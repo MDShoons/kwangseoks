@@ -2,14 +2,14 @@
 // 아래 Firebase 설정값은 사용자가 제공한 Firebase Console 화면을 기준으로 반영했습니다.
 // 비밀번호는 절대 이 파일에 저장하지 마세요.
 
-export const firebaseConfig = {
-  apiKey: "AIzaSyDPGMjMBLGkapVTdq07j_fXw6sv4TTPeo",
+const firebaseConfig = {
+  apiKey: "AIzaSyDPGi_MBLGkap_VTdo07j_fXw6Sy4TTPeo",
   authDomain: "kksarchive.firebaseapp.com",
   projectId: "kksarchive",
   storageBucket: "kksarchive.firebasestorage.app",
   messagingSenderId: "322477795788",
-  appId: "1:322477795788:web:9f6a9c2c8d26c1a76d5569",
-  measurementId: "G-9R60YXCMY9"
+  appId: "1:322477795788:web:85a4990dd85b04fe6d5569",
+  measurementId: "G-L8JDZMQFWS"
 };
 
 // 관리자 이메일 목록
