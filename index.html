@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>광석이네집 | 김광석 아카이브</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="#home" data-page="home">
+        <span class="logo-mark">ㄱ</span>
+        <span id="siteLogoText">광석이네집</span>
+      </a>
+
+      <nav class="main-nav">
+        <a href="#home" data-page="home">광석이네집</a>
+        <a href="#videos" data-page="videos">videos</a>
+        <a href="#songs" data-page="songs">songs</a>
+        <a href="#radios" data-page="radios">radios</a>
+        <a href="#photos" data-page="photos">photos</a>
+        <a href="#stories" data-page="stories">stories</a>
+        <a href="#about" data-page="about">about seok</a>
+        <a href="#oneum" data-page="oneum">oneum</a>
+        <a href="#admin" data-page="admin" class="admin-only hidden">관리자</a>
+      </nav>
+
+      <div class="auth-area" id="authArea">
+        <button class="ghost-btn" data-open-modal="loginModal">로그인</button>
+        <button class="primary-btn" data-open-modal="signupModal">회원가입</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="page active">
+      <section class="hero">
+        <div>
+          <p class="eyebrow" id="heroEyebrow">Kim Kwang-seok Digital Archive</p>
+          <h1 id="heroTitle">노래가 된 사람,<br />기록으로 남은 목소리.</h1>
+          <p class="hero-desc" id="heroDescription">
+            김광석의 영상, 음악, 라디오, 사진, 일기와 둥근소리글을
+            차분히 모아두는 디지털 아카이브입니다.
+          </p>
+          <div class="hero-actions">
+            <button class="primary-btn" data-page="videos">영상 보기</button>
+            <button class="ghost-btn light" data-page="songs">음악 듣기</button>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p class="card-date" id="homeCardLabel">오늘의 기록</p>
+          <h2 id="homeCardTitle">광석이네집에 오신 것을 환영합니다.</h2>
+          <p id="homeCardText">
+            이곳은 자료를 함부로 소비하기보다, 출처와 맥락을 함께 남기는
+            아카이브를 지향합니다.
+          </p>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <div class="section-head">
+          <h2>최신 자료</h2>
+          <p>관리자 화면에서 등록한 자료가 표시됩니다. Firebase 연결 전에는 기본 샘플이 보입니다.</p>
+        </div>
+        <div class="grid four" id="homeLatest"></div>
+      </section>
+    </section>
+
+    <section id="videos" class="page">
+      <div class="page-title">
+        <p class="eyebrow">archive</p>
+        <h1>videos</h1>
+        <p>김광석의 공연, 방송, 인터뷰 영상을 모아보는 공간입니다.</p>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="videoSearch" placeholder="영상 제목, 연도, 출처 검색" />
+        <select id="videoFilter">
+          <option value="all">전체</option>
+          <option value="공연">공연</option>
+          <option value="방송">방송</option>
+          <option value="인터뷰">인터뷰</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="grid three" id="videosList"></div>
+    </section>
+
+    <section id="songs" class="page">
+      <div class="page-title">
+        <p class="eyebrow">archive</p>
+        <h1>songs</h1>
+        <p>김광석의 음악 자료를 정리하는 공간입니다.</p>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="songSearch" placeholder="곡명, 앨범명, 연도 검색" />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>곡명</th>
+              <th>앨범/출처</th>
+              <th>연도</th>
+              <th>보기</th>
+            </tr>
+          </thead>
+          <tbody id="songsList"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="radios" class="page">
+      <div class="page-title">
+        <p class="eyebrow">archive</p>
+        <h1>radios</h1>
+        <p>김광석의 라디오 출연, 인터뷰, 방송 음성 자료를 정리합니다.</p>
+      </div>
+      <div class="list" id="radiosList"></div>
+    </section>
+
+    <section id="photos" class="page">
+      <div class="page-title">
+        <p class="eyebrow">archive</p>
+        <h1>photos</h1>
+        <p>사진 자료를 연도, 장소, 출처와 함께 보관합니다.</p>
+      </div>
+      <div class="grid four" id="photosList"></div>
+    </section>
+
+    <section id="stories" class="page">
+      <div class="page-title">
+        <p class="eyebrow">diary only</p>
+        <h1>stories</h1>
+        <p>이 공간은 김광석의 일기만을 다룹니다. 다른 글, 기사, 팬글은 넣지 않습니다.</p>
+      </div>
+      <div class="notice-box">
+        <strong>운영 원칙</strong>
+        <p>stories에는 일기 외 콘텐츠를 등록하지 않습니다. 출처와 공개 가능 여부 확인이 필요합니다.</p>
+      </div>
+      <div class="list" id="storiesList"></div>
+    </section>
+
+    <section id="about" class="page">
+      <div class="page-title">
+        <p class="eyebrow">profile</p>
+        <h1>about seok</h1>
+        <p>김광석의 생애, 음악 활동, 연보, 음반, 공연 기록을 정리합니다.</p>
+      </div>
+      <div class="article-card">
+        <h2>김광석 소개</h2>
+        <p id="aboutMainText">
+          이 영역은 김광석에 대한 기본 소개를 담는 공간입니다.
+          실제 공개 전에는 연보, 음반, 공연 기록을 신뢰 가능한 자료로 검토해야 합니다.
+        </p>
+        <h3>구성 항목</h3>
+        <ul>
+          <li>생애</li>
+          <li>음악 활동</li>
+          <li>연보</li>
+          <li>음반</li>
+          <li>공연 기록</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="oneum" class="page">
+      <div class="page-title">
+        <p class="eyebrow">writing</p>
+        <h1>oneum</h1>
+        <p>김광석의 둥근소리글을 정리하는 공간입니다.</p>
+      </div>
+      <div class="list" id="oneumList"></div>
+    </section>
+
+    <section id="mypage" class="page">
+      <div class="page-title">
+        <p class="eyebrow">member</p>
+        <h1>마이페이지</h1>
+        <p>회원 정보와 최근 이용 내역을 확인합니다.</p>
+      </div>
+      <div class="article-card" id="myProfile"></div>
+    </section>
+
+    <section id="admin" class="page">
+      <div class="page-title">
+        <p class="eyebrow">administrator</p>
+        <h1>관리자 편집실</h1>
+        <p>관리자만 접근할 수 있는 사이트 편집 화면입니다. 메인 템플릿과 콘텐츠를 사이트 안에서 수정합니다.</p>
+      </div>
+
+      <div class="admin-warning">
+        <strong>관리자 계정</strong>
+        <p>
+          관리자 권한은 <b>oldsong0106</b> 또는 <b>shinestone0106</b> 관리자 아이디로 로그인한 사용자에게만 열립니다.
+          관리자 비밀번호는 코드에 저장하지 않습니다.
+        </p>
+      </div>
+
+      <div class="admin-grid">
+        <section class="admin-panel">
+          <h2>메인 템플릿 편집</h2>
+          <form id="templateForm">
+            <label>사이트 로고 이름
+              <input id="editSiteTitle" type="text" required />
+            </label>
+            <label>상단 작은 문구
+              <input id="editHeroEyebrow" type="text" required />
+            </label>
+            <label>메인 제목
+              <textarea id="editHeroTitle" rows="3" required></textarea>
+            </label>
+            <label>메인 설명
+              <textarea id="editHeroDescription" rows="4" required></textarea>
+            </label>
+            <label>오늘의 기록 제목
+              <input id="editHomeCardTitle" type="text" required />
+            </label>
+            <label>오늘의 기록 내용
+              <textarea id="editHomeCardText" rows="4" required></textarea>
+            </label>
+            <label>about seok 소개문
+              <textarea id="editAboutMainText" rows="5" required></textarea>
+            </label>
+            <label>푸터 문구
+              <textarea id="editFooterText" rows="3" required></textarea>
+            </label>
+            <button type="submit" class="primary-btn full">템플릿 저장</button>
+          </form>
+        </section>
+
+        <section class="admin-panel">
+          <h2>콘텐츠 등록/수정</h2>
+          <form id="contentForm">
+            <input type="hidden" id="contentId" />
+            <label>메뉴
+              <select id="contentCategory" required>
+                <option value="videos">videos</option>
+                <option value="songs">songs</option>
+                <option value="radios">radios</option>
+                <option value="photos">photos</option>
+                <option value="stories">stories</option>
+                <option value="oneum">oneum</option>
+              </select>
+            </label>
+            <label>제목
+              <input id="contentTitle" type="text" required />
+            </label>
+            <label>연도/날짜
+              <input id="contentDate" type="text" placeholder="예: 1995 또는 1995.08.11" />
+            </label>
+            <label>분류
+              <input id="contentType" type="text" placeholder="예: 공연, 방송, 인터뷰, 일기" />
+            </label>
+            <label>출처/앨범
+              <input id="contentSource" type="text" placeholder="자료 출처 또는 앨범명" />
+            </label>
+            <label>파일/외부 링크
+              <input id="contentUrl" type="url" placeholder="https://..." />
+            </label>
+            <label>설명/본문
+              <textarea id="contentBody" rows="7"></textarea>
+            </label>
+            <label>공개 상태
+              <select id="contentVisibility">
+                <option value="public">전체 공개</option>
+                <option value="members">회원 공개</option>
+                <option value="private">비공개</option>
+              </select>
+            </label>
+            <button type="submit" class="primary-btn full">콘텐츠 저장</button>
+            <button type="button" class="ghost-btn full" id="resetContentForm">새 글 작성</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="admin-panel">
+        <h2>등록된 콘텐츠 관리</h2>
+        <p class="small-text">수정 버튼을 누르면 위 입력창에 내용이 들어갑니다. 삭제는 되돌릴 수 없습니다.</p>
+        <div class="admin-content-list" id="adminContentList"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footerText">본 사이트는 김광석 관련 자료를 보존하고 정리하기 위한 아카이브 예시입니다.</p>
+    <p>모든 자료의 저작권은 각 권리자에게 있으며, 실제 공개 전 권리 확인이 필요합니다.</p>
+  </footer>
+
+  <div class="modal" id="signupModal" aria-hidden="true">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal="signupModal">×</button>
+      <h2>회원가입</h2>
+      <form id="signupForm">
+        <label>이름<input type="text" id="signupName" required /></label>
+        <label>전화번호<input type="tel" id="signupPhone" placeholder="010-0000-0000" required /></label>
+
+        <label>아이디</label>
+        <div class="inline-field">
+          <input type="text" id="signupLoginId" required />
+          <button type="button" class="ghost-btn" id="checkLoginIdBtn">중복확인</button>
+        </div>
+        <p class="form-message" id="loginIdCheckMessage"></p>
+
+        <label>메일주소</label>
+        <div class="email-field">
+          <input type="text" id="signupEmailLocal" placeholder="메일 앞부분" required />
+          <span>@</span>
+          <select id="signupEmailDomain" required>
+            <option value="gmail.com">gmail.com</option>
+            <option value="kakao.com">kakao.com</option>
+            <option value="naver.com">naver.com</option>
+          </select>
+        </div>
+
+        <label>비밀번호<input type="password" id="signupPassword" minlength="6" required /></label>
+        <label>비밀번호 확인<input type="password" id="signupPasswordConfirm" minlength="6" required /></label>
+
+        <div class="privacy-box">
+          <strong>개인정보 수집 및 이용 동의</strong>
+          <p>
+            수집 항목: 이름, 전화번호, 아이디, 메일주소, 비밀번호<br />
+            수집 목적: 회원 식별, 로그인, 비밀번호 찾기, 서비스 이용 관리<br />
+            보유 기간: 회원 탈퇴 시까지
+          </p>
+        </div>
+
+        <label class="check-label">
+          <input type="checkbox" id="privacyAgree" required />
+          개인정보 수집 및 이용에 동의합니다.
+        </label>
+        <button type="submit" class="primary-btn full">회원가입</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="loginModal" aria-hidden="true">
+    <div class="modal-content">
+      <button class="modal-close" data-close-modal="loginModal">×</button>
+      <h2>로그인</h2>
+      <form id="loginForm">
+        <label>아이디<input type="text" id="loginId" required /></label>
+        <label>비밀번호<input type="password" id="loginPassword" required /></label>
+        <button type="submit" class="primary-btn full">로그인</button>
+      </form>
+      <p class="small-text">관리자는 관리자 아이디로 로그인하면 관리자 메뉴가 열립니다.</p>
+      <p class="small-text" id="firebaseStatusText">Firebase 연결 확인 중...</p>
+    </div>
+  </div>
+
+  <div class="modal" id="detailModal" aria-hidden="true">
+    <div class="modal-content wide">
+      <button class="modal-close" data-close-modal="detailModal">×</button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
