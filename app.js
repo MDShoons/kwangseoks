@@ -37,8 +37,8 @@ const firebaseConfig = {
   storageBucket: "kksarchive.firebasestorage.app",
   messagingSenderId: "322477795788",
   appId: "1:322477795788:web:9f6a9c2c8d26c1a76d5569",
-  measurementId: "G-9RG0YXC
-
+  measurementId: "G-9RG0YXCMY9"
+};
 // 관리자 계정 목록입니다.
 // 비밀번호는 보안상 코드에 저장하지 않습니다.
 const ADMINS = [
