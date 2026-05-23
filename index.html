@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>광석이네집 | 김광석 아카이브</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="logo" onclick="showPage('home')">
+      광석이네집
+      <span>김광석 디지털 아카이브</span>
+    </div>
+
+    <nav>
+      <button onclick="showPage('home')">광석이네집</button>
+      <button onclick="showPage('videos')">Videos</button>
+      <button onclick="showPage('songs')">Songs</button>
+      <button onclick="showPage('radios')">Radios</button>
+      <button onclick="showPage('photos')">Photos</button>
+      <button onclick="showPage('stories')">Stories</button>
+      <button onclick="showPage('about')">About Seok</button>
+      <button onclick="showPage('oneum')">Oneum</button>
+    </nav>
+
+    <div class="auth-area">
+      <span id="userStatus">로그인 전</span>
+      <button id="loginBtn" onclick="showPage('login')">로그인</button>
+      <button id="signupBtn" onclick="showPage('signup')">회원가입</button>
+      <button id="logoutBtn" class="hidden">로그아웃</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="page active">
+      <section class="hero">
+        <h1>노래가 머무는 곳, 광석이네집</h1>
+        <p>김광석의 시간과 목소리, 사진과 글을 조용히 기록합니다.</p>
+        <div>
+          <button onclick="showPage('videos')">영상 보러가기</button>
+          <button onclick="showPage('photos')">사진 보러가기</button>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>최신 자료</h2>
+        <div id="latestContents" class="card-grid"></div>
+      </section>
+    </section>
+
+    <section id="videos" class="page">
+      <div class="page-title">
+        <h1>Videos</h1>
+        <p>김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.</p>
+      </div>
+
+      <div class="toolbar">
+        <input id="videoSearch" type="text" placeholder="영상 검색" oninput="loadContents()" />
+        <select id="videoYearFilter" onchange="loadContents()">
+          <option value="">전체 연도</option>
+          <option value="1996">1996</option>
+          <option value="1995">1995</option>
+          <option value="1994">1994</option>
+          <option value="1993">1993</option>
+          <option value="1992">1992</option>
+        </select>
+      </div>
+
+      <div id="videoList" class="card-grid"></div>
+    </section>
+
+    <section id="songs" class="page">
+      <div class="page-title">
+        <h1>Songs</h1>
+        <p>김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.</p>
+      </div>
+      <div id="songList" class="list-box"></div>
+    </section>
+
+    <section id="radios" class="page">
+      <div class="page-title">
+        <h1>Radios</h1>
+        <p>김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.</p>
+      </div>
+      <div id="radioList" class="list-box"></div>
+    </section>
+
+    <section id="photos" class="page">
+      <div class="page-title">
+        <h1>Photos</h1>
+        <p>김광석의 시간과 표정을 담은 사진 아카이브입니다.</p>
+      </div>
+
+      <div class="toolbar">
+        <select id="photoTemplate" onchange="changeTemplate('photos', this.value)">
+          <option value="gallery">갤러리형</option>
+          <option value="card">카드형</option>
+          <option value="timeline">연도별형</option>
+        </select>
+      </div>
+
+      <div id="photoList" class="card-grid"></div>
+    </section>
+
+    <section id="stories" class="page">
+      <div class="page-title">
+        <h1>Stories</h1>
+        <p>김광석을 기억하는 글과 이야기를 모았습니다.</p>
+      </div>
+      <div id="storyList" class="list-box"></div>
+    </section>
+
+    <section id="about" class="page">
+      <div class="page-title">
+        <h1>About Seok</h1>
+        <p>김광석의 생애와 음악 세계를 정리한 공간입니다.</p>
+      </div>
+
+      <article class="article-box">
+        <h2>김광석</h2>
+        <p>
+          이 공간은 김광석의 음악, 공연, 사진, 라디오, 글 자료를 정리하기 위한
+          디지털 아카이브입니다. 실제 연표와 자료 설명은 출처 확인 후 등록하는 것이 좋습니다.
+        </p>
+      </article>
+    </section>
+
+    <section id="oneum" class="page">
+      <div class="page-title">
+        <h1>Oneum</h1>
+        <p>김광석의 둥근소리글을 모아둔 공간입니다.</p>
+      </div>
+      <div id="oneumList" class="list-box"></div>
+    </section>
+
+    <section id="login" class="page auth-page">
+      <h1>로그인</h1>
+      <input id="loginEmail" type="email" placeholder="이메일" />
+      <input id="loginPassword" type="password" placeholder="비밀번호" />
+      <button id="doLoginBtn">로그인</button>
+    </section>
+
+    <section id="signup" class="page auth-page">
+      <h1>회원가입</h1>
+
+      <input id="signupName" type="text" placeholder="이름" />
+      <input id="signupPhone" type="tel" placeholder="전화번호" />
+      <input id="signupLoginId" type="text" placeholder="아이디" />
+      <input id="signupEmail" type="email" placeholder="메일주소" />
+      <input id="signupPassword" type="password" placeholder="비밀번호" />
+
+      <label class="checkbox-label">
+        <input id="privacyAgree" type="checkbox" />
+        개인정보 수집 및 이용에 동의합니다.
+      </label>
+
+      <button id="doSignupBtn">회원가입</button>
+    </section>
+
+    <section id="admin" class="page">
+      <div class="page-title">
+        <h1>관리자 화면</h1>
+        <p>사진 업로드, 유튜브 URL 등록, 템플릿 변경을 관리합니다.</p>
+      </div>
+
+      <div class="admin-tabs">
+        <button onclick="showAdminForm('video')">영상 등록</button>
+        <button onclick="showAdminForm('photo')">사진 등록</button>
+        <button onclick="showAdminForm('text')">글 등록</button>
+        <button onclick="showAdminForm('template')">템플릿 변경</button>
+      </div>
+
+      <form id="adminVideoForm" class="admin-form">
+        <h2>유튜브 영상 등록</h2>
+        <input id="videoTitle" type="text" placeholder="영상 제목" />
+        <input id="youtubeUrl" type="url" placeholder="유튜브 URL" />
+        <input id="videoYear" type="text" placeholder="연도 예: 1995" />
+        <input id="videoSource" type="text" placeholder="출처" />
+        <textarea id="videoDescription" placeholder="영상 설명"></textarea>
+        <button type="button" id="saveVideoBtn">영상 저장</button>
+      </form>
+
+      <form id="adminPhotoForm" class="admin-form hidden">
+        <h2>사진 업로드</h2>
+        <input id="photoTitle" type="text" placeholder="사진 제목" />
+        <input id="photoFile" type="file" accept="image/*" />
+        <input id="photoYear" type="text" placeholder="연도 예: 1994" />
+        <input id="photoSource" type="text" placeholder="출처" />
+        <textarea id="photoDescription" placeholder="사진 설명"></textarea>
+        <button type="button" id="savePhotoBtn">사진 저장</button>
+      </form>
+
+      <form id="adminTextForm" class="admin-form hidden">
+        <h2>글 자료 등록</h2>
+        <select id="textCategory">
+          <option value="stories">Stories</option>
+          <option value="oneum">Oneum</option>
+          <option value="songs">Songs</option>
+          <option value="radios">Radios</option>
+        </select>
+        <input id="textTitle" type="text" placeholder="제목" />
+        <textarea id="textBody" placeholder="본문"></textarea>
+        <input id="textYear" type="text" placeholder="연도" />
+        <input id="textSource" type="text" placeholder="출처" />
+        <button type="button" id="saveTextBtn">글 저장</button>
+      </form>
+
+      <form id="adminTemplateForm" class="admin-form hidden">
+        <h2>템플릿 변경</h2>
+        <select id="templatePage">
+          <option value="photos">Photos</option>
+          <option value="videos">Videos</option>
+          <option value="songs">Songs</option>
+        </select>
+
+        <select id="templateType">
+          <option value="gallery">갤러리형</option>
+          <option value="card">카드형</option>
+          <option value="list">리스트형</option>
+          <option value="timeline">연도별형</option>
+        </select>
+
+        <button type="button" id="saveTemplateBtn">템플릿 저장</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>광석이네집 | 김광석 디지털 아카이브</p>
+    <p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
