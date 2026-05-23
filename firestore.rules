@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == "kos20050627@gmail.com";
+    }
+
+    // 회원 정보
+    match /users/{userId} {
+      // 본인은 자기 회원정보를 읽고 쓸 수 있습니다.
+      allow read, create, update: if signedIn() && request.auth.uid == userId;
+
+      // 관리자는 회원정보를 읽을 수 있습니다.
+      allow read: if isAdmin();
+
+      // 회원 삭제는 일단 막아둡니다. 실제 회원탈퇴 기능 만들 때 별도 설계하세요.
+      allow delete: if false;
+    }
+
+    // 사이트 템플릿 설정
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 아카이브 콘텐츠
+    match /contents/{contentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
