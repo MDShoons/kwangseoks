@@ -22,13 +22,13 @@ import {
 
 // TODO: 본인의 Firebase 설정값으로 반드시 바꾸세요.
 const firebaseConfig = {
-  apiKey: "여기에_apiKey",
-  authDomain: "여기에_authDomain",
-  projectId: "여기에_projectId",
-  storageBucket: "여기에_storageBucket",
-  messagingSenderId: "여기에_messagingSenderId",
-  appId: "여기에_appId"
-};
+  apiKey: "AIzaSyDPGi_MBLGkap_VTdo07j_fXw6Sy4TTPeo",
+  authDomain: "kksarchive.firebaseapp.com",
+  projectId: "kksarchive",
+  storageBucket: "kksarchive.firebasestorage.app",
+  messagingSenderId: "322477795788",
+  appId: "1:322477795788:web:9f6a9c2c8d26c1a76d5569",
+  measurementId: "G-9RG0YXC
 
 let app;
 let auth;
