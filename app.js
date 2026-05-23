@@ -30,13 +30,13 @@ import {
 
 // TODO: Firebase Console에서 복사한 본인 설정값으로 교체하세요.
 const firebaseConfig = {
-  apiKey: "여기에_apiKey",
-  authDomain: "여기에_authDomain",
-  projectId: "여기에_projectId",
-  storageBucket: "여기에_storageBucket",
-  messagingSenderId: "여기에_messagingSenderId",
-  appId: "여기에_appId"
-};
+  apiKey: "AIzaSyDPGi_MBLGkap_VTdo07j_fXw6Sy4TTPeo",
+  authDomain: "kksarchive.firebaseapp.com",
+  projectId: "kksarchive",
+  storageBucket: "kksarchive.firebasestorage.app",
+  messagingSenderId: "322477795788",
+  appId: "1:322477795788:web:9f6a9c2c8d26c1a76d5569",
+  measurementId: "G-9RG0YXC
 
 // 관리자 이메일입니다. 이 이메일로 로그인한 사람만 관리자 화면을 볼 수 있습니다.
 const ADMIN_EMAIL = "kos20050627@gmail.com";
