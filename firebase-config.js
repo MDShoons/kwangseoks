@@ -1,13 +1,14 @@
 // firebase-config.js
 // Firebase Console > Project settings > Your apps > Web app 에서 복사한 값을 아래에 붙여 넣으세요.
 
-export const firebaseConfig = {
-  apiKey: "여기에_API_KEY",
-  authDomain: "여기에_PROJECT_ID.firebaseapp.com",
-  projectId: "여기에_PROJECT_ID",
-  storageBucket: "여기에_PROJECT_ID.appspot.com",
-  messagingSenderId: "여기에_SENDER_ID",
-  appId: "여기에_APP_ID"
+const firebaseConfig = {
+  apiKey: "AIzaSyDPGi_MBLGkap_VTdo07j_fXw6Sy4TTPeo",
+  authDomain: "kksarchive.firebaseapp.com",
+  projectId: "kksarchive",
+  storageBucket: "kksarchive.firebasestorage.app",
+  messagingSenderId: "322477795788",
+  appId: "1:322477795788:web:9f6a9c2c8d26c1a76d5569",
+  measurementId: "G-9RG0YXCMY9"
 };
 
 // 관리자 이메일 목록
