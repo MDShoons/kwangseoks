@@ -1,3 +1,25 @@
+
+function normalizeYoutubeEmbedUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value);
+    let id = "";
+    if (parsed.hostname.includes("youtu.be")) {
+      id = parsed.pathname.replace("/", "");
+    } else if (parsed.searchParams.get("v")) {
+      id = parsed.searchParams.get("v");
+    } else if (parsed.pathname.includes("/embed/")) {
+      return value;
+    }
+
+    return id ? `https://www.youtube.com/embed/${id}` : value;
+  } catch {
+    return value;
+  }
+}
+
 import {
   firebaseConfig,
   ADMIN_EMAILS,
@@ -15,7 +37,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v74-worker-origin-bypass";
+const APP_VERSION = "v75-link-only-media";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -233,7 +255,7 @@ async function uploadFileToGitHubWorker(file, folder) {
 
     text = await response.text();
   } catch (error) {
-    throw new Error(`Cloudflare Worker에 연결하지 못했습니다. CORS 또는 Worker Deploy 문제일 가능성이 큽니다. 현재 사용 중인 Worker 주소: ${workerUrl}. health 확인: ${workerUrl}/health. 원문: ${error.message}`);
+    throw new Error(`파일 직접 업로드는 현재 사용하지 않는 것을 권장합니다. URL 링크로 저장해 주세요. Cloudflare Worker에 연결하지 못했습니다. CORS 또는 Worker Deploy 문제일 가능성이 큽니다. 현재 사용 중인 Worker 주소: ${workerUrl}. health 확인: ${workerUrl}/health. 원문: ${error.message}`);
   }
 
   let data = null;
@@ -499,22 +521,42 @@ document.getElementById("saveRadioBtn").addEventListener("click", () => saveAudi
 
 async function saveAudioLike(category, prefix) {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
-  const title = document.getElementById(`${prefix}Title`).value.trim();
+
+  const title = document.getElementById(`${prefix}Title`)?.value.trim() || "";
+  const urlInput = document.getElementById(`${prefix}Url`)?.value.trim() || "";
+  const fileInput = document.getElementById(`${prefix}File`);
+  const imageInput = document.getElementById(`${prefix}ImageUrl`) || document.getElementById(`${prefix}ThumbnailUrl`);
+  const imageUrl = imageInput?.value.trim() || "";
+  const file = fileInput?.files?.[0];
+
   if (!title) return alert("제목을 입력하세요.");
-  const file = document.getElementById(`${prefix}File`).files[0];
-  const directUrl = document.getElementById(`${prefix}FileUrl`).value.trim();
-  if (!file && !directUrl) return alert("파일 또는 URL을 입력하세요.");
+  if (!urlInput && !file) {
+    return alert("미디어 링크를 입력하세요. 파일 직접 업로드 대신 URL 입력을 권장합니다.");
+  }
+
   try {
-    const uploadedUrl = file ? await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios") : "";
-    const mediaUrl = directUrl || uploadedUrl;
-    const imageUrl = await getImageDataUrlOrDirectUrl(document.getElementById(`${prefix}ImageFile`).files[0], document.getElementById(`${prefix}ImageUrl`).value, 1000);
-    await addDoc(collection(db, "contents"), { category, subCategory:document.getElementById(`${prefix}SubCategory`).value, mediaType:"audio", title, mediaUrl, thumbnailUrl:imageUrl,
-      year:document.getElementById(`${prefix}Year`).value.trim(), source:document.getElementById(`${prefix}Source`).value.trim(),
-      description:document.getElementById(`${prefix}Description`).value.trim(), body:document.getElementById(`${prefix}Description`).value.trim(),
-      isPublic:true, createdBy:currentUser.uid, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
-    alert(category === "songs" ? "음원이 저장되었습니다." : "라디오가 저장되었습니다.");
-    document.getElementById(category === "songs" ? "adminAudioForm" : "adminRadioForm").reset(); await loadContents();
-  } catch(e) { alert("미디어 파일 저장 오류: " + e.message); }
+    // 링크 입력이 있으면 Worker 업로드를 절대 호출하지 않음
+    const mediaUrl = urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios");
+
+    await addDoc(collection(db, "contents"), {
+      category,
+      subCategory: document.getElementById(`${prefix}SubCategory`)?.value || "",
+      mediaType: "audio",
+      title,
+      mediaUrl,
+      thumbnailUrl: imageUrl,
+      description: document.getElementById(`${prefix}Description`)?.value.trim() || "",
+      year: document.getElementById(`${prefix}Year`)?.value.trim() || "",
+      source: document.getElementById(`${prefix}Source`)?.value.trim() || "",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    alert("링크 방식으로 저장되었습니다.");
+    await loadContents();
+  } catch (error) {
+    alert("미디어 링크 저장 오류: " + error.message);
+  }
 }
 
 

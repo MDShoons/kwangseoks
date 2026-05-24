@@ -2270,3 +2270,19 @@ body.screen-protect-blur footer {
 #dailyRecommendPlayer .daily-player-close:hover {
   background: rgba(255, 255, 255, 0.32) !important;
 }
+
+/* v75: 링크 입력 방식 안내 */
+.link-only-notice {
+  margin: 16px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid #d8c2ad;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #5a3826;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.link-only-notice strong {
+  font-weight: 900;
+}

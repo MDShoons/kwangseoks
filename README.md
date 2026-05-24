@@ -775,3 +775,24 @@ ZIP 안의 cloudflare-worker-github-uploader.js 내용을 Worker에 붙여넣고
 정상 확인:
 https://kwangseoks-uploader.kos20050627.workers.dev/health
 version: v74-origin-bypass-upload
+
+
+## v75 수정 사항 - 미디어 링크 입력 방식 전환
+파일 직접 업로드 방식 대신 링크 입력 중심으로 전환했습니다.
+
+핵심:
+- mp3 / wav / mp4 / 이미지 파일을 직접 GitHub로 올리지 않아도 됨
+- 관리자 화면의 URL 칸에 외부 링크를 입력하면 저장
+- URL이 입력되어 있으면 Cloudflare Worker를 호출하지 않음
+- 파일 선택은 선택사항으로 남겨두었지만, 권장 방식은 URL 입력
+
+권장 링크 예:
+- YouTube 영상 링크
+- archive.org 음원/영상 링크
+- Cloudflare R2 공개 URL
+- Firebase Storage 다운로드 URL
+- GitHub raw 또는 GitHub Pages 파일 URL
+- Google Drive 직접 다운로드 가능한 공유 링크
+
+적용 후:
+index.html 하단 버전이 v75-link-only-media로 보여야 합니다.
