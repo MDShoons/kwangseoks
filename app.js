@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v63-right-side-player-ui";
+const APP_VERSION = "v64-player-volume-mute";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1002,8 +1002,20 @@ function setupDailyRecommendPlayer() {
   const progress = document.getElementById("dailyPlayerProgress");
   const current = document.getElementById("dailyPlayerCurrent");
   const duration = document.getElementById("dailyPlayerDuration");
+  const muteBtn = document.getElementById("dailyPlayerMuteBtn");
+  const volumeSlider = document.getElementById("dailyPlayerVolume");
 
-  if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration) return;
+  if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider) return;
+
+  
+  const savedVolume = localStorage.getItem("kwangseoks_daily_player_volume");
+  const savedMuted = localStorage.getItem("kwangseoks_daily_player_muted");
+
+  const initialVolume = savedVolume !== null ? Math.min(1, Math.max(0, Number(savedVolume))) : 0.7;
+  audio.volume = Number.isFinite(initialVolume) ? initialVolume : 0.7;
+  audio.muted = savedMuted === "yes";
+  volumeSlider.value = String(Math.round(audio.volume * 100));
+  muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
 
   const songs = allContents.filter((item) => item.category === "songs");
   const selected = pickDailyRecommendedSong(songs);
@@ -1066,6 +1078,33 @@ function setupDailyRecommendPlayer() {
 
   audio.setAttribute("controlsList", "nodownload noplaybackrate");
   audio.setAttribute("oncontextmenu", "return false");
+
+  
+  volumeSlider.addEventListener("input", () => {
+    const value = Math.min(100, Math.max(0, Number(volumeSlider.value || 0)));
+    audio.volume = value / 100;
+
+    if (audio.volume === 0) {
+      audio.muted = true;
+    } else {
+      audio.muted = false;
+    }
+
+    localStorage.setItem("kwangseoks_daily_player_volume", String(audio.volume));
+    localStorage.setItem("kwangseoks_daily_player_muted", audio.muted ? "yes" : "no");
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
+  });
+
+  muteBtn.addEventListener("click", () => {
+    audio.muted = !audio.muted;
+    localStorage.setItem("kwangseoks_daily_player_muted", audio.muted ? "yes" : "no");
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
+  });
+
+  audio.addEventListener("volumechange", () => {
+    volumeSlider.value = String(Math.round(audio.volume * 100));
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
+  });
 
   playBtn.addEventListener("click", async () => {
     if (playBtn.disabled || !audio.src) return;

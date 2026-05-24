@@ -1840,3 +1840,33 @@ body.screen-protect-blur footer {
     max-width: 158px !important;
   }
 }
+
+/* v64: 오늘의 추천곡 볼륨/음소거 */
+#dailyRecommendPlayer .daily-volume-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  margin-top: 10px !important;
+}
+
+#dailyRecommendPlayer .daily-mute-btn {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.9) !important;
+  color: #8a3e62 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider {
+  width: 100% !important;
+  height: 4px !important;
+  accent-color: #fff !important;
+  cursor: pointer !important;
+}
