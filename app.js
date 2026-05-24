@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v61-about-document-page";
+const APP_VERSION = "v62-player-empty-message";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1008,18 +1008,45 @@ function setupDailyRecommendPlayer() {
   const songs = allContents.filter((item) => item.category === "songs");
   const selected = pickDailyRecommendedSong(songs);
 
+  player.classList.remove("hidden");
+
   if (!selected) {
-    player.classList.add("hidden");
+    dailyRecommendedItemId = "";
+    audio.pause();
+    audio.removeAttribute("src");
+    title.textContent = "재생할 곡이 없습니다";
+    sub.textContent = "Songs에 음원을 등록하면 오늘의 추천곡이 표시됩니다.";
+    playBtn.textContent = "▶";
+    playBtn.disabled = true;
+    playBtn.classList.add("disabled");
+    progress.value = "0";
+    progress.disabled = true;
+    current.textContent = "0:00";
+    duration.textContent = "0:00";
     return;
   }
 
   const sourceUrl = selected.mediaUrl || selected.fileUrl || selected.audioUrl || "";
   if (!sourceUrl) {
-    player.classList.add("hidden");
+    dailyRecommendedItemId = "";
+    audio.pause();
+    audio.removeAttribute("src");
+    title.textContent = "재생할 곡이 없습니다";
+    sub.textContent = "Songs에 재생 가능한 음원 URL이 없습니다.";
+    playBtn.textContent = "▶";
+    playBtn.disabled = true;
+    playBtn.classList.add("disabled");
+    progress.value = "0";
+    progress.disabled = true;
+    current.textContent = "0:00";
+    duration.textContent = "0:00";
     return;
   }
 
-  player.classList.remove("hidden");
+  playBtn.disabled = false;
+  playBtn.classList.remove("disabled");
+  progress.disabled = false;
+
   title.textContent = selected.title || "제목 없는 추천곡";
   sub.textContent = `${getKoreanDateKey()} · 매일 00:00 추천 변경`;
 
@@ -1041,6 +1068,8 @@ function setupDailyRecommendPlayer() {
   audio.setAttribute("oncontextmenu", "return false");
 
   playBtn.addEventListener("click", async () => {
+    if (playBtn.disabled || !audio.src) return;
+
     try {
       if (audio.paused) {
         await audio.play();

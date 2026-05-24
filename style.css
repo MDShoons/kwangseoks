@@ -1677,3 +1677,19 @@ body.screen-protect-blur footer {
   margin-bottom: 22px;
   background: #f4eee7;
 }
+
+/* v62: 추천곡 없을 때도 플레이어 유지 */
+.daily-play-btn.disabled,
+.daily-play-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.daily-player-progress:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.daily-player-title {
+  word-break: keep-all;
+}
