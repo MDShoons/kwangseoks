@@ -2236,3 +2236,37 @@ body.screen-protect-blur footer {
   margin-top: 10px;
   padding-left: 12px;
 }
+
+/* v71: 오늘의 추천곡 닫기 버튼 */
+#dailyRecommendPlayer.closed {
+  display: none !important;
+}
+
+#dailyRecommendPlayer .daily-player-card {
+  position: relative !important;
+}
+
+#dailyRecommendPlayer .daily-player-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  width: 22px !important;
+  height: 22px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+#dailyRecommendPlayer .daily-player-close:hover {
+  background: rgba(255, 255, 255, 0.32) !important;
+}

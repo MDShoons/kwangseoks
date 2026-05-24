@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v70-hardcoded-worker-upload";
+const APP_VERSION = "v72-upload-firebase-token";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -201,6 +201,15 @@ async function getImageDataUrlOrDirectUrl(file, directUrl, maxWidth = 1400) {
 async function uploadFileToGitHubWorker(file, folder) {
   if (!file) return "";
 
+  if (!currentUser) {
+    throw new Error("로그인 후 업로드할 수 있습니다. Firebase ID Token이 없습니다.");
+  }
+
+  const token = await currentUser.getIdToken(true);
+  if (!token) {
+    throw new Error("Firebase ID Token이 없습니다. 다시 로그인한 뒤 업로드해 주세요.");
+  }
+
   const workerUrl = ACTIVE_UPLOAD_WORKER_URL;
   const uploadUrl = `${workerUrl.replace(/\/$/, "")}/upload`;
 
@@ -217,7 +226,10 @@ async function uploadFileToGitHubWorker(file, folder) {
       method: "POST",
       body: formData,
       mode: "cors",
-      cache: "no-store"
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
 
     text = await response.text();
@@ -980,6 +992,26 @@ function formatPlayerTime(seconds) {
   return `${min}:${sec}`;
 }
 
+
+function getDailyPlayerClosedKey() {
+  return `kwangseoks_daily_player_closed_${getKoreanDateKey()}`;
+}
+
+function closeDailyRecommendPlayer() {
+  const player = document.getElementById("dailyRecommendPlayer");
+  const audio = document.getElementById("dailyPlayerAudio");
+
+  if (audio) {
+    audio.pause();
+  }
+
+  if (player) {
+    player.classList.add("closed");
+  }
+
+  localStorage.setItem(getDailyPlayerClosedKey(), "yes");
+}
+
 function setupDailyRecommendPlayer() {
   const player = document.getElementById("dailyRecommendPlayer");
   const audio = document.getElementById("dailyPlayerAudio");
@@ -991,8 +1023,18 @@ function setupDailyRecommendPlayer() {
   const duration = document.getElementById("dailyPlayerDuration");
   const muteBtn = document.getElementById("dailyPlayerMuteBtn");
   const volumeSlider = document.getElementById("dailyPlayerVolume");
+  const closeBtn = document.getElementById("dailyPlayerCloseBtn");
 
-  if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider) return;
+  if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider || !closeBtn) return;
+
+  if (localStorage.getItem(getDailyPlayerClosedKey()) === "yes") {
+    player.classList.add("closed");
+    audio.pause();
+    return;
+  }
+
+  player.classList.remove("closed");
+
 
   
   const savedVolume = localStorage.getItem("kwangseoks_daily_player_volume");
@@ -1085,6 +1127,13 @@ function setupDailyRecommendPlayer() {
   audio.setAttribute("oncontextmenu", "return false");
 
   
+  
+  closeBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeDailyRecommendPlayer();
+  });
+
   volumeSlider.addEventListener("input", () => {
     const value = Math.min(100, Math.max(0, Number(volumeSlider.value || 0)));
     audio.volume = value / 100;
@@ -1856,3 +1905,5 @@ async function deleteContentItem(id) {
 loadSiteSettings();
 loadPageCategories();
 loadContents();
+
+window.closeDailyRecommendPlayer = closeDailyRecommendPlayer;

@@ -704,3 +704,34 @@ https://kwangseoks-uploader.kos20050627.workers.dev
 
 중요:
 Cloudflare Worker 코드 자체도 v69 Git Data API 코드로 Deploy되어 있어야 합니다.
+
+
+## v71 수정 사항 - 오늘의 추천곡 닫기 버튼
+오늘의 추천곡 미니 플레이어에 X 닫기 버튼을 추가했습니다.
+
+동작:
+- X 버튼 클릭 시 플레이어 숨김
+- 재생 중이면 자동 일시정지
+- 숨김 상태는 브라우저 localStorage에 저장
+- 한국시간 날짜 기준으로 하루 동안 숨김 유지
+- 다음 날이 되면 다시 표시
+
+
+## v72 수정 사항 - 업로드 Firebase ID Token 전송 복구
+미디어 업로드 시 “Firebase ID Token이 없습니다.” 오류가 발생하던 문제를 수정했습니다.
+
+수정 내용:
+- 업로드 전 로그인 상태 확인
+- currentUser.getIdToken(true)로 Firebase ID Token 발급
+- Worker /upload 요청에 Authorization: Bearer <token> 헤더 추가
+- 토큰이 없으면 다시 로그인하라는 오류 표시
+
+적용 후:
+1. GitHub에 v72 전체 덮어쓰기
+2. Commit changes
+3. Ctrl + F5
+4. 로그아웃 후 다시 로그인
+5. 미디어 업로드 재시도
+
+중요:
+Cloudflare Worker가 Firebase ID Token 검증을 요구하는 구조라면, 이 버전부터 토큰이 전달됩니다.
