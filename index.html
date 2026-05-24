@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>광석이네 집 | 김광석 디지털 아카이브</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo" onclick="showPage('home')">
+      <strong id="siteLogoText">광석이네 집</strong>
+      <small id="siteLogoSubText">김광석 디지털 아카이브</small>
+    </div>
+
+    <nav>
+      <button onclick="showPage('home')">광석이네집</button>
+      <button onclick="showPage('videos')">Videos</button>
+      <button onclick="showPage('songs')">Songs</button>
+      <button onclick="showPage('radios')">Radios</button>
+      <button onclick="showPage('photos')">Photos</button>
+      <button onclick="showPage('stories')">Stories</button>
+      <button onclick="showPage('about')">About Seok</button>
+      <button onclick="showPage('oneum')">Oneum</button>
+    </nav>
+
+    <div class="auth-area">
+      <span id="userStatus">로그인 전</span>
+      <button id="loginBtn" onclick="showPage('login')">로그인</button>
+      <button id="signupBtn" onclick="showPage('signup')">회원가입</button>
+      <button id="logoutBtn" class="hidden">로그아웃</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="page active">
+      <section class="hero" id="homeHero">
+        <h1 id="homeTitle">노래가 머무는 이 곳, 광석이네집</h1>
+        <p id="homeDescription">김광석 아카이브</p>
+        <div>
+          <button onclick="showPage('videos')">영상 보러가기</button>
+          <button onclick="showPage('photos')">사진 보러가기</button>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>최신 자료</h2>
+        <div id="latestContents" class="card-grid"></div>
+      </section>
+    </section>
+
+    <section id="videos" class="page content-page">
+      <div class="page-title"><h1>Videos</h1><p id="videosDesc">김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.</p></div>
+      <div class="toolbar"><select id="videosTemplateSelect" onchange="quickTemplate('videos', this.value)"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option></select><select id="videosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="videoList" class="card-grid"></div>
+    </section>
+
+    <section id="songs" class="page content-page">
+      <div class="page-title"><h1>Songs</h1><p id="songsDesc">김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.</p></div>
+      <div class="toolbar"><select id="songsCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="songList" class="list-box"></div>
+    </section>
+
+    <section id="radios" class="page content-page">
+      <div class="page-title"><h1>Radios</h1><p id="radiosDesc">김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.</p></div>
+      <div class="toolbar"><select id="radiosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="radioList" class="list-box"></div>
+    </section>
+
+    <section id="photos" class="page content-page">
+      <div class="page-title"><h1>Photos</h1><p id="photosDesc">김광석의 시간과 표정을 담은 사진 아카이브입니다.</p></div>
+      <div class="toolbar"><select id="photosTemplateSelect" onchange="quickTemplate('photos', this.value)"><option value="gallery">갤러리형</option><option value="card">카드형</option><option value="timeline">연도별형</option><option value="list">리스트형</option></select><select id="photosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="photoList" class="card-grid"></div>
+    </section>
+
+    <section id="stories" class="page content-page">
+      <div class="page-title"><h1>Stories</h1><p id="storiesDesc">김광석의 일기입니다.</p></div>
+      <div class="toolbar"><select id="storiesCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="storyList" class="list-box"></div>
+    </section>
+
+    <section id="about" class="page content-page">
+      <div class="page-title"><h1>About Seok</h1><p id="aboutDesc">김광석에 대한 정보를 볼 수 있는 곳입니다.</p></div>
+      <div class="toolbar"><select id="aboutCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="aboutList" class="list-box"></div>
+    </section>
+
+    <section id="oneum" class="page content-page">
+      <div class="page-title"><h1>Oneum</h1><p id="oneumDesc">김광석의 둥근소리글을 모아둔 곳입니다.</p></div>
+      <div class="toolbar"><select id="oneumCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="oneumList" class="list-box"></div>
+    </section>
+
+    <section id="login" class="page auth-page">
+      <h1>로그인</h1>
+      <p class="helper-text">아이디 또는 이메일로 로그인할 수 있습니다.</p>
+      <input id="loginIdentifier" type="text" placeholder="아이디 또는 이메일" />
+      <input id="loginPassword" type="password" placeholder="비밀번호" />
+      <button id="doLoginBtn">로그인</button>
+    </section>
+
+    <section id="signup" class="page auth-page">
+      <h1>회원가입</h1>
+      <input id="signupName" type="text" placeholder="이름" />
+      <input id="signupPhone" type="tel" placeholder="전화번호" />
+      <div class="inline-field"><input id="signupLoginId" type="text" placeholder="아이디" /><button type="button" id="checkLoginIdBtn">중복확인</button></div>
+      <p id="loginIdCheckMessage" class="check-message">아이디 중복확인을 해주세요.</p>
+      <input id="signupEmail" type="email" placeholder="메일주소" />
+      <input id="signupPassword" type="password" placeholder="비밀번호" />
+      <label class="checkbox-label"><input id="privacyAgree" type="checkbox" /> 개인정보 수집 및 이용에 동의합니다.</label>
+      <button id="doSignupBtn">회원가입</button>
+    </section>
+
+    <section id="admin" class="page">
+      <div class="page-title"><h1>관리자 화면</h1><p>글 작성, 사진 저장, 유튜브 URL 등록, 미디어 업로드/GitHub 저장, 자료 수정/삭제, 사이트 설정을 관리합니다.</p></div>
+
+      <div class="admin-tabs">
+        <button onclick="showAdminForm('content')">각 페이지 글/사진 등록</button>
+        <button onclick="showAdminForm('video')">영상 등록</button>
+        <button onclick="showAdminForm('photo')">사진 등록</button>
+        <button onclick="showAdminForm('audio')">음원 등록</button>
+        <button onclick="showAdminForm('radio')">라디오 등록</button>
+        <button onclick="showAdminForm('manage')">자료 수정/삭제</button>
+        <button onclick="showAdminForm('template')">템플릿/사이트 수정</button>
+        <button onclick="showAdminForm('category')">페이지별 카테고리 만들기</button>
+      </div>
+
+      <form id="adminContentForm" class="admin-form">
+        <h2>각 페이지 글/사진 등록</h2>
+        <input type="hidden" id="editContentId" value="" />
+        <label>등록할 페이지</label>
+        <select id="contentCategory"><option value="videos">Videos</option><option value="songs">Songs</option><option value="radios">Radios</option><option value="photos">Photos</option><option value="stories">Stories - 김광석의 일기</option><option value="about">About Seok</option><option value="oneum">Oneum</option></select>
+        <label>자료 카테고리</label>
+        <select id="contentSubCategory"><option value="">카테고리 없음</option></select>
+        <input id="contentTitle" type="text" placeholder="제목" />
+        <textarea id="contentBody" placeholder="본문 또는 설명"></textarea>
+        <input id="contentYear" type="text" placeholder="연도 예: 1994" />
+        <input id="contentSource" type="text" placeholder="출처" />
+        <label>첨부 이미지</label>
+        <input id="contentImageFile" type="file" accept="image/*" />
+        <input id="contentImageUrl" type="url" placeholder="이미지 URL 직접 입력 선택 사항" />
+        <p class="helper-text">이미지는 자동 압축 후 Firestore에 저장됩니다. Worker 없이 바로 작동합니다.</p>
+        <label class="checkbox-label"><input id="contentFeatured" type="checkbox" /> 메인 최신/추천 자료로 활용</label>
+        <button type="button" id="saveContentBtn">저장하기</button>
+        <button type="button" id="resetContentBtn" class="secondary-btn">입력 초기화</button>
+      </form>
+
+      <form id="adminVideoForm" class="admin-form hidden">
+        <h2>영상 등록</h2>
+        <p class="helper-text">유튜브 URL은 바로 저장됩니다. mp4 파일 업로드는 Cloudflare Worker가 연결되어 있어야 GitHub videos 폴더에 저장됩니다.</p>
+        <label>자료 카테고리</label><select id="videoSubCategory"><option value="">카테고리 없음</option></select>
+        <input id="videoTitle" type="text" placeholder="영상 제목" />
+        <input id="youtubeUrl" type="url" placeholder="유튜브 URL 선택 입력" />
+        <input id="videoFile" type="file" accept="video/mp4" />
+        <input id="videoFileUrl" type="url" placeholder="영상 파일 URL 직접 입력 선택 사항" />
+        <input id="videoYear" type="text" placeholder="연도 예: 1995" />
+        <input id="videoSource" type="text" placeholder="출처" />
+        <textarea id="videoDescription" placeholder="영상 설명"></textarea>
+        <label>영상 썸네일 이미지</label>
+        <input id="videoImageFile" type="file" accept="image/*" />
+        <input id="videoImageUrl" type="url" placeholder="썸네일 이미지 URL 직접 입력 선택 사항" />
+        <button type="button" id="saveVideoBtn">영상 저장</button>
+      </form>
+
+      <form id="adminPhotoForm" class="admin-form hidden">
+        <h2>사진 등록</h2>
+        <p class="helper-text">사진은 자동 압축 후 Firestore에 바로 저장됩니다.</p>
+        <input id="photoTitle" type="text" placeholder="사진 제목" />
+        <input id="photoFile" type="file" accept="image/*" />
+        <input id="photoImageUrl" type="url" placeholder="사진 이미지 URL 직접 입력 선택 사항" />
+        <input id="photoYear" type="text" placeholder="연도 예: 1994" />
+        <input id="photoSource" type="text" placeholder="출처" />
+        <textarea id="photoDescription" placeholder="사진 설명"></textarea>
+        <button type="button" id="savePhotoBtn">사진 저장</button>
+      </form>
+
+      <form id="adminAudioForm" class="admin-form hidden">
+        <h2>음원 등록</h2>
+        <p class="helper-text">mp3/wav 파일 업로드는 Worker 연결 시 GitHub audios 폴더에 저장됩니다. URL 직접 입력도 가능합니다.</p>
+        <label>자료 카테고리</label><select id="audioSubCategory"><option value="">카테고리 없음</option></select>
+        <input id="audioTitle" type="text" placeholder="음원 제목" />
+        <input id="audioFile" type="file" accept="audio/mpeg,audio/mp3,audio/wav,.mp3,.wav" />
+        <input id="audioFileUrl" type="url" placeholder="음원 파일 URL 직접 입력 선택 사항" />
+        <input id="audioYear" type="text" placeholder="연도 예: 1994" />
+        <input id="audioSource" type="text" placeholder="출처" />
+        <textarea id="audioDescription" placeholder="음원 설명"></textarea>
+        <label>대표 이미지</label>
+        <input id="audioImageFile" type="file" accept="image/*" />
+        <input id="audioImageUrl" type="url" placeholder="대표 이미지 URL 직접 입력 선택 사항" />
+        <button type="button" id="saveAudioBtn">음원 저장</button>
+      </form>
+
+      <form id="adminRadioForm" class="admin-form hidden">
+        <h2>라디오 등록</h2>
+        <p class="helper-text">mp3/wav 파일 업로드는 Worker 연결 시 GitHub radios 폴더에 저장됩니다. URL 직접 입력도 가능합니다.</p>
+        <label>자료 카테고리</label><select id="radioSubCategory"><option value="">카테고리 없음</option></select>
+        <input id="radioTitle" type="text" placeholder="라디오 제목" />
+        <input id="radioFile" type="file" accept="audio/mpeg,audio/mp3,audio/wav,.mp3,.wav" />
+        <input id="radioFileUrl" type="url" placeholder="라디오 파일 URL 직접 입력 선택 사항" />
+        <input id="radioYear" type="text" placeholder="연도 예: 1995" />
+        <input id="radioSource" type="text" placeholder="출처 / 방송사 / 프로그램명" />
+        <textarea id="radioDescription" placeholder="라디오 설명"></textarea>
+        <label>대표 이미지</label>
+        <input id="radioImageFile" type="file" accept="image/*" />
+        <input id="radioImageUrl" type="url" placeholder="대표 이미지 URL 직접 입력 선택 사항" />
+        <button type="button" id="saveRadioBtn">라디오 저장</button>
+      </form>
+
+      <section id="adminManageForm" class="admin-form hidden">
+        <h2>자료 수정/삭제</h2>
+        <div class="toolbar"><select id="manageCategoryFilter" onchange="renderAdminManageList()"><option value="">전체</option><option value="videos">Videos</option><option value="songs">Songs</option><option value="radios">Radios</option><option value="photos">Photos</option><option value="stories">Stories</option><option value="about">About Seok</option><option value="oneum">Oneum</option></select><button type="button" onclick="loadContents()">새로고침</button></div>
+        <div id="adminContentList" class="admin-list"></div>
+      </section>
+
+      <form id="adminTemplateForm" class="admin-form hidden">
+        <h2>템플릿/사이트 수정</h2>
+        <h3>사이트 기본 문구</h3>
+        <input id="settingSiteName" type="text" placeholder="사이트명" />
+        <input id="settingSiteSubName" type="text" placeholder="보조명" />
+        <input id="settingHomeTitle" type="text" placeholder="메인 제목" />
+        <textarea id="settingHomeDescription" placeholder="메인 설명"></textarea>
+        <label>메인 큰 배경 사진</label>
+        <input id="settingHomeBgFile" type="file" accept="image/*" />
+        <input id="settingHomeBgUrl" type="url" placeholder="메인 큰 배경 이미지 URL 직접 입력 선택 사항" />
+        <p class="helper-text">메인 배경은 파일 선택 후 저장하면 바로 바뀝니다. 자동 압축 후 Firestore에 저장됩니다.</p>
+
+        <h3>글씨/색상 디자인</h3>
+        <div class="design-grid">
+          <label>사이트 배경색<input id="settingBodyBgColor" type="color" value="#f6f0e7" /></label>
+          <label>상단 메뉴 배경색<input id="settingHeaderBgColor" type="color" value="#2d241f" /></label>
+          <label>버튼 색상<input id="settingButtonColor" type="color" value="#7a4d35" /></label>
+          <label>박스/카드 배경색<input id="settingCardBgColor" type="color" value="#fffaf4" /></label>
+          <label>기본 글씨 색상<input id="settingTextColor" type="color" value="#2f2924" /></label>
+          <label>메인 배경 글씨 색상<input id="settingHeroTextColor" type="color" value="#ffffff" /></label>
+          <label>메뉴 글씨 색상<input id="settingNavTextColor" type="color" value="#f8eee3" /></label>
+          <label>기본 글씨 크기(px)<input id="settingBaseFontSize" type="number" min="12" max="24" value="16" /></label>
+          <label>메인 제목 크기(px)<input id="settingHeroTitleSize" type="number" min="24" max="72" value="46" /></label>
+          <label>메인 설명 크기(px)<input id="settingHeroDescSize" type="number" min="12" max="36" value="20" /></label>
+        </div>
+        <button type="button" id="applyDesignPreviewBtn" class="secondary-btn">색상/글씨 크기 바로 미리보기</button>
+        <button type="button" id="resetDesignBtn" class="secondary-btn">기본 색상으로 되돌리기</button>
+
+        <h3>페이지 설명 문구</h3>
+        <textarea id="settingVideosDesc" placeholder="Videos 설명"></textarea>
+        <textarea id="settingSongsDesc" placeholder="Songs 설명"></textarea>
+        <textarea id="settingRadiosDesc" placeholder="Radios 설명"></textarea>
+        <textarea id="settingPhotosDesc" placeholder="Photos 설명"></textarea>
+        <textarea id="settingStoriesDesc" placeholder="Stories 설명"></textarea>
+        <textarea id="settingAboutDesc" placeholder="About Seok 설명"></textarea>
+        <textarea id="settingOneumDesc" placeholder="Oneum 설명"></textarea>
+
+        <h3>페이지 템플릿</h3>
+        <label>변경할 페이지</label>
+        <select id="templatePage"><option value="home">Home</option><option value="videos">Videos</option><option value="songs">Songs</option><option value="radios">Radios</option><option value="photos">Photos</option><option value="stories">Stories</option><option value="about">About Seok</option><option value="oneum">Oneum</option></select>
+        <label>템플릿</label>
+        <select id="templateType"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option><option value="wide">넓은 본문형</option></select>
+        <button type="button" id="saveTemplateBtn">템플릿만 저장</button>
+        <button type="button" id="saveSiteSettingsBtn">사이트 문구/배경/디자인 저장</button>
+      </form>
+
+      <section id="adminCategoryForm" class="admin-form hidden">
+        <h2>페이지별 카테고리 만들기</h2>
+        <p class="helper-text">예: Songs 페이지에 1집, 2집 / Videos 페이지에 공연, 방송, 인터뷰 등을 만들 수 있습니다.</p>
+        <label>카테고리를 만들 페이지</label>
+        <select id="categoryPage"><option value="videos">Videos</option><option value="songs">Songs</option><option value="radios">Radios</option><option value="photos">Photos</option><option value="stories">Stories</option><option value="about">About Seok</option><option value="oneum">Oneum</option></select>
+        <input id="newCategoryName" type="text" placeholder="새 카테고리 이름 예: 1집, 2집, 공연, 인터뷰" />
+        <button type="button" id="saveCategoryBtn">카테고리 생성</button>
+        <h3>현재 카테고리</h3>
+        <div id="categoryList" class="category-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="contentDetailModal" class="detail-modal hidden" onclick="closeContentDetail(event)">
+    <div class="detail-modal-inner" onclick="event.stopPropagation()">
+      <button type="button" class="detail-close-btn" onclick="closeContentDetail()">닫기 ×</button>
+      <div id="detailMediaArea" class="detail-media-area"></div>
+      <div class="detail-text-area"><h2 id="detailTitle"></h2><p id="detailCategory"></p><p id="detailMeta"></p><div id="detailDescription"></div></div>
+    </div>
+  </div>
+
+  <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
