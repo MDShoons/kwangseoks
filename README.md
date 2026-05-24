@@ -648,3 +648,36 @@ https://kwangseoks-uploader.kos20050627.workers.dev/health
 - index.html 마지막 script가 app.js?v=68-worker-url-fix 인지 확인
 - firebase-config.js 안의 GITHUB_UPLOAD_WORKER_URL 값이 https://kwangseoks-uploader.kos20050627.workers.dev 인지 확인
 - GitHub Pages 배포 후 Ctrl + F5
+
+
+## v69 수정 사항 - Worker 업로드 방식을 Git Data API로 변경
+GitHub Contents API가 큰 파일에서 다음 오류를 내는 문제를 줄이기 위해 Worker 코드를 교체했습니다.
+
+오류:
+Sorry, the file is too large to be processed.
+
+수정:
+- GitHub Contents API 방식 제거
+- Git Data API 방식 사용
+  1. blob 생성
+  2. tree 생성
+  3. commit 생성
+  4. branch ref 업데이트
+
+주의:
+- GitHub 자체가 너무 큰 파일 저장에는 적합하지 않습니다.
+- 95MB를 넘는 파일은 기본적으로 Worker에서 거절합니다.
+- 긴 mp4, 큰 wav는 Cloudflare R2 또는 Firebase Storage를 쓰는 편이 안전합니다.
+
+Cloudflare에서 반드시 해야 할 일:
+1. Workers & Pages
+2. kwangseoks-uploader Worker 선택
+3. Edit code 또는 Deployments 쪽에서 worker 코드 교체
+4. cloudflare-worker-github-uploader.js 전체 내용 붙여넣기
+5. Deploy
+
+Health 확인:
+https://kwangseoks-uploader.kos20050627.workers.dev/health
+
+정상 version:
+v69-git-data-api
