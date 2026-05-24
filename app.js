@@ -113,88 +113,21 @@ function normalizeGithubPagesMediaPath(url, type = "media") {
 
 
 
-
-function isInternetArchiveUrl(url) {
-  try {
-    const parsed = new URL(String(url || "").trim());
-    return parsed.hostname === "archive.org" || parsed.hostname.endsWith(".archive.org");
-  } catch {
-    return false;
-  }
-}
-
-function normalizeInternetArchiveMediaUrl(url, type = "media") {
-  const value = String(url || "").trim();
-  if (!value) return "";
-
-  try {
-    const parsed = new URL(value);
-
-    if (!(parsed.hostname === "archive.org" || parsed.hostname.endsWith(".archive.org"))) {
-      return value;
-    }
-
-    // 이미 직접 다운로드 URL이면 그대로 사용
-    if (parsed.pathname.startsWith("/download/")) {
-      return value;
-    }
-
-    // details URL 자동 변환
-    // 예:
-    // https://archive.org/details/ITEM/1/1.flac
-    // → https://archive.org/download/ITEM/1.flac
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    const detailsIndex = parts.indexOf("details");
-
-    if (detailsIndex === -1 || !parts[detailsIndex + 1]) {
-      return value;
-    }
-
-    const itemId = decodeURIComponent(parts[detailsIndex + 1]);
-    const tail = parts.slice(detailsIndex + 2).map(part => decodeURIComponent(part));
-
-    const mediaExt = /\.(mp3|wav|flac|m4a|aac|ogg|mp4|webm|mov|m4v|jpg|jpeg|png|webp|gif)$/i;
-    let fileName = "";
-
-    for (let i = tail.length - 1; i >= 0; i -= 1) {
-      if (mediaExt.test(tail[i])) {
-        fileName = tail[i];
-        break;
-      }
-    }
-
-    if (!fileName) {
-      return value;
-    }
-
-    return `https://archive.org/download/${encodeURIComponent(itemId)}/${encodeURIComponent(fileName)}`;
-  } catch {
-    return value;
-  }
-}
-
-
 function normalizeMediaUrlForPlayback(url, type = "media") {
   const value = String(url || "").trim();
   if (!value) return "";
 
-  let mediaUrl = typeof normalizeGithubPagesMediaPath === "function"
-    ? normalizeGithubPagesMediaPath(value, type)
-    : value;
+  const localOrAbsolute = normalizeGithubPagesMediaPath(value, type);
 
-  if (isInternetArchiveUrl(mediaUrl)) {
-    mediaUrl = normalizeInternetArchiveMediaUrl(mediaUrl, type);
+  if (localOrAbsolute.includes("drive.google.com")) {
+    return normalizeGoogleDriveMediaUrl(localOrAbsolute, type);
   }
 
-  if (mediaUrl.includes("drive.google.com") && typeof normalizeGoogleDriveMediaUrl === "function") {
-    return normalizeGoogleDriveMediaUrl(mediaUrl, type);
+  if (isHttpOnlyMediaUrl(localOrAbsolute)) {
+    return toWorkerProxyMediaUrl(localOrAbsolute);
   }
 
-  if (typeof isHttpOnlyMediaUrl === "function" && isHttpOnlyMediaUrl(mediaUrl)) {
-    return toWorkerProxyMediaUrl(mediaUrl);
-  }
-
-  return mediaUrl;
+  return localOrAbsolute;
 }
 function getGoogleDriveFileId(url) {
   const value = String(url || "").trim();
@@ -275,7 +208,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v85-detail-cover-visible";
+const APP_VERSION = "v83-github-pages-media-folders";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -2101,16 +2034,12 @@ function renderDetailMedia(item) {
   }
 
   if (category === "songs" || category === "radios") {
-    const coverHtml = imageUrl
-      ? `<div class="detail-media-box detail-cover-only detail-audio-cover"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`
-      : "";
+    if (mediaUrl) {
+      return `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>`;
+    }
 
-    const playerHtml = mediaUrl
-      ? `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>`
-      : "";
-
-    if (coverHtml || playerHtml) {
-      return `<div class="detail-media-stack">${coverHtml}${playerHtml}</div>`;
+    if (imageUrl) {
+      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
     }
 
     return "";
