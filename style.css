@@ -1693,3 +1693,150 @@ body.screen-protect-blur footer {
 .daily-player-title {
   word-break: keep-all;
 }
+
+/* v63: 오른쪽 고정형 오늘의 추천곡 플레이어 */
+#dailyRecommendPlayer.daily-player {
+  position: fixed !important;
+  top: 155px !important;
+  right: 34px !important;
+  left: auto !important;
+  width: 210px !important;
+  max-width: 210px !important;
+  z-index: 9000 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+#dailyRecommendPlayer.daily-player.hidden {
+  display: block !important;
+}
+
+#dailyRecommendPlayer .daily-player-card {
+  pointer-events: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border-radius: 22px !important;
+  padding: 18px 16px !important;
+  background: linear-gradient(145deg, #6b315f, #bd3f77 55%, #ee7a2f) !important;
+  color: #fff !important;
+  box-shadow: 0 18px 42px rgba(42, 29, 23, 0.24) !important;
+  user-select: none !important;
+  border: 1px solid rgba(255,255,255,0.16) !important;
+}
+
+#dailyRecommendPlayer .daily-player-label {
+  display: inline-block !important;
+  margin-bottom: 12px !important;
+  padding: 4px 9px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.17) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  color: #fff !important;
+}
+
+#dailyRecommendPlayer .daily-player-title {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+  min-height: 46px !important;
+  color: #fff !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+}
+
+#dailyRecommendPlayer .daily-player-sub {
+  margin-top: 6px !important;
+  font-size: 10.5px !important;
+  line-height: 1.35 !important;
+  opacity: 0.86 !important;
+  color: rgba(255,255,255,0.88) !important;
+}
+
+#dailyRecommendPlayer .daily-player-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+  margin-top: 18px !important;
+}
+
+#dailyRecommendPlayer .daily-play-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #9b3f68 !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18) !important;
+}
+
+#dailyRecommendPlayer .daily-play-btn.disabled,
+#dailyRecommendPlayer .daily-play-btn:disabled {
+  opacity: 0.48 !important;
+  cursor: not-allowed !important;
+}
+
+#dailyRecommendPlayer .daily-player-time {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  flex: 1 !important;
+  font-size: 10px !important;
+  opacity: 0.9 !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+
+#dailyRecommendPlayer .daily-player-progress {
+  width: 100% !important;
+  height: 4px !important;
+  margin-top: 13px !important;
+  accent-color: #fff !important;
+  cursor: pointer !important;
+}
+
+#dailyRecommendPlayer .daily-player-progress:disabled {
+  opacity: 0.48 !important;
+  cursor: not-allowed !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerAudio {
+  display: none !important;
+}
+
+@media (max-width: 1500px) {
+  #dailyRecommendPlayer.daily-player {
+    right: 16px !important;
+    width: 184px !important;
+    max-width: 184px !important;
+  }
+
+  #dailyRecommendPlayer .daily-player-title {
+    font-size: 15px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  #dailyRecommendPlayer.daily-player {
+    position: fixed !important;
+    right: 12px !important;
+    top: 130px !important;
+    width: 168px !important;
+    max-width: 168px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  #dailyRecommendPlayer.daily-player {
+    right: 10px !important;
+    bottom: 14px !important;
+    top: auto !important;
+    width: 158px !important;
+    max-width: 158px !important;
+  }
+}
