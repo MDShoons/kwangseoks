@@ -1,3 +1,0 @@
-// v9에서는 Firebase Storage를 사용하지 않습니다.
-// 사진 파일은 Cloudflare Worker를 통해 GitHub 저장소 images 폴더에 저장합니다.
-// Firestore에는 최종 이미지 URL만 저장합니다.
