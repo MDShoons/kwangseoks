@@ -8,7 +8,7 @@ import {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged, deleteUser, deleteUser
+  signOut, onAuthStateChanged, deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
@@ -17,7 +17,7 @@ import {
 
 const APP_VERSION = "v31-small-cards-no-download";
 console.log("광석이네집", APP_VERSION, "worker:", GITHUB_UPLOAD_WORKER_URL);
-const APP_VERSION = "v38-js-error-fix";
+const APP_VERSION = "v39-stable-member-fix";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -68,7 +68,6 @@ window.deleteContentItem = deleteContentItem;
 window.deleteCustomCategory = deleteCustomCategory;
 window.openContentDetail = openContentDetail;
 window.closeContentDetail = closeContentDetail;
-window.fillMyPageForm = fillMyPageForm;
 window.quickTemplate = quickTemplate;
 
 function normalizeLoginId(v) { return String(v || "").trim().toLowerCase(); }
@@ -117,12 +116,8 @@ function showPage(pageId, fromHash = false) {
   }
 
   if (pageId === "admin" && !isAdmin) {
-    alert("관리자만 접근할 수 있습니다.");
-    pageId = "home";
-    if (window.location.hash !== "#home") {
-      window.location.hash = "home";
-      return;
-    }
+    if (currentUser) alert("관리자만 접근할 수 있습니다.");
+    pageId = currentUser ? "home" : "loginRequired";
   }
 
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
@@ -144,7 +139,9 @@ function showPage(pageId, fromHash = false) {
     loadContents();
   }
 
-  installBasicContentProtection?.();
+  if (typeof installBasicContentProtection === "function") {
+    installBasicContentProtection();
+  }
 }
 
 function showAdminForm(type) {
@@ -517,20 +514,15 @@ async function saveAudioLike(category, prefix) {
 function fillMyPageForm() {
   if (!currentUser || !currentUserProfile) return;
 
-  const loginId = currentUserProfile.loginId || "";
-  const email = currentUser.email || currentUserProfile.email || "";
-  const name = currentUserProfile.name || "";
-  const phone = currentUserProfile.phone || "";
-
   const loginIdEl = document.getElementById("mypageLoginId");
   const emailEl = document.getElementById("mypageEmail");
   const nameEl = document.getElementById("mypageName");
   const phoneEl = document.getElementById("mypagePhone");
 
-  if (loginIdEl) loginIdEl.value = loginId;
-  if (emailEl) emailEl.value = email;
-  if (nameEl) nameEl.value = name;
-  if (phoneEl) phoneEl.value = phone;
+  if (loginIdEl) loginIdEl.value = currentUserProfile.loginId || "";
+  if (emailEl) emailEl.value = currentUser.email || currentUserProfile.email || "";
+  if (nameEl) nameEl.value = currentUserProfile.name || "";
+  if (phoneEl) phoneEl.value = currentUserProfile.phone || "";
 }
 
 async function saveMyPageInfo() {
@@ -539,9 +531,7 @@ async function saveMyPageInfo() {
   const name = document.getElementById("mypageName").value.trim();
   const phone = document.getElementById("mypagePhone").value.trim();
 
-  if (!name || !phone) {
-    return alert("이름과 전화번호를 입력하세요.");
-  }
+  if (!name || !phone) return alert("이름과 전화번호를 입력하세요.");
 
   try {
     await updateDoc(doc(db, "users", currentUser.uid), {
@@ -550,12 +540,7 @@ async function saveMyPageInfo() {
       updatedAt: serverTimestamp()
     });
 
-    currentUserProfile = {
-      ...(currentUserProfile || {}),
-      name,
-      phone
-    };
-
+    currentUserProfile = { ...(currentUserProfile || {}), name, phone };
     alert("회원 정보가 수정되었습니다.");
     fillMyPageForm();
   } catch (error) {
@@ -567,18 +552,14 @@ async function deleteMyAccount() {
   if (!currentUser || !currentUserProfile) return alert("로그인 후 이용할 수 있습니다.");
 
   const confirmText = prompt("회원 탈퇴를 진행하려면 '탈퇴합니다'를 입력하세요.");
-  if (confirmText !== "탈퇴합니다") {
-    return alert("회원 탈퇴가 취소되었습니다.");
-  }
+  if (confirmText !== "탈퇴합니다") return alert("회원 탈퇴가 취소되었습니다.");
 
   try {
     const uid = currentUser.uid;
     const loginId = currentUserProfile.loginId;
 
     await deleteDoc(doc(db, "users", uid));
-    if (loginId) {
-      await deleteDoc(doc(db, "loginIds", loginId));
-    }
+    if (loginId) await deleteDoc(doc(db, "loginIds", loginId));
 
     await deleteUser(currentUser);
 
@@ -586,7 +567,7 @@ async function deleteMyAccount() {
     goPage("home");
   } catch (error) {
     if (String(error.code || "").includes("requires-recent-login")) {
-      alert("보안을 위해 다시 로그인한 뒤 회원 탈퇴를 진행해야 합니다. 로그아웃 후 다시 로그인해 주세요.");
+      alert("보안을 위해 다시 로그인한 뒤 회원 탈퇴를 진행해야 합니다.");
     } else {
       alert("회원 탈퇴 오류: " + error.message);
     }
@@ -819,8 +800,7 @@ function matchesPageSearch(page, item) {
 function filterBySelectedSubCategory(page, items) {
   const selected = document.getElementById(`${page}CategoryFilter`)?.value || "";
   let filtered = selected ? items.filter(i => i.subCategory === selected) : items;
-  filtered = filtered.filter(item => matchesPageSearch(page, item));
-  return filtered;
+  return filtered.filter(item => matchesPageSearch(page, item));
 }
 
 function renderLatestByCategory(contents) {
@@ -850,9 +830,9 @@ function renderLatestByCategory(contents) {
     } else {
       div.innerHTML = `
         <h3>${labels[page]}</h3>
-        <div class="latest-mini-card" onclick="goPage('${page}'); setTimeout(() => openContentDetail('${item.id}'), 150);">
+        <div class="latest-mini-card" onclick="goPage('${page}'); setTimeout(() => openContentDetail('${item.id}'), 250);">
           <strong>${escapeHtml(item.title || "제목 없음")}</strong>
-          <p>${escapeHtml((item.description || item.body || "").slice(0, 80))}</p>
+          <p>${escapeHtml((item.description || item.body || "").slice(0, 70))}</p>
           <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
           <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
         </div>

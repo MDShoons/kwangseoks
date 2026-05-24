@@ -904,8 +904,7 @@ video {
   user-drag: none;
 }
 
-
-/* v37: 자료별 최신자료 / 검색 / 로그인 제한 / 회원정보 */
+/* v39: 안정형 회원/검색 기능 UI */
 .latest-category-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -918,7 +917,7 @@ video {
   border-radius: 20px;
   background: rgba(255, 250, 244, 0.82);
   padding: 20px;
-  min-height: 210px;
+  min-height: 190px;
 }
 
 .latest-category-box h3 {
@@ -951,14 +950,13 @@ video {
   flex: 1;
 }
 
-.login-required-page {
-  text-align: center;
+.login-required-page,
+.mypage-page {
   max-width: 620px;
 }
 
-.login-required-page h1 {
-  font-size: 34px;
-  margin-bottom: 14px;
+.login-required-page {
+  text-align: center;
 }
 
 .login-required-actions {
@@ -978,36 +976,6 @@ video {
 }
 
 #mypageBtn {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-}
-
-@media (max-width: 1180px) {
-  .latest-category-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-/* v38: 오류 복구 보정 */
-.login-required-page,
-.mypage-page {
-  max-width: 620px;
-}
-
-.latest-category-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.latest-category-box {
-  border: 1px solid #e0cdb9;
-  border-radius: 20px;
-  background: rgba(255, 250, 244, 0.82);
-  padding: 20px;
-}
-
-.page-search-input {
-  min-width: 320px;
-  flex: 1;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.22);
 }

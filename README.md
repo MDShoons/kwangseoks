@@ -299,34 +299,25 @@ v36에서는 hash routing을 적용해 메뉴 클릭 시 주소가 함께 바뀝
 GitHub Pages에서는 `/radios` 같은 서버 경로 방식보다 `#radios` 방식이 안전합니다.
 
 
-## v37 수정 사항 - 최신자료/검색/로그인 제한/회원정보
-추가 기능:
-- 메인 최신 자료칸을 자료별 최신 자료로 표시
-- 각 페이지별 검색창 추가
-- 비로그인 사용자는 Videos, Radios, Photos, Oneum 접근 제한
-- 제한 페이지 접근 시 “로그인을 하지 않으셨네요!” 안내 표시
-- 회원 정보 수정 화면 추가
-- 회원 탈퇴 기능 추가
+## v39 수정 사항 - v36 기준 안정 복구판
+v37/v38에서 메뉴 클릭이 멈추는 문제를 피하기 위해,
+정상 작동하던 v36을 기준으로 기능을 다시 안전하게 붙였습니다.
 
-주의:
-- 회원 탈퇴는 Firebase Auth 보안 정책상 최근 로그인 상태가 아니면 다시 로그인해야 할 수 있습니다.
-- 회원 탈퇴를 위해 Firestore Rules도 v37의 firestore.rules로 다시 게시해야 합니다.
-- 회원 탈퇴는 users 문서와 loginIds 문서를 삭제하고 Firebase Auth 계정을 삭제합니다.
-- 이미 GitHub에 업로드된 mp3/mp4/wav 실제 파일은 회원 탈퇴나 자료 삭제와 별개로 남습니다.
+핵심:
+- 새 파일 `app-v39.js` 사용
+- index.html이 `app-v39.js?v=39-stable-member-fix`를 읽음
+- 기존 app-v25.js 캐시/꼬임 회피
 
+포함 기능:
+- 자료별 최신 자료
+- 페이지별 검색
+- 비로그인 접근 제한: Videos, Radios, Photos, Oneum
+- “로그인을 하지 않으셨네요!” 안내 화면
+- 회원 정보 수정
+- 회원 탈퇴
 
-## v38 수정 사항 - v37 클릭 무반응 오류 복구
-v37 적용 후 메뉴를 눌러도 반응이 없는 문제를 복구했습니다.
-
-주요 보정:
-- showPage 라우팅 함수를 안정형으로 재작성
-- hash 주소 라우팅과 로그인 제한 로직 충돌 방지
-- VALID_PAGES / RESTRICTED_PAGES 선언 오류 방지
-- 최신자료/검색/회원정보 기능은 유지
-- app-v25.js 캐시 방지 쿼리를 v38로 변경
-
-적용 후:
-1. GitHub에 전체 덮어쓰기
+적용:
+1. ZIP 전체를 GitHub에 덮어쓰기
 2. Commit changes
-3. Ctrl + F5
-4. 개발자도구 콘솔에 오류가 없는지 확인
+3. Firestore Rules도 ZIP의 firestore.rules로 다시 게시
+4. Ctrl + F5
