@@ -796,3 +796,27 @@ version: v74-origin-bypass-upload
 
 적용 후:
 index.html 하단 버전이 v75-link-only-media로 보여야 합니다.
+
+
+## v76 수정 사항 - 구글드라이브 링크 재생 지원
+구글드라이브 공유 링크를 입력해도 사이트에서 재생 가능하도록 링크 변환 기능을 추가했습니다.
+
+지원 입력:
+- https://drive.google.com/file/d/파일ID/view?usp=sharing
+- https://drive.google.com/uc?export=download&id=파일ID
+
+내부 변환:
+- drive.google.com/file/d/파일ID/view
+  → https://drive.google.com/uc?export=download&id=파일ID
+
+적용:
+- Songs
+- Radios
+- Videos
+- Photos
+- 상세보기
+- 오늘의 추천곡 플레이어
+
+주의:
+구글드라이브 파일 공유 설정이 반드시 “링크가 있는 모든 사용자: 뷰어”여야 합니다.
+파일이 너무 크거나 구글이 바이러스 검사/쿠키 확인 페이지를 끼워 넣으면 브라우저 플레이어에서 재생이 막힐 수 있습니다.

@@ -1,4 +1,55 @@
 
+
+function getGoogleDriveFileId(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value);
+
+    if (!parsed.hostname.includes("drive.google.com")) {
+      return "";
+    }
+
+    const idFromQuery = parsed.searchParams.get("id");
+    if (idFromQuery) return idFromQuery;
+
+    const match = parsed.pathname.match(/\/file\/d\/([^/]+)/);
+    if (match && match[1]) return match[1];
+
+    const foldersMatch = parsed.pathname.match(/\/open\/([^/]+)/);
+    if (foldersMatch && foldersMatch[1]) return foldersMatch[1];
+
+    return "";
+  } catch {
+    const match = value.match(/\/file\/d\/([^/]+)/);
+    return match ? match[1] : "";
+  }
+}
+
+function normalizeGoogleDriveMediaUrl(url, type = "media") {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  const id = getGoogleDriveFileId(value);
+  if (!id) return value;
+
+  // 오디오/영상 재생은 download 주소가 가장 많이 호환됨.
+  // 이미 uc?export=download&id=... 형태여도 같은 주소로 정리.
+  return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
+}
+
+function normalizeMediaUrlForPlayback(url, type = "media") {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  if (value.includes("drive.google.com")) {
+    return normalizeGoogleDriveMediaUrl(value, type);
+  }
+
+  return value;
+}
+
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -37,7 +88,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v75-link-only-media";
+const APP_VERSION = "v76-google-drive-link-play";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -536,7 +587,7 @@ async function saveAudioLike(category, prefix) {
 
   try {
     // 링크 입력이 있으면 Worker 업로드를 절대 호출하지 않음
-    const mediaUrl = urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios");
+    const mediaUrl = normalizeMediaUrlForPlayback(urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios"), "audio");
 
     await addDoc(collection(db, "contents"), {
       category,
@@ -1126,7 +1177,7 @@ function setupDailyRecommendPlayer() {
     return;
   }
 
-  const sourceUrl = selected.mediaUrl || selected.fileUrl || selected.audioUrl || "";
+  const sourceUrl = normalizeMediaUrlForPlayback(selected.mediaUrl || selected.fileUrl || selected.audioUrl || "", "audio");
   if (!sourceUrl) {
     dailyRecommendedItemId = "";
     audio.pause();
@@ -1496,7 +1547,7 @@ function renderAboutDocument(items) {
 
     return `
       <section class="about-document-entry">
-        ${imageUrl ? `<img class="about-document-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" />` : ""}
+        ${imageUrl ? `<img class="about-document-image" src="${escapeHtml(playbackImageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" />` : ""}
         <h2>${escapeHtml(item.title || "제목 없는 글")}</h2>
         <div class="about-document-meta">
           ${yearText}
@@ -1648,7 +1699,7 @@ function renderList(id, items) {
 
     div.onclick = () => openContentDetail(item.id);
 
-    const img = item.thumbnailUrl || (item.mediaType !== "audio" && item.mediaType !== "video" ? item.mediaUrl : "");
+    const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (item.mediaType !== "audio" && item.mediaType !== "video" ? item.mediaUrl : ""), "image");
     const previewLength = isStoryList ? 110 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
@@ -1659,7 +1710,7 @@ function renderList(id, items) {
         ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
         ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
         ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
-        ${item.mediaType === "audio" ? (id === "radioList" ? renderRadioMonochromePlayer(item.mediaUrl, `radio-list-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`) : ""}
+        ${item.mediaType === "audio" ? (id === "radioList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `radio-list-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`) : ""}
         <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
         <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
         ${createdDateMarkup(item)}
@@ -1672,10 +1723,10 @@ function renderList(id, items) {
 function createCard(item) {
   const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id);
   let media = "";
-  if (item.mediaType === "youtube") media = `<iframe src="${item.mediaUrl}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video") media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
-  else if (item.mediaType === "audio") media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`;
-  else if (item.mediaUrl) media = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}">`;
+  if (item.mediaType === "youtube") media = `<iframe src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" allowfullscreen></iframe>`;
+  else if (item.mediaType === "video") media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  else if (item.mediaType === "audio") media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`;
+  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
   return card;
@@ -1789,6 +1840,8 @@ function renderDetailMedia(item) {
   const mediaUrl = item.mediaUrl || item.fileUrl || item.videoUrl || "";
   const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
   const youtubeUrl = item.youtubeUrl || item.url || "";
+  const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
+  const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
   const title = escapeHtml(item.title || "");
 
   if (category === "videos") {
@@ -1797,11 +1850,11 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
-      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(mediaUrl)}"></video></div>`;
+      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></video></div>`;
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
     }
 
     return "";
@@ -1812,11 +1865,11 @@ function renderDetailMedia(item) {
       if (category === "radios") {
         return `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(mediaUrl, `radio-detail-${item.id || "detail"}`)}</div>`;
       }
-      return `<div class="detail-audio-box"><audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${escapeHtml(mediaUrl)}"></audio></div>`;
+      return `<div class="detail-audio-box"><audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></audio></div>`;
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
     }
 
     return "";
@@ -1824,14 +1877,14 @@ function renderDetailMedia(item) {
 
   if (category === "photos") {
     if (imageUrl || mediaUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(imageUrl || mediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl || playbackMediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
     }
 
     return "";
   }
 
   if (imageUrl) {
-    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
   }
 
   return "";

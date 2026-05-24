@@ -2286,3 +2286,26 @@ body.screen-protect-blur footer {
 .link-only-notice strong {
   font-weight: 900;
 }
+
+/* v76: 구글드라이브 링크 안내 */
+.drive-link-notice {
+  margin: 12px 0 16px;
+  padding: 13px 15px;
+  border: 1px solid #cfcfcf;
+  border-radius: 14px;
+  background: #f6f6f6;
+  color: #333;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.drive-link-notice strong {
+  font-weight: 900;
+}
+
+.drive-link-notice code {
+  font-size: 12px;
+  background: #e9e9e9;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
