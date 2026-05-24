@@ -1285,3 +1285,178 @@ video {
 .created-date {
   letter-spacing: -0.01em;
 }
+
+/* v55: Stories 목록 본문 미리보기 */
+.text-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.story-preview-card .text-preview {
+  -webkit-line-clamp: 4;
+  max-height: 6.6em;
+}
+
+.read-more-hint {
+  margin-top: 8px !important;
+  font-size: 13px !important;
+  font-weight: 800;
+  color: #8a5235;
+}
+
+/* v56: 상세보기 업로드 날짜/시간 */
+#detailMeta,
+.detail-meta {
+  line-height: 1.75;
+}
+
+#detailMeta strong,
+.detail-meta strong {
+  font-weight: 800;
+}
+
+/* v57: About Seok 소개글 전용 페이지 */
+.about-article {
+  max-width: 1120px;
+  margin: 24px auto 0;
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.9);
+  padding: 34px 40px;
+  line-height: 1.8;
+}
+
+.about-article h2 {
+  margin: 0 0 14px 0;
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.about-article-meta {
+  margin: 0 0 22px 0;
+  font-size: 14px;
+  color: #7a5a43;
+}
+
+.about-article-body {
+  font-size: 16px;
+  line-height: 1.9;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.about-article-image {
+  display: block;
+  max-width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  background: #f4eee7;
+}
+
+#about .toolbar,
+#aboutSearchInput,
+#aboutSortSelect,
+#aboutCategoryFilter,
+#aboutPagination,
+#aboutList {
+  display: none !important;
+}
+
+/* v58: 사진 상세보기 확대/축소 툴 */
+.photo-zoom-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 12px 0;
+  flex-wrap: wrap;
+}
+
+.photo-zoom-toolbar button {
+  border: 1px solid #d8c2ad;
+  border-radius: 10px;
+  background: #fffaf4;
+  color: #5a3826;
+  padding: 8px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.photo-zoom-toolbar button:hover {
+  background: #8a5235;
+  color: #fff;
+}
+
+#detailZoomPercent {
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b4a36;
+}
+
+.photo-zoom-viewer {
+  width: 100%;
+  max-height: 520px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #f4eee7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-in;
+}
+
+.photo-zoom-viewer img {
+  max-width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  transition: transform 0.12s ease;
+  transform-origin: center center;
+  user-select: none;
+}
+
+.photo-zoom-viewer img.dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+/* v58: 캡처/인쇄/화면이탈 억제 보조 */
+.screen-protect-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(36, 28, 22, 0.92);
+  color: #fffaf4;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.screen-protect-overlay.hidden {
+  display: none !important;
+}
+
+body.screen-protect-blur main,
+body.screen-protect-blur header,
+body.screen-protect-blur footer {
+  filter: blur(18px);
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #screenProtectOverlay,
+  #screenProtectOverlay * {
+    visibility: visible !important;
+  }
+}

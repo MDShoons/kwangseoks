@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v54-upload-date-time";
+const APP_VERSION = "v58-photo-zoom-screen-protect";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -57,7 +57,7 @@ const DEFAULT_SETTINGS = {
 let currentSettings = { ...DEFAULT_SETTINGS };
 
 
-const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
 const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
 
 function getPageFromHash() {
@@ -90,6 +90,8 @@ window.editContent = editContent;
 window.deleteContentItem = deleteContentItem;
 window.deleteCustomCategory = deleteCustomCategory;
 window.openContentDetail = openContentDetail;
+window.resetDetailPhotoZoom = resetDetailPhotoZoom;
+window.zoomDetailPhoto = zoomDetailPhoto;
 window.openLatestItem = openLatestItem;
 window.closeContentDetail = closeContentDetail;
 window.quickTemplate = quickTemplate;
@@ -141,12 +143,13 @@ function showPage(pageId, fromHash = false) {
 
   if (pageId === "home") tryPlayHomeVoiceOnce();
 
-  if (["videos", "songs", "radios", "photos", "stories", "about", "oneum"].includes(pageId)) {
+  if (["videos", "songs", "radios", "photos", "stories", "oneum"].includes(pageId)) {
     loadContents();
   }
 
   if (typeof installBasicContentProtection === "function") {
     installBasicContentProtection();
+installScreenProtection();
   }
 }
 
@@ -801,6 +804,44 @@ async function applySavedTemplates() {
 
 
 
+
+function showScreenProtectOverlay(reason = "protect") {
+  const overlay = document.getElementById("screenProtectOverlay");
+  if (!overlay) return;
+
+  overlay.classList.remove("hidden");
+  document.body.classList.add("screen-protect-blur");
+
+  clearTimeout(window.__screenProtectTimer);
+  window.__screenProtectTimer = setTimeout(() => {
+    overlay.classList.add("hidden");
+    document.body.classList.remove("screen-protect-blur");
+  }, reason === "printscreen" ? 1800 : 900);
+}
+
+function installScreenProtection() {
+  window.addEventListener("blur", () => {
+    showScreenProtectOverlay("blur");
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      document.body.classList.add("screen-protect-blur");
+    } else {
+      setTimeout(() => document.body.classList.remove("screen-protect-blur"), 600);
+    }
+  });
+
+  window.addEventListener("beforeprint", () => {
+    document.body.classList.add("print-protect");
+    showScreenProtectOverlay("print");
+  });
+
+  window.addEventListener("afterprint", () => {
+    document.body.classList.remove("print-protect");
+  });
+}
+
 function installBasicContentProtection() {
   const allowEditable = (target) => {
     const tag = String(target?.tagName || "").toLowerCase();
@@ -834,6 +875,7 @@ function installBasicContentProtection() {
 
     const blocked =
       event.key === "F12" ||
+      event.key === "PrintScreen" ||
       (event.ctrlKey && event.shiftKey && ["i", "j", "c"].includes(key)) ||
       (event.metaKey && event.altKey && ["i", "j", "c"].includes(key)) ||
       (event.ctrlKey && ["u", "s", "p"].includes(key)) ||
@@ -842,6 +884,7 @@ function installBasicContentProtection() {
     if (blocked) {
       event.preventDefault();
       event.stopPropagation();
+      showScreenProtectOverlay(event.key === "PrintScreen" ? "printscreen" : "shortcut");
       alert("이 사이트에서는 해당 기능을 사용할 수 없습니다.");
       return false;
     }
@@ -885,7 +928,6 @@ function renderAllContentSections() {
   const radios = prepareItemsForPage("radios", filterBySelectedSubCategory("radios", allContents.filter(i => i.category === "radios")));
   const photos = prepareItemsForPage("photos", filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
   const stories = prepareItemsForPage("stories", filterBySelectedSubCategory("stories", allContents.filter(i => i.category === "stories")));
-  const about = prepareItemsForPage("about", filterBySelectedSubCategory("about", allContents.filter(i => i.category === "about")));
   const oneum = prepareItemsForPage("oneum", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
 
   renderVideos(videos);
@@ -893,7 +935,7 @@ function renderAllContentSections() {
   renderList("songList", songs);
   renderList("radioList", radios);
   renderList("storyList", stories);
-  renderList("aboutList", about);
+  renderAboutArticle(allContents.filter(i => i.category === "about"));
   renderList("oneumList", oneum);
 
   renderAdminManageList();
@@ -919,7 +961,6 @@ const pageState = {
   radios: 1,
   photos: 1,
   stories: 1,
-  about: 1,
   oneum: 1
 };
 
@@ -1075,11 +1116,10 @@ function renderLatestByCategory(contents) {
     radios: "Radios 최신",
     photos: "Photos 최신",
     stories: "Stories 최신",
-    about: "About Seok 최신",
     oneum: "Oneum 최신"
   };
 
-  const pages = ["videos", "songs", "radios", "photos", "stories", "about", "oneum"];
+  const pages = ["videos", "songs", "radios", "photos", "stories", "oneum"];
   box.innerHTML = "";
 
   pages.forEach((page) => {
@@ -1115,15 +1155,75 @@ function renderLatest(contents) {
 }
 function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
 function renderPhotos(items) { const box = document.getElementById("photoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 사진이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
+
+function makeTextPreview(text, maxLength = 90) {
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  if (!clean) return "";
+  return clean.length > maxLength ? clean.slice(0, maxLength) + "..." : clean;
+}
+
+
+function renderAboutArticle(items) {
+  const box = document.getElementById("aboutArticle");
+  if (!box) return;
+
+  const sorted = [...items].sort((a, b) => getItemTimestamp(b) - getItemTimestamp(a));
+  const item = sorted[0];
+
+  if (!item) {
+    box.innerHTML = `<p class="helper-text">아직 등록된 소개글이 없습니다.</p>`;
+    return;
+  }
+
+  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+  const bodyText = item.body || item.description || "";
+
+  box.innerHTML = `
+    ${imageUrl ? `<img class="about-article-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" />` : ""}
+    <h2>${escapeHtml(item.title || "김광석 소개")}</h2>
+    <p class="about-article-meta"><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</p>
+    ${bodyText ? `<div class="about-article-body">${escapeHtml(bodyText).replace(/\n/g, "<br>")}</div>` : `<p class="helper-text">소개글 내용이 없습니다.</p>`}
+  `;
+}
+
 function renderList(id, items) {
-  const box = document.getElementById(id); box.innerHTML = "";
-  if (!items.length) { box.innerHTML = "<p>등록된 자료가 없습니다.</p>"; return; }
+  const box = document.getElementById(id);
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  if (!items.length) {
+    box.innerHTML = "<p>등록된 자료가 없습니다.</p>";
+    return;
+  }
+
+  const isStoryList = id === "storyList";
+
   items.forEach(item => {
     const div = document.createElement("div");
     div.className = (item.mediaUrl || item.thumbnailUrl) && item.mediaType !== "youtube" ? "list-item with-image" : "list-item";
+    if (isStoryList) div.classList.add("story-preview-card");
+
     div.onclick = () => openContentDetail(item.id);
+
     const img = item.thumbnailUrl || (item.mediaType !== "audio" && item.mediaType !== "video" ? item.mediaUrl : "");
-    div.innerHTML = `${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}<div><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.body || item.description || "")}</p>${item.mediaType === "audio" ? `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>` : ""}<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
+    const previewLength = isStoryList ? 110 : 90;
+    const previewText = makeTextPreview(item.body || item.description || "", previewLength);
+
+    div.innerHTML = `
+      ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
+      <div>
+        <h3>${escapeHtml(item.title)}</h3>
+        ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
+        ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
+        ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
+        ${item.mediaType === "audio" ? `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>` : ""}
+        <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
+        <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+        ${createdDateMarkup(item)}
+      </div>
+    `;
+
     box.appendChild(div);
   });
 }
@@ -1135,7 +1235,7 @@ function createCard(item) {
   else if (item.mediaType === "audio") media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.description || item.body || "")}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
   return card;
 }
 
@@ -1161,6 +1261,86 @@ function youtubeEmbedHtml(url) {
   return `<iframe src="https://www.youtube.com/embed/${escapeHtml(videoId)}" title="YouTube video" allowfullscreen></iframe>`;
 }
 
+
+
+let detailPhotoZoomScale = 1;
+let detailPhotoTranslateX = 0;
+let detailPhotoTranslateY = 0;
+let detailPhotoDragging = false;
+let detailPhotoDragStartX = 0;
+let detailPhotoDragStartY = 0;
+
+function applyDetailPhotoZoom() {
+  const img = document.getElementById("detailZoomImage");
+  if (!img) return;
+
+  img.style.transform = `translate(${detailPhotoTranslateX}px, ${detailPhotoTranslateY}px) scale(${detailPhotoZoomScale})`;
+
+  const percent = document.getElementById("detailZoomPercent");
+  if (percent) percent.textContent = `${Math.round(detailPhotoZoomScale * 100)}%`;
+}
+
+function zoomDetailPhoto(delta) {
+  detailPhotoZoomScale = Math.min(4, Math.max(0.5, detailPhotoZoomScale + delta));
+  if (detailPhotoZoomScale === 1) {
+    detailPhotoTranslateX = 0;
+    detailPhotoTranslateY = 0;
+  }
+  applyDetailPhotoZoom();
+}
+
+function resetDetailPhotoZoom() {
+  detailPhotoZoomScale = 1;
+  detailPhotoTranslateX = 0;
+  detailPhotoTranslateY = 0;
+  applyDetailPhotoZoom();
+}
+
+function bindDetailPhotoZoom() {
+  const viewer = document.getElementById("detailPhotoZoomViewer");
+  const img = document.getElementById("detailZoomImage");
+  if (!viewer || !img) return;
+
+  detailPhotoZoomScale = 1;
+  detailPhotoTranslateX = 0;
+  detailPhotoTranslateY = 0;
+  applyDetailPhotoZoom();
+
+  viewer.onwheel = (event) => {
+    event.preventDefault();
+    zoomDetailPhoto(event.deltaY < 0 ? 0.15 : -0.15);
+  };
+
+  img.onmousedown = (event) => {
+    if (detailPhotoZoomScale <= 1) return;
+    detailPhotoDragging = true;
+    detailPhotoDragStartX = event.clientX - detailPhotoTranslateX;
+    detailPhotoDragStartY = event.clientY - detailPhotoTranslateY;
+    img.classList.add("dragging");
+  };
+
+  window.onmousemove = (event) => {
+    if (!detailPhotoDragging) return;
+    detailPhotoTranslateX = event.clientX - detailPhotoDragStartX;
+    detailPhotoTranslateY = event.clientY - detailPhotoDragStartY;
+    applyDetailPhotoZoom();
+  };
+
+  window.onmouseup = () => {
+    detailPhotoDragging = false;
+    img.classList.remove("dragging");
+  };
+
+  viewer.ondblclick = () => {
+    if (detailPhotoZoomScale === 1) {
+      detailPhotoZoomScale = 2;
+    } else {
+      resetDetailPhotoZoom();
+      return;
+    }
+    applyDetailPhotoZoom();
+  };
+}
 
 function renderDetailMedia(item) {
   const category = item.category || "";
@@ -1236,7 +1416,7 @@ function openContentDetail(id) {
 
   titleEl.textContent = item.title || "제목 없음";
   categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
-  metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}`;
+  metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
   descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
   modal.classList.remove("hidden");
@@ -1244,6 +1424,7 @@ function openContentDetail(id) {
   if (typeof hardenMediaDownloadControls === "function") {
     hardenMediaDownloadControls();
   }
+  bindDetailPhotoZoom();
   document.body.style.overflow = "hidden";
 }
 

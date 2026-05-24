@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="screenProtectOverlay" class="screen-protect-overlay hidden">
+    <div>화면 보호 모드입니다.</div>
+  </div>
   <header class="site-header">
     <div class="logo" onclick="goPage('home')">
       <strong id="siteLogoText">광석이네 집</strong>
@@ -107,14 +110,10 @@
     </section>
 
     <section id="about" class="page content-page">
-      <div class="page-title"><h1>About Seok</h1><p id="aboutDesc">김광석에 대한 정보를 볼 수 있는 곳입니다.</p></div>
-      <div class="toolbar"><input id="aboutSearchInput" class="page-search-input" type="search" placeholder="정보 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
-          <select id="aboutSortSelect" class="page-sort-select" onchange="resetPageAndReload('about')">
-            <option value="desc">최신 순</option>
-            <option value="asc">오래된 순</option>
-          </select><select id="aboutCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
-      <div id="aboutList" class="list-box"></div>
-        <div id="aboutPagination" class="pagination"></div>
+<div class="page-title"><h1>About Seok</h1><p id="aboutDesc">김광석에 대한 정보를 볼 수 있는 곳입니다.</p></div>
+      <article id="aboutArticle" class="about-article">
+        <p class="helper-text">아직 등록된 소개글이 없습니다.</p>
+      </article>
     </section>
 
     <section id="oneum" class="page content-page">
@@ -349,8 +348,8 @@
       <div class="detail-text-area"><h2 id="detailTitle"></h2><p id="detailCategory"></p><p id="detailMeta"></p><div id="detailDescription"></div></div>
     </div>
   </div>
-<div class="version-marker">v54-upload-date-time</div>
+<div class="version-marker">v58-photo-zoom-screen-protect</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=54-upload-date-time"></script>
+  <script type="module" src="app.js?v=58-photo-zoom-screen-protect"></script>
 </body>
 </html>
