@@ -2639,3 +2639,48 @@ body.screen-protect-blur footer {
   margin-bottom: 0 !important;
   border-radius: 0 !important;
 }
+
+
+/* v83: center Songs/Radios cards evenly inside the frame */
+#songList.list-box,
+#radioList.list-box {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 420px)) !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  align-items: start !important;
+  width: 100% !important;
+  max-width: 1120px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#songList .list-item,
+#radioList .list-item,
+#songList .content-card,
+#radioList .content-card {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#songList .list-item.audio-archive-card,
+#radioList .list-item.audio-archive-card {
+  width: 420px !important;
+  max-width: 420px !important;
+}
+
+@media (max-width: 760px) {
+  #songList.list-box,
+  #radioList.list-box {
+    grid-template-columns: 1fr !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+  }
+
+  #songList .list-item.audio-archive-card,
+  #radioList .list-item.audio-archive-card,
+  #songList .list-item,
+  #radioList .list-item {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
