@@ -1,0 +1,2371 @@
+:root {
+  --body-bg: #f6f0e7;
+  --header-bg: #2d241f;
+  --button-bg: #7a4d35;
+  --card-bg: #fffaf4;
+  --text-color: #2f2924;
+  --hero-text-color: #ffffff;
+  --nav-text-color: #f8eee3;
+  --base-font-size: 16px;
+  --hero-title-size: 46px;
+  --hero-desc-size: 20px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Noto Sans KR", Arial, sans-serif;
+  background: var(--body-bg) !important;
+  color: var(--text-color) !important;
+  font-size: var(--base-font-size) !important;
+}
+
+.site-header {
+  min-height: 82px;
+  padding: 0 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--header-bg) !important;
+  color: var(--nav-text-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo { font-size: 24px; font-weight: 700; cursor: pointer; }
+.logo small { display: block; font-size: 12px; color: var(--nav-text-color); opacity: .85; }
+
+nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+nav button {
+  border: 0;
+  background: transparent;
+  color: var(--nav-text-color) !important;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: 700;
+}
+nav button:hover { background: rgba(255,255,255,.08); }
+
+button {
+  border: none;
+  background: var(--button-bg) !important;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.secondary-btn { opacity: .9; }
+.hidden { display: none !important; }
+
+.auth-area { display: flex; gap: 8px; align-items: center; color: var(--nav-text-color); font-weight: 700; }
+
+main { max-width: 1240px; margin: 0 auto; min-height: 720px; padding: 36px 24px; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+.hero {
+  min-height: 380px;
+  background-color: #5e4433;
+  background-image: linear-gradient(135deg, #3c3029, #8a674d);
+  background-size: cover;
+  background-position: center center;
+  color: var(--hero-text-color) !important;
+  border-radius: 28px;
+  padding: 80px 70px;
+  margin-bottom: 42px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(45,36,31,.16);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(20,12,8,.18);
+}
+.hero h1, .hero p, .hero div { position: relative; z-index: 1; text-shadow: 0 2px 10px rgba(0,0,0,.35); }
+.hero h1 { font-size: var(--hero-title-size) !important; margin: 0 0 16px; color: var(--hero-text-color) !important; }
+.hero p { font-size: var(--hero-desc-size) !important; color: var(--hero-text-color) !important; margin: 0 0 26px; }
+
+.content-section, .page-title, .auth-page, .admin-form, .list-box {
+  background: var(--card-bg) !important;
+  border: 1px solid #e4d4c2;
+  border-radius: 22px;
+  padding: 28px;
+  margin-bottom: 28px;
+  color: var(--text-color) !important;
+}
+.page-title h1 { margin: 0 0 8px; font-size: 34px; color: var(--text-color) !important; }
+.page-title p { margin: 0; }
+
+.toolbar { display: flex; gap: 12px; margin-bottom: 24px; }
+.toolbar select, input, textarea, select {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #d5c0aa;
+  border-radius: 10px;
+  background: white;
+  color: var(--text-color) !important;
+}
+textarea { min-height: 130px; resize: vertical; }
+
+.inline-field { display: grid; grid-template-columns: 1fr 110px; gap: 10px; width: 100%; }
+.helper-text, .check-message { font-size: 14px; color: #6e5d50; }
+.check-message.ok { color: #197b30; }
+.check-message.error { color: #b3261e; }
+
+.card-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.card {
+  background: var(--card-bg) !important;
+  border: 1px solid #e2d0bc;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(60,48,41,.08);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.card:hover, .list-item:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(60,48,41,.16); }
+.card img, .card iframe, .card video {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  border: 0;
+  display: block;
+  background: #201914;
+}
+.card audio { width: 100%; padding: 10px; }
+.card-placeholder { height: 190px; display: flex; align-items: center; justify-content: center; background: #e8d8c7; }
+.card-body { padding: 16px; }
+.card-body h3 { margin: 0 0 8px; font-size: 18px; color: var(--text-color) !important; }
+.card-body p { margin: 5px 0; font-size: 14px; }
+
+.list-item {
+  padding: 18px 0;
+  border-bottom: 1px solid #e5d5c4;
+  cursor: pointer;
+}
+.list-item.with-image { display: grid; grid-template-columns: 180px 1fr; gap: 20px; }
+.list-item img { width: 180px; height: 130px; object-fit: cover; border-radius: 12px; }
+
+.auth-page { max-width: 520px; margin: 40px auto; display: none; flex-direction: column; gap: 14px; }
+.auth-page.active { display: flex; }
+
+.admin-tabs { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+.admin-form { display: flex; flex-direction: column; gap: 14px; }
+.admin-list { display: flex; flex-direction: column; gap: 12px; }
+.admin-row {
+  background: white;
+  border: 1px solid #e2d0bc;
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+.admin-row-actions { display: flex; gap: 8px; }
+.delete-btn { background: #a53d2d !important; }
+
+.category-badge {
+  display: inline-block;
+  margin: 6px 0 8px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #ead8c6;
+  color: #4b3528;
+  font-size: 12px;
+  font-weight: 700;
+}
+.category-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.category-chip { display: inline-flex; align-items: center; gap: 8px; background: white; border: 1px solid #e2d0bc; border-radius: 999px; padding: 8px 12px; }
+
+.design-grid { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 14px; }
+.design-grid label { display: flex; flex-direction: column; gap: 8px; font-weight: 700; }
+.design-grid input[type="color"] { height: 46px; padding: 4px; }
+
+.content-page.template-gallery .card-grid { grid-template-columns: repeat(3, 1fr); }
+.content-page.template-gallery .card img, .content-page.template-gallery .card iframe, .content-page.template-gallery .card video { height: 260px; }
+.content-page.template-list .card-grid { display: block; }
+.content-page.template-list .card { display: grid; grid-template-columns: 280px 1fr; margin-bottom: 18px; }
+.content-page.template-timeline .page-title, .content-page.template-timeline .list-item, .content-page.template-timeline .card { border-left: 10px solid var(--button-bg); }
+
+.detail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(23,18,15,.72);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+.detail-modal.hidden { display: none !important; }
+.detail-modal-inner {
+  width: min(1080px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 24px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.35);
+  padding: 26px;
+}
+.detail-close-btn { float: right; border-radius: 999px; margin-bottom: 12px; }
+.detail-media-area { clear: both; margin-bottom: 22px; }
+.detail-media-area img { width: 100%; max-height: 70vh; object-fit: contain; border-radius: 18px; background: #201914; }
+.detail-media-area iframe, .detail-media-area video { width: 100%; aspect-ratio: 16/9; min-height: 360px; border: 0; border-radius: 18px; background: #201914; }
+.detail-media-area audio { width: 100%; margin-top: 14px; }
+#detailDescription { margin-top: 18px; line-height: 1.8; white-space: pre-wrap; }
+
+footer {
+  text-align: center;
+  padding: 36px;
+  background: var(--header-bg) !important;
+  color: var(--nav-text-color);
+  font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+  .site-header { height: auto; flex-direction: column; gap: 14px; padding: 20px; }
+  .list-item.with-image, .content-page.template-list .card { display: block; }
+}
+@media (max-width: 760px) {
+  .card-grid, .design-grid { grid-template-columns: 1fr; }
+  .hero { padding: 48px 28px; }
+  .detail-media-area iframe, .detail-media-area video { min-height: 220px; }
+}
+
+
+/* v28: 미디어 다운로드 버튼 숨김 및 저장 방지 보조 */
+audio,
+video {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+video::-internal-media-controls-download-button,
+audio::-internal-media-controls-download-button {
+  display: none;
+}
+
+video::-webkit-media-controls-enclosure,
+audio::-webkit-media-controls-enclosure {
+  overflow: hidden;
+}
+
+.no-download-note {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 6px;
+}
+
+
+/* v29: 라디오/음원 카드 폭 축소 */
+#radioList,
+#songList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+#radioList .content-card,
+#songList .content-card {
+  width: fit-content;
+  max-width: 520px;
+  min-width: 320px;
+}
+
+#radioList .content-body,
+#songList .content-body {
+  width: 100%;
+}
+
+#radioList audio,
+#songList audio {
+  width: 280px;
+  max-width: 100%;
+}
+
+
+/* v30: 라디오/음원 카드 더 작고 단정하게 */
+#radioList,
+#songList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+#radioList .content-card,
+#songList .content-card,
+#radioList .list-item,
+#songList .list-item {
+  width: fit-content;
+  max-width: 420px;
+  min-width: 280px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid #e0cdb9;
+  box-shadow: 0 3px 10px rgba(60, 48, 41, 0.07);
+  background: var(--card-bg, #fffaf4) !important;
+}
+
+#radioList .content-card:hover,
+#songList .content-card:hover,
+#radioList .list-item:hover,
+#songList .list-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(60, 48, 41, 0.11);
+}
+
+#radioList .content-body,
+#songList .content-body,
+#radioList .list-item > div,
+#songList .list-item > div {
+  width: 100%;
+}
+
+#radioList h3,
+#songList h3 {
+  font-size: 17px;
+  line-height: 1.35;
+  margin: 0 0 10px 0;
+}
+
+#radioList p,
+#songList p {
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 6px 0;
+}
+
+#radioList audio,
+#songList audio {
+  width: 250px;
+  max-width: 100%;
+  margin: 8px 0 10px 0;
+}
+
+#radioList img,
+#songList img {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+#radioList .category-badge,
+#songList .category-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  margin: 4px 0 6px;
+}
+
+@media (max-width: 760px) {
+  #radioList .content-card,
+  #songList .content-card,
+  #radioList .list-item,
+  #songList .list-item {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #radioList audio,
+  #songList audio {
+    width: 100%;
+  }
+}
+
+
+/* v31: 작은 카드 + 미디어 다운로드 방지 재적용 */
+audio,
+video {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+video::-internal-media-controls-download-button,
+audio::-internal-media-controls-download-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure,
+audio::-webkit-media-controls-enclosure {
+  overflow: hidden;
+}
+
+#radioList audio,
+#songList audio {
+  width: 250px;
+  max-width: 100%;
+}
+
+#radioList .list-item,
+#songList .list-item,
+#radioList .content-card,
+#songList .content-card {
+  max-width: 420px;
+  min-width: 280px;
+}
+
+
+/* v32: PC 전용 느낌 강화 레이아웃 */
+body {
+  min-width: 1180px;
+}
+
+.site-header {
+  min-width: 1180px;
+  height: 86px;
+  padding: 0 44px;
+  flex-direction: row !important;
+  gap: 24px;
+}
+
+.logo {
+  min-width: 190px;
+}
+
+nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+nav button {
+  white-space: nowrap;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.auth-area {
+  min-width: 210px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+main {
+  max-width: 1280px;
+  min-width: 1040px;
+  padding: 42px 32px;
+}
+
+.hero {
+  min-height: 390px;
+  padding: 82px 72px;
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.content-section,
+.page-title,
+.auth-page,
+.admin-form,
+.list-box {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card-grid {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.content-page.template-gallery .card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.content-page.template-list .card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.content-page.template-list .card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+}
+
+.toolbar {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.admin-tabs {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* PC 화면에서 라디오/음원 카드는 작은 박스형 유지 */
+#radioList,
+#songList {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: flex-start;
+}
+
+#radioList .list-item,
+#songList .list-item,
+#radioList .content-card,
+#songList .content-card {
+  width: 420px;
+  max-width: 420px;
+  min-width: 420px;
+}
+
+#radioList audio,
+#songList audio {
+  width: 250px;
+}
+
+/* 관리자 입력 화면 PC 폭 정리 */
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+  max-width: 100%;
+}
+
+.design-grid {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
+/* 상세창 PC형 */
+.detail-modal-inner {
+  width: 980px;
+  max-width: 980px;
+}
+
+.detail-media-area iframe,
+.detail-media-area video {
+  min-height: 480px;
+}
+
+/* PC 버전에서는 모바일 반응형 축소 규칙을 덜 강하게 */
+@media (max-width: 1180px) {
+  body {
+    min-width: 1180px;
+  }
+
+  .site-header {
+    min-width: 1180px;
+  }
+
+  main {
+    min-width: 1040px;
+  }
+}
+
+
+/* v33: 라디오/음원 목록 정돈형 레이아웃 */
+#radioList.list-box,
+#songList.list-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-top: 22px;
+  display: grid !important;
+  grid-template-columns: repeat(2, 420px);
+  gap: 18px;
+  align-items: start;
+  justify-content: start;
+}
+
+#radioList .list-item,
+#songList .list-item {
+  display: block !important;
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+  padding: 22px 24px !important;
+  margin: 0 !important;
+  border: 1px solid #e0cdb9 !important;
+  border-radius: 18px !important;
+  background: var(--card-bg, #fffaf4) !important;
+  box-shadow: 0 4px 14px rgba(60, 48, 41, 0.08) !important;
+  cursor: pointer;
+}
+
+#radioList .list-item:hover,
+#songList .list-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgba(60, 48, 41, 0.13) !important;
+}
+
+#radioList .list-item > div,
+#songList .list-item > div {
+  width: 100%;
+  max-width: 100%;
+}
+
+#radioList h3,
+#songList h3 {
+  margin: 0 0 12px 0 !important;
+  font-size: 18px !important;
+  line-height: 1.42 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  color: var(--text-color, #2f2924) !important;
+}
+
+#radioList p,
+#songList p {
+  margin: 7px 0 !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  color: var(--text-color, #2f2924) !important;
+}
+
+#radioList p:first-of-type,
+#songList p:first-of-type {
+  margin-bottom: 14px !important;
+}
+
+#radioList strong,
+#songList strong {
+  font-weight: 800;
+}
+
+#radioList audio,
+#songList audio {
+  width: 270px !important;
+  max-width: 100%;
+  display: block;
+  margin: 14px 0 18px 0 !important;
+}
+
+#radioList img,
+#songList img {
+  width: 100%;
+  max-width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+#radioList .category-badge,
+#songList .category-badge {
+  display: inline-block;
+  margin: 0 0 10px 0 !important;
+  font-size: 12px;
+  padding: 4px 9px;
+}
+
+/* 기존 v29/v30/v31/v32에서 남은 폭 강제값 보정 */
+#radioList .content-card,
+#songList .content-card {
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+}
+
+/* PC 화면에서 빈 박스처럼 보이지 않도록 부모 높이 자동화 */
+#radioList:empty::before,
+#songList:empty::before {
+  content: "등록된 자료가 없습니다.";
+  display: block;
+  background: var(--card-bg, #fffaf4);
+  border: 1px solid #e0cdb9;
+  border-radius: 18px;
+  padding: 22px 24px;
+  width: 420px;
+}
+
+/* 화면 하단에 쌓이는 버전 표시 숨김 */
+body > div[style*="v25"],
+body > div[style*="v26"],
+body > div[style*="v27"],
+body > div[style*="v28"],
+body > div[style*="v29"],
+body > div[style*="v30"],
+body > div[style*="v31"],
+body > div[style*="v32"] {
+  display: none !important;
+}
+
+@media (max-width: 1180px) {
+  #radioList.list-box,
+  #songList.list-box {
+    grid-template-columns: repeat(2, 420px);
+  }
+}
+
+
+.version-marker {
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.45;
+  padding: 8px;
+}
+
+
+/* v34: 깔끔한 프레임형 라디오/음원 레이아웃 */
+#radioList.list-box,
+#songList.list-box {
+  background: #f8f4ef !important;
+  border: 1px solid #dbcab8 !important;
+  border-radius: 28px !important;
+  box-shadow: none !important;
+  padding: 42px 44px !important;
+  margin-top: 24px !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 420px));
+  gap: 28px !important;
+  align-items: start;
+  justify-content: start;
+  width: 100%;
+  min-height: 260px;
+}
+
+#radioList .list-item,
+#songList .list-item,
+#radioList .content-card,
+#songList .content-card {
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+  background: #fcfaf7 !important;
+  border: 1px solid #dcccbc !important;
+  border-radius: 24px !important;
+  box-shadow: 0 2px 8px rgba(53, 42, 34, 0.04) !important;
+  padding: 34px 40px 30px !important;
+  margin: 0 !important;
+  overflow: hidden;
+  align-self: start;
+}
+
+#radioList .list-item:hover,
+#songList .list-item:hover,
+#radioList .content-card:hover,
+#songList .content-card:hover {
+  transform: none !important;
+  box-shadow: 0 4px 12px rgba(53, 42, 34, 0.06) !important;
+}
+
+#radioList .list-item > div,
+#songList .list-item > div,
+#radioList .content-body,
+#songList .content-body {
+  width: 100%;
+}
+
+#radioList h3,
+#songList h3 {
+  margin: 0 0 22px 0 !important;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e4d8cc;
+  font-size: 20px !important;
+  line-height: 1.35 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em;
+  color: #221d19 !important;
+}
+
+#radioList p,
+#songList p {
+  margin: 0 0 10px 0 !important;
+  font-size: 15px !important;
+  line-height: 1.72 !important;
+  color: #2d2723 !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+#radioList p:first-of-type,
+#songList p:first-of-type {
+  margin-bottom: 20px !important;
+}
+
+#radioList audio,
+#songList audio {
+  display: block;
+  width: 290px !important;
+  max-width: 100%;
+  margin: 22px 0 24px 0 !important;
+}
+
+#radioList img,
+#songList img {
+  width: 100%;
+  max-width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 18px;
+}
+
+#radioList .list-item p:nth-last-child(-n+2),
+#songList .list-item p:nth-last-child(-n+2),
+#radioList .content-card p:nth-last-child(-n+2),
+#songList .content-card p:nth-last-child(-n+2) {
+  margin-bottom: 8px !important;
+}
+
+#radioList .list-item::after,
+#songList .list-item::after,
+#radioList .content-card::after,
+#songList .content-card::after {
+  content: "";
+  display: block;
+  margin-top: 28px;
+  border-bottom: 1px solid #e4d8cc;
+}
+
+#radioList strong,
+#songList strong {
+  font-weight: 800;
+  color: #1f1a16;
+}
+
+#radioList .category-badge,
+#songList .category-badge {
+  display: inline-block;
+  margin: 0 0 14px 0 !important;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #efe3d3;
+  font-size: 12px;
+  color: #6a4a33;
+}
+
+/* 하단 버전 문구 숨김 */
+.version-marker {
+  display: none !important;
+}
+
+/* Radios / Songs 페이지 상단 설명 박스도 더 정돈 */
+#radiosPage .page-title,
+#songsPage .page-title {
+  border-radius: 24px;
+  padding: 28px 34px;
+}
+
+#radiosPage .page-title h2,
+#songsPage .page-title h2 {
+  margin-bottom: 10px;
+  font-size: 34px;
+}
+
+#radiosPage .page-title p,
+#songsPage .page-title p {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+@media (max-width: 1400px) {
+  #radioList.list-box,
+  #songList.list-box {
+    grid-template-columns: repeat(2, 420px);
+  }
+}
+
+/* v43: 안정형 회원/검색/최신자료 UI */
+.latest-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+.latest-category-box {
+  border: 1px solid #e0cdb9;
+  border-radius: 20px;
+  background: rgba(255, 250, 244, 0.82);
+  padding: 20px;
+  min-height: 190px;
+}
+.latest-category-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  border-bottom: 1px solid #e6d8ca;
+  padding-bottom: 10px;
+}
+.latest-mini-card { cursor: pointer; }
+.latest-mini-card strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+.latest-mini-card p {
+  margin: 4px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  opacity: 0.9;
+}
+.page-search-input {
+  min-width: 320px;
+  flex: 1;
+}
+.login-required-page,
+.mypage-page {
+  max-width: 620px;
+}
+.login-required-page { text-align: center; }
+.login-required-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 22px;
+}
+.mypage-page label {
+  font-weight: 800;
+  margin-top: 8px;
+}
+.warning-text { color: #9b3d2c; }
+#mypageBtn {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.22);
+}
+.login-lock-note {
+  margin-top: 10px !important;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #efe3d3;
+  color: #7a4d35;
+  font-size: 12px !important;
+  font-weight: 800;
+  display: inline-block;
+}
+
+/* v44: 우클릭/F12/드래그/선택 방지 */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+select,
+option {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+img,
+audio,
+video {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* v45: 상세창 미디어 표시 오류 수정 */
+.detail-media-box {
+  width: 100%;
+  margin: 0 0 22px 0;
+}
+
+.detail-media-box img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #f4eee7;
+}
+
+.detail-media-box video,
+.detail-media-box iframe {
+  width: 100%;
+  min-height: 420px;
+  border: 0;
+  border-radius: 18px;
+  background: #111;
+}
+
+.detail-audio-box {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 24px 0;
+  padding: 18px 20px;
+  border: 1px solid #e0cdb9;
+  border-radius: 999px;
+  background: #f8f4ef;
+}
+
+.detail-audio-box audio {
+  width: 320px;
+  max-width: 100%;
+  display: block;
+}
+
+.detail-text-box h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 26px;
+  line-height: 1.38;
+}
+
+.detail-meta {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.detail-body-text {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e2d3c4;
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.detail-cover-only img[src=""],
+.detail-media-box img:not([src]) {
+  display: none !important;
+}
+
+/* v46: 홈 화면 김광석 육성 오디오 */
+.home-voice-section {
+  max-width: 1120px;
+  margin: 28px auto;
+}
+
+.home-voice-card {
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.86);
+  padding: 28px 34px;
+  box-shadow: 0 6px 20px rgba(60, 48, 41, 0.06);
+}
+
+.home-voice-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #efe3d3;
+  color: #704c35;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.home-voice-card h2 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  line-height: 1.4;
+}
+
+.home-voice-card p {
+  margin: 0 0 18px 0;
+  line-height: 1.65;
+}
+
+.home-voice-card audio {
+  width: 360px;
+  max-width: 100%;
+}
+
+/* v47: 홈 화면 육성 자동재생 */
+.home-voice-section {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+#homeVoiceAudio {
+  display: none !important;
+}
+
+.home-voice-notice {
+  margin: 18px auto 0;
+  width: fit-content;
+  max-width: 90%;
+  padding: 10px 16px;
+  border: 1px solid #dfcdbb;
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.9);
+  color: #704c35;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(60, 48, 41, 0.06);
+}
+
+/* v50: 홈 큰 사진 hover 시 육성 재생, 화면 요소 제거 */
+#homeVoiceAudio,
+.home-voice-hidden-audio {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  appearance: none !important;
+}
+
+.home-voice-section,
+.home-voice-card,
+.home-voice-kicker,
+.home-voice-notice,
+#homeVoiceSection,
+#homeVoiceNotice {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+
+#home .hero {
+  cursor: pointer;
+}
+
+/* v51: 상세정보 클릭/표시 복구 */
+.detail-media-area.hidden {
+  display: none !important;
+}
+
+.detail-media-area {
+  width: 100%;
+  margin: 0 0 22px 0;
+}
+
+.detail-media-area img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #f4eee7;
+}
+
+.detail-media-area video,
+.detail-media-area iframe {
+  width: 100%;
+  min-height: 420px;
+  border: 0;
+  border-radius: 18px;
+  background: #111;
+}
+
+.detail-audio-box {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 22px 0;
+  padding: 18px 20px;
+  border: 1px solid #e0cdb9;
+  border-radius: 999px;
+  background: #f8f4ef;
+}
+
+.detail-audio-box audio {
+  width: 320px;
+  max-width: 100%;
+  display: block;
+}
+
+.detail-text-area h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 26px;
+  line-height: 1.38;
+}
+
+#detailCategory,
+#detailMeta {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+#detailDescription {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e2d3c4;
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* v52: 홈 큰 사진 hover 재생/이탈 일시정지 */
+#homeVoiceAudio,
+.home-voice-hidden-audio {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  appearance: none !important;
+}
+
+.home-voice-section,
+.home-voice-card,
+.home-voice-kicker,
+.home-voice-notice,
+#homeVoiceSection,
+#homeVoiceNotice {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+
+#home .hero {
+  cursor: pointer;
+}
+
+/* v53: 자료 목록 6개 단위 페이지네이션 / 정렬 / 등록일 표시 */
+.page-sort-select {
+  min-width: 130px;
+  padding: 11px 12px;
+  border: 1px solid #d8c2ad;
+  border-radius: 10px;
+  background: #fffaf4;
+  font-weight: 700;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 28px 0 8px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #d8c2ad;
+  border-radius: 10px;
+  background: #fffaf4;
+  color: #5a3826;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pagination button:hover,
+.pagination button.active {
+  background: #8a5235;
+  color: #fff;
+  border-color: #8a5235;
+}
+
+.created-date {
+  margin-top: 6px !important;
+  font-size: 13px !important;
+  opacity: 0.88;
+}
+
+/* v54: 업로드 날짜+시간 표시 */
+.created-date {
+  letter-spacing: -0.01em;
+}
+
+/* v55: Stories 목록 본문 미리보기 */
+.text-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.story-preview-card .text-preview {
+  -webkit-line-clamp: 4;
+  max-height: 6.6em;
+}
+
+.read-more-hint {
+  margin-top: 8px !important;
+  font-size: 13px !important;
+  font-weight: 800;
+  color: #8a5235;
+}
+
+/* v56: 상세보기 업로드 날짜/시간 */
+#detailMeta,
+.detail-meta {
+  line-height: 1.75;
+}
+
+#detailMeta strong,
+.detail-meta strong {
+  font-weight: 800;
+}
+
+/* v57: About Seok 소개글 전용 페이지 */
+.about-article {
+  max-width: 1120px;
+  margin: 24px auto 0;
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.9);
+  padding: 34px 40px;
+  line-height: 1.8;
+}
+
+.about-article h2 {
+  margin: 0 0 14px 0;
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.about-article-meta {
+  margin: 0 0 22px 0;
+  font-size: 14px;
+  color: #7a5a43;
+}
+
+.about-article-body {
+  font-size: 16px;
+  line-height: 1.9;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.about-article-image {
+  display: block;
+  max-width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  background: #f4eee7;
+}
+
+#about .toolbar,
+#aboutSearchInput,
+#aboutSortSelect,
+#aboutCategoryFilter,
+#aboutPagination,
+#aboutList {
+  display: none !important;
+}
+
+/* v58: 사진 상세보기 확대/축소 툴 */
+.photo-zoom-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 12px 0;
+  flex-wrap: wrap;
+}
+
+.photo-zoom-toolbar button {
+  border: 1px solid #d8c2ad;
+  border-radius: 10px;
+  background: #fffaf4;
+  color: #5a3826;
+  padding: 8px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.photo-zoom-toolbar button:hover {
+  background: #8a5235;
+  color: #fff;
+}
+
+#detailZoomPercent {
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b4a36;
+}
+
+.photo-zoom-viewer {
+  width: 100%;
+  max-height: 520px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #f4eee7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-in;
+}
+
+.photo-zoom-viewer img {
+  max-width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  transition: transform 0.12s ease;
+  transform-origin: center center;
+  user-select: none;
+}
+
+.photo-zoom-viewer img.dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+/* v58: 캡처/인쇄/화면이탈 억제 보조 */
+.screen-protect-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(36, 28, 22, 0.92);
+  color: #fffaf4;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.screen-protect-overlay.hidden {
+  display: none !important;
+}
+
+body.screen-protect-blur main,
+body.screen-protect-blur header,
+body.screen-protect-blur footer {
+  filter: blur(18px);
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #screenProtectOverlay,
+  #screenProtectOverlay * {
+    visibility: visible !important;
+  }
+}
+
+/* v59: About Seok 라우팅 복구 */
+#about .toolbar,
+#aboutSearchInput,
+#aboutSortSelect,
+#aboutCategoryFilter,
+#aboutPagination,
+#aboutList {
+  display: none !important;
+}
+
+.about-article {
+  max-width: 1120px;
+  margin: 24px auto 0;
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.9);
+  padding: 34px 40px;
+  line-height: 1.8;
+}
+
+.about-article h2 {
+  margin: 0 0 14px 0;
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.about-article-body {
+  font-size: 16px;
+  line-height: 1.9;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* v60: 전역 오늘의 추천곡 미니 플레이어 */
+.daily-player {
+  position: fixed;
+  left: 24px;
+  top: 180px;
+  z-index: 9990;
+  width: 190px;
+  pointer-events: none;
+}
+
+.daily-player.hidden {
+  display: none !important;
+}
+
+.daily-player-card {
+  pointer-events: auto;
+  width: 100%;
+  border-radius: 22px;
+  padding: 18px 16px;
+  background: linear-gradient(145deg, #6d315f, #a4496f 52%, #e87535);
+  color: #fff;
+  box-shadow: 0 18px 42px rgba(42, 29, 23, 0.22);
+  user-select: none;
+}
+
+.daily-player-label {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.daily-player-title {
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.3;
+  min-height: 44px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.daily-player-sub {
+  margin-top: 5px;
+  font-size: 10px;
+  line-height: 1.35;
+  opacity: 0.82;
+}
+
+.daily-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 18px;
+}
+
+.daily-play-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #8a3e62;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.daily-player-time {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.daily-player-progress {
+  width: 100%;
+  margin-top: 12px;
+  accent-color: #fff;
+  cursor: pointer;
+}
+
+#dailyPlayerAudio {
+  display: none !important;
+}
+
+@media (max-width: 1380px) {
+  .daily-player {
+    left: 12px;
+    width: 160px;
+  }
+
+  .daily-player-card {
+    padding: 15px 13px;
+  }
+
+  .daily-player-title {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .daily-player {
+    position: static;
+    width: min(420px, calc(100% - 32px));
+    margin: 18px auto 0;
+  }
+}
+
+/* v61: About Seok 문서형/연보형 페이지 */
+#about .toolbar,
+#aboutSearchInput,
+#aboutSortSelect,
+#aboutCategoryFilter,
+#aboutPagination,
+#aboutList,
+#aboutArticle {
+  display: none !important;
+}
+
+.about-document {
+  max-width: 1120px;
+  margin: 24px auto 0;
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.92);
+  padding: 36px 44px;
+  line-height: 1.85;
+}
+
+.about-document-entry {
+  padding: 26px 0 30px;
+  border-bottom: 1px solid #dcc9b6;
+}
+
+.about-document-entry:first-child {
+  padding-top: 0;
+}
+
+.about-document-entry:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.about-document-entry h2 {
+  margin: 0 0 14px 0;
+  font-size: 25px;
+  line-height: 1.38;
+  letter-spacing: -0.03em;
+}
+
+.about-document-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: #7a5a43;
+}
+
+.about-document-body {
+  font-size: 16px;
+  line-height: 1.95;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.about-document-image {
+  display: block;
+  max-width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  border-radius: 18px;
+  margin-bottom: 22px;
+  background: #f4eee7;
+}
+
+/* v62: 추천곡 없을 때도 플레이어 유지 */
+.daily-play-btn.disabled,
+.daily-play-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.daily-player-progress:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.daily-player-title {
+  word-break: keep-all;
+}
+
+/* v63: 오른쪽 고정형 오늘의 추천곡 플레이어 */
+#dailyRecommendPlayer.daily-player {
+  position: fixed !important;
+  top: 155px !important;
+  right: 34px !important;
+  left: auto !important;
+  width: 210px !important;
+  max-width: 210px !important;
+  z-index: 9000 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+#dailyRecommendPlayer.daily-player.hidden {
+  display: block !important;
+}
+
+#dailyRecommendPlayer .daily-player-card {
+  pointer-events: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border-radius: 22px !important;
+  padding: 18px 16px !important;
+  background: linear-gradient(145deg, #6b315f, #bd3f77 55%, #ee7a2f) !important;
+  color: #fff !important;
+  box-shadow: 0 18px 42px rgba(42, 29, 23, 0.24) !important;
+  user-select: none !important;
+  border: 1px solid rgba(255,255,255,0.16) !important;
+}
+
+#dailyRecommendPlayer .daily-player-label {
+  display: inline-block !important;
+  margin-bottom: 12px !important;
+  padding: 4px 9px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.17) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  color: #fff !important;
+}
+
+#dailyRecommendPlayer .daily-player-title {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+  min-height: 46px !important;
+  color: #fff !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+}
+
+#dailyRecommendPlayer .daily-player-sub {
+  margin-top: 6px !important;
+  font-size: 10.5px !important;
+  line-height: 1.35 !important;
+  opacity: 0.86 !important;
+  color: rgba(255,255,255,0.88) !important;
+}
+
+#dailyRecommendPlayer .daily-player-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+  margin-top: 18px !important;
+}
+
+#dailyRecommendPlayer .daily-play-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #9b3f68 !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18) !important;
+}
+
+#dailyRecommendPlayer .daily-play-btn.disabled,
+#dailyRecommendPlayer .daily-play-btn:disabled {
+  opacity: 0.48 !important;
+  cursor: not-allowed !important;
+}
+
+#dailyRecommendPlayer .daily-player-time {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  flex: 1 !important;
+  font-size: 10px !important;
+  opacity: 0.9 !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+
+#dailyRecommendPlayer .daily-player-progress {
+  width: 100% !important;
+  height: 4px !important;
+  margin-top: 13px !important;
+  accent-color: #fff !important;
+  cursor: pointer !important;
+}
+
+#dailyRecommendPlayer .daily-player-progress:disabled {
+  opacity: 0.48 !important;
+  cursor: not-allowed !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerAudio {
+  display: none !important;
+}
+
+@media (max-width: 1500px) {
+  #dailyRecommendPlayer.daily-player {
+    right: 16px !important;
+    width: 184px !important;
+    max-width: 184px !important;
+  }
+
+  #dailyRecommendPlayer .daily-player-title {
+    font-size: 15px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  #dailyRecommendPlayer.daily-player {
+    position: fixed !important;
+    right: 12px !important;
+    top: 130px !important;
+    width: 168px !important;
+    max-width: 168px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  #dailyRecommendPlayer.daily-player {
+    right: 10px !important;
+    bottom: 14px !important;
+    top: auto !important;
+    width: 158px !important;
+    max-width: 158px !important;
+  }
+}
+
+/* v64: 오늘의 추천곡 볼륨/음소거 */
+#dailyRecommendPlayer .daily-volume-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  margin-top: 10px !important;
+}
+
+#dailyRecommendPlayer .daily-mute-btn {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.9) !important;
+  color: #8a3e62 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider {
+  width: 100% !important;
+  height: 4px !important;
+  accent-color: #fff !important;
+  cursor: pointer !important;
+}
+
+/* v65: 볼륨 조절 UI 소형화 */
+#dailyRecommendPlayer .daily-volume-row,
+#dailyRecommendPlayer .compact-volume-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  margin-top: 8px !important;
+  width: 96px !important;
+  max-width: 96px !important;
+  height: 20px !important;
+}
+
+#dailyRecommendPlayer .daily-mute-btn {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.18) !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider {
+  width: 68px !important;
+  max-width: 68px !important;
+  min-width: 68px !important;
+  height: 3px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  accent-color: #ffffff !important;
+  cursor: pointer !important;
+}
+
+/* Chrome / Edge */
+#dailyRecommendPlayer .daily-volume-slider::-webkit-slider-runnable-track {
+  height: 3px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.38) !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  margin-top: -4px !important;
+  border: 0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+}
+
+/* Firefox */
+#dailyRecommendPlayer .daily-volume-slider::-moz-range-track {
+  height: 3px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.38) !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider::-moz-range-thumb {
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider:disabled {
+  opacity: 0.42 !important;
+  cursor: not-allowed !important;
+}
+
+/* v66: 볼륨 UI 강제 소형화 - id 기준 최종 override */
+#dailyRecommendPlayer #dailyPlayerMuteBtn {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,0.22) !important;
+  color: #fff !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 54px !important;
+  max-width: 54px !important;
+  min-width: 54px !important;
+  height: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  accent-color: #ffffff !important;
+  display: inline-block !important;
+  flex: 0 0 54px !important;
+}
+
+#dailyRecommendPlayer .daily-volume-row,
+#dailyRecommendPlayer .compact-volume-row {
+  width: 78px !important;
+  max-width: 78px !important;
+  min-width: 78px !important;
+  height: 18px !important;
+  max-height: 18px !important;
+  margin-top: 6px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  overflow: visible !important;
+}
+
+/* Chrome / Edge / Safari */
+#dailyRecommendPlayer #dailyPlayerVolume::-webkit-slider-runnable-track {
+  -webkit-appearance: none !important;
+  height: 2px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.36) !important;
+  border: 0 !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  margin-top: -3px !important;
+  box-shadow: none !important;
+}
+
+/* Firefox */
+#dailyRecommendPlayer #dailyPlayerVolume::-moz-range-track {
+  height: 2px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.36) !important;
+  border: 0 !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-moz-range-thumb {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-ms-track {
+  width: 54px !important;
+  height: 2px !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  color: transparent !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-ms-thumb {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+}
+
+
+/* v67: 라디오 전용 흑백 커스텀 플레이어 */
+.radio-mono-player {
+  width: 290px;
+  max-width: 100%;
+  margin: 14px 0 12px;
+}
+
+.radio-mono-player audio {
+  display: none !important;
+}
+
+.radio-mono-controls {
+  display: grid;
+  grid-template-columns: 34px auto 1fr 26px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  background: #efefef;
+  border: 1px solid #e0e0e0;
+}
+
+.radio-mono-play,
+.radio-mono-mute {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #111;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.radio-mono-play {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #d4d4d4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radio-mono-play:hover,
+.radio-mono-mute:hover {
+  opacity: 0.8;
+}
+
+.radio-mono-time {
+  min-width: 66px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+}
+
+.radio-mono-divider {
+  opacity: 0.5;
+}
+
+.radio-mono-progress,
+.radio-mono-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.radio-mono-progress::-webkit-slider-runnable-track,
+.radio-mono-volume::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #bdbdbd;
+}
+
+.radio-mono-progress::-webkit-slider-thumb,
+.radio-mono-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #111;
+  margin-top: -4px;
+  border: 0;
+}
+
+.radio-mono-progress::-moz-range-track,
+.radio-mono-volume::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #bdbdbd;
+}
+
+.radio-mono-progress::-moz-range-thumb,
+.radio-mono-volume::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #111;
+  border: 0;
+}
+
+.radio-mono-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-left: 10px;
+}
+
+.radio-mono-volume-label {
+  min-width: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  letter-spacing: 0.04em;
+}
+
+.radio-mono-volume {
+  width: 86px;
+  max-width: 86px;
+}
+
+#radioList .list-item .radio-mono-player {
+  margin-top: 14px;
+}
+
+#radioList .list-item .radio-mono-controls {
+  width: 290px;
+  max-width: 100%;
+}
+
+.detail-radio-audio-box {
+  width: 100%;
+  max-width: 320px;
+  padding: 0;
+  margin: 0 0 24px 0;
+  border: 0;
+  background: transparent;
+}
+
+.detail-radio-audio-box .radio-mono-player {
+  width: 320px;
+  max-width: 100%;
+  margin: 0;
+}
+
+.detail-radio-audio-box .radio-mono-controls {
+  grid-template-columns: 38px auto 1fr 28px;
+  gap: 14px;
+  padding: 13px 16px;
+  background: #f0f0f0;
+  border: 1px solid #dddddd;
+}
+
+.detail-radio-audio-box .radio-mono-play {
+  width: 38px;
+  height: 38px;
+}
+
+.detail-radio-audio-box .radio-mono-time {
+  font-size: 14px;
+}
+
+.detail-radio-audio-box .radio-mono-volume-row {
+  margin-top: 10px;
+  padding-left: 12px;
+}
+
+/* v71: 오늘의 추천곡 닫기 버튼 */
+#dailyRecommendPlayer.closed {
+  display: none !important;
+}
+
+#dailyRecommendPlayer .daily-player-card {
+  position: relative !important;
+}
+
+#dailyRecommendPlayer .daily-player-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  width: 22px !important;
+  height: 22px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+#dailyRecommendPlayer .daily-player-close:hover {
+  background: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* v75: 링크 입력 방식 안내 */
+.link-only-notice {
+  margin: 16px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid #d8c2ad;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #5a3826;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.link-only-notice strong {
+  font-weight: 900;
+}
+
+/* v76: 구글드라이브 링크 안내 */
+.drive-link-notice {
+  margin: 12px 0 16px;
+  padding: 13px 15px;
+  border: 1px solid #cfcfcf;
+  border-radius: 14px;
+  background: #f6f6f6;
+  color: #333;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.drive-link-notice strong {
+  font-weight: 900;
+}
+
+.drive-link-notice code {
+  font-size: 12px;
+  background: #e9e9e9;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+/* v77: URL 입력칸 인식 보강 안내 */
+.url-read-fix-notice {
+  margin: 12px 0 16px;
+  padding: 13px 15px;
+  border: 1px solid #bbb;
+  border-radius: 14px;
+  background: #f3f3f3;
+  color: #222;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.url-read-fix-notice strong {
+  font-weight: 900;
+}
+
+.url-read-fix-notice code {
+  font-size: 12px;
+  background: #e5e5e5;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+/* v78: Songs도 Radios와 같은 흑백 플레이어 UI 적용 */
+#songList .list-item .radio-mono-player,
+#radioList .list-item .radio-mono-player {
+  width: 290px;
+  max-width: 100%;
+  margin-top: 14px;
+}
+
+#songList .list-item .radio-mono-controls,
+#radioList .list-item .radio-mono-controls {
+  width: 290px;
+  max-width: 100%;
+}
+
+#songList .list-item audio:not(.native-audio),
+#radioList .list-item audio:not(.native-audio) {
+  display: none !important;
+}
+
+#songList .list-item .radio-mono-player audio,
+#radioList .list-item .radio-mono-player audio {
+  display: none !important;
+}
+
+#songList .radio-mono-controls,
+#radioList .radio-mono-controls {
+  background: #efefef;
+  color: #111;
+}
+
+#songList .radio-mono-play,
+#songList .radio-mono-mute,
+#radioList .radio-mono-play,
+#radioList .radio-mono-mute {
+  color: #111;
+}
