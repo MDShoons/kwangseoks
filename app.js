@@ -44,6 +44,8 @@ window.showAdminForm = showAdminForm;
 window.changeTemplate = changeTemplate;
 window.loadContents = loadContents;
 window.renderAdminManageList = renderAdminManageList;
+window.openDetailModal = openDetailModal;
+window.closeDetailModal = closeDetailModal;
 window.editContent = editContent;
 window.deleteContentItem = deleteContentItem;
 
@@ -191,6 +193,7 @@ function renderCategoryList() {
       <span>${escapeHtml(cat.name)}</span>
       <button type="button" onclick="deleteCustomCategory('${cat.id}')">삭제</button>
     `;
+    stopMediaClickPropagation(div);
     box.appendChild(div);
   });
 }
@@ -1066,6 +1069,72 @@ function filterBySelectedSubCategory(page, items) {
   return items.filter((item) => item.subCategory === selected);
 }
 
+
+
+function stopMediaClickPropagation(container) {
+  container.querySelectorAll("iframe, video, audio, button, a").forEach((el) => {
+    el.addEventListener("click", (event) => event.stopPropagation());
+  });
+}
+
+function getContentById(id) {
+  return allContents.find((item) => item.id === id);
+}
+
+function openDetailModal(id) {
+  const item = getContentById(id);
+  if (!item) return;
+
+  const modal = document.getElementById("detailModal");
+  const body = document.getElementById("detailModalBody");
+  if (!modal || !body) return;
+
+  let mediaHtml = "";
+
+  if (item.mediaType === "youtube") {
+    mediaHtml = `<div class="detail-media"><iframe src="${item.mediaUrl}" allowfullscreen></iframe></div>`;
+  } else if (item.mediaType === "video") {
+    mediaHtml = `<div class="detail-media"><video controls src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video></div>`;
+  } else if (item.mediaType === "audio") {
+    const cover = item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title || "")}" />` : "";
+    mediaHtml = `<div class="detail-media">${cover}<audio controls src="${item.mediaUrl}"></audio></div>`;
+  } else if (item.mediaUrl) {
+    mediaHtml = `<div class="detail-media"><img src="${item.mediaUrl}" alt="${escapeHtml(item.title || "")}" /></div>`;
+  }
+
+  body.innerHTML = `
+    <div class="detail-info">
+      <h2>${escapeHtml(item.title || "")}</h2>
+      ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
+      ${mediaHtml}
+      <p>${escapeHtml(item.body || item.description || "")}</p>
+      <div class="detail-meta">
+        <span>분류: ${escapeHtml(item.category || "미분류")}</span>
+        <span>연도: ${escapeHtml(item.year || "미상")}</span>
+        <span>출처: ${escapeHtml(item.source || "미기재")}</span>
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeDetailModal() {
+  const modal = document.getElementById("detailModal");
+  const body = document.getElementById("detailModalBody");
+  if (!modal || !body) return;
+
+  modal.classList.add("hidden");
+  body.innerHTML = "";
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeDetailModal();
+});
+
+
 function renderLatest(contents) {
   const latest = document.getElementById("latestContents");
   if (!latest) return;
@@ -1172,6 +1241,7 @@ function renderList(elementId, items) {
 function createCard(item) {
   const card = document.createElement("div");
   card.className = "card";
+  card.onclick = () => openDetailModal(item.id);
 
   let mediaHtml = "";
 
@@ -1200,6 +1270,7 @@ function createCard(item) {
     </div>
   `;
 
+  stopMediaClickPropagation(card);
   return card;
 }
 

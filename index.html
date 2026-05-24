@@ -489,6 +489,16 @@
     <p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p>
   </footer>
 
+
+  <div id="detailModal" class="detail-modal hidden">
+    <div class="detail-modal-backdrop" onclick="closeDetailModal()"></div>
+    <div class="detail-modal-content">
+      <button type="button" class="detail-close-btn" onclick="closeDetailModal()">닫기 ×</button>
+      <div id="detailModalBody"></div>
+    </div>
+  </div>
+
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
