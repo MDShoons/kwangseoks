@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v45-detail-media-fix";
+const APP_VERSION = "v44-block-rightclick-f12";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -906,110 +906,22 @@ function createCard(item) {
   return card;
 }
 
-
-function youtubeEmbedHtml(url) {
-  const safeUrl = String(url || "");
-  let videoId = "";
-
-  try {
-    const parsed = new URL(safeUrl);
-    if (parsed.hostname.includes("youtu.be")) {
-      videoId = parsed.pathname.replace("/", "");
-    } else if (parsed.searchParams.get("v")) {
-      videoId = parsed.searchParams.get("v");
-    } else if (parsed.pathname.includes("/embed/")) {
-      videoId = parsed.pathname.split("/embed/")[1].split("/")[0];
-    }
-  } catch {
-    return "";
-  }
-
-  if (!videoId) return "";
-  return `<iframe src="https://www.youtube.com/embed/${escapeHtml(videoId)}" title="YouTube video" allowfullscreen></iframe>`;
-}
-
-
-function renderDetailMedia(item) {
-  const category = item.category || "";
-  const mediaUrl = item.mediaUrl || item.fileUrl || item.videoUrl || "";
-  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
-  const youtubeUrl = item.youtubeUrl || item.url || "";
-  const title = escapeHtml(item.title || "");
-
-  if (category === "videos") {
-    if (youtubeUrl && (youtubeUrl.includes("youtube.com") || youtubeUrl.includes("youtu.be"))) {
-      return `<div class="detail-media-box">${youtubeEmbedHtml(youtubeUrl)}</div>`;
-    }
-
-    if (mediaUrl) {
-      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(mediaUrl)}"></video></div>`;
-    }
-
-    if (imageUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
-    }
-
-    return "";
-  }
-
-  if (category === "songs" || category === "radios") {
-    if (mediaUrl) {
-      return `<div class="detail-audio-box"><audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${escapeHtml(mediaUrl)}"></audio></div>`;
-    }
-
-    if (imageUrl) {
-      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
-    }
-
-    return "";
-  }
-
-  if (category === "photos") {
-    if (imageUrl || mediaUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(imageUrl || mediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
-    }
-
-    return "";
-  }
-
-  if (imageUrl) {
-    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
-  }
-
-  return "";
-}
-
 function openContentDetail(id) {
-  const item = allContents.find((content) => content.id === id);
-  if (!item) return;
-
-  const modal = document.getElementById("contentDetailModal");
-  const body = document.getElementById("contentDetailBody");
-  if (!modal || !body) return;
-
-  const mediaHtml = renderDetailMedia(item);
-  const bodyText = item.body || item.description || "";
-  const safeBody = escapeHtml(bodyText).replace(/\n/g, "<br>");
-
-  body.innerHTML = `
-    ${mediaHtml}
-    <div class="detail-text-box">
-      <h2>${escapeHtml(item.title || "제목 없음")}</h2>
-      <p class="detail-meta"><strong>분류:</strong> ${escapeHtml(item.category || "미분류")}</p>
-      <p class="detail-meta"><strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
-      ${item.subCategory ? `<p class="detail-meta"><strong>카테고리:</strong> ${escapeHtml(item.subCategory)}</p>` : ""}
-      ${bodyText ? `<div class="detail-body-text">${safeBody}</div>` : ""}
-    </div>
-  `;
-
-  modal.classList.remove("hidden");
-  installBasicContentProtection();
-  if (typeof hardenMediaDownloadControls === "function") {
-    hardenMediaDownloadControls();
-  }
+  const item = allContents.find(i => i.id === id); if (!item) return;
+  document.getElementById("detailTitle").textContent = item.title || "제목 없음";
+  document.getElementById("detailCategory").textContent = [item.category ? `분류: ${item.category}` : "", item.subCategory ? `카테고리: ${item.subCategory}` : ""].filter(Boolean).join(" / ");
+  document.getElementById("detailMeta").textContent = `${item.year ? "연도: "+item.year : "연도: 미상"} / ${item.source ? "출처: "+item.source : "출처: 미기재"}`;
+  document.getElementById("detailDescription").textContent = item.body || item.description || "";
+  const area = document.getElementById("detailMediaArea"); area.innerHTML = "";
+  if (item.mediaType === "youtube") area.innerHTML = `<iframe src="${item.mediaUrl}" allowfullscreen></iframe>`;
+  else if (item.mediaType === "video") area.innerHTML = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  else if (item.mediaType === "audio") area.innerHTML = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : ""}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`;
+  else if (item.mediaUrl) area.innerHTML = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}">`;
+  else area.innerHTML = `<div class="card-placeholder">글 자료</div>`;
+  document.getElementById("contentDetailModal").classList.remove("hidden");
+  hardenMediaDownloadControls();
   document.body.style.overflow = "hidden";
 }
-
 function closeContentDetail(event) {
   if (event && event.target !== event.currentTarget) return;
   document.getElementById("detailMediaArea").innerHTML = "";
