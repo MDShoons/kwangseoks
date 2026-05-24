@@ -1071,10 +1071,50 @@ function filterBySelectedSubCategory(page, items) {
 
 
 
-function stopMediaClickPropagation(container) {
-  container.querySelectorAll("iframe, video, audio, button, a").forEach((el) => {
-    el.addEventListener("click", (event) => event.stopPropagation());
-  });
+
+function ensureDetailModal() {
+  let modal = document.getElementById("detailModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "detailModal";
+  modal.className = "detail-modal hidden";
+  modal.innerHTML = `
+    <div class="detail-modal-backdrop"></div>
+    <div class="detail-modal-content">
+      <button type="button" class="detail-close-btn">닫기 ×</button>
+      <div id="detailModalBody"></div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  modal.querySelector(".detail-modal-backdrop").addEventListener("click", closeDetailModal);
+  modal.querySelector(".detail-close-btn").addEventListener("click", closeDetailModal);
+
+  return modal;
+}
+
+
+function ensureDetailModal() {
+  let modal = document.getElementById("detailModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "detailModal";
+  modal.className = "detail-modal hidden";
+  modal.innerHTML = `
+    <div class="detail-modal-backdrop"></div>
+    <div class="detail-modal-content">
+      <button type="button" class="detail-close-btn">닫기 ×</button>
+      <div id="detailModalBody"></div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  modal.querySelector(".detail-modal-backdrop").addEventListener("click", closeDetailModal);
+  modal.querySelector(".detail-close-btn").addEventListener("click", closeDetailModal);
+
+  return modal;
 }
 
 function getContentById(id) {
@@ -1083,11 +1123,14 @@ function getContentById(id) {
 
 function openDetailModal(id) {
   const item = getContentById(id);
-  if (!item) return;
+  if (!item) {
+    alert("자료를 찾지 못했습니다. 새로고침 후 다시 시도하세요.");
+    return;
+  }
 
-  const modal = document.getElementById("detailModal");
+  const modal = ensureDetailModal();
   const body = document.getElementById("detailModalBody");
-  if (!modal || !body) return;
+  if (!body) return;
 
   let mediaHtml = "";
 
@@ -1123,17 +1166,29 @@ function openDetailModal(id) {
 function closeDetailModal() {
   const modal = document.getElementById("detailModal");
   const body = document.getElementById("detailModalBody");
-  if (!modal || !body) return;
+  if (!modal) return;
 
   modal.classList.add("hidden");
-  body.innerHTML = "";
+  if (body) body.innerHTML = "";
   document.body.style.overflow = "";
+}
+
+function stopMediaClickPropagation(container) {
+  container.querySelectorAll("iframe, video, audio, button, a, select, input, textarea").forEach((el) => {
+    el.addEventListener("click", (event) => event.stopPropagation());
+  });
 }
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeDetailModal();
 });
 
+document.addEventListener("click", (event) => {
+  const card = event.target.closest(".card[data-content-id], .list-item[data-content-id]");
+  if (!card) return;
+  const id = card.dataset.contentId;
+  if (id) openDetailModal(id);
+});
 
 function renderLatest(contents) {
   const latest = document.getElementById("latestContents");
@@ -1241,7 +1296,7 @@ function renderList(elementId, items) {
 function createCard(item) {
   const card = document.createElement("div");
   card.className = "card";
-  card.onclick = () => openDetailModal(item.id);
+  card.dataset.contentId = item.id;
 
   let mediaHtml = "";
 
