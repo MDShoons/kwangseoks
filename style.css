@@ -293,3 +293,126 @@ audio::-webkit-media-controls-enclosure {
   width: 280px;
   max-width: 100%;
 }
+
+
+/* v30: 라디오/음원 카드 더 작고 단정하게 */
+#radioList,
+#songList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+#radioList .content-card,
+#songList .content-card,
+#radioList .list-item,
+#songList .list-item {
+  width: fit-content;
+  max-width: 420px;
+  min-width: 280px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid #e0cdb9;
+  box-shadow: 0 3px 10px rgba(60, 48, 41, 0.07);
+  background: var(--card-bg, #fffaf4) !important;
+}
+
+#radioList .content-card:hover,
+#songList .content-card:hover,
+#radioList .list-item:hover,
+#songList .list-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(60, 48, 41, 0.11);
+}
+
+#radioList .content-body,
+#songList .content-body,
+#radioList .list-item > div,
+#songList .list-item > div {
+  width: 100%;
+}
+
+#radioList h3,
+#songList h3 {
+  font-size: 17px;
+  line-height: 1.35;
+  margin: 0 0 10px 0;
+}
+
+#radioList p,
+#songList p {
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 6px 0;
+}
+
+#radioList audio,
+#songList audio {
+  width: 250px;
+  max-width: 100%;
+  margin: 8px 0 10px 0;
+}
+
+#radioList img,
+#songList img {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+#radioList .category-badge,
+#songList .category-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  margin: 4px 0 6px;
+}
+
+@media (max-width: 760px) {
+  #radioList .content-card,
+  #songList .content-card,
+  #radioList .list-item,
+  #songList .list-item {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #radioList audio,
+  #songList audio {
+    width: 100%;
+  }
+}
+
+
+/* v31: 작은 카드 + 미디어 다운로드 방지 재적용 */
+audio,
+video {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+video::-internal-media-controls-download-button,
+audio::-internal-media-controls-download-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure,
+audio::-webkit-media-controls-enclosure {
+  overflow: hidden;
+}
+
+#radioList audio,
+#songList audio {
+  width: 250px;
+  max-width: 100%;
+}
+
+#radioList .list-item,
+#songList .list-item,
+#radioList .content-card,
+#songList .content-card {
+  max-width: 420px;
+  min-width: 280px;
+}

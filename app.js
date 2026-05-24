@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v28-no-media-download";
+const APP_VERSION = "v31-small-cards-no-download";
 console.log("광석이네집", APP_VERSION, "worker:", GITHUB_UPLOAD_WORKER_URL);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
