@@ -15,7 +15,8 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v69-worker-gitdata-upload";
+const APP_VERSION = "v70-hardcoded-worker-upload";
+const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -197,60 +198,45 @@ async function getImageDataUrlOrDirectUrl(file, directUrl, maxWidth = 1400) {
   return directUrl && directUrl.trim() ? directUrl.trim() : "";
 }
 
-async function uploadFileToGitHubWorker(file, folder = "images") {
+async function uploadFileToGitHubWorker(file, folder) {
   if (!file) return "";
 
-  const maxBytes = 95 * 1024 * 1024;
-  if (file.size > maxBytes) {
-    throw new Error(`파일 용량이 너무 큽니다. 현재 ${(file.size / 1024 / 1024).toFixed(1)}MB입니다. 이 구조에서는 95MB 이하 파일만 업로드하세요.`);
-  }
+  const workerUrl = ACTIVE_UPLOAD_WORKER_URL;
+  const uploadUrl = `${workerUrl.replace(/\/$/, "")}/upload`;
 
-  if (!GITHUB_UPLOAD_WORKER_URL) {
-    throw new Error("Cloudflare Worker 업로드 주소가 설정되지 않았습니다. firebase-config.js의 GITHUB_UPLOAD_WORKER_URL을 입력하세요.");
-  }
-
-  if (!currentUser) {
-    throw new Error("로그인 후 업로드할 수 있습니다.");
-  }
-
-  const idToken = await currentUser.getIdToken();
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("folder", folder);
+  formData.append("folder", folder || "");
+  formData.append("kind", folder || "");
 
-  let res;
+  let response;
+  let text = "";
+
   try {
-    res = await fetch(GITHUB_UPLOAD_WORKER_URL, {
+    response = await fetch(uploadUrl, {
       method: "POST",
-      headers: { Authorization: `Bearer ${idToken}` },
-      body: formData
+      body: formData,
+      mode: "cors",
+      cache: "no-store"
     });
+
+    text = await response.text();
   } catch (error) {
-    throw new Error(
-      "Cloudflare Worker에 연결하지 못했습니다. 현재 사이트가 새 Worker 주소를 읽어야 합니다. 새 Worker health 확인: https://kwangseoks-uploader.kos20050627.workers.dev/health. " +
-      "브라우저에서 https://kwangseoks-uploader.kos20050627.workers.dev/health 를 열었을 때 ok:true JSON이 보여야 정상입니다."
-    );
+    throw new Error(`Cloudflare Worker에 연결하지 못했습니다. 현재 사용 중인 Worker 주소: ${workerUrl}. health 확인: ${workerUrl}/health. 원문: ${error.message}`);
   }
 
-  const text = await res.text();
-  let result = {};
+  let data = null;
   try {
-    result = text ? JSON.parse(text) : {};
+    data = text ? JSON.parse(text) : {};
   } catch {
-    result = { error: text };
+    data = { ok: false, error: text || "Worker 응답을 JSON으로 읽지 못했습니다." };
   }
 
-  if (!res.ok) {
-    const message = result.error || result.message || `Worker 오류: HTTP ${res.status}`;
-    const details = result.details?.message ? ` / GitHub: ${result.details.message}` : "";
-    throw new Error(message + details);
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || data.message || `Worker 업로드 실패: HTTP ${response.status}`);
   }
 
-  if (!result.imageUrl) {
-    throw new Error("Worker가 파일 URL을 반환하지 않았습니다. Worker 코드가 최신 v23인지 확인하세요.");
-  }
-
-  return result.imageUrl;
+  return data.url || data.downloadUrl || data.path || "";
 }
 
 function getYoutubeEmbedUrl(url) {

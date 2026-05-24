@@ -681,3 +681,26 @@ https://kwangseoks-uploader.kos20050627.workers.dev/health
 
 정상 version:
 v69-git-data-api
+
+
+## v70 수정 사항 - 사이트 업로드 Worker 주소 강제 고정
+사이트가 firebase-config.js를 못 읽거나 캐시 때문에 예전 Worker 주소를 쓰는 문제를 막기 위해 app.js 안에 Worker 주소를 직접 고정했습니다.
+
+강제 Worker URL:
+https://kwangseoks-uploader.kos20050627.workers.dev
+
+업로드 함수:
+- ACTIVE_UPLOAD_WORKER_URL 사용
+- /upload로 직접 POST
+- cache: no-store
+- 연결 실패 시 현재 사용 중인 Worker 주소를 오류에 직접 표시
+
+확인:
+1. GitHub에 v70 전체 덮어쓰기
+2. Commit changes
+3. Ctrl + F5
+4. 브라우저에서 아래 주소 확인
+   https://kwangseoks-uploader.kos20050627.workers.dev/health
+
+중요:
+Cloudflare Worker 코드 자체도 v69 Git Data API 코드로 Deploy되어 있어야 합니다.
