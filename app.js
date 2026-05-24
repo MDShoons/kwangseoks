@@ -1,4 +1,56 @@
 
+function getInputValueByIds(ids) {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && typeof el.value === "string" && el.value.trim()) {
+      return el.value.trim();
+    }
+  }
+  return "";
+}
+
+function getFileByIds(ids) {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && el.files && el.files[0]) {
+      return el.files[0];
+    }
+  }
+  return null;
+}
+
+function getMediaUrlForPrefix(prefix) {
+  return getInputValueByIds([
+    `${prefix}Url`,
+    `${prefix}MediaUrl`,
+    `${prefix}FileUrl`,
+    `${prefix}Link`,
+    `${prefix}SourceUrl`,
+    `${prefix}AudioUrl`,
+    `${prefix}VideoUrl`,
+    `${prefix}PhotoUrl`,
+    `${prefix}ImageUrl`,
+    `${prefix}URL`,
+    prefix === "audio" ? "songUrl" : "",
+    prefix === "audio" ? "songMediaUrl" : "",
+    prefix === "radio" ? "radioUrl" : "",
+    prefix === "radio" ? "radioMediaUrl" : "",
+    prefix === "video" ? "videoUrl" : "",
+    prefix === "photo" ? "photoUrl" : ""
+  ].filter(Boolean));
+}
+
+function getThumbnailUrlForPrefix(prefix) {
+  return getInputValueByIds([
+    `${prefix}ThumbnailUrl`,
+    `${prefix}ThumbUrl`,
+    `${prefix}ImageUrl`,
+    `${prefix}CoverUrl`,
+    `${prefix}PhotoUrl`
+  ]);
+}
+
+
 
 function getGoogleDriveFileId(url) {
   const value = String(url || "").trim();
@@ -88,7 +140,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v76-google-drive-link-play";
+const APP_VERSION = "v77-url-input-read-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -573,20 +625,17 @@ document.getElementById("saveRadioBtn").addEventListener("click", () => saveAudi
 async function saveAudioLike(category, prefix) {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
 
-  const title = document.getElementById(`${prefix}Title`)?.value.trim() || "";
-  const urlInput = document.getElementById(`${prefix}Url`)?.value.trim() || "";
-  const fileInput = document.getElementById(`${prefix}File`);
-  const imageInput = document.getElementById(`${prefix}ImageUrl`) || document.getElementById(`${prefix}ThumbnailUrl`);
-  const imageUrl = imageInput?.value.trim() || "";
-  const file = fileInput?.files?.[0];
+  const title = getInputValueByIds([`${prefix}Title`, category === "songs" ? "songTitle" : "", category === "radios" ? "radioTitle" : ""].filter(Boolean));
+  const urlInput = getMediaUrlForPrefix(prefix);
+  const file = getFileByIds([`${prefix}File`, `${prefix}UploadFile`, category === "songs" ? "songFile" : "", category === "radios" ? "radioFile" : ""].filter(Boolean));
+  const imageUrl = getThumbnailUrlForPrefix(prefix);
 
   if (!title) return alert("제목을 입력하세요.");
   if (!urlInput && !file) {
-    return alert("미디어 링크를 입력하세요. 파일 직접 업로드 대신 URL 입력을 권장합니다.");
+    return alert("미디어 URL 칸에 링크를 입력하세요. 예: https://drive.google.com/file/d/.../view 또는 https://drive.google.com/uc?export=download&id=...");
   }
 
   try {
-    // 링크 입력이 있으면 Worker 업로드를 절대 호출하지 않음
     const mediaUrl = normalizeMediaUrlForPlayback(urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios"), "audio");
 
     await addDoc(collection(db, "contents"), {
@@ -596,14 +645,14 @@ async function saveAudioLike(category, prefix) {
       title,
       mediaUrl,
       thumbnailUrl: imageUrl,
-      description: document.getElementById(`${prefix}Description`)?.value.trim() || "",
-      year: document.getElementById(`${prefix}Year`)?.value.trim() || "",
-      source: document.getElementById(`${prefix}Source`)?.value.trim() || "",
+      description: getInputValueByIds([`${prefix}Description`, `${prefix}Desc`]),
+      year: getInputValueByIds([`${prefix}Year`]),
+      source: getInputValueByIds([`${prefix}Source`]),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
 
-    alert("링크 방식으로 저장되었습니다.");
+    alert("미디어 링크가 저장되었습니다.");
     await loadContents();
   } catch (error) {
     alert("미디어 링크 저장 오류: " + error.message);

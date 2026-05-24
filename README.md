@@ -820,3 +820,19 @@ index.html 하단 버전이 v75-link-only-media로 보여야 합니다.
 주의:
 구글드라이브 파일 공유 설정이 반드시 “링크가 있는 모든 사용자: 뷰어”여야 합니다.
 파일이 너무 크거나 구글이 바이러스 검사/쿠키 확인 페이지를 끼워 넣으면 브라우저 플레이어에서 재생이 막힐 수 있습니다.
+
+
+## v77 수정 사항 - URL 입력칸 인식 오류 수정
+구글드라이브 링크를 넣어도 “미디어 링크를 입력하세요”가 뜨던 문제를 수정했습니다.
+
+원인:
+- 저장 함수가 실제 화면의 URL 입력칸 id와 다른 id를 찾고 있었을 가능성이 큼
+- 링크를 넣었어도 코드에서는 빈 값으로 판단
+
+수정:
+- audioUrl, radioUrl, radioMediaUrl, radioFileUrl, radioLink 등 가능한 URL 입력칸 id를 모두 탐색
+- Songs / Radios / Videos / Photos 저장 함수 보강
+- 구글드라이브 file/d/.../view 링크 자동 변환 유지
+
+적용 후 사이트 하단 버전:
+v77-url-input-read-fix
