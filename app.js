@@ -140,7 +140,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v77-url-input-read-fix";
+const APP_VERSION = "v79-google-drive-preview-player";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1614,7 +1614,37 @@ function renderAboutArticle(items) {
 }
 
 
+
+function isGoogleDriveUrl(url) {
+  return String(url || "").includes("drive.google.com");
+}
+
+function toGoogleDrivePreviewUrl(url) {
+  const id = getGoogleDriveFileId(url);
+  return id ? `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview` : url;
+}
+
+function renderGoogleDrivePreviewPlayer(url, label = "Google Drive media") {
+  const previewUrl = toGoogleDrivePreviewUrl(url);
+  return `
+    <div class="gdrive-preview-player" onclick="event.stopPropagation()">
+      <iframe
+        src="${escapeHtml(previewUrl)}"
+        title="${escapeHtml(label)}"
+        allow="autoplay"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+      <p class="gdrive-preview-note">구글드라이브 미리보기 플레이어로 재생됩니다.</p>
+    </div>
+  `;
+}
+
 function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
+  if (isGoogleDriveUrl(mediaUrl)) {
+    return renderGoogleDrivePreviewPlayer(mediaUrl, playerId || "Google Drive audio");
+  }
+
   const safeUrl = escapeHtml(mediaUrl || "");
   const safeId = escapeHtml(playerId || "");
   if (!safeUrl) return "";
@@ -1759,7 +1789,7 @@ function renderList(id, items) {
         ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
         ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
         ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
-        ${item.mediaType === "audio" ? (id === "radioList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `radio-list-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`) : ""}
+        ${item.mediaType === "audio" ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`) : ""}
         <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
         <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
         ${createdDateMarkup(item)}
@@ -1911,10 +1941,7 @@ function renderDetailMedia(item) {
 
   if (category === "songs" || category === "radios") {
     if (mediaUrl) {
-      if (category === "radios") {
-        return `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(mediaUrl, `radio-detail-${item.id || "detail"}`)}</div>`;
-      }
-      return `<div class="detail-audio-box"><audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></audio></div>`;
+      return `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>`;
     }
 
     if (imageUrl) {

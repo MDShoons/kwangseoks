@@ -836,3 +836,32 @@ index.html 하단 버전이 v75-link-only-media로 보여야 합니다.
 
 적용 후 사이트 하단 버전:
 v77-url-input-read-fix
+
+
+## v78 수정 사항 - Songs UI를 Radios UI와 동일하게 변경
+Songs 페이지의 오디오 재생 UI를 Radios 페이지와 같은 흑백 커스텀 플레이어로 변경했습니다.
+
+수정 내용:
+- Songs 목록 기본 audio 플레이어 제거
+- Songs 목록에 Radios와 동일한 흑백 커스텀 플레이어 적용
+- Songs 상세보기에도 동일한 플레이어 적용
+- 재생/일시정지, 진행바, 시간 표시, 음소거, 볼륨 조절 동일 적용
+- Radios UI는 기존 유지
+
+적용 후 사이트 하단 버전:
+v78-songs-match-radios-ui
+
+
+## v79 수정 사항 - 구글드라이브 preview 플레이어 적용
+구글드라이브 링크가 audio 태그에서 0:00 / 0:00으로 표시되며 재생되지 않는 문제를 피하기 위해,
+Google Drive 링크는 자동으로 preview iframe 플레이어로 표시합니다.
+
+동작:
+- 일반 mp3/wav 직접 링크: 사이트 흑백 커스텀 플레이어 사용
+- Google Drive 링크: https://drive.google.com/file/d/파일ID/preview iframe 사용
+- Songs / Radios 목록과 상세보기 적용
+- Videos / Photos 상세보기에서도 Google Drive 링크는 preview iframe 적용
+
+주의:
+iframe 내부 UI는 Google Drive가 제공하는 것이므로 사이트 플레이어처럼 완전히 꾸밀 수 없습니다.
+파일 공유 설정은 “링크가 있는 모든 사용자: 뷰어”여야 합니다.
