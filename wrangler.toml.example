@@ -1,0 +1,18 @@
+# wrangler.toml 예시
+# Cloudflare Workers에서 이 파일을 사용할 경우 계정에 맞게 수정하세요.
+
+name = "gwangseok-github-uploader"
+main = "cloudflare-worker-github-uploader.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+GITHUB_OWNER = "여기에_GITHUB_아이디"
+GITHUB_REPO = "여기에_저장소_이름"
+GITHUB_BRANCH = "main"
+GITHUB_PAGES_BASE_URL = "https://여기에_GITHUB_아이디.github.io/여기에_저장소_이름"
+ADMIN_EMAILS = "shinestone0106@kakao.com,kos20050627@gmail.com"
+ALLOWED_ORIGIN = "https://여기에_GITHUB_아이디.github.io"
+
+# GITHUB_TOKEN은 보안상 여기에 적지 말고 Cloudflare Dashboard의 Worker Settings > Variables > Secrets에 넣으세요.
+# 또는 CLI 사용 시:
+# wrangler secret put GITHUB_TOKEN

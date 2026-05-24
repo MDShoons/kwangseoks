@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        (
+          request.auth.token.email == "shinestone0106@kakao.com" ||
+          request.auth.token.email == "kos20050627@gmail.com"
+        );
+    }
+
+    match /loginIds/{loginId} {
+      allow read: if true;
+
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.loginId == loginId
+        && request.resource.data.email == request.auth.token.email;
+
+      allow update, delete: if false;
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow read, update: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if false;
+    }
+
+    match /contents/{contentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /templateSettings/{pageId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /siteSettings/{settingId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // v15: 페이지별 사용자 정의 카테고리
+    // 예: Songs → 1집, 2집 / Videos → 공연, 방송, 인터뷰
+    match /pageCategories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
