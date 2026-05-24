@@ -2848,3 +2848,228 @@ body.screen-protect-blur footer {
     aspect-ratio: 1 / 1;
   }
 }
+
+
+/* v87: Song card should match the requested compact cover + text + player layout */
+#songList.list-box,
+#radioList.list-box {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 420px)) !important;
+  justify-content: center !important;
+  gap: 28px !important;
+}
+
+#songList .list-item.audio-archive-card,
+#radioList .list-item.audio-archive-card {
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+  padding: 40px 40px 36px !important;
+  border-radius: 26px !important;
+  background: #fffaf4 !important;
+  border: 1px solid #dcc7b4 !important;
+  box-shadow: 0 8px 22px rgba(70, 48, 32, 0.06) !important;
+}
+
+.audio-archive-shell {
+  gap: 24px !important;
+}
+
+.audio-archive-top {
+  display: grid !important;
+  grid-template-columns: 132px minmax(0, 1fr) !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+.audio-archive-top.no-cover {
+  display: block !important;
+}
+
+.audio-archive-cover {
+  width: 132px !important;
+  height: 132px !important;
+  border-radius: 18px !important;
+  background: #eee6dc !important;
+  border: 1px solid #d8c6b3 !important;
+}
+
+.audio-archive-cover img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #eee6dc !important;
+}
+
+.audio-archive-cover-placeholder span {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #8a5c3e !important;
+  letter-spacing: 0.02em !important;
+}
+
+#songList .audio-archive-meta h3,
+#radioList .audio-archive-meta h3 {
+  margin: 2px 0 14px 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: 24px !important;
+  line-height: 1.28 !important;
+  font-weight: 900 !important;
+  color: #17110d !important;
+  letter-spacing: -0.04em !important;
+}
+
+.audio-archive-summary {
+  margin: 0 !important;
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+  color: #261b14 !important;
+  -webkit-line-clamp: 4 !important;
+}
+
+.audio-archive-player-row {
+  margin-top: 4px !important;
+}
+
+#songList .audio-archive-player-row .radio-mono-player,
+#radioList .audio-archive-player-row .radio-mono-player {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#songList .audio-archive-player-row .radio-mono-controls,
+#radioList .audio-archive-player-row .radio-mono-controls {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 62px !important;
+  border-radius: 18px !important;
+  background: #eeeae5 !important;
+  border: 0 !important;
+  padding: 0 18px !important;
+}
+
+#songList .audio-archive-player-row .radio-mono-play,
+#radioList .audio-archive-player-row .radio-mono-play {
+  width: 46px !important;
+  height: 46px !important;
+  background: #7a4d35 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+}
+
+#songList .audio-archive-player-row .radio-mono-volume-row,
+#radioList .audio-archive-player-row .radio-mono-volume-row {
+  margin-top: 12px !important;
+  padding-left: 10px !important;
+}
+
+.audio-archive-info-row {
+  margin-top: 4px !important;
+  padding-top: 20px !important;
+  border-top: 1px solid #dfd0c2 !important;
+  gap: 14px !important;
+}
+
+#songList .audio-archive-info-row p,
+#radioList .audio-archive-info-row p {
+  margin: 0 !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  color: #2c211a !important;
+}
+
+#songList .audio-archive-info-row strong,
+#radioList .audio-archive-info-row strong {
+  font-weight: 900 !important;
+}
+
+@media (max-width: 760px) {
+  #songList.list-box,
+  #radioList.list-box {
+    grid-template-columns: 1fr !important;
+  }
+
+  #songList .list-item.audio-archive-card,
+  #radioList .list-item.audio-archive-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding: 28px !important;
+  }
+
+  .audio-archive-top {
+    grid-template-columns: 116px minmax(0, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .audio-archive-cover {
+    width: 116px !important;
+    height: 116px !important;
+  }
+}
+
+
+/* v88 emergency: ensure Songs cards match requested UI and Radios stay coverless */
+#songList.list-box,
+#radioList.list-box {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 420px)) !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  align-items: start !important;
+}
+
+#songList .list-item.audio-archive-card,
+#radioList .list-item.audio-archive-card {
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+}
+
+#songList .audio-archive-top {
+  display: grid !important;
+  grid-template-columns: 132px minmax(0, 1fr) !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+#radioList .audio-archive-top,
+#radioList .audio-archive-top.no-cover {
+  display: block !important;
+}
+
+#radioList .audio-archive-cover,
+#radioList .audio-archive-cover-placeholder {
+  display: none !important;
+}
+
+#songList .audio-archive-cover {
+  width: 132px !important;
+  height: 132px !important;
+  border-radius: 18px !important;
+}
+
+#songList .audio-archive-cover img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+#songList .audio-archive-player-row .radio-mono-controls,
+#radioList .audio-archive-player-row .radio-mono-controls {
+  min-height: 62px !important;
+}
+
+@media (max-width: 760px) {
+  #songList.list-box,
+  #radioList.list-box {
+    grid-template-columns: 1fr !important;
+  }
+  #songList .list-item.audio-archive-card,
+  #radioList .list-item.audio-archive-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+}

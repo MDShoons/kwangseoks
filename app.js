@@ -162,7 +162,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v86-song-detail-sketch-layout";
+const APP_VERSION = "v88-emergency-radios-fix-song-ui";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -490,14 +490,22 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("mypageBtn")?.classList.toggle("hidden", !user);
   let adminBtn = document.getElementById("adminNavBtn");
   if (isAdmin && !adminBtn) {
-    adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
+    adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => goPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-  await window.addEventListener("hashchange", handleHashRoute);
-window.addEventListener("DOMContentLoaded", handleHashRoute);
-loadSiteSettings(); await loadPageCategories(); await loadContents();
+  await loadSiteSettings();
+  await loadPageCategories();
+  await loadContents();
   handleHashRoute();
 });
+
+window.addEventListener("hashchange", handleHashRoute);
+window.addEventListener("DOMContentLoaded", () => {
+  handleHashRoute();
+});
+
+// GitHub Pages에서 인증 초기화가 늦어져도 화면 전환이 멈추지 않도록 즉시 한 번 실행
+handleHashRoute();
 
 async function loadPageCategories() {
   try {
@@ -1864,7 +1872,6 @@ function setupRadioMonochromePlayers(root = document) {
 
 function renderAudioArchiveCard(item, id, img, previewText) {
   const safeTitle = escapeHtml(item.title || "제목 없음");
-  const safeCategory = item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : "";
   const safePreview = previewText ? `<p class="audio-archive-summary">${escapeHtml(previewText)}</p>` : `<p class="audio-archive-summary empty">설명 정보가 없습니다.</p>`;
   const safeYear = escapeHtml(item.year || "미상");
   const safeSource = escapeHtml(item.source || "미기재");
@@ -1884,7 +1891,6 @@ function renderAudioArchiveCard(item, id, img, previewText) {
         ${thumb}
         <div class="audio-archive-meta">
           <h3>${safeTitle}</h3>
-          ${safeCategory}
           ${safePreview}
         </div>
       </div>
