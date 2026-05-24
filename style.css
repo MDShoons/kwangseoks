@@ -2369,3 +2369,19 @@ body.screen-protect-blur footer {
 #radioList .radio-mono-mute {
   color: #111;
 }
+
+/* v79: Songs/Radios album jackets should not be cropped */
+#songList img,
+#radioList img {
+  height: 220px !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #f4eee7 !important;
+}
+
+@media (max-width: 760px) {
+  #songList img,
+  #radioList img {
+    height: 190px !important;
+  }
+}

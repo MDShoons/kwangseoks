@@ -91,12 +91,34 @@ function normalizeGoogleDriveMediaUrl(url, type = "media") {
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
 }
 
+function normalizeGitHubPagesAudioUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value);
+    const isKwangseoksPages = parsed.hostname === "mdshoons.github.io" && parsed.pathname.startsWith("/kwangseoks/");
+    if (!isKwangseoksPages) return value;
+
+    const repoPath = parsed.pathname.replace(/^\/kwangseoks\//, "");
+    if (!/^(audios|radios)\//i.test(repoPath)) return value;
+
+    return `https://raw.githubusercontent.com/mdshoons/kwangseoks/main/${repoPath}`;
+  } catch (_) {
+    return value;
+  }
+}
+
 function normalizeMediaUrlForPlayback(url, type = "media") {
   const value = String(url || "").trim();
   if (!value) return "";
 
-  if (value.includes("drive.google.com")) {
+  if (value.includes("drive.google.com") || value.includes("docs.google.com")) {
     return normalizeGoogleDriveMediaUrl(value, type);
+  }
+
+  if (type === "audio" || type === "radios" || type === "songs") {
+    return normalizeGitHubPagesAudioUrl(value);
   }
 
   return value;
@@ -140,7 +162,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v78-songs-match-radios-ui";
+const APP_VERSION = "v81-radio-raw-url-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1133,6 +1155,39 @@ function formatPlayerTime(seconds) {
   return `${min}:${sec}`;
 }
 
+function getAudioPlaybackCandidates(url) {
+  const value = String(url || "").trim();
+  if (!value) return [];
+
+  const candidates = [];
+  const push = (candidate) => {
+    if (candidate && !candidates.includes(candidate)) candidates.push(candidate);
+  };
+
+  const normalized = normalizeMediaUrlForPlayback(value, "audio");
+  push(normalized);
+  push(value);
+
+  // GitHub Pages에 방금 올라간 파일은 배포 지연 때문에 0:00/404가 날 수 있으므로 raw 주소를 우선 시도한다.
+  const raw = normalizeGitHubPagesAudioUrl(value);
+  if (raw !== value) push(raw);
+
+  const id = getGoogleDriveFileId(value);
+  if (id) {
+    const encoded = encodeURIComponent(id);
+    push(`https://drive.usercontent.google.com/download?id=${encoded}&export=download&authuser=0`);
+    push(`https://drive.google.com/uc?export=download&id=${encoded}`);
+    push(`https://docs.google.com/uc?export=download&id=${encoded}`);
+  }
+
+  return candidates;
+}
+
+function formatPlayerDuration(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "--:--";
+  return formatPlayerTime(seconds);
+}
+
 
 function getDailyPlayerClosedKey() {
   return `kwangseoks_daily_player_closed_${getKoreanDateKey()}`;
@@ -1615,16 +1670,17 @@ function renderAboutArticle(items) {
 
 
 function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
-  const safeUrl = escapeHtml(mediaUrl || "");
+  const normalizedUrl = normalizeMediaUrlForPlayback(mediaUrl || "", "audio");
+  const safeUrl = escapeHtml(normalizedUrl);
   const safeId = escapeHtml(playerId || "");
   if (!safeUrl) return "";
 
   return `
-    <div class="radio-mono-player" data-radio-player data-player-id="${safeId}" onclick="event.stopPropagation()">
-      <audio preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${safeUrl}"></audio>
+    <div class="radio-mono-player" data-radio-player data-player-id="${safeId}" data-audio-url="${safeUrl}" onclick="event.stopPropagation()">
+      <audio preload="auto" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
       <div class="radio-mono-controls">
         <button type="button" class="radio-mono-play" aria-label="재생 또는 일시정지">▶</button>
-        <div class="radio-mono-time"><span class="radio-mono-current">0:00</span> <span class="radio-mono-divider">/</span> <span class="radio-mono-duration">0:00</span></div>
+        <div class="radio-mono-time"><span class="radio-mono-current">0:00</span> <span class="radio-mono-divider">/</span> <span class="radio-mono-duration">--:--</span></div>
         <input type="range" class="radio-mono-progress" min="0" max="1000" value="0" step="1" aria-label="재생 위치">
         <button type="button" class="radio-mono-mute" aria-label="음소거">🔈</button>
       </div>
@@ -1653,8 +1709,37 @@ function setupRadioMonochromePlayers(root = document) {
     player.dataset.bound = 'yes';
     audio.volume = 0.8;
     audio.muted = false;
-    volume.value = '80';
     audio.setAttribute('playsinline', '');
+    audio.preload = 'auto';
+    volume.value = '80';
+
+    const sourceUrl = player.dataset.audioUrl || audio.getAttribute('src') || '';
+    const candidates = getAudioPlaybackCandidates(sourceUrl);
+    let candidateIndex = 0;
+    let triedDurationProbe = false;
+
+    const setPlayerMessage = (text) => {
+      duration.textContent = text;
+    };
+
+    const updateDurationUi = () => {
+      duration.textContent = formatPlayerDuration(audio.duration);
+    };
+
+    const loadCandidate = (index = 0) => {
+      const nextUrl = candidates[index];
+      if (!nextUrl) {
+        setPlayerMessage('링크 확인');
+        return false;
+      }
+      candidateIndex = index;
+      triedDurationProbe = false;
+      audio.src = nextUrl;
+      audio.load();
+      return true;
+    };
+
+    loadCandidate(0);
 
     player.addEventListener('click', (event) => event.stopPropagation());
     player.querySelectorAll('button, input').forEach((control) => {
@@ -1672,8 +1757,38 @@ function setupRadioMonochromePlayers(root = document) {
       playBtn.textContent = audio.paused ? '▶' : '❚❚';
     };
 
+    const tryFixMissingDuration = () => {
+      if (triedDurationProbe) return;
+      if (Number.isFinite(audio.duration) && audio.duration > 0) return;
+      if (audio.readyState < 1) return;
+
+      triedDurationProbe = true;
+      const oldMuted = audio.muted;
+      const oldTime = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+      audio.muted = true;
+      try {
+        audio.currentTime = 1e9;
+      } catch (_) {
+        audio.muted = oldMuted;
+        return;
+      }
+
+      const restore = () => {
+        audio.removeEventListener('timeupdate', restore);
+        audio.removeEventListener('durationchange', restore);
+        try { audio.currentTime = oldTime || 0; } catch (_) {}
+        audio.muted = oldMuted;
+        updateDurationUi();
+        syncVolumeUi();
+      };
+
+      audio.addEventListener('timeupdate', restore, { once: true });
+      audio.addEventListener('durationchange', restore, { once: true });
+      setTimeout(restore, 500);
+    };
+
     playBtn.addEventListener('click', async () => {
-      if (!audio.src) return;
+      if (!audio.src && !loadCandidate(candidateIndex)) return;
       try {
         if (audio.paused) {
           await audio.play();
@@ -1682,6 +1797,7 @@ function setupRadioMonochromePlayers(root = document) {
         }
       } catch (error) {
         console.error('라디오 재생 오류', error);
+        setPlayerMessage('재생 불가');
       }
     });
 
@@ -1703,16 +1819,33 @@ function setupRadioMonochromePlayers(root = document) {
     });
 
     audio.addEventListener('loadedmetadata', () => {
-      duration.textContent = formatPlayerTime(audio.duration);
+      updateDurationUi();
+      setTimeout(tryFixMissingDuration, 120);
     });
+
+    audio.addEventListener('durationchange', updateDurationUi);
+    audio.addEventListener('canplay', updateDurationUi);
+    audio.addEventListener('loadeddata', updateDurationUi);
 
     audio.addEventListener('timeupdate', () => {
       current.textContent = formatPlayerTime(audio.currentTime);
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        duration.textContent = formatPlayerTime(audio.duration);
         progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
       } else {
         progress.value = '0';
       }
+    });
+
+    audio.addEventListener('error', () => {
+      const canTryNext = candidateIndex + 1 < candidates.length;
+      if (canTryNext) {
+        loadCandidate(candidateIndex + 1);
+        return;
+      }
+      console.error('오디오 링크를 불러오지 못했습니다:', sourceUrl, audio.error);
+      setPlayerMessage('링크 확인');
+      syncPlayUi();
     });
 
     audio.addEventListener('play', syncPlayUi);
@@ -1725,6 +1858,7 @@ function setupRadioMonochromePlayers(root = document) {
 
     syncPlayUi();
     syncVolumeUi();
+    updateDurationUi();
   });
 }
 

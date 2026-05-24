@@ -204,11 +204,17 @@ async function handleUpload(request, env) {
   );
 
   const pagesBase = env.GITHUB_PAGES_BASE_URL || `https://${env.GITHUB_OWNER}.github.io/${env.GITHUB_REPO}`;
-  const url = `${pagesBase.replace(/\/$/, "")}/${filePath}`;
+  const pagesUrl = `${pagesBase.replace(/\/$/, "")}/${filePath}`;
+  const branch = env.GITHUB_BRANCH || "main";
+  const rawUrl = `https://raw.githubusercontent.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/${branch}/${filePath}`;
+  const isAudioLike = /^(audios|radios)\//i.test(filePath);
+  const url = isAudioLike ? rawUrl : pagesUrl;
 
   return jsonResponse({
     ok: true,
     url,
+    pagesUrl,
+    rawUrl,
     path: filePath,
     size: file.size,
     type: file.type || "",
@@ -230,7 +236,7 @@ export default {
         return jsonResponse({
           ok: true,
           service: "kwangseoks-github-uploader",
-          version: "v74-origin-bypass-upload",
+          version: "v81-raw-audio-url",
           hasOwner: Boolean(env.GITHUB_OWNER),
           hasRepo: Boolean(env.GITHUB_REPO),
           hasToken: Boolean(env.GITHUB_TOKEN),
