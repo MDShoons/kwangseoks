@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v44-block-rightclick-f12";
+const APP_VERSION = "v48-home-voice-file-included";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -134,6 +134,8 @@ function showPage(pageId, fromHash = false) {
   if (pageId === "mypage") {
     fillMyPageForm();
   }
+
+  if (pageId === "home") tryPlayHomeVoiceOnce();
 
   if (["videos", "songs", "radios", "photos", "stories", "about", "oneum"].includes(pageId)) {
     loadContents();
@@ -573,6 +575,90 @@ async function deleteMyAccount() {
   }
 }
 
+
+
+function applyHomeVoiceSettings(settings = currentSettings || {}) {
+  const section = document.getElementById("homeVoiceSection");
+  const audioEl = document.getElementById("homeVoiceAudio");
+  const noticeEl = document.getElementById("homeVoiceNotice");
+
+  if (!section || !audioEl) return;
+
+  const voiceUrl = settings.homeVoiceUrl || "https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3";
+
+  if (!voiceUrl) {
+    section.classList.add("hidden");
+    audioEl.pause();
+    audioEl.removeAttribute("src");
+    if (noticeEl) noticeEl.classList.add("hidden");
+    return;
+  }
+
+  section.classList.remove("hidden");
+  audioEl.src = voiceUrl;
+  audioEl.preload = "auto";
+  audioEl.setAttribute("playsinline", "");
+  audioEl.setAttribute("controlsList", "nodownload noplaybackrate");
+  audioEl.setAttribute("oncontextmenu", "return false");
+
+  tryPlayHomeVoiceOnce();
+}
+
+function tryPlayHomeVoiceOnce() {
+  const audioEl = document.getElementById("homeVoiceAudio");
+  const noticeEl = document.getElementById("homeVoiceNotice");
+
+  if (!audioEl || !audioEl.src) return;
+
+  const onceKey = "kwangseoks_home_voice_played_v1";
+
+  if (sessionStorage.getItem(onceKey) === "yes") {
+    if (noticeEl) noticeEl.classList.add("hidden");
+    return;
+  }
+
+  const markPlayed = () => {
+    sessionStorage.setItem(onceKey, "yes");
+    if (noticeEl) noticeEl.classList.add("hidden");
+    cleanupGestureListeners();
+  };
+
+  const playNow = async () => {
+    try {
+      audioEl.currentTime = 0;
+      await audioEl.play();
+      markPlayed();
+    } catch (error) {
+      if (noticeEl) noticeEl.classList.remove("hidden");
+      installGestureFallback();
+    }
+  };
+
+  const gesturePlay = async () => {
+    try {
+      audioEl.currentTime = 0;
+      await audioEl.play();
+      markPlayed();
+    } catch {
+      if (noticeEl) noticeEl.classList.remove("hidden");
+    }
+  };
+
+  function installGestureFallback() {
+    document.addEventListener("click", gesturePlay, { once: true, capture: true });
+    document.addEventListener("touchstart", gesturePlay, { once: true, capture: true });
+    document.addEventListener("keydown", gesturePlay, { once: true, capture: true });
+  }
+
+  function cleanupGestureListeners() {
+    document.removeEventListener("click", gesturePlay, true);
+    document.removeEventListener("touchstart", gesturePlay, true);
+    document.removeEventListener("keydown", gesturePlay, true);
+  }
+
+  playNow();
+}
+
 async function loadSiteSettings() {
   try {
     const snap = await getDoc(doc(db, "siteSettings", "main"));
@@ -619,6 +705,17 @@ function fillSettingsFormFromCurrent() {
   Object.entries(ids).forEach(([id,key]) => { const el = document.getElementById(id); if (el) el.value = currentSettings[key] || DEFAULT_SETTINGS[key] || ""; });
   const bgUrl = document.getElementById("settingHomeBgUrl");
   if (bgUrl) bgUrl.value = currentSettings.homeBgDataUrl ? "" : (currentSettings.homeBgUrl || "");
+
+  if (document.getElementById("homeVoiceTitleInput")) {
+    document.getElementById("homeVoiceTitleInput").value = currentSettings.homeVoiceTitle || "김광석의 목소리";
+  }
+  if (document.getElementById("homeVoiceDescriptionInput")) {
+    document.getElementById("homeVoiceDescriptionInput").value = currentSettings.homeVoiceDescription || "그의 목소리를 잠시 들어보세요.";
+  }
+  if (document.getElementById("homeVoiceUrlInput")) {
+    document.getElementById("homeVoiceUrlInput").value = currentSettings.homeVoiceUrl || "https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3";
+  }
+
 }
 
 function readDesignSettingsFromForm() {
@@ -662,7 +759,11 @@ document.getElementById("saveSiteSettingsBtn").addEventListener("click", async (
       storiesDesc: document.getElementById("settingStoriesDesc").value.trim() || DEFAULT_SETTINGS.storiesDesc,
       aboutDesc: document.getElementById("settingAboutDesc").value.trim() || DEFAULT_SETTINGS.aboutDesc,
       oneumDesc: document.getElementById("settingOneumDesc").value.trim() || DEFAULT_SETTINGS.oneumDesc,
-      ...readDesignSettingsFromForm(), homeBgUrl, homeBgDataUrl, updatedAt: serverTimestamp()
+      ...readDesignSettingsFromForm(), homeBgUrl, homeBgDataUrl, 
+    homeVoiceTitle: document.getElementById("homeVoiceTitleInput")?.value.trim() || "김광석의 목소리",
+    homeVoiceDescription: document.getElementById("homeVoiceDescriptionInput")?.value.trim() || "그의 목소리를 잠시 들어보세요.",
+    homeVoiceUrl: document.getElementById("homeVoiceUrlInput")?.value.trim() || "https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3",
+    updatedAt: serverTimestamp()
     };
     await setDoc(doc(db, "siteSettings", "main"), settings);
     currentSettings = { ...DEFAULT_SETTINGS, ...settings };
@@ -795,6 +896,7 @@ async function loadContents() {
     snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
     renderAllContentSections();
     await applySavedTemplates();
+  applyHomeVoiceSettings(currentSettings);
   } catch(e) { console.error(e); }
 }
 
@@ -906,22 +1008,110 @@ function createCard(item) {
   return card;
 }
 
+
+function youtubeEmbedHtml(url) {
+  const safeUrl = String(url || "");
+  let videoId = "";
+
+  try {
+    const parsed = new URL(safeUrl);
+    if (parsed.hostname.includes("youtu.be")) {
+      videoId = parsed.pathname.replace("/", "");
+    } else if (parsed.searchParams.get("v")) {
+      videoId = parsed.searchParams.get("v");
+    } else if (parsed.pathname.includes("/embed/")) {
+      videoId = parsed.pathname.split("/embed/")[1].split("/")[0];
+    }
+  } catch {
+    return "";
+  }
+
+  if (!videoId) return "";
+  return `<iframe src="https://www.youtube.com/embed/${escapeHtml(videoId)}" title="YouTube video" allowfullscreen></iframe>`;
+}
+
+
+function renderDetailMedia(item) {
+  const category = item.category || "";
+  const mediaUrl = item.mediaUrl || item.fileUrl || item.videoUrl || "";
+  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+  const youtubeUrl = item.youtubeUrl || item.url || "";
+  const title = escapeHtml(item.title || "");
+
+  if (category === "videos") {
+    if (youtubeUrl && (youtubeUrl.includes("youtube.com") || youtubeUrl.includes("youtu.be"))) {
+      return `<div class="detail-media-box">${youtubeEmbedHtml(youtubeUrl)}</div>`;
+    }
+
+    if (mediaUrl) {
+      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(mediaUrl)}"></video></div>`;
+    }
+
+    if (imageUrl) {
+      return `<div class="detail-media-box"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+    }
+
+    return "";
+  }
+
+  if (category === "songs" || category === "radios") {
+    if (mediaUrl) {
+      return `<div class="detail-audio-box"><audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${escapeHtml(mediaUrl)}"></audio></div>`;
+    }
+
+    if (imageUrl) {
+      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+    }
+
+    return "";
+  }
+
+  if (category === "photos") {
+    if (imageUrl || mediaUrl) {
+      return `<div class="detail-media-box"><img src="${escapeHtml(imageUrl || mediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+    }
+
+    return "";
+  }
+
+  if (imageUrl) {
+    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(imageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+  }
+
+  return "";
+}
+
 function openContentDetail(id) {
-  const item = allContents.find(i => i.id === id); if (!item) return;
-  document.getElementById("detailTitle").textContent = item.title || "제목 없음";
-  document.getElementById("detailCategory").textContent = [item.category ? `분류: ${item.category}` : "", item.subCategory ? `카테고리: ${item.subCategory}` : ""].filter(Boolean).join(" / ");
-  document.getElementById("detailMeta").textContent = `${item.year ? "연도: "+item.year : "연도: 미상"} / ${item.source ? "출처: "+item.source : "출처: 미기재"}`;
-  document.getElementById("detailDescription").textContent = item.body || item.description || "";
-  const area = document.getElementById("detailMediaArea"); area.innerHTML = "";
-  if (item.mediaType === "youtube") area.innerHTML = `<iframe src="${item.mediaUrl}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video") area.innerHTML = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
-  else if (item.mediaType === "audio") area.innerHTML = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : ""}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`;
-  else if (item.mediaUrl) area.innerHTML = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}">`;
-  else area.innerHTML = `<div class="card-placeholder">글 자료</div>`;
-  document.getElementById("contentDetailModal").classList.remove("hidden");
-  hardenMediaDownloadControls();
+  const item = allContents.find((content) => content.id === id);
+  if (!item) return;
+
+  const modal = document.getElementById("contentDetailModal");
+  const body = document.getElementById("contentDetailBody");
+  if (!modal || !body) return;
+
+  const mediaHtml = renderDetailMedia(item);
+  const bodyText = item.body || item.description || "";
+  const safeBody = escapeHtml(bodyText).replace(/\n/g, "<br>");
+
+  body.innerHTML = `
+    ${mediaHtml}
+    <div class="detail-text-box">
+      <h2>${escapeHtml(item.title || "제목 없음")}</h2>
+      <p class="detail-meta"><strong>분류:</strong> ${escapeHtml(item.category || "미분류")}</p>
+      <p class="detail-meta"><strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+      ${item.subCategory ? `<p class="detail-meta"><strong>카테고리:</strong> ${escapeHtml(item.subCategory)}</p>` : ""}
+      ${bodyText ? `<div class="detail-body-text">${safeBody}</div>` : ""}
+    </div>
+  `;
+
+  modal.classList.remove("hidden");
+  installBasicContentProtection();
+  if (typeof hardenMediaDownloadControls === "function") {
+    hardenMediaDownloadControls();
+  }
   document.body.style.overflow = "hidden";
 }
+
 function closeContentDetail(event) {
   if (event && event.target !== event.currentTarget) return;
   document.getElementById("detailMediaArea").innerHTML = "";

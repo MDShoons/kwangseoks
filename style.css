@@ -971,3 +971,134 @@ video {
   -webkit-user-drag: none;
   user-drag: none;
 }
+
+/* v45: 상세창 미디어 표시 오류 수정 */
+.detail-media-box {
+  width: 100%;
+  margin: 0 0 22px 0;
+}
+
+.detail-media-box img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #f4eee7;
+}
+
+.detail-media-box video,
+.detail-media-box iframe {
+  width: 100%;
+  min-height: 420px;
+  border: 0;
+  border-radius: 18px;
+  background: #111;
+}
+
+.detail-audio-box {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 24px 0;
+  padding: 18px 20px;
+  border: 1px solid #e0cdb9;
+  border-radius: 999px;
+  background: #f8f4ef;
+}
+
+.detail-audio-box audio {
+  width: 320px;
+  max-width: 100%;
+  display: block;
+}
+
+.detail-text-box h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 26px;
+  line-height: 1.38;
+}
+
+.detail-meta {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.detail-body-text {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e2d3c4;
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.detail-cover-only img[src=""],
+.detail-media-box img:not([src]) {
+  display: none !important;
+}
+
+/* v46: 홈 화면 김광석 육성 오디오 */
+.home-voice-section {
+  max-width: 1120px;
+  margin: 28px auto;
+}
+
+.home-voice-card {
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.86);
+  padding: 28px 34px;
+  box-shadow: 0 6px 20px rgba(60, 48, 41, 0.06);
+}
+
+.home-voice-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #efe3d3;
+  color: #704c35;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.home-voice-card h2 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  line-height: 1.4;
+}
+
+.home-voice-card p {
+  margin: 0 0 18px 0;
+  line-height: 1.65;
+}
+
+.home-voice-card audio {
+  width: 360px;
+  max-width: 100%;
+}
+
+/* v47: 홈 화면 육성 자동재생 */
+.home-voice-section {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+#homeVoiceAudio {
+  display: none !important;
+}
+
+.home-voice-notice {
+  margin: 18px auto 0;
+  width: fit-content;
+  max-width: 90%;
+  padding: 10px 16px;
+  border: 1px solid #dfcdbb;
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.9);
+  color: #704c35;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(60, 48, 41, 0.06);
+}
