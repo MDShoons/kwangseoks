@@ -162,7 +162,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v81-radio-raw-url-fix";
+const APP_VERSION = "v82-audio-archive-ui";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1862,6 +1862,40 @@ function setupRadioMonochromePlayers(root = document) {
   });
 }
 
+function renderAudioArchiveCard(item, id, img, previewText) {
+  const safeTitle = escapeHtml(item.title || "제목 없음");
+  const safeCategory = item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : "";
+  const safePreview = previewText ? `<p class="audio-archive-summary">${escapeHtml(previewText)}</p>` : `<p class="audio-archive-summary empty">설명 정보가 없습니다.</p>`;
+  const safeYear = escapeHtml(item.year || "미상");
+  const safeSource = escapeHtml(item.source || "미기재");
+  const created = createdDateMarkup(item);
+  const player = renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`);
+  const thumb = img
+    ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
+    : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`;
+
+  return `
+    <div class="audio-archive-shell">
+      <div class="audio-archive-top">
+        ${thumb}
+        <div class="audio-archive-meta">
+          <h3>${safeTitle}</h3>
+          ${safeCategory}
+          ${safePreview}
+        </div>
+      </div>
+      <div class="audio-archive-player-row">
+        ${player}
+      </div>
+      <div class="audio-archive-info-row">
+        <p><strong>연도:</strong> ${safeYear}</p>
+        <p><strong>출처:</strong> ${safeSource}</p>
+        ${created}
+      </div>
+    </div>
+  `;
+}
+
 function renderList(id, items) {
   const box = document.getElementById(id);
   if (!box) return;
@@ -1874,11 +1908,13 @@ function renderList(id, items) {
   }
 
   const isStoryList = id === "storyList";
+  const isAudioArchiveList = id === "songList" || id === "radioList";
 
   items.forEach(item => {
     const div = document.createElement("div");
     div.className = (item.mediaUrl || item.thumbnailUrl) && item.mediaType !== "youtube" ? "list-item with-image" : "list-item";
     if (isStoryList) div.classList.add("story-preview-card");
+    if (isAudioArchiveList && item.mediaType === "audio") div.classList.add("audio-archive-card");
 
     div.onclick = () => openContentDetail(item.id);
 
@@ -1886,19 +1922,23 @@ function renderList(id, items) {
     const previewLength = isStoryList ? 110 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
-    div.innerHTML = `
-      ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
-      <div>
-        <h3>${escapeHtml(item.title)}</h3>
-        ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
-        ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
-        ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
-        ${item.mediaType === "audio" ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`) : ""}
-        <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
-        <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
-        ${createdDateMarkup(item)}
-      </div>
-    `;
+    if (isAudioArchiveList && item.mediaType === "audio") {
+      div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
+    } else {
+      div.innerHTML = `
+        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
+        <div>
+          <h3>${escapeHtml(item.title)}</h3>
+          ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
+          ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
+          ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
+          ${item.mediaType === "audio" ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`) : ""}
+          <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
+          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+          ${createdDateMarkup(item)}
+        </div>
+      `;
+    }
 
     box.appendChild(div);
   });
