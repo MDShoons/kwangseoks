@@ -416,3 +416,161 @@ audio::-webkit-media-controls-enclosure {
   max-width: 420px;
   min-width: 280px;
 }
+
+
+/* v32: PC 전용 느낌 강화 레이아웃 */
+body {
+  min-width: 1180px;
+}
+
+.site-header {
+  min-width: 1180px;
+  height: 86px;
+  padding: 0 44px;
+  flex-direction: row !important;
+  gap: 24px;
+}
+
+.logo {
+  min-width: 190px;
+}
+
+nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+nav button {
+  white-space: nowrap;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.auth-area {
+  min-width: 210px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+main {
+  max-width: 1280px;
+  min-width: 1040px;
+  padding: 42px 32px;
+}
+
+.hero {
+  min-height: 390px;
+  padding: 82px 72px;
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.content-section,
+.page-title,
+.auth-page,
+.admin-form,
+.list-box {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card-grid {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.content-page.template-gallery .card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.content-page.template-list .card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.content-page.template-list .card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+}
+
+.toolbar {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.admin-tabs {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* PC 화면에서 라디오/음원 카드는 작은 박스형 유지 */
+#radioList,
+#songList {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: flex-start;
+}
+
+#radioList .list-item,
+#songList .list-item,
+#radioList .content-card,
+#songList .content-card {
+  width: 420px;
+  max-width: 420px;
+  min-width: 420px;
+}
+
+#radioList audio,
+#songList audio {
+  width: 250px;
+}
+
+/* 관리자 입력 화면 PC 폭 정리 */
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+  max-width: 100%;
+}
+
+.design-grid {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
+/* 상세창 PC형 */
+.detail-modal-inner {
+  width: 980px;
+  max-width: 980px;
+}
+
+.detail-media-area iframe,
+.detail-media-area video {
+  min-height: 480px;
+}
+
+/* PC 버전에서는 모바일 반응형 축소 규칙을 덜 강하게 */
+@media (max-width: 1180px) {
+  body {
+    min-width: 1180px;
+  }
+
+  .site-header {
+    min-width: 1180px;
+  }
+
+  main {
+    min-width: 1040px;
+  }
+}
