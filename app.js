@@ -208,7 +208,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v83-github-pages-media-folders";
+const APP_VERSION = "v84-startup-loading-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -539,9 +539,6 @@ onAuthStateChanged(auth, async (user) => {
     adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-  await window.addEventListener("hashchange", handleHashRoute);
-window.addEventListener("DOMContentLoaded", handleHashRoute);
-loadSiteSettings(); await loadPageCategories(); await loadContents();
   handleHashRoute();
 });
 
@@ -1016,39 +1013,14 @@ async function applySavedTemplates() {
 
 function showScreenProtectOverlay(reason = "protect") {
   const overlay = document.getElementById("screenProtectOverlay");
-  if (!overlay) return;
-
-  overlay.classList.remove("hidden");
-  document.body.classList.add("screen-protect-blur");
-
-  clearTimeout(window.__screenProtectTimer);
-  window.__screenProtectTimer = setTimeout(() => {
-    overlay.classList.add("hidden");
-    document.body.classList.remove("screen-protect-blur");
-  }, reason === "printscreen" ? 1800 : 900);
+  if (overlay) overlay.classList.add("hidden");
+  document.body.classList.remove("screen-protect-blur");
 }
 
 function installScreenProtection() {
-  window.addEventListener("blur", () => {
-    showScreenProtectOverlay("blur");
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      document.body.classList.add("screen-protect-blur");
-    } else {
-      setTimeout(() => document.body.classList.remove("screen-protect-blur"), 600);
-    }
-  });
-
-  window.addEventListener("beforeprint", () => {
-    document.body.classList.add("print-protect");
-    showScreenProtectOverlay("print");
-  });
-
-  window.addEventListener("afterprint", () => {
-    document.body.classList.remove("print-protect");
-  });
+  const overlay = document.getElementById("screenProtectOverlay");
+  if (overlay) overlay.classList.add("hidden");
+  document.body.classList.remove("screen-protect-blur");
 }
 
 function installBasicContentProtection() {
@@ -2166,8 +2138,34 @@ async function deleteContentItem(id) {
   }
 }
 
-loadSiteSettings();
-loadPageCategories();
-loadContents();
+
+let appBootStarted = false;
+
+async function bootKwangseoksApp() {
+  if (appBootStarted) return;
+  appBootStarted = true;
+
+  try {
+    handleHashRoute();
+
+    await Promise.allSettled([
+      loadSiteSettings(),
+      loadPageCategories(),
+      loadContents()
+    ]);
+
+    handleHashRoute();
+  } catch (error) {
+    console.error("사이트 초기화 오류:", error);
+    handleHashRoute();
+  }
+}
+
+window.addEventListener("hashchange", handleHashRoute);
+window.addEventListener("DOMContentLoaded", bootKwangseoksApp);
+
+if (document.readyState === "interactive" || document.readyState === "complete") {
+  bootKwangseoksApp();
+}
 
 window.closeDailyRecommendPlayer = closeDailyRecommendPlayer;

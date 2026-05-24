@@ -2627,3 +2627,17 @@ body.screen-protect-blur footer {
   padding: 2px 5px;
   border-radius: 5px;
 }
+
+/* v84: 초기 로딩/화면보호 오버레이 잔상 방지 */
+#screenProtectOverlay,
+.screen-protect-overlay {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.screen-protect-blur main,
+body.screen-protect-blur header,
+body.screen-protect-blur footer {
+  filter: none !important;
+}

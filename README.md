@@ -955,3 +955,18 @@ HTTP 외부 링크 대신 GitHub 저장소 안에 미디어 폴더를 만들고 
 
 적용 후 사이트 하단 버전:
 v83-github-pages-media-folders
+
+
+## v84 수정 사항 - 사이트 계속 로딩/초기화 멈춤 수정
+사이트가 계속 로딩 중처럼 보이는 문제를 줄이기 위해 시작 로직을 정리했습니다.
+
+수정 내용:
+- hash/page 이동 로직을 로그인 상태 처리와 분리
+- loadSiteSettings / loadPageCategories / loadContents 중복 호출 정리
+- DOMContentLoaded에서 안전하게 한 번만 초기화
+- 초기화 실패 시에도 기본 페이지가 보이도록 처리
+- 화면 보호 오버레이가 로딩처럼 남는 문제 방지
+- GitHub Pages 미디어 폴더 방식 유지
+
+적용 후 사이트 하단 버전:
+v84-startup-loading-fix
