@@ -99,6 +99,12 @@ function normalizeMediaUrlForPlayback(url, type = "media") {
     return normalizeGoogleDriveMediaUrl(value, type);
   }
 
+  // GitHub Pages는 https 사이트이므로 http 음원은 브라우저에서 차단될 수 있습니다.
+  // 서버가 https를 지원하면 자동으로 https로 바꿔 재생을 시도합니다.
+  if (typeof location !== "undefined" && location.protocol === "https:" && value.startsWith("http://")) {
+    return "https://" + value.slice("http://".length);
+  }
+
   return value;
 }
 
@@ -140,7 +146,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v79-google-drive-preview-player";
+const APP_VERSION = "v81-direct-mp3-link-player";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -632,7 +638,7 @@ async function saveAudioLike(category, prefix) {
 
   if (!title) return alert("제목을 입력하세요.");
   if (!urlInput && !file) {
-    return alert("미디어 URL 칸에 링크를 입력하세요. 예: https://drive.google.com/file/d/.../view 또는 https://drive.google.com/uc?export=download&id=...");
+    return alert("미디어 URL 칸에 mp3 링크를 입력하세요. 예: http://oneum.net/.../song.mp3 또는 https://.../song.mp3");
   }
 
   try {
@@ -1624,10 +1630,28 @@ function toGoogleDrivePreviewUrl(url) {
   return id ? `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview` : url;
 }
 
-function renderGoogleDrivePreviewPlayer(url, label = "Google Drive media") {
+
+function renderGoogleDriveListButton(url, label = "Google Drive media") {
   const previewUrl = toGoogleDrivePreviewUrl(url);
   return `
-    <div class="gdrive-preview-player" onclick="event.stopPropagation()">
+    <div class="gdrive-list-player" onclick="event.stopPropagation()">
+      <button type="button" class="gdrive-list-play-btn" onclick="window.open('${escapeHtml(previewUrl)}', '_blank', 'noopener,noreferrer')">▶</button>
+      <div class="gdrive-list-text">
+        <strong>구글드라이브 음원</strong>
+        <span>클릭하면 새 창에서 재생됩니다.</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderGoogleDriveDetailPlayer(url, label = "Google Drive media") {
+  const previewUrl = toGoogleDrivePreviewUrl(url);
+  return `
+    <div class="gdrive-detail-player" onclick="event.stopPropagation()">
+      <div class="gdrive-detail-toolbar">
+        <strong>구글드라이브 미리보기</strong>
+        <button type="button" onclick="window.open('${escapeHtml(previewUrl)}', '_blank', 'noopener,noreferrer')">새 창에서 열기</button>
+      </div>
       <iframe
         src="${escapeHtml(previewUrl)}"
         title="${escapeHtml(label)}"
@@ -1635,14 +1659,22 @@ function renderGoogleDrivePreviewPlayer(url, label = "Google Drive media") {
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade">
       </iframe>
-      <p class="gdrive-preview-note">구글드라이브 미리보기 플레이어로 재생됩니다.</p>
+      <p class="gdrive-preview-note">파일이 보이지 않으면 구글드라이브 공유 설정을 “링크가 있는 모든 사용자: 뷰어”로 바꿔야 합니다.</p>
     </div>
   `;
 }
 
+function renderGoogleDrivePreviewPlayer(url, label = "Google Drive media") {
+  return renderGoogleDriveDetailPlayer(url, label);
+}
+
 function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
   if (isGoogleDriveUrl(mediaUrl)) {
-    return renderGoogleDrivePreviewPlayer(mediaUrl, playerId || "Google Drive audio");
+    const idText = String(playerId || "");
+    if (idText.includes("detail")) {
+      return renderGoogleDriveDetailPlayer(mediaUrl, playerId || "Google Drive audio");
+    }
+    return renderGoogleDriveListButton(mediaUrl, playerId || "Google Drive audio");
   }
 
   const safeUrl = escapeHtml(mediaUrl || "");
