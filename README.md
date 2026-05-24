@@ -333,3 +333,28 @@ v39에서 메뉴가 계속 반응하지 않던 원인을 수정했습니다.
 새 JS:
 - app-v41.js
 - index.html은 app-v41.js?v=41-latest-login-gate를 읽습니다.
+
+
+## v42 수정 사항 - app.js 단일 파일 복구
+v41에서 `app-v41.js`를 읽지 못하거나 캐시/파일명 문제로 클릭이 멈추는 문제를 피하기 위해,
+다시 `app.js` 하나만 읽도록 정리했습니다.
+
+핵심:
+- index.html → `app.js?v=42-single-appjs-fix`
+- app-v41.js 의존 제거
+- app.js에 모든 기능 통합
+- Node syntax check 결과: 정상
+
+포함 기능:
+- 자료별 최신 자료
+- 비로그인 최신자료 클릭 제한
+- 페이지별 검색
+- Videos/Radios/Photos/Oneum 로그인 제한
+- 회원정보 수정
+- 회원탈퇴
+
+적용:
+1. ZIP 전체를 GitHub에 덮어쓰기
+2. 반드시 `index.html`과 `app.js`가 새 파일로 올라갔는지 확인
+3. Commit changes
+4. Ctrl + F5

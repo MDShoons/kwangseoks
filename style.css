@@ -995,3 +995,71 @@ video {
 .latest-mini-card {
   cursor: pointer;
 }
+
+/* v42: single app.js 복구 UI */
+.latest-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+.latest-category-box {
+  border: 1px solid #e0cdb9;
+  border-radius: 20px;
+  background: rgba(255, 250, 244, 0.82);
+  padding: 20px;
+  min-height: 190px;
+}
+.latest-category-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  border-bottom: 1px solid #e6d8ca;
+  padding-bottom: 10px;
+}
+.latest-mini-card { cursor: pointer; }
+.latest-mini-card strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+.latest-mini-card p {
+  margin: 4px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  opacity: 0.9;
+}
+.page-search-input {
+  min-width: 320px;
+  flex: 1;
+}
+.login-required-page,
+.mypage-page {
+  max-width: 620px;
+}
+.login-required-page { text-align: center; }
+.login-required-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 22px;
+}
+.mypage-page label {
+  font-weight: 800;
+  margin-top: 8px;
+}
+.warning-text { color: #9b3d2c; }
+#mypageBtn {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.22);
+}
+.login-lock-note {
+  margin-top: 10px !important;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #efe3d3;
+  color: #7a4d35;
+  font-size: 12px !important;
+  font-weight: 800;
+  display: inline-block;
+}
