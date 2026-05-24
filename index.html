@@ -35,6 +35,7 @@
 
   <main>
     <section id="home" class="page active">
+      <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
       <section class="hero" id="homeHero">
         <h1 id="homeTitle">노래가 머무는 이 곳, 광석이네집</h1>
         <p id="homeDescription">김광석 아카이브</p>
@@ -43,18 +44,7 @@
           <button onclick="goPage('photos')">사진 보러가기</button>
         </div>
       </section>
-
-
-      <section id="homeVoiceSection" class="home-voice-section hidden">
-        <div class="home-voice-card">
-          <div class="home-voice-kicker">김광석 육성</div>
-          <h2 id="homeVoiceTitle">김광석의 목소리</h2>
-          <p id="homeVoiceDescription">그의 목소리를 잠시 들어보세요.</p>
-          <audio id="homeVoiceAudio" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
-        </div>
-      </section>
-
-      <section class="content-section latest-by-category-section">
+<section class="content-section latest-by-category-section">
         <h2>자료별 최신 자료</h2>
         <p class="helper-text">각 자료실에 최근 등록된 자료를 모았습니다.</p>
         <div id="latestByCategory" class="latest-category-grid"></div>
@@ -284,7 +274,7 @@
           <input id="homeVoiceTitleInput" type="text" placeholder="육성 제목 예: 김광석의 목소리" />
           <textarea id="homeVoiceDescriptionInput" placeholder="육성 설명 예: 잠시 그의 목소리를 들어보세요."></textarea>
           <input id="homeVoiceUrlInput" type="url" placeholder="기본값: https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3" />
-          <p class="helper-text">※ GitHub audios/radios 폴더에 올라간 mp3 또는 wav 주소를 넣으면 홈 화면 진입 시 한 번 자동 재생을 시도합니다. 브라우저가 자동재생을 막으면 첫 클릭/터치 때 한 번 재생됩니다.</p>
+          <p class="helper-text">※ GitHub audios/radios 폴더에 올라간 mp3 또는 wav 주소를 넣으면 홈 화면 큰 사진 영역에 마우스가 닿을 때 재생됩니다. 화면에는 플레이어가 표시되지 않습니다.</p>
 
           <h3>페이지 설명 문구</h3>
         <textarea id="settingVideosDesc" placeholder="Videos 설명"></textarea>
@@ -324,8 +314,8 @@
       <div class="detail-text-area"><h2 id="detailTitle"></h2><p id="detailCategory"></p><p id="detailMeta"></p><div id="detailDescription"></div></div>
     </div>
   </div>
-<div class="version-marker">v48-home-voice-file-included</div>
+<div class="version-marker">v51-detail-open-fix</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=48-home-voice-file-included"></script>
+  <script type="module" src="app.js?v=51-detail-open-fix"></script>
 </body>
 </html>

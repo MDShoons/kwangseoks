@@ -1102,3 +1102,103 @@ video {
   font-weight: 800;
   box-shadow: 0 4px 12px rgba(60, 48, 41, 0.06);
 }
+
+/* v50: 홈 큰 사진 hover 시 육성 재생, 화면 요소 제거 */
+#homeVoiceAudio,
+.home-voice-hidden-audio {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  appearance: none !important;
+}
+
+.home-voice-section,
+.home-voice-card,
+.home-voice-kicker,
+.home-voice-notice,
+#homeVoiceSection,
+#homeVoiceNotice {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+
+#home .hero {
+  cursor: pointer;
+}
+
+/* v51: 상세정보 클릭/표시 복구 */
+.detail-media-area.hidden {
+  display: none !important;
+}
+
+.detail-media-area {
+  width: 100%;
+  margin: 0 0 22px 0;
+}
+
+.detail-media-area img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #f4eee7;
+}
+
+.detail-media-area video,
+.detail-media-area iframe {
+  width: 100%;
+  min-height: 420px;
+  border: 0;
+  border-radius: 18px;
+  background: #111;
+}
+
+.detail-audio-box {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 22px 0;
+  padding: 18px 20px;
+  border: 1px solid #e0cdb9;
+  border-radius: 999px;
+  background: #f8f4ef;
+}
+
+.detail-audio-box audio {
+  width: 320px;
+  max-width: 100%;
+  display: block;
+}
+
+.detail-text-area h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 26px;
+  line-height: 1.38;
+}
+
+#detailCategory,
+#detailMeta {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+#detailDescription {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e2d3c4;
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}

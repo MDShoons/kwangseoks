@@ -367,3 +367,32 @@ https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3
 주의:
 GitHub Pages 배포 후 파일 URL이 실제로 열리는지 확인하세요.
 https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3
+
+
+## v50 수정 사항 - 홈 큰 사진 hover 시 김광석 육성 재생
+홈 화면의 “김광석의 목소리” 카드/플레이어를 완전히 제거했습니다.
+
+동작:
+- /kwangseoks/ 또는 /kwangseoks/#home 접속
+- 홈 화면의 큰 김광석 사진 영역, 즉 “노래가 머무는 이 곳…” 히어로 이미지 영역에 마우스 커서가 닿으면 육성 재생 시도
+- 모바일에서는 큰 사진 영역을 터치하면 재생 시도
+- 화면에는 오디오 플레이어, 김광석 육성 카드, 안내 문구가 표시되지 않음
+
+주의:
+일부 브라우저는 hover만으로 소리 재생을 막을 수 있습니다.
+그 경우 같은 사진 영역을 클릭/터치하면 재생됩니다.
+
+
+## v51 수정 사항 - 상세정보 클릭/표시 복구
+사진, 영상, 음성, 일기 등을 클릭해도 상세정보가 나오지 않던 문제를 수정했습니다.
+
+원인:
+- index.html의 상세창 구조는 `detailMediaArea`, `detailTitle`, `detailCategory`, `detailMeta`, `detailDescription` 방식이었음
+- 이전 JS는 없는 요소인 `contentDetailBody`를 찾고 있었음
+- 그래서 클릭해도 상세창 내용이 채워지지 않았음
+
+수정:
+- openContentDetail()을 기존 HTML 구조에 맞게 재작성
+- closeContentDetail()도 안전하게 재작성
+- Videos / Songs / Radios / Photos / Stories / About / Oneum 상세정보 표시 복구
+- 라디오/음원은 깨진 이미지 대신 오디오 플레이어 표시

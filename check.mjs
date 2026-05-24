@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v48-home-voice-file-included";
+const APP_VERSION = "v51-detail-open-fix";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -134,6 +134,8 @@ function showPage(pageId, fromHash = false) {
   if (pageId === "mypage") {
     fillMyPageForm();
   }
+
+  if (pageId === "home") setupHeroVoiceHover();
 
   if (pageId === "home") tryPlayHomeVoiceOnce();
 
@@ -577,86 +579,58 @@ async function deleteMyAccount() {
 
 
 
-function applyHomeVoiceSettings(settings = currentSettings || {}) {
-  const section = document.getElementById("homeVoiceSection");
-  const audioEl = document.getElementById("homeVoiceAudio");
-  const noticeEl = document.getElementById("homeVoiceNotice");
 
-  if (!section || !audioEl) return;
+
+
+
+
+function applyHomeVoiceSettings(settings = currentSettings || {}) {
+  const audioEl = document.getElementById("homeVoiceAudio");
+  if (!audioEl) return;
 
   const voiceUrl = settings.homeVoiceUrl || "https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3";
 
   if (!voiceUrl) {
-    section.classList.add("hidden");
     audioEl.pause();
     audioEl.removeAttribute("src");
-    if (noticeEl) noticeEl.classList.add("hidden");
     return;
   }
 
-  section.classList.remove("hidden");
   audioEl.src = voiceUrl;
   audioEl.preload = "auto";
   audioEl.setAttribute("playsinline", "");
   audioEl.setAttribute("controlsList", "nodownload noplaybackrate");
   audioEl.setAttribute("oncontextmenu", "return false");
 
-  tryPlayHomeVoiceOnce();
+  setupHeroVoiceHover();
 }
 
-function tryPlayHomeVoiceOnce() {
+function setupHeroVoiceHover() {
+  const hero = document.querySelector("#home .hero");
   const audioEl = document.getElementById("homeVoiceAudio");
-  const noticeEl = document.getElementById("homeVoiceNotice");
+  if (!hero || !audioEl || !audioEl.src) return;
 
-  if (!audioEl || !audioEl.src) return;
+  if (hero.dataset.voiceBound === "yes") return;
+  hero.dataset.voiceBound = "yes";
 
-  const onceKey = "kwangseoks_home_voice_played_v1";
+  hero.setAttribute("title", "김광석의 목소리 듣기");
 
-  if (sessionStorage.getItem(onceKey) === "yes") {
-    if (noticeEl) noticeEl.classList.add("hidden");
-    return;
-  }
+  const playVoice = async () => {
+    if (!audioEl.src) return;
 
-  const markPlayed = () => {
-    sessionStorage.setItem(onceKey, "yes");
-    if (noticeEl) noticeEl.classList.add("hidden");
-    cleanupGestureListeners();
-  };
-
-  const playNow = async () => {
     try {
+      audioEl.pause();
       audioEl.currentTime = 0;
       await audioEl.play();
-      markPlayed();
     } catch (error) {
-      if (noticeEl) noticeEl.classList.remove("hidden");
-      installGestureFallback();
+      console.log("브라우저가 hover 자동재생을 막았습니다. 클릭/터치 때 다시 시도합니다:", error?.message || error);
     }
   };
 
-  const gesturePlay = async () => {
-    try {
-      audioEl.currentTime = 0;
-      await audioEl.play();
-      markPlayed();
-    } catch {
-      if (noticeEl) noticeEl.classList.remove("hidden");
-    }
-  };
-
-  function installGestureFallback() {
-    document.addEventListener("click", gesturePlay, { once: true, capture: true });
-    document.addEventListener("touchstart", gesturePlay, { once: true, capture: true });
-    document.addEventListener("keydown", gesturePlay, { once: true, capture: true });
-  }
-
-  function cleanupGestureListeners() {
-    document.removeEventListener("click", gesturePlay, true);
-    document.removeEventListener("touchstart", gesturePlay, true);
-    document.removeEventListener("keydown", gesturePlay, true);
-  }
-
-  playNow();
+  hero.addEventListener("mouseenter", playVoice);
+  hero.addEventListener("focus", playVoice);
+  hero.addEventListener("click", playVoice);
+  hero.addEventListener("touchstart", playVoice, { passive: true });
 }
 
 async function loadSiteSettings() {
@@ -1086,23 +1060,27 @@ function openContentDetail(id) {
   if (!item) return;
 
   const modal = document.getElementById("contentDetailModal");
-  const body = document.getElementById("contentDetailBody");
-  if (!modal || !body) return;
+  const mediaArea = document.getElementById("detailMediaArea");
+  const titleEl = document.getElementById("detailTitle");
+  const categoryEl = document.getElementById("detailCategory");
+  const metaEl = document.getElementById("detailMeta");
+  const descEl = document.getElementById("detailDescription");
+
+  if (!modal || !mediaArea || !titleEl || !categoryEl || !metaEl || !descEl) {
+    alert("상세창 영역을 찾지 못했습니다. index.html의 상세창 구조를 확인해 주세요.");
+    return;
+  }
 
   const mediaHtml = renderDetailMedia(item);
   const bodyText = item.body || item.description || "";
-  const safeBody = escapeHtml(bodyText).replace(/\n/g, "<br>");
 
-  body.innerHTML = `
-    ${mediaHtml}
-    <div class="detail-text-box">
-      <h2>${escapeHtml(item.title || "제목 없음")}</h2>
-      <p class="detail-meta"><strong>분류:</strong> ${escapeHtml(item.category || "미분류")}</p>
-      <p class="detail-meta"><strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
-      ${item.subCategory ? `<p class="detail-meta"><strong>카테고리:</strong> ${escapeHtml(item.subCategory)}</p>` : ""}
-      ${bodyText ? `<div class="detail-body-text">${safeBody}</div>` : ""}
-    </div>
-  `;
+  mediaArea.innerHTML = mediaHtml || "";
+  mediaArea.classList.toggle("hidden", !mediaHtml);
+
+  titleEl.textContent = item.title || "제목 없음";
+  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
+  metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}`;
+  descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
   modal.classList.remove("hidden");
   installBasicContentProtection();
@@ -1112,12 +1090,27 @@ function openContentDetail(id) {
   document.body.style.overflow = "hidden";
 }
 
+
 function closeContentDetail(event) {
   if (event && event.target !== event.currentTarget) return;
-  document.getElementById("detailMediaArea").innerHTML = "";
-  document.getElementById("contentDetailModal").classList.add("hidden");
+
+  const mediaArea = document.getElementById("detailMediaArea");
+  const titleEl = document.getElementById("detailTitle");
+  const categoryEl = document.getElementById("detailCategory");
+  const metaEl = document.getElementById("detailMeta");
+  const descEl = document.getElementById("detailDescription");
+  const modal = document.getElementById("contentDetailModal");
+
+  if (mediaArea) mediaArea.innerHTML = "";
+  if (titleEl) titleEl.textContent = "";
+  if (categoryEl) categoryEl.innerHTML = "";
+  if (metaEl) metaEl.innerHTML = "";
+  if (descEl) descEl.innerHTML = "";
+  if (modal) modal.classList.add("hidden");
+
   document.body.style.overflow = "";
 }
+
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeContentDetail(); });
 
 function renderAdminManageList() {
