@@ -1,35 +1,31 @@
 
 // kwangseoks Cloudflare Worker GitHub uploader
-// v73: CORS-safe upload. Accepts token via formData idToken or Authorization.
+// v74: permissive CORS + origin bypass for upload troubleshooting.
+// Accepts Firebase token via formData idToken.
 
-function buildCorsHeaders(request, env) {
-  const requestOrigin = request.headers.get("Origin") || "";
-  const allowed = env.ALLOWED_ORIGIN || "https://mdshoons.github.io";
-  const origin = requestOrigin && requestOrigin === allowed ? requestOrigin : allowed;
-
+function corsHeaders() {
   return {
-    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin"
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Max-Age": "86400"
   };
 }
 
-function jsonResponse(data, status, request, env) {
+function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      ...buildCorsHeaders(request, env)
+      ...corsHeaders()
     }
   });
 }
 
-function optionsResponse(request, env) {
+function optionsResponse() {
   return new Response(null, {
     status: 204,
-    headers: buildCorsHeaders(request, env)
+    headers: corsHeaders()
   });
 }
 
@@ -162,32 +158,24 @@ async function uploadViaGitDataAPI(env, filePath, base64Content, message) {
   };
 }
 
-function getTokenFromRequest(request, form) {
-  const auth = request.headers.get("Authorization") || "";
-  const bearer = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
-  const formToken = form.get("idToken");
-
-  return bearer || String(formToken || "");
-}
-
 async function handleUpload(request, env) {
   const contentType = request.headers.get("content-type") || "";
   if (!contentType.includes("multipart/form-data")) {
-    return jsonResponse({ ok: false, error: "multipart/form-data 요청만 지원합니다." }, 400, request, env);
+    return jsonResponse({ ok: false, error: "multipart/form-data 요청만 지원합니다." }, 400);
   }
 
   const form = await request.formData();
+  const idToken = String(form.get("idToken") || "");
 
-  const idToken = getTokenFromRequest(request, form);
   if (!idToken) {
-    return jsonResponse({ ok: false, error: "Firebase ID Token이 없습니다." }, 401, request, env);
+    return jsonResponse({ ok: false, error: "Firebase ID Token이 없습니다." }, 401);
   }
 
   const file = form.get("file");
   const kind = String(form.get("kind") || form.get("folder") || form.get("category") || "");
 
   if (!file || typeof file === "string") {
-    return jsonResponse({ ok: false, error: "file 필드가 필요합니다." }, 400, request, env);
+    return jsonResponse({ ok: false, error: "file 필드가 필요합니다." }, 400);
   }
 
   const maxBytes = Number(env.MAX_UPLOAD_BYTES || 95 * 1024 * 1024);
@@ -197,7 +185,7 @@ async function handleUpload(request, env) {
       error: `파일이 너무 큽니다. 현재 Worker 제한은 ${Math.floor(maxBytes / 1024 / 1024)}MB입니다. 더 큰 파일은 Cloudflare R2/Firebase Storage를 사용해야 합니다.`,
       size: file.size,
       maxBytes
-    }, 413, request, env);
+    }, 413);
   }
 
   const safeName = sanitizeFilename(file.name);
@@ -226,13 +214,13 @@ async function handleUpload(request, env) {
     type: file.type || "",
     name: file.name,
     commitSha: result.commitSha
-  }, 200, request, env);
+  }, 200);
 }
 
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
-      return optionsResponse(request, env);
+      return optionsResponse();
     }
 
     const url = new URL(request.url);
@@ -242,29 +230,29 @@ export default {
         return jsonResponse({
           ok: true,
           service: "kwangseoks-github-uploader",
-          version: "v73-cors-safe-upload",
+          version: "v74-origin-bypass-upload",
           hasOwner: Boolean(env.GITHUB_OWNER),
           hasRepo: Boolean(env.GITHUB_REPO),
           hasToken: Boolean(env.GITHUB_TOKEN),
           branch: env.GITHUB_BRANCH || "main",
-          allowedOrigin: env.ALLOWED_ORIGIN || "https://mdshoons.github.io"
-        }, 200, request, env);
+          allowedOrigin: "*"
+        }, 200);
       }
 
       if (url.pathname === "/upload") {
         if (request.method !== "POST") {
-          return jsonResponse({ ok: false, error: "POST만 지원합니다." }, 405, request, env);
+          return jsonResponse({ ok: false, error: "POST만 지원합니다." }, 405);
         }
 
         return await handleUpload(request, env);
       }
 
-      return jsonResponse({ ok: false, error: "Not found" }, 404, request, env);
+      return jsonResponse({ ok: false, error: "Not found" }, 404);
     } catch (error) {
       return jsonResponse({
         ok: false,
         error: error?.message || String(error)
-      }, 500, request, env);
+      }, 500);
     }
   }
 };

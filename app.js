@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v73-cors-safe-upload";
+const APP_VERSION = "v74-worker-origin-bypass";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -227,7 +227,8 @@ async function uploadFileToGitHubWorker(file, folder) {
       method: "POST",
       body: formData,
       mode: "cors",
-      cache: "no-store"
+      cache: "no-store",
+      credentials: "omit"
     });
 
     text = await response.text();

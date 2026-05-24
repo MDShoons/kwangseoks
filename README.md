@@ -756,3 +756,22 @@ https://kwangseoks-uploader.kos20050627.workers.dev/health
 
 정상:
 version: v73-cors-safe-upload
+
+
+## v74 수정 사항 - CORS 원인 분리용 Worker
+아직도 Failed to fetch가 나는 경우를 위해 CORS를 가장 단순한 방식으로 완화했습니다.
+
+수정 내용:
+- Worker 응답 Access-Control-Allow-Origin: *
+- Access-Control-Allow-Headers: *
+- 사이트 fetch는 Authorization 헤더 없이 FormData만 사용
+- credentials: omit
+- health version: v74-origin-bypass-upload
+
+중요:
+이 버전도 Cloudflare Worker 코드 교체가 필수입니다.
+ZIP 안의 cloudflare-worker-github-uploader.js 내용을 Worker에 붙여넣고 Deploy하세요.
+
+정상 확인:
+https://kwangseoks-uploader.kos20050627.workers.dev/health
+version: v74-origin-bypass-upload
