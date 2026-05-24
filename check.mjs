@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v58-photo-zoom-screen-protect";
+const APP_VERSION = "v61-about-document-page";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -57,7 +57,7 @@ const DEFAULT_SETTINGS = {
 let currentSettings = { ...DEFAULT_SETTINGS };
 
 
-const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
 const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
 
 function getPageFromHash() {
@@ -140,6 +140,8 @@ function showPage(pageId, fromHash = false) {
   }
 
   if (pageId === "home") setupHeroVoiceHover();
+
+  if (pageId === "about") renderAboutDocument(allContents.filter(i => i.category === "about"));
 
   if (pageId === "home") tryPlayHomeVoiceOnce();
 
@@ -935,11 +937,150 @@ function renderAllContentSections() {
   renderList("songList", songs);
   renderList("radioList", radios);
   renderList("storyList", stories);
-  renderAboutArticle(allContents.filter(i => i.category === "about"));
+  renderAboutDocument(allContents.filter(i => i.category === "about"));
   renderList("oneumList", oneum);
 
   renderAdminManageList();
   installBasicContentProtection();
+}
+
+
+let dailyRecommendedItemId = "";
+let dailyPlayerBound = false;
+
+function getKoreanDateKey() {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+
+  return formatter.format(new Date());
+}
+
+function seededNumberFromString(text) {
+  let hash = 2166136261;
+
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return Math.abs(hash >>> 0);
+}
+
+function pickDailyRecommendedSong(songs) {
+  const playable = songs.filter((item) => {
+    const url = item.mediaUrl || item.fileUrl || item.audioUrl || "";
+    return !!url;
+  });
+
+  if (!playable.length) return null;
+
+  const dateKey = getKoreanDateKey();
+  const seed = seededNumberFromString(`kwangseoks-${dateKey}`);
+  const index = seed % playable.length;
+
+  return playable[index];
+}
+
+function formatPlayerTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+
+  const min = Math.floor(seconds / 60);
+  const sec = Math.floor(seconds % 60).toString().padStart(2, "0");
+  return `${min}:${sec}`;
+}
+
+function setupDailyRecommendPlayer() {
+  const player = document.getElementById("dailyRecommendPlayer");
+  const audio = document.getElementById("dailyPlayerAudio");
+  const title = document.getElementById("dailyPlayerTitle");
+  const sub = document.getElementById("dailyPlayerSub");
+  const playBtn = document.getElementById("dailyPlayerPlayBtn");
+  const progress = document.getElementById("dailyPlayerProgress");
+  const current = document.getElementById("dailyPlayerCurrent");
+  const duration = document.getElementById("dailyPlayerDuration");
+
+  if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration) return;
+
+  const songs = allContents.filter((item) => item.category === "songs");
+  const selected = pickDailyRecommendedSong(songs);
+
+  if (!selected) {
+    player.classList.add("hidden");
+    return;
+  }
+
+  const sourceUrl = selected.mediaUrl || selected.fileUrl || selected.audioUrl || "";
+  if (!sourceUrl) {
+    player.classList.add("hidden");
+    return;
+  }
+
+  player.classList.remove("hidden");
+  title.textContent = selected.title || "제목 없는 추천곡";
+  sub.textContent = `${getKoreanDateKey()} · 매일 00:00 추천 변경`;
+
+  if (dailyRecommendedItemId !== selected.id) {
+    dailyRecommendedItemId = selected.id;
+    audio.pause();
+    audio.src = sourceUrl;
+    audio.currentTime = 0;
+    progress.value = "0";
+    playBtn.textContent = "▶";
+    current.textContent = "0:00";
+    duration.textContent = "0:00";
+  }
+
+  if (dailyPlayerBound) return;
+  dailyPlayerBound = true;
+
+  audio.setAttribute("controlsList", "nodownload noplaybackrate");
+  audio.setAttribute("oncontextmenu", "return false");
+
+  playBtn.addEventListener("click", async () => {
+    try {
+      if (audio.paused) {
+        await audio.play();
+      } else {
+        audio.pause();
+      }
+    } catch (error) {
+      console.log("추천곡 재생 오류:", error?.message || error);
+    }
+  });
+
+  audio.addEventListener("play", () => {
+    playBtn.textContent = "Ⅱ";
+  });
+
+  audio.addEventListener("pause", () => {
+    playBtn.textContent = "▶";
+  });
+
+  audio.addEventListener("loadedmetadata", () => {
+    duration.textContent = formatPlayerTime(audio.duration);
+  });
+
+  audio.addEventListener("timeupdate", () => {
+    current.textContent = formatPlayerTime(audio.currentTime);
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
+    }
+  });
+
+  progress.addEventListener("input", () => {
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      audio.currentTime = (Number(progress.value) / 1000) * audio.duration;
+    }
+  });
+
+  audio.addEventListener("ended", () => {
+    playBtn.textContent = "▶";
+    progress.value = "0";
+  });
 }
 
 async function loadContents() {
@@ -948,6 +1089,7 @@ async function loadContents() {
     allContents = [];
     snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
     renderAllContentSections();
+    setupDailyRecommendPlayer();
     await applySavedTemplates();
   applyHomeVoiceSettings(currentSettings);
   } catch(e) { console.error(e); }
@@ -1163,27 +1305,49 @@ function makeTextPreview(text, maxLength = 90) {
 }
 
 
-function renderAboutArticle(items) {
-  const box = document.getElementById("aboutArticle");
+
+
+
+function renderAboutDocument(items) {
+  const box = document.getElementById("aboutDocument") || document.getElementById("aboutArticle");
   if (!box) return;
 
-  const sorted = [...items].sort((a, b) => getItemTimestamp(b) - getItemTimestamp(a));
-  const item = sorted[0];
+  const sorted = [...items].sort((a, b) => {
+    const ay = Number(String(a.year || "").replace(/[^0-9]/g, "")) || 0;
+    const by = Number(String(b.year || "").replace(/[^0-9]/g, "")) || 0;
 
-  if (!item) {
-    box.innerHTML = `<p class="helper-text">아직 등록된 소개글이 없습니다.</p>`;
+    if (ay && by && ay !== by) return ay - by;
+    return getItemTimestamp(a) - getItemTimestamp(b);
+  });
+
+  if (!sorted.length) {
+    box.innerHTML = `<p class="helper-text">아직 등록된 김광석 관련 글이 없습니다.</p>`;
     return;
   }
 
-  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
-  const bodyText = item.body || item.description || "";
+  box.innerHTML = sorted.map((item) => {
+    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+    const bodyText = item.body || item.description || "";
+    const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
+    const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
 
-  box.innerHTML = `
-    ${imageUrl ? `<img class="about-article-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" />` : ""}
-    <h2>${escapeHtml(item.title || "김광석 소개")}</h2>
-    <p class="about-article-meta"><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</p>
-    ${bodyText ? `<div class="about-article-body">${escapeHtml(bodyText).replace(/\n/g, "<br>")}</div>` : `<p class="helper-text">소개글 내용이 없습니다.</p>`}
-  `;
+    return `
+      <section class="about-document-entry">
+        ${imageUrl ? `<img class="about-document-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" />` : ""}
+        <h2>${escapeHtml(item.title || "제목 없는 글")}</h2>
+        <div class="about-document-meta">
+          ${yearText}
+          ${sourceText}
+          <span><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</span>
+        </div>
+        ${bodyText ? `<div class="about-document-body">${escapeHtml(bodyText).replace(/\n/g, "<br>")}</div>` : `<p class="helper-text">본문이 없습니다.</p>`}
+      </section>
+    `;
+  }).join("");
+}
+
+function renderAboutArticle(items) {
+  renderAboutDocument(items);
 }
 
 function renderList(id, items) {

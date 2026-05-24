@@ -1460,3 +1460,220 @@ body.screen-protect-blur footer {
     visibility: visible !important;
   }
 }
+
+/* v59: About Seok 라우팅 복구 */
+#about .toolbar,
+#aboutSearchInput,
+#aboutSortSelect,
+#aboutCategoryFilter,
+#aboutPagination,
+#aboutList {
+  display: none !important;
+}
+
+.about-article {
+  max-width: 1120px;
+  margin: 24px auto 0;
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.9);
+  padding: 34px 40px;
+  line-height: 1.8;
+}
+
+.about-article h2 {
+  margin: 0 0 14px 0;
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.about-article-body {
+  font-size: 16px;
+  line-height: 1.9;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* v60: 전역 오늘의 추천곡 미니 플레이어 */
+.daily-player {
+  position: fixed;
+  left: 24px;
+  top: 180px;
+  z-index: 9990;
+  width: 190px;
+  pointer-events: none;
+}
+
+.daily-player.hidden {
+  display: none !important;
+}
+
+.daily-player-card {
+  pointer-events: auto;
+  width: 100%;
+  border-radius: 22px;
+  padding: 18px 16px;
+  background: linear-gradient(145deg, #6d315f, #a4496f 52%, #e87535);
+  color: #fff;
+  box-shadow: 0 18px 42px rgba(42, 29, 23, 0.22);
+  user-select: none;
+}
+
+.daily-player-label {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.daily-player-title {
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.3;
+  min-height: 44px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.daily-player-sub {
+  margin-top: 5px;
+  font-size: 10px;
+  line-height: 1.35;
+  opacity: 0.82;
+}
+
+.daily-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 18px;
+}
+
+.daily-play-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #8a3e62;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+.daily-player-time {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.daily-player-progress {
+  width: 100%;
+  margin-top: 12px;
+  accent-color: #fff;
+  cursor: pointer;
+}
+
+#dailyPlayerAudio {
+  display: none !important;
+}
+
+@media (max-width: 1380px) {
+  .daily-player {
+    left: 12px;
+    width: 160px;
+  }
+
+  .daily-player-card {
+    padding: 15px 13px;
+  }
+
+  .daily-player-title {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .daily-player {
+    position: static;
+    width: min(420px, calc(100% - 32px));
+    margin: 18px auto 0;
+  }
+}
+
+/* v61: About Seok 문서형/연보형 페이지 */
+#about .toolbar,
+#aboutSearchInput,
+#aboutSortSelect,
+#aboutCategoryFilter,
+#aboutPagination,
+#aboutList,
+#aboutArticle {
+  display: none !important;
+}
+
+.about-document {
+  max-width: 1120px;
+  margin: 24px auto 0;
+  border: 1px solid #dfcdbb;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.92);
+  padding: 36px 44px;
+  line-height: 1.85;
+}
+
+.about-document-entry {
+  padding: 26px 0 30px;
+  border-bottom: 1px solid #dcc9b6;
+}
+
+.about-document-entry:first-child {
+  padding-top: 0;
+}
+
+.about-document-entry:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.about-document-entry h2 {
+  margin: 0 0 14px 0;
+  font-size: 25px;
+  line-height: 1.38;
+  letter-spacing: -0.03em;
+}
+
+.about-document-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: #7a5a43;
+}
+
+.about-document-body {
+  font-size: 16px;
+  line-height: 1.95;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.about-document-image {
+  display: block;
+  max-width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  border-radius: 18px;
+  margin-bottom: 22px;
+  background: #f4eee7;
+}
