@@ -24,4 +24,4 @@ export const ADMIN_LOGIN_IDS = [
 // Cloudflare Worker 업로드 주소
 // Worker 배포 후 아래 빈 문자열을 실제 주소로 바꾸세요.
 // 예: "https://gwangseok-github-uploader.사용자명.workers.dev/upload"
-export const GITHUB_UPLOAD_WORKER_URL = "https://kwangseoks.kos20050627.workers.dev/upload";
+export const GITHUB_UPLOAD_WORKER_URL = "";

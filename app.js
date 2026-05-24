@@ -46,8 +46,6 @@ window.loadContents = loadContents;
 window.renderAdminManageList = renderAdminManageList;
 window.editContent = editContent;
 window.deleteContentItem = deleteContentItem;
-window.openContentDetail = openContentDetail;
-window.closeContentDetail = closeContentDetail;
 
 const pages = 
 
@@ -1068,73 +1066,6 @@ function filterBySelectedSubCategory(page, items) {
   return items.filter((item) => item.subCategory === selected);
 }
 
-
-function openContentDetail(id) {
-  const item = allContents.find((content) => content.id === id);
-  if (!item) return;
-
-  const modal = document.getElementById("contentDetailModal");
-  const mediaArea = document.getElementById("detailMediaArea");
-  const title = document.getElementById("detailTitle");
-  const category = document.getElementById("detailCategory");
-  const meta = document.getElementById("detailMeta");
-  const description = document.getElementById("detailDescription");
-
-  if (!modal || !mediaArea || !title || !category || !meta || !description) return;
-
-  title.textContent = item.title || "제목 없음";
-
-  const categoryText = [
-    item.category ? `분류: ${item.category}` : "",
-    item.subCategory ? `카테고리: ${item.subCategory}` : ""
-  ].filter(Boolean).join(" / ");
-  category.textContent = categoryText || "분류 없음";
-
-  const metaText = [
-    item.year ? `연도: ${item.year}` : "연도: 미상",
-    item.source ? `출처: ${item.source}` : "출처: 미기재"
-  ].join(" / ");
-  meta.textContent = metaText;
-
-  description.textContent = item.body || item.description || "";
-
-  mediaArea.innerHTML = "";
-
-  if (item.mediaType === "youtube" && item.mediaUrl) {
-    mediaArea.innerHTML = `<iframe src="${item.mediaUrl}" allowfullscreen></iframe>`;
-  } else if (item.mediaType === "video" && item.mediaUrl) {
-    mediaArea.innerHTML = `<video controls src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
-  } else if (item.mediaType === "audio" && item.mediaUrl) {
-    const cover = item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title || "")}" />` : "";
-    mediaArea.innerHTML = `${cover}<audio controls src="${item.mediaUrl}"></audio>`;
-  } else if (item.mediaUrl) {
-    mediaArea.innerHTML = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title || "")}" />`;
-  } else if (item.thumbnailUrl) {
-    mediaArea.innerHTML = `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title || "")}" />`;
-  } else {
-    mediaArea.innerHTML = `<div class="card-placeholder">글 자료</div>`;
-  }
-
-  modal.classList.remove("hidden");
-  document.body.style.overflow = "hidden";
-}
-
-function closeContentDetail(event) {
-  if (event && event.target && event.currentTarget && event.target !== event.currentTarget) return;
-
-  const modal = document.getElementById("contentDetailModal");
-  const mediaArea = document.getElementById("detailMediaArea");
-
-  if (mediaArea) mediaArea.innerHTML = "";
-  if (modal) modal.classList.add("hidden");
-
-  document.body.style.overflow = "";
-}
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeContentDetail();
-});
-
 function renderLatest(contents) {
   const latest = document.getElementById("latestContents");
   if (!latest) return;
@@ -1241,8 +1172,6 @@ function renderList(elementId, items) {
 function createCard(item) {
   const card = document.createElement("div");
   card.className = "card";
-  card.onclick = () => openContentDetail(item.id);
-  card.title = "클릭해서 크게 보기";
 
   let mediaHtml = "";
 
