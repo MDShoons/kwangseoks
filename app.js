@@ -765,6 +765,11 @@ function applyDesignSettings(settings = currentSettings) {
     el.style.color = safe.textColor;
   });
 
+  document.querySelectorAll(".site-header nav button").forEach((el) => {
+    el.style.backgroundColor = "transparent";
+    el.style.color = safe.navTextColor;
+  });
+
   const hero = document.getElementById("homeHero");
   if (hero) {
     hero.style.color = safe.heroTextColor;
@@ -1434,3 +1439,9 @@ if (previewHomeBgBtn) {
 loadSiteSettings();
 loadPageCategories();
 loadContents();
+
+
+/* v24_SAFE_RESTORE_MARK */
+window.addEventListener("error", (event) => {
+  console.error("사이트 실행 오류:", event.error || event.message);
+});

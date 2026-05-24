@@ -965,3 +965,169 @@ select {
   font-size: 13px;
   font-weight: 700;
 }
+
+
+/* v23: 상단 메뉴 시각 복구 + 상세 보기 유지 */
+.site-header {
+  background: var(--header-bg, #2d241f) !important;
+  color: #ffffff !important;
+}
+
+.logo,
+.logo span,
+.logo small {
+  color: #ffffff !important;
+}
+
+.logo small {
+  color: #d8c6b3 !important;
+}
+
+nav button {
+  background: transparent !important;
+  color: var(--nav-text-color, #f8eee3) !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 9px 12px !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+}
+
+nav button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.auth-area {
+  color: #ffffff !important;
+}
+
+.auth-area button,
+#logoutBtn,
+#loginBtn,
+#signupBtn {
+  background: var(--button-bg, #7a4d35) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+}
+
+.hero button,
+.admin-tabs button,
+.admin-form button,
+.auth-page button {
+  background: var(--button-bg, #7a4d35) !important;
+  color: #ffffff !important;
+}
+
+footer,
+footer p,
+#footerTitle {
+  background: var(--header-bg, #2d241f) !important;
+  color: #d8c6b3 !important;
+}
+
+/* 디자인 설정에서 버튼 색을 바꿔도 상단 메뉴는 텍스트형 유지 */
+.site-header nav button {
+  background-color: transparent !important;
+}
+
+/* 상세 보기 카드 기능은 유지 */
+.card,
+.list-item {
+  cursor: pointer;
+}
+
+.card:hover,
+.list-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(60, 48, 41, 0.15);
+}
+
+
+/* v24: 안전 복구 CSS */
+.site-header {
+  background: var(--header-bg, #2d241f) !important;
+}
+
+.site-header nav button {
+  background: transparent !important;
+  color: var(--nav-text-color, #f8eee3) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.site-header nav button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.auth-area button,
+#loginBtn,
+#signupBtn,
+#logoutBtn {
+  background: var(--button-bg, #7a4d35) !important;
+  color: #fff !important;
+}
+
+.card,
+.list-item {
+  cursor: pointer;
+}
+
+/* 상세 보기 모달 기본값 */
+.detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+}
+
+.detail-modal.hidden {
+  display: none !important;
+}
+
+.detail-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 12, 8, 0.72);
+}
+
+.detail-modal-content {
+  position: relative;
+  width: min(980px, calc(100vw - 36px));
+  max-height: calc(100vh - 48px);
+  margin: 24px auto;
+  overflow: auto;
+  background: var(--card-bg, #fffaf4);
+  color: var(--text-color, #2f2924);
+  border-radius: 24px;
+  padding: 28px;
+}
+
+.detail-close-btn {
+  border: none;
+  background: var(--button-bg, #7a4d35);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.detail-media img,
+.detail-media video {
+  width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  display: block;
+  background: #1f1712;
+}
+
+.detail-media iframe {
+  width: 100%;
+  height: min(56vw, 540px);
+  border: 0;
+}
+
+.detail-media audio {
+  width: 100%;
+  padding: 20px 0;
+}
