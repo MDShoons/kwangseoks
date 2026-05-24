@@ -242,3 +242,74 @@ PC 화면 기준으로 레이아웃을 다시 정리했습니다.
 - 오디오 플레이어 폭 270px로 정리
 - 반복 출력되던 v31/v32 버전 표시 제거
 - 다운로드 방지 기능 유지
+
+
+## v34 수정 사항 - 깔끔한 프레임형 레이아웃
+사용자가 원하는 예시처럼 Radios / Songs 목록을
+큰 부드러운 프레임 안에 정돈된 개별 카드가 들어가는 방식으로 다시 정리했습니다.
+
+적용 내용:
+- 큰 외곽 프레임: 연한 배경 + 둥근 모서리 + 얇은 테두리
+- 내부 카드: 420px 고정 폭, 넉넉한 여백, 더 얌전한 그림자
+- 제목 아래 구분선 추가
+- 설명 / 연도 / 출처 타이포그래피와 줄간격 정리
+- 오디오 플레이어 위치와 여백 정리
+- 하단 버전 표시 숨김
+- 다운로드 방지 기능 유지
+
+
+## v35 수정 사항 - 우클릭/F12 방지
+일반 사용자가 사이트 화면에서 쉽게 저장하거나 개발자도구를 여는 것을 막기 위한 기본 방지 기능을 추가했습니다.
+
+적용 내용:
+- 우클릭 메뉴 차단
+- 이미지/오디오/비디오 드래그 저장 방지
+- 일반 텍스트 선택 방지
+- F12 차단
+- Ctrl+Shift+I 차단
+- Ctrl+Shift+J 차단
+- Ctrl+Shift+C 차단
+- Ctrl+U 차단
+- Ctrl+S 차단
+- Ctrl+P 차단
+- Mac의 Command 조합 일부 차단
+- 입력창/textarea/select에서는 텍스트 입력과 선택 가능 유지
+- 다운로드 버튼 숨김 기능 유지
+
+중요한 한계:
+이 기능은 일반 사용자 편의 기능 차단 수준입니다.
+브라우저 메뉴, 확장 프로그램, 직접 URL 접근, 네트워크 분석, GitHub 공개 파일 접근까지 완전히 막을 수는 없습니다.
+진짜 다운로드/소스 접근을 제한하려면 공개 GitHub Pages가 아니라 비공개 저장소와 서버 인증 구조가 필요합니다.
+
+
+## v36 수정 사항 - 페이지별 주소 표시
+기존 사이트는 SPA 구조라 Radios를 보고 있어도 주소가 `/kwangseoks/`로만 표시되었습니다.
+v36에서는 hash routing을 적용해 메뉴 클릭 시 주소가 함께 바뀝니다.
+
+주소 예:
+- 홈: https://mdshoons.github.io/kwangseoks/#home
+- Videos: https://mdshoons.github.io/kwangseoks/#videos
+- Songs: https://mdshoons.github.io/kwangseoks/#songs
+- Radios: https://mdshoons.github.io/kwangseoks/#radios
+- Photos: https://mdshoons.github.io/kwangseoks/#photos
+- Stories: https://mdshoons.github.io/kwangseoks/#stories
+- About Seok: https://mdshoons.github.io/kwangseoks/#about
+- Oneum: https://mdshoons.github.io/kwangseoks/#oneum
+
+GitHub Pages에서는 `/radios` 같은 서버 경로 방식보다 `#radios` 방식이 안전합니다.
+
+
+## v37 수정 사항 - 최신자료/검색/로그인 제한/회원정보
+추가 기능:
+- 메인 최신 자료칸을 자료별 최신 자료로 표시
+- 각 페이지별 검색창 추가
+- 비로그인 사용자는 Videos, Radios, Photos, Oneum 접근 제한
+- 제한 페이지 접근 시 “로그인을 하지 않으셨네요!” 안내 표시
+- 회원 정보 수정 화면 추가
+- 회원 탈퇴 기능 추가
+
+주의:
+- 회원 탈퇴는 Firebase Auth 보안 정책상 최근 로그인 상태가 아니면 다시 로그인해야 할 수 있습니다.
+- 회원 탈퇴를 위해 Firestore Rules도 v37의 firestore.rules로 다시 게시해야 합니다.
+- 회원 탈퇴는 users 문서와 loginIds 문서를 삭제하고 Firebase Auth 계정을 삭제합니다.
+- 이미 GitHub에 업로드된 mp3/mp4/wav 실제 파일은 회원 탈퇴나 자료 삭제와 별개로 남습니다.

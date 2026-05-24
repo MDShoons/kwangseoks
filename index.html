@@ -8,26 +8,27 @@
 </head>
 <body>
   <header class="site-header">
-    <div class="logo" onclick="showPage('home')">
+    <div class="logo" onclick="goPage('home')">
       <strong id="siteLogoText">광석이네 집</strong>
       <small id="siteLogoSubText">김광석 디지털 아카이브</small>
     </div>
 
     <nav>
-      <button onclick="showPage('home')">광석이네집</button>
-      <button onclick="showPage('videos')">Videos</button>
-      <button onclick="showPage('songs')">Songs</button>
-      <button onclick="showPage('radios')">Radios</button>
-      <button onclick="showPage('photos')">Photos</button>
-      <button onclick="showPage('stories')">Stories</button>
-      <button onclick="showPage('about')">About Seok</button>
-      <button onclick="showPage('oneum')">Oneum</button>
+      <button onclick="goPage('home')">광석이네집</button>
+      <button onclick="goPage('videos')">Videos</button>
+      <button onclick="goPage('songs')">Songs</button>
+      <button onclick="goPage('radios')">Radios</button>
+      <button onclick="goPage('photos')">Photos</button>
+      <button onclick="goPage('stories')">Stories</button>
+      <button onclick="goPage('about')">About Seok</button>
+      <button onclick="goPage('oneum')">Oneum</button>
     </nav>
 
     <div class="auth-area">
       <span id="userStatus">로그인 전</span>
-      <button id="loginBtn" onclick="showPage('login')">로그인</button>
-      <button id="signupBtn" onclick="showPage('signup')">회원가입</button>
+      <button id="loginBtn" onclick="goPage('login')">로그인</button>
+      <button id="signupBtn" onclick="goPage('signup')">회원가입</button>
+      <button id="mypageBtn" class="hidden" onclick="goPage('mypage')">내 정보</button>
       <button id="logoutBtn" class="hidden">로그아웃</button>
     </div>
   </header>
@@ -38,57 +39,68 @@
         <h1 id="homeTitle">노래가 머무는 이 곳, 광석이네집</h1>
         <p id="homeDescription">김광석 아카이브</p>
         <div>
-          <button onclick="showPage('videos')">영상 보러가기</button>
-          <button onclick="showPage('photos')">사진 보러가기</button>
+          <button onclick="goPage('videos')">영상 보러가기</button>
+          <button onclick="goPage('photos')">사진 보러가기</button>
         </div>
       </section>
 
-      <section class="content-section">
-        <h2>최신 자료</h2>
-        <div id="latestContents" class="card-grid"></div>
+      <section class="content-section latest-by-category-section">
+        <h2>자료별 최신 자료</h2>
+        <p class="helper-text">각 자료실에 최근 등록된 자료를 모았습니다.</p>
+        <div id="latestByCategory" class="latest-category-grid"></div>
       </section>
     </section>
 
     <section id="videos" class="page content-page">
       <div class="page-title"><h1>Videos</h1><p id="videosDesc">김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.</p></div>
-      <div class="toolbar"><select id="videosTemplateSelect" onchange="quickTemplate('videos', this.value)"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option></select><select id="videosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="videosSearchInput" class="page-search-input" type="search" placeholder="영상 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="videosTemplateSelect" onchange="quickTemplate('videos', this.value)"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option></select><select id="videosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="videoList" class="card-grid"></div>
     </section>
 
     <section id="songs" class="page content-page">
       <div class="page-title"><h1>Songs</h1><p id="songsDesc">김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.</p></div>
-      <div class="toolbar"><select id="songsCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="songsSearchInput" class="page-search-input" type="search" placeholder="음원 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="songsCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="songList" class="list-box"></div>
     </section>
 
     <section id="radios" class="page content-page">
       <div class="page-title"><h1>Radios</h1><p id="radiosDesc">김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.</p></div>
-      <div class="toolbar"><select id="radiosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="radiosSearchInput" class="page-search-input" type="search" placeholder="라디오 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="radiosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="radioList" class="list-box"></div>
     </section>
 
     <section id="photos" class="page content-page">
       <div class="page-title"><h1>Photos</h1><p id="photosDesc">김광석의 시간과 표정을 담은 사진 아카이브입니다.</p></div>
-      <div class="toolbar"><select id="photosTemplateSelect" onchange="quickTemplate('photos', this.value)"><option value="gallery">갤러리형</option><option value="card">카드형</option><option value="timeline">연도별형</option><option value="list">리스트형</option></select><select id="photosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="photosSearchInput" class="page-search-input" type="search" placeholder="사진 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="photosTemplateSelect" onchange="quickTemplate('photos', this.value)"><option value="gallery">갤러리형</option><option value="card">카드형</option><option value="timeline">연도별형</option><option value="list">리스트형</option></select><select id="photosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="photoList" class="card-grid"></div>
     </section>
 
     <section id="stories" class="page content-page">
       <div class="page-title"><h1>Stories</h1><p id="storiesDesc">김광석의 일기입니다.</p></div>
-      <div class="toolbar"><select id="storiesCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="storiesSearchInput" class="page-search-input" type="search" placeholder="일기 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="storiesCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="storyList" class="list-box"></div>
     </section>
 
     <section id="about" class="page content-page">
       <div class="page-title"><h1>About Seok</h1><p id="aboutDesc">김광석에 대한 정보를 볼 수 있는 곳입니다.</p></div>
-      <div class="toolbar"><select id="aboutCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="aboutSearchInput" class="page-search-input" type="search" placeholder="정보 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="aboutCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="aboutList" class="list-box"></div>
     </section>
 
     <section id="oneum" class="page content-page">
       <div class="page-title"><h1>Oneum</h1><p id="oneumDesc">김광석의 둥근소리글을 모아둔 곳입니다.</p></div>
-      <div class="toolbar"><select id="oneumCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="oneumSearchInput" class="page-search-input" type="search" placeholder="둥근소리글 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="oneumCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="oneumList" class="list-box"></div>
+    </section>
+
+
+    <section id="loginRequired" class="page auth-page login-required-page">
+      <h1>로그인을 하지 않으셨네요!</h1>
+      <p>이 자료실은 로그인한 회원만 볼 수 있습니다.</p>
+      <div class="login-required-actions">
+        <button onclick="goPage('login')">로그인하기</button>
+        <button onclick="goPage('signup')">회원가입하기</button>
+      </div>
     </section>
 
     <section id="login" class="page auth-page">
@@ -109,6 +121,23 @@
       <input id="signupPassword" type="password" placeholder="비밀번호" />
       <label class="checkbox-label"><input id="privacyAgree" type="checkbox" /> 개인정보 수집 및 이용에 동의합니다.</label>
       <button id="doSignupBtn">회원가입</button>
+    </section>
+
+
+    <section id="mypage" class="page auth-page mypage-page">
+      <h1>회원 정보</h1>
+      <p class="helper-text">이름과 전화번호를 수정할 수 있습니다. 아이디와 이메일은 로그인 식별 정보라 여기서는 수정하지 않습니다.</p>
+      <label>아이디</label>
+      <input id="mypageLoginId" type="text" disabled />
+      <label>이메일</label>
+      <input id="mypageEmail" type="email" disabled />
+      <label>이름</label>
+      <input id="mypageName" type="text" placeholder="이름" />
+      <label>전화번호</label>
+      <input id="mypagePhone" type="tel" placeholder="전화번호" />
+      <button type="button" id="saveMyPageBtn">회원 정보 수정</button>
+      <button type="button" id="deleteAccountBtn" class="delete-btn">회원 탈퇴</button>
+      <p class="helper-text warning-text">회원 탈퇴는 되돌릴 수 없습니다. 최근 로그인 상태가 아니면 Firebase 정책상 다시 로그인해야 할 수 있습니다.</p>
     </section>
 
     <section id="admin" class="page">
@@ -278,11 +307,8 @@
       <div class="detail-text-area"><h2 id="detailTitle"></h2><p id="detailCategory"></p><p id="detailMeta"></p><div id="detailDescription"></div></div>
     </div>
   </div>
-
-
-
-<div class="version-marker">v33-clean-audio-layout</div>
+<div class="version-marker">v37-member-search-gate</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app-v25.js?v=33-clean-audio-layout"></script>
+  <script type="module" src="app-v25.js?v=37-member-search-gate"></script>
 </body>
 </html>

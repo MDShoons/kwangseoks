@@ -8,7 +8,7 @@ import {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged
+  signOut, onAuthStateChanged, deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
@@ -17,6 +17,8 @@ import {
 
 const APP_VERSION = "v31-small-cards-no-download";
 console.log("광석이네집", APP_VERSION, "worker:", GITHUB_UPLOAD_WORKER_URL);
+const APP_VERSION = "v37-member-search-gate";
+console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -57,6 +59,7 @@ const DEFAULT_SETTINGS = {
 let currentSettings = { ...DEFAULT_SETTINGS };
 
 window.showPage = showPage;
+window.goPage = goPage;
 window.showAdminForm = showAdminForm;
 window.loadContents = loadContents;
 window.renderAdminManageList = renderAdminManageList;
@@ -65,6 +68,7 @@ window.deleteContentItem = deleteContentItem;
 window.deleteCustomCategory = deleteCustomCategory;
 window.openContentDetail = openContentDetail;
 window.closeContentDetail = closeContentDetail;
+window.fillMyPageForm = fillMyPageForm;
 window.quickTemplate = quickTemplate;
 
 function normalizeLoginId(v) { return String(v || "").trim().toLowerCase(); }
@@ -74,12 +78,51 @@ function escapeHtml(text) {
   return String(text || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
 
-function showPage(pageId) {
+
+const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
+
+function getPageFromHash() {
+  const page = window.location.hash.replace("#", "").trim();
+  return VALID_PAGES.includes(page) ? page : "home";
+}
+
+function goPage(pageId) {
+  if (!VALID_PAGES.includes(pageId)) pageId = "home";
+  if (window.location.hash !== `#${pageId}`) {
+    window.location.hash = pageId;
+  } else {
+    showPage(pageId, true);
+  }
+}
+
+function handleHashRoute() {
+  showPage(getPageFromHash(), true);
+}
+
+function showPage(pageId, fromHash = false) {
+  if (!fromHash && VALID_PAGES.includes(pageId)) {
+    goPage(pageId);
+    return;
+  }
+  if (RESTRICTED_PAGES.includes(pageId) && !currentUser) {
+    pageId = "loginRequired";
+    if (!fromHash && window.location.hash !== "#loginRequired") {
+      window.location.hash = "loginRequired";
+      return;
+    }
+  }
+
+  if (pageId === "mypage" && !currentUser) {
+    pageId = "loginRequired";
+  }
+
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const target = document.getElementById(pageId);
   if (target) target.classList.add("active");
   if (pageId === "admin" && !isAdmin) { alert("관리자만 접근할 수 있습니다."); showPage("home"); return; }
   if (pageId === "admin") { fillSettingsFormFromCurrent(); renderAdminManageList(); bindDesignPreviewEvents(); }
+  if (pageId === "mypage") fillMyPageForm();
   if (["videos","songs","radios","photos","stories","about","oneum"].includes(pageId)) loadContents();
 }
 
@@ -94,6 +137,7 @@ function showAdminForm(type) {
   if (type === "category") renderCategoryList();
   if (type === "manage") renderAdminManageList();
   hardenMediaDownloadControls();
+  installBasicContentProtection();
 }
 
 async function fileToCompressedDataUrl(file, maxWidth = 1400, quality = 0.74) {
@@ -253,6 +297,9 @@ document.getElementById("doLoginBtn").addEventListener("click", async () => {
   } catch (e) { alert("로그인 오류: " + e.message); }
 });
 
+document.getElementById("saveMyPageBtn")?.addEventListener("click", saveMyPageInfo);
+document.getElementById("deleteAccountBtn")?.addEventListener("click", deleteMyAccount);
+
 document.getElementById("logoutBtn").addEventListener("click", async () => { await signOut(auth); alert("로그아웃되었습니다."); showPage("home"); });
 
 onAuthStateChanged(auth, async (user) => {
@@ -268,12 +315,16 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("loginBtn").classList.toggle("hidden", Boolean(user));
   document.getElementById("signupBtn").classList.toggle("hidden", Boolean(user));
   document.getElementById("logoutBtn").classList.toggle("hidden", !user);
+  document.getElementById("mypageBtn")?.classList.toggle("hidden", !user);
   let adminBtn = document.getElementById("adminNavBtn");
   if (isAdmin && !adminBtn) {
     adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-  await loadSiteSettings(); await loadPageCategories(); await loadContents();
+  await installBasicContentProtection();
+window.addEventListener("hashchange", handleHashRoute);
+window.addEventListener("DOMContentLoaded", handleHashRoute);
+loadSiteSettings(); await loadPageCategories(); await loadContents();
 });
 
 async function loadPageCategories() {
@@ -441,6 +492,86 @@ async function saveAudioLike(category, prefix) {
   } catch(e) { alert("미디어 파일 저장 오류: " + e.message); }
 }
 
+
+function fillMyPageForm() {
+  if (!currentUser || !currentUserProfile) return;
+
+  const loginId = currentUserProfile.loginId || "";
+  const email = currentUser.email || currentUserProfile.email || "";
+  const name = currentUserProfile.name || "";
+  const phone = currentUserProfile.phone || "";
+
+  const loginIdEl = document.getElementById("mypageLoginId");
+  const emailEl = document.getElementById("mypageEmail");
+  const nameEl = document.getElementById("mypageName");
+  const phoneEl = document.getElementById("mypagePhone");
+
+  if (loginIdEl) loginIdEl.value = loginId;
+  if (emailEl) emailEl.value = email;
+  if (nameEl) nameEl.value = name;
+  if (phoneEl) phoneEl.value = phone;
+}
+
+async function saveMyPageInfo() {
+  if (!currentUser) return alert("로그인 후 이용할 수 있습니다.");
+
+  const name = document.getElementById("mypageName").value.trim();
+  const phone = document.getElementById("mypagePhone").value.trim();
+
+  if (!name || !phone) {
+    return alert("이름과 전화번호를 입력하세요.");
+  }
+
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      name,
+      phone,
+      updatedAt: serverTimestamp()
+    });
+
+    currentUserProfile = {
+      ...(currentUserProfile || {}),
+      name,
+      phone
+    };
+
+    alert("회원 정보가 수정되었습니다.");
+    fillMyPageForm();
+  } catch (error) {
+    alert("회원 정보 수정 오류: " + error.message);
+  }
+}
+
+async function deleteMyAccount() {
+  if (!currentUser || !currentUserProfile) return alert("로그인 후 이용할 수 있습니다.");
+
+  const confirmText = prompt("회원 탈퇴를 진행하려면 '탈퇴합니다'를 입력하세요.");
+  if (confirmText !== "탈퇴합니다") {
+    return alert("회원 탈퇴가 취소되었습니다.");
+  }
+
+  try {
+    const uid = currentUser.uid;
+    const loginId = currentUserProfile.loginId;
+
+    await deleteDoc(doc(db, "users", uid));
+    if (loginId) {
+      await deleteDoc(doc(db, "loginIds", loginId));
+    }
+
+    await deleteUser(currentUser);
+
+    alert("회원 탈퇴가 완료되었습니다.");
+    goPage("home");
+  } catch (error) {
+    if (String(error.code || "").includes("requires-recent-login")) {
+      alert("보안을 위해 다시 로그인한 뒤 회원 탈퇴를 진행해야 합니다. 로그아웃 후 다시 로그인해 주세요.");
+    } else {
+      alert("회원 탈퇴 오류: " + error.message);
+    }
+  }
+}
+
 async function loadSiteSettings() {
   try {
     const snap = await getDoc(doc(db, "siteSettings", "main"));
@@ -566,6 +697,51 @@ async function applySavedTemplates() {
 
 
 
+
+function installBasicContentProtection() {
+  const block = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+  };
+
+  document.addEventListener("contextmenu", block, true);
+  document.addEventListener("dragstart", block, true);
+  document.addEventListener("selectstart", (event) => {
+    const tag = (event.target && event.target.tagName || "").toLowerCase();
+    if (["input", "textarea", "select"].includes(tag)) return true;
+    event.preventDefault();
+    return false;
+  }, true);
+
+  document.addEventListener("keydown", (event) => {
+    const key = String(event.key || "").toLowerCase();
+
+    const blocked =
+      event.key === "F12" ||
+      (event.ctrlKey && event.shiftKey && ["i", "j", "c"].includes(key)) ||
+      (event.metaKey && event.altKey && ["i", "j", "c"].includes(key)) ||
+      (event.ctrlKey && ["u", "s", "p"].includes(key)) ||
+      (event.metaKey && ["u", "s", "p"].includes(key));
+
+    if (blocked) {
+      event.preventDefault();
+      event.stopPropagation();
+      alert("이 사이트에서는 해당 기능을 사용할 수 없습니다.");
+      return false;
+    }
+
+    return true;
+  }, true);
+
+  // 오디오/비디오 위 우클릭도 다시 한번 방지
+  document.querySelectorAll("audio, video, img").forEach((el) => {
+    el.setAttribute("draggable", "false");
+    el.addEventListener("contextmenu", block, true);
+    el.addEventListener("dragstart", block, true);
+  });
+}
+
 function hardenMediaDownloadControls() {
   document.querySelectorAll("audio, video").forEach((media) => {
     media.setAttribute("controlsList", "nodownload noplaybackrate");
@@ -579,6 +755,7 @@ function hardenMediaDownloadControls() {
 
 function renderAllContentSections() {
   renderLatest(allContents);
+  renderLatestByCategory(allContents);
   renderVideos(filterBySelectedSubCategory("videos", allContents.filter(i => i.category === "videos")));
   renderPhotos(filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
   renderList("songList", filterBySelectedSubCategory("songs", allContents.filter(i => i.category === "songs")));
@@ -587,6 +764,7 @@ function renderAllContentSections() {
   renderList("aboutList", filterBySelectedSubCategory("about", allContents.filter(i => i.category === "about")));
   renderList("oneumList", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
   renderAdminManageList();
+  installBasicContentProtection();
 }
 
 async function loadContents() {
@@ -598,10 +776,72 @@ async function loadContents() {
     await applySavedTemplates();
   } catch(e) { console.error(e); }
 }
+
+function matchesPageSearch(page, item) {
+  const input = document.getElementById(`${page}SearchInput`);
+  const keyword = String(input?.value || "").trim().toLowerCase();
+  if (!keyword) return true;
+
+  const haystack = [
+    item.title,
+    item.body,
+    item.description,
+    item.year,
+    item.source,
+    item.subCategory,
+    item.category
+  ].join(" ").toLowerCase();
+
+  return haystack.includes(keyword);
+}
+
 function filterBySelectedSubCategory(page, items) {
   const selected = document.getElementById(`${page}CategoryFilter`)?.value || "";
-  return selected ? items.filter(i => i.subCategory === selected) : items;
+  let filtered = selected ? items.filter(i => i.subCategory === selected) : items;
+  filtered = filtered.filter(item => matchesPageSearch(page, item));
+  return filtered;
 }
+
+function renderLatestByCategory(contents) {
+  const box = document.getElementById("latestByCategory");
+  if (!box) return;
+
+  const labels = {
+    videos: "Videos 최신",
+    songs: "Songs 최신",
+    radios: "Radios 최신",
+    photos: "Photos 최신",
+    stories: "Stories 최신",
+    about: "About Seok 최신",
+    oneum: "Oneum 최신"
+  };
+
+  const pages = ["videos", "songs", "radios", "photos", "stories", "about", "oneum"];
+  box.innerHTML = "";
+
+  pages.forEach((page) => {
+    const item = contents.find((content) => content.category === page);
+    const div = document.createElement("div");
+    div.className = "latest-category-box";
+
+    if (!item) {
+      div.innerHTML = `<h3>${labels[page]}</h3><p class="helper-text">아직 등록된 자료가 없습니다.</p>`;
+    } else {
+      div.innerHTML = `
+        <h3>${labels[page]}</h3>
+        <div class="latest-mini-card" onclick="goPage('${page}'); setTimeout(() => openContentDetail('${item.id}'), 150);">
+          <strong>${escapeHtml(item.title || "제목 없음")}</strong>
+          <p>${escapeHtml((item.description || item.body || "").slice(0, 80))}</p>
+          <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
+          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+        </div>
+      `;
+    }
+
+    box.appendChild(div);
+  });
+}
+
 function renderLatest(contents) {
   const box = document.getElementById("latestContents"); box.innerHTML = "";
   const source = contents.filter(i => i.isFeatured).length ? contents.filter(i => i.isFeatured) : contents;

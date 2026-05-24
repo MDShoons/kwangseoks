@@ -720,3 +720,270 @@ body > div[style*="v32"] {
   opacity: 0.45;
   padding: 8px;
 }
+
+
+/* v34: 깔끔한 프레임형 라디오/음원 레이아웃 */
+#radioList.list-box,
+#songList.list-box {
+  background: #f8f4ef !important;
+  border: 1px solid #dbcab8 !important;
+  border-radius: 28px !important;
+  box-shadow: none !important;
+  padding: 42px 44px !important;
+  margin-top: 24px !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 420px));
+  gap: 28px !important;
+  align-items: start;
+  justify-content: start;
+  width: 100%;
+  min-height: 260px;
+}
+
+#radioList .list-item,
+#songList .list-item,
+#radioList .content-card,
+#songList .content-card {
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+  background: #fcfaf7 !important;
+  border: 1px solid #dcccbc !important;
+  border-radius: 24px !important;
+  box-shadow: 0 2px 8px rgba(53, 42, 34, 0.04) !important;
+  padding: 34px 40px 30px !important;
+  margin: 0 !important;
+  overflow: hidden;
+  align-self: start;
+}
+
+#radioList .list-item:hover,
+#songList .list-item:hover,
+#radioList .content-card:hover,
+#songList .content-card:hover {
+  transform: none !important;
+  box-shadow: 0 4px 12px rgba(53, 42, 34, 0.06) !important;
+}
+
+#radioList .list-item > div,
+#songList .list-item > div,
+#radioList .content-body,
+#songList .content-body {
+  width: 100%;
+}
+
+#radioList h3,
+#songList h3 {
+  margin: 0 0 22px 0 !important;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e4d8cc;
+  font-size: 20px !important;
+  line-height: 1.35 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em;
+  color: #221d19 !important;
+}
+
+#radioList p,
+#songList p {
+  margin: 0 0 10px 0 !important;
+  font-size: 15px !important;
+  line-height: 1.72 !important;
+  color: #2d2723 !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+#radioList p:first-of-type,
+#songList p:first-of-type {
+  margin-bottom: 20px !important;
+}
+
+#radioList audio,
+#songList audio {
+  display: block;
+  width: 290px !important;
+  max-width: 100%;
+  margin: 22px 0 24px 0 !important;
+}
+
+#radioList img,
+#songList img {
+  width: 100%;
+  max-width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 18px;
+}
+
+#radioList .list-item p:nth-last-child(-n+2),
+#songList .list-item p:nth-last-child(-n+2),
+#radioList .content-card p:nth-last-child(-n+2),
+#songList .content-card p:nth-last-child(-n+2) {
+  margin-bottom: 8px !important;
+}
+
+#radioList .list-item::after,
+#songList .list-item::after,
+#radioList .content-card::after,
+#songList .content-card::after {
+  content: "";
+  display: block;
+  margin-top: 28px;
+  border-bottom: 1px solid #e4d8cc;
+}
+
+#radioList strong,
+#songList strong {
+  font-weight: 800;
+  color: #1f1a16;
+}
+
+#radioList .category-badge,
+#songList .category-badge {
+  display: inline-block;
+  margin: 0 0 14px 0 !important;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #efe3d3;
+  font-size: 12px;
+  color: #6a4a33;
+}
+
+/* 하단 버전 문구 숨김 */
+.version-marker {
+  display: none !important;
+}
+
+/* Radios / Songs 페이지 상단 설명 박스도 더 정돈 */
+#radiosPage .page-title,
+#songsPage .page-title {
+  border-radius: 24px;
+  padding: 28px 34px;
+}
+
+#radiosPage .page-title h2,
+#songsPage .page-title h2 {
+  margin-bottom: 10px;
+  font-size: 34px;
+}
+
+#radiosPage .page-title p,
+#songsPage .page-title p {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+@media (max-width: 1400px) {
+  #radioList.list-box,
+  #songList.list-box {
+    grid-template-columns: repeat(2, 420px);
+  }
+}
+
+
+/* v35: 우클릭/드래그/선택 방지 보조 */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+select {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+img,
+audio,
+video {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+
+/* v37: 자료별 최신자료 / 검색 / 로그인 제한 / 회원정보 */
+.latest-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.latest-category-box {
+  border: 1px solid #e0cdb9;
+  border-radius: 20px;
+  background: rgba(255, 250, 244, 0.82);
+  padding: 20px;
+  min-height: 210px;
+}
+
+.latest-category-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  border-bottom: 1px solid #e6d8ca;
+  padding-bottom: 10px;
+}
+
+.latest-mini-card {
+  cursor: pointer;
+}
+
+.latest-mini-card strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.latest-mini-card p {
+  margin: 4px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  opacity: 0.9;
+}
+
+.page-search-input {
+  min-width: 320px;
+  flex: 1;
+}
+
+.login-required-page {
+  text-align: center;
+  max-width: 620px;
+}
+
+.login-required-page h1 {
+  font-size: 34px;
+  margin-bottom: 14px;
+}
+
+.login-required-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.mypage-page label {
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+.warning-text {
+  color: #9b3d2c;
+}
+
+#mypageBtn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+@media (max-width: 1180px) {
+  .latest-category-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
