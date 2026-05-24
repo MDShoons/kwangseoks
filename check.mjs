@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v51-detail-open-fix";
+const APP_VERSION = "v52-hero-hover-pause-resume";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -605,33 +605,58 @@ function applyHomeVoiceSettings(settings = currentSettings || {}) {
   setupHeroVoiceHover();
 }
 
+
 function setupHeroVoiceHover() {
   const hero = document.querySelector("#home .hero");
   const audioEl = document.getElementById("homeVoiceAudio");
   if (!hero || !audioEl || !audioEl.src) return;
 
-  if (hero.dataset.voiceBound === "yes") return;
-  hero.dataset.voiceBound = "yes";
+  if (hero.dataset.voiceBound === "pauseResume") return;
+  hero.dataset.voiceBound = "pauseResume";
 
-  hero.setAttribute("title", "김광석의 목소리 듣기");
+  hero.setAttribute("title", "커서를 올리면 김광석의 목소리가 재생되고, 벗어나면 멈춥니다.");
 
   const playVoice = async () => {
     if (!audioEl.src) return;
 
     try {
-      audioEl.pause();
-      audioEl.currentTime = 0;
       await audioEl.play();
     } catch (error) {
-      console.log("브라우저가 hover 자동재생을 막았습니다. 클릭/터치 때 다시 시도합니다:", error?.message || error);
+      console.log("브라우저가 hover 재생을 막았습니다. 클릭/터치 때 다시 시도합니다:", error?.message || error);
     }
   };
 
+  const pauseVoice = () => {
+    if (!audioEl.paused) {
+      audioEl.pause();
+    }
+  };
+
+  const toggleVoice = async () => {
+    if (audioEl.paused) {
+      await playVoice();
+    } else {
+      pauseVoice();
+    }
+  };
+
+  // PC: 커서가 올라오면 이어서 재생, 벗어나면 일시정지
   hero.addEventListener("mouseenter", playVoice);
+  hero.addEventListener("mouseleave", pauseVoice);
+
+  // 키보드 접근성
   hero.addEventListener("focus", playVoice);
-  hero.addEventListener("click", playVoice);
-  hero.addEventListener("touchstart", playVoice, { passive: true });
+  hero.addEventListener("blur", pauseVoice);
+
+  // 브라우저가 hover 재생을 막는 경우, 클릭하면 재생/일시정지 토글
+  hero.addEventListener("click", toggleVoice);
+
+  // 모바일: 터치할 때 재생/일시정지 토글
+  hero.addEventListener("touchstart", (event) => {
+    toggleVoice();
+  }, { passive: true });
 }
+
 
 async function loadSiteSettings() {
   try {
