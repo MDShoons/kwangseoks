@@ -574,3 +574,149 @@ main {
     min-width: 1040px;
   }
 }
+
+
+/* v33: 라디오/음원 목록 정돈형 레이아웃 */
+#radioList.list-box,
+#songList.list-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-top: 22px;
+  display: grid !important;
+  grid-template-columns: repeat(2, 420px);
+  gap: 18px;
+  align-items: start;
+  justify-content: start;
+}
+
+#radioList .list-item,
+#songList .list-item {
+  display: block !important;
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+  padding: 22px 24px !important;
+  margin: 0 !important;
+  border: 1px solid #e0cdb9 !important;
+  border-radius: 18px !important;
+  background: var(--card-bg, #fffaf4) !important;
+  box-shadow: 0 4px 14px rgba(60, 48, 41, 0.08) !important;
+  cursor: pointer;
+}
+
+#radioList .list-item:hover,
+#songList .list-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgba(60, 48, 41, 0.13) !important;
+}
+
+#radioList .list-item > div,
+#songList .list-item > div {
+  width: 100%;
+  max-width: 100%;
+}
+
+#radioList h3,
+#songList h3 {
+  margin: 0 0 12px 0 !important;
+  font-size: 18px !important;
+  line-height: 1.42 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  color: var(--text-color, #2f2924) !important;
+}
+
+#radioList p,
+#songList p {
+  margin: 7px 0 !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  color: var(--text-color, #2f2924) !important;
+}
+
+#radioList p:first-of-type,
+#songList p:first-of-type {
+  margin-bottom: 14px !important;
+}
+
+#radioList strong,
+#songList strong {
+  font-weight: 800;
+}
+
+#radioList audio,
+#songList audio {
+  width: 270px !important;
+  max-width: 100%;
+  display: block;
+  margin: 14px 0 18px 0 !important;
+}
+
+#radioList img,
+#songList img {
+  width: 100%;
+  max-width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+#radioList .category-badge,
+#songList .category-badge {
+  display: inline-block;
+  margin: 0 0 10px 0 !important;
+  font-size: 12px;
+  padding: 4px 9px;
+}
+
+/* 기존 v29/v30/v31/v32에서 남은 폭 강제값 보정 */
+#radioList .content-card,
+#songList .content-card {
+  width: 420px !important;
+  max-width: 420px !important;
+  min-width: 420px !important;
+}
+
+/* PC 화면에서 빈 박스처럼 보이지 않도록 부모 높이 자동화 */
+#radioList:empty::before,
+#songList:empty::before {
+  content: "등록된 자료가 없습니다.";
+  display: block;
+  background: var(--card-bg, #fffaf4);
+  border: 1px solid #e0cdb9;
+  border-radius: 18px;
+  padding: 22px 24px;
+  width: 420px;
+}
+
+/* 화면 하단에 쌓이는 버전 표시 숨김 */
+body > div[style*="v25"],
+body > div[style*="v26"],
+body > div[style*="v27"],
+body > div[style*="v28"],
+body > div[style*="v29"],
+body > div[style*="v30"],
+body > div[style*="v31"],
+body > div[style*="v32"] {
+  display: none !important;
+}
+
+@media (max-width: 1180px) {
+  #radioList.list-box,
+  #songList.list-box {
+    grid-template-columns: repeat(2, 420px);
+  }
+}
+
+
+.version-marker {
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.45;
+  padding: 8px;
+}
