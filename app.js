@@ -61,7 +61,8 @@ const DEFAULT_SETTINGS = {
   storiesDesc: "김광석의 일기를 모아둔 공간입니다.",
   aboutDesc: "김광석의 생애와 음악 세계를 정리한 공간입니다.",
   oneumDesc: "김광석의 둥근소리글을 모아둔 공간입니다.",
-  homeBgUrl: ""
+  homeBgUrl: "./images/main-bg.png",
+  homeBgDataUrl: ""
 };
 
 function normalizeLoginId(value) {
@@ -510,6 +511,51 @@ window.deleteCustomCategory = async function deleteCustomCategory(id) {
   }
 };
 
+
+async function fileToCompressedDataUrl(file, maxWidth = 1600, quality = 0.78) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("이미지 파일을 읽지 못했습니다."));
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("이미지를 불러오지 못했습니다."));
+    image.src = dataUrl;
+  });
+
+  const ratio = img.width > maxWidth ? maxWidth / img.width : 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(img.width * ratio);
+  canvas.height = Math.round(img.height * ratio);
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  let output = canvas.toDataURL("image/jpeg", quality);
+
+  if (output.length > 850000) {
+    output = canvas.toDataURL("image/jpeg", 0.6);
+  }
+  if (output.length > 850000) {
+    const smallerCanvas = document.createElement("canvas");
+    smallerCanvas.width = Math.round(canvas.width * 0.8);
+    smallerCanvas.height = Math.round(canvas.height * 0.8);
+    const sctx = smallerCanvas.getContext("2d");
+    sctx.drawImage(canvas, 0, 0, smallerCanvas.width, smallerCanvas.height);
+    output = smallerCanvas.toDataURL("image/jpeg", 0.55);
+  }
+
+  if (output.length > 900000) {
+    throw new Error("배경 이미지가 너무 큽니다. 더 작은 이미지로 다시 시도하세요.");
+  }
+
+  return output;
+}
+
 async function uploadImageToGitHubWorker(file, folder = "images") {
   if (!file) return "";
 
@@ -552,6 +598,14 @@ async function uploadImageToGitHubWorker(file, folder = "images") {
 
 async function uploadFileToGitHubWorker(file, folder = "images") {
   return await uploadImageToGitHubWorker(file, folder);
+}
+
+
+async function getImageDataUrlOrDirectUrl(file, directUrl, maxWidth = 1400) {
+  if (file) {
+    return await fileToCompressedDataUrl(file, maxWidth, 0.74);
+  }
+  return directUrl && directUrl.trim() ? directUrl.trim() : "";
 }
 
 function pickDirectUrlOrUploadedUrl(directUrl, uploadedUrl) {
@@ -601,8 +655,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
   }
 
   try {
-    const uploadedImageUrl = imageFile ? await uploadImageToGitHubWorker(imageFile, "images/content") : "";
-    const imageUrl = pickDirectUrlOrUploadedUrl(directImageUrl, uploadedImageUrl);
+    const imageUrl = await getImageDataUrlOrDirectUrl(imageFile, directImageUrl, 1400);
 
     const payload = {
       category,
@@ -688,9 +741,8 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
     }
 
     const uploadedVideoUrl = videoFile ? await uploadFileToGitHubWorker(videoFile, "images/videos") : "";
-    const uploadedThumbnailUrl = thumbnailFile ? await uploadFileToGitHubWorker(thumbnailFile, "images/video-thumbnails") : "";
     const mediaUrl = embedUrl || pickDirectUrlOrUploadedUrl(directVideoUrl, uploadedVideoUrl);
-    const thumbnailUrl = pickDirectUrlOrUploadedUrl(directThumbnailUrl, uploadedThumbnailUrl);
+    const thumbnailUrl = await getImageDataUrlOrDirectUrl(thumbnailFile, directThumbnailUrl, 1000);
 
     await addDoc(collection(db, "contents"), {
       category: "videos",
@@ -737,8 +789,7 @@ document.getElementById("savePhotoBtn").addEventListener("click", async () => {
   }
 
   try {
-    const uploadedImageUrl = photoFile ? await uploadImageToGitHubWorker(photoFile, "images/photos") : "";
-    const imageUrl = pickDirectUrlOrUploadedUrl(directImageUrl, uploadedImageUrl);
+    const imageUrl = await getImageDataUrlOrDirectUrl(photoFile, directImageUrl, 1400);
 
     await addDoc(collection(db, "contents"), {
       category: "photos",
@@ -792,9 +843,8 @@ document.getElementById("saveAudioBtn").addEventListener("click", async () => {
 
   try {
     const uploadedAudioUrl = audioFile ? await uploadFileToGitHubWorker(audioFile, "images/audios") : "";
-    const uploadedImageUrl = imageFile ? await uploadFileToGitHubWorker(imageFile, "images/audio-covers") : "";
     const mediaUrl = pickDirectUrlOrUploadedUrl(directAudioUrl, uploadedAudioUrl);
-    const imageUrl = pickDirectUrlOrUploadedUrl(directImageUrl, uploadedImageUrl);
+    const imageUrl = await getImageDataUrlOrDirectUrl(imageFile, directImageUrl, 1000);
 
     await addDoc(collection(db, "contents"), {
       category: "songs",
@@ -849,9 +899,8 @@ document.getElementById("saveRadioBtn").addEventListener("click", async () => {
 
   try {
     const uploadedRadioUrl = radioFile ? await uploadFileToGitHubWorker(radioFile, "images/radios") : "";
-    const uploadedImageUrl = imageFile ? await uploadFileToGitHubWorker(imageFile, "images/radio-covers") : "";
     const mediaUrl = pickDirectUrlOrUploadedUrl(directRadioUrl, uploadedRadioUrl);
-    const imageUrl = pickDirectUrlOrUploadedUrl(directImageUrl, uploadedImageUrl);
+    const imageUrl = await getImageDataUrlOrDirectUrl(imageFile, directImageUrl, 1000);
 
     await addDoc(collection(db, "contents"), {
       category: "radios",
@@ -913,8 +962,17 @@ document.getElementById("saveSiteSettingsBtn").addEventListener("click", async (
   try {
     const homeBgFile = document.getElementById("settingHomeBgFile").files[0];
     const homeBgUrlInput = document.getElementById("settingHomeBgUrl").value.trim();
-    const uploadedHomeBgUrl = homeBgFile ? await uploadImageToGitHubWorker(homeBgFile, "images/site-settings") : "";
-    let homeBgUrl = homeBgUrlInput || uploadedHomeBgUrl || currentSettings.homeBgUrl || "";
+
+    let homeBgDataUrl = currentSettings.homeBgDataUrl || "";
+    let homeBgUrl = currentSettings.homeBgUrl || "";
+
+    if (homeBgFile) {
+      homeBgDataUrl = await fileToCompressedDataUrl(homeBgFile, 1600, 0.78);
+      homeBgUrl = "";
+    } else if (homeBgUrlInput) {
+      homeBgUrl = homeBgUrlInput;
+      homeBgDataUrl = "";
+    }
 
     const settings = {
       siteName: document.getElementById("settingSiteName").value.trim() || DEFAULT_SETTINGS.siteName,
@@ -929,6 +987,7 @@ document.getElementById("saveSiteSettingsBtn").addEventListener("click", async (
       aboutDesc: document.getElementById("settingAboutDesc").value.trim() || DEFAULT_SETTINGS.aboutDesc,
       oneumDesc: document.getElementById("settingOneumDesc").value.trim() || DEFAULT_SETTINGS.oneumDesc,
       homeBgUrl,
+      homeBgDataUrl,
       updatedAt: serverTimestamp()
     };
 
@@ -938,7 +997,7 @@ document.getElementById("saveSiteSettingsBtn").addEventListener("click", async (
     fillSettingsFormFromCurrent();
     document.getElementById("settingHomeBgUrl").value = "";
     document.getElementById("settingHomeBgFile").value = "";
-    alert("사이트 문구/배경 이미지가 저장되었고 화면에 반영되었습니다.");
+    alert("사이트 문구/배경 이미지가 저장되었습니다. 이제 파일 선택 후 저장만 눌러도 메인 배경이 바뀝니다.");
   } catch (error) {
     alert("사이트 설정 저장 오류: " + error.message);
   }
@@ -973,7 +1032,12 @@ function applySiteSettings(settings) {
   document.getElementById("footerTitle").textContent = `${settings.siteName} | ${settings.siteSubName}`;
 
   const homeHero = document.getElementById("homeHero");
-  if (settings.homeBgUrl) {
+  const directBg = settings.homeBgDataUrl || "";
+  if (directBg) {
+    homeHero.style.backgroundImage = `url("${directBg}")`;
+    homeHero.classList.add("has-bg");
+    homeHero.classList.remove("no-bg");
+  } else if (settings.homeBgUrl) {
     const separator = settings.homeBgUrl.includes("?") ? "&" : "?";
     const bgUrl = `${settings.homeBgUrl}${separator}v=${Date.now()}`;
     homeHero.style.backgroundImage = `url("${bgUrl}")`;
@@ -1335,15 +1399,26 @@ function escapeHtml(text) {
 
 const previewHomeBgBtn = document.getElementById("previewHomeBgBtn");
 if (previewHomeBgBtn) {
-  previewHomeBgBtn.addEventListener("click", () => {
+  previewHomeBgBtn.addEventListener("click", async () => {
+    const file = document.getElementById("settingHomeBgFile").files[0];
     const url = document.getElementById("settingHomeBgUrl").value.trim();
-    if (!url) {
-      alert("먼저 메인 배경 이미지 URL을 입력하세요. 파일 선택은 저장 후 업로드되어야 미리볼 수 있습니다.");
-      return;
+    try {
+      if (file) {
+        const dataUrl = await fileToCompressedDataUrl(file, 1600, 0.78);
+        document.getElementById("homeHero").style.backgroundImage = `url("${dataUrl}")`;
+        alert("선택한 파일을 메인 배경에 임시 미리보기로 적용했습니다. 실제 저장은 ‘사이트 문구/배경 저장’을 눌러야 합니다.");
+        return;
+      }
+      if (!url) {
+        alert("먼저 파일을 선택하거나 메인 배경 이미지 URL을 입력하세요.");
+        return;
+      }
+      const separator = url.includes("?") ? "&" : "?";
+      document.getElementById("homeHero").style.backgroundImage = `url("${url}${separator}preview=${Date.now()}")`;
+      alert("입력한 URL을 메인 배경에 임시 미리보기로 적용했습니다. 실제 저장은 ‘사이트 문구/배경 저장’을 눌러야 합니다.");
+    } catch (error) {
+      alert("배경 미리보기 오류: " + error.message);
     }
-    const separator = url.includes("?") ? "&" : "?";
-    document.getElementById("homeHero").style.backgroundImage = `url("${url}${separator}preview=${Date.now()}")`;
-    alert("입력한 URL을 메인 배경에 임시 미리보기로 적용했습니다. 실제 저장은 ‘사이트 문구/배경 저장’을 눌러야 합니다.");
   });
 }
 
