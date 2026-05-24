@@ -949,3 +949,25 @@ body > div[style*="v32"] {
   font-weight: 800;
   display: inline-block;
 }
+
+/* v44: 우클릭/F12/드래그/선택 방지 */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+select,
+option {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+img,
+audio,
+video {
+  -webkit-user-drag: none;
+  user-drag: none;
+}

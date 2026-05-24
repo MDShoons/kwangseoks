@@ -276,3 +276,25 @@ index.html은 app.js 하나만 읽습니다.
 GitHub에는 ZIP 안의 파일을 루트에 덮어쓰기해야 합니다.
 index.html의 마지막 script는 아래여야 합니다.
 <script type="module" src="app.js?v=43-stable-appjs-member"></script>
+
+
+## v44 수정 사항 - 우클릭/F12 차단 재적용
+사이트 화면에서 일반 사용자가 쉽게 개발자도구나 저장 기능을 쓰지 못하도록 방지 코드를 다시 적용했습니다.
+
+차단:
+- 오른쪽 클릭
+- F12
+- Ctrl + Shift + I
+- Ctrl + Shift + J
+- Ctrl + Shift + C
+- Ctrl + U
+- Ctrl + S
+- Ctrl + P
+- 이미지/오디오/비디오 드래그 저장
+- 일반 텍스트 선택
+
+허용:
+- input / textarea / select 입력창 안에서는 텍스트 선택 가능
+
+한계:
+브라우저 메뉴에서 직접 개발자도구 열기, 확장 프로그램, 직접 URL 접근, GitHub 공개 파일 접근까지 완전히 막을 수는 없습니다.
