@@ -1,6 +1,12 @@
-이 ZIP은 GitHub Pages 루트 업로드 전용입니다.
+이 ZIP은 GitHub Pages 루트 업로드 전용 v82입니다.
 
-압축을 풀면 바로 index.html, app.js, style.css가 보여야 정상입니다.
+압축을 풀었을 때 바로 아래 파일들이 보여야 정상입니다.
+
+index.html
+app.js
+style.css
+firebase-config.js
+cloudflare-worker-github-uploader.js
 
 GitHub 저장소에서 올바른 위치:
 kwangseoks/
@@ -9,21 +15,35 @@ kwangseoks/
   style.css
   firebase-config.js
   cloudflare-worker-github-uploader.js
+  images/
+  audios/
+  videos/
+  radios/
 
 잘못된 위치:
 kwangseoks/
-  kwangseoks-v74-ROOT-ONLY-upload-this/
+  kwangseoks-v82-ROOT-ONLY-upload-this/
     index.html
+    app.js
 
-적용 후 확인:
-1. GitHub 저장소 최상단의 index.html을 열기
-2. 맨 아래 script가 아래인지 확인
-   <script type="module" src="app.js?v=74-worker-origin-bypass"></script>
+GitHub 적용 후 확인:
+1. https://mdshoons.github.io/kwangseoks/
+2. Ctrl + F5
+3. 사이트 하단 버전이 아래처럼 보여야 함:
+   v82-http-link-proxy
 
-3. 사이트 접속 후 Ctrl + F5
-4. 사이트 하단 버전이 아래인지 확인
-   v74-worker-origin-bypass
+Cloudflare Worker도 반드시 별도로 교체:
+1. 이 ZIP 안의 cloudflare-worker-github-uploader.js 열기
+2. 내용 전체 복사
+3. Cloudflare → Workers & Pages → kwangseoks-uploader
+4. Edit code
+5. 기존 코드 전체 삭제 후 붙여넣기
+6. Deploy
 
-Cloudflare Worker도 별도 확인:
+Worker 확인:
 https://kwangseoks-uploader.kos20050627.workers.dev/health
-version이 v74-origin-bypass-upload이면 Worker도 최신입니다.
+
+정상이라면:
+version: v82-http-link-proxy
+
+두 조건이 모두 맞아야 http://oneum.net/...mp3 링크가 재생됩니다.

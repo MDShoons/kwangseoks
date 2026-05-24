@@ -922,3 +922,14 @@ v82-http-link-proxy
 
 적용 후 사이트 하단 버전:
 v82-http-link-proxy
+
+
+## ROOT ONLY v82 재압축본
+이 ZIP은 폴더째 들어가지 않도록 루트 전용으로 다시 묶은 파일입니다.
+
+필수 확인:
+- 사이트 하단: v82-http-link-proxy
+- Worker health: v82-http-link-proxy
+
+HTTP mp3 링크는 Worker의 /proxy 기능이 있어야 재생됩니다.
+따라서 GitHub Pages와 Cloudflare Worker 둘 다 v82여야 합니다.
