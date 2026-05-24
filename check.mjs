@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v53-pagination-sort-date";
+const APP_VERSION = "v54-upload-date-time";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -948,8 +948,10 @@ function formatKoreanDate(value) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
 
-  return `${year}년 ${month}월 ${day}일`;
+  return `${year}년 ${month}월 ${day}일 | ${hour}:${minute}`;
 }
 
 function getItemCreatedDateText(item) {
@@ -1019,7 +1021,7 @@ function renderPagination(page, totalPages, currentPage) {
 
 
 function createdDateMarkup(item) {
-  return `<p class="created-date"><strong>등록일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</p>`;
+  return `<p class="created-date"><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</p>`;
 }
 
 function prepareItemsForPage(page, items) {

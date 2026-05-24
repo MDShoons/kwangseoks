@@ -435,3 +435,15 @@ https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3
 주의:
 등록일은 Firestore의 createdAt 값을 기준으로 표시합니다.
 createdAt 값이 없는 오래된 자료는 updatedAt/date를 보조로 사용하며, 그래도 없으면 ‘등록일 미기재’로 표시됩니다.
+
+
+## v54 수정 사항 - 업로드 날짜와 시간 표시
+자료 카드의 등록일 표시를 업로드 날짜+시간 형식으로 바꿨습니다.
+
+표시 예:
+업로드일: 2026년 05월 24일 | 16:35
+
+기준:
+- Firestore createdAt 우선
+- createdAt이 없으면 updatedAt / createdDate / date 순서로 보조 사용
+- 값이 없으면 ‘등록일 미기재’ 표시

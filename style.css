@@ -1280,3 +1280,8 @@ video {
   font-size: 13px !important;
   opacity: 0.88;
 }
+
+/* v54: 업로드 날짜+시간 표시 */
+.created-date {
+  letter-spacing: -0.01em;
+}
