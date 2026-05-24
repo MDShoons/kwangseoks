@@ -2059,3 +2059,180 @@ body.screen-protect-blur footer {
   background: #ffffff !important;
   border: 0 !important;
 }
+
+
+/* v67: 라디오 전용 흑백 커스텀 플레이어 */
+.radio-mono-player {
+  width: 290px;
+  max-width: 100%;
+  margin: 14px 0 12px;
+}
+
+.radio-mono-player audio {
+  display: none !important;
+}
+
+.radio-mono-controls {
+  display: grid;
+  grid-template-columns: 34px auto 1fr 26px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  background: #efefef;
+  border: 1px solid #e0e0e0;
+}
+
+.radio-mono-play,
+.radio-mono-mute {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #111;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.radio-mono-play {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #d4d4d4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radio-mono-play:hover,
+.radio-mono-mute:hover {
+  opacity: 0.8;
+}
+
+.radio-mono-time {
+  min-width: 66px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+}
+
+.radio-mono-divider {
+  opacity: 0.5;
+}
+
+.radio-mono-progress,
+.radio-mono-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.radio-mono-progress::-webkit-slider-runnable-track,
+.radio-mono-volume::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #bdbdbd;
+}
+
+.radio-mono-progress::-webkit-slider-thumb,
+.radio-mono-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #111;
+  margin-top: -4px;
+  border: 0;
+}
+
+.radio-mono-progress::-moz-range-track,
+.radio-mono-volume::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #bdbdbd;
+}
+
+.radio-mono-progress::-moz-range-thumb,
+.radio-mono-volume::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #111;
+  border: 0;
+}
+
+.radio-mono-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-left: 10px;
+}
+
+.radio-mono-volume-label {
+  min-width: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  letter-spacing: 0.04em;
+}
+
+.radio-mono-volume {
+  width: 86px;
+  max-width: 86px;
+}
+
+#radioList .list-item .radio-mono-player {
+  margin-top: 14px;
+}
+
+#radioList .list-item .radio-mono-controls {
+  width: 290px;
+  max-width: 100%;
+}
+
+.detail-radio-audio-box {
+  width: 100%;
+  max-width: 320px;
+  padding: 0;
+  margin: 0 0 24px 0;
+  border: 0;
+  background: transparent;
+}
+
+.detail-radio-audio-box .radio-mono-player {
+  width: 320px;
+  max-width: 100%;
+  margin: 0;
+}
+
+.detail-radio-audio-box .radio-mono-controls {
+  grid-template-columns: 38px auto 1fr 28px;
+  gap: 14px;
+  padding: 13px 16px;
+  background: #f0f0f0;
+  border: 1px solid #dddddd;
+}
+
+.detail-radio-audio-box .radio-mono-play {
+  width: 38px;
+  height: 38px;
+}
+
+.detail-radio-audio-box .radio-mono-time {
+  font-size: 14px;
+}
+
+.detail-radio-audio-box .radio-mono-volume-row {
+  margin-top: 10px;
+  padding-left: 12px;
+}

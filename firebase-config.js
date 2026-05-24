@@ -18,4 +18,4 @@ export const ADMIN_LOGIN_IDS = [
   "oldsong0106"
 ];
 
-export const GITHUB_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev/upload";
+export const GITHUB_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";

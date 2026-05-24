@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v66-tiny-volume-ui";
+const APP_VERSION = "v68-worker-url-fix";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -942,6 +942,7 @@ function renderAllContentSections() {
 
   renderAdminManageList();
   installBasicContentProtection();
+  setupRadioMonochromePlayers();
 }
 
 
@@ -1436,6 +1437,121 @@ function renderAboutArticle(items) {
   renderAboutDocument(items);
 }
 
+
+function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
+  const safeUrl = escapeHtml(mediaUrl || "");
+  const safeId = escapeHtml(playerId || "");
+  if (!safeUrl) return "";
+
+  return `
+    <div class="radio-mono-player" data-radio-player data-player-id="${safeId}" onclick="event.stopPropagation()">
+      <audio preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${safeUrl}"></audio>
+      <div class="radio-mono-controls">
+        <button type="button" class="radio-mono-play" aria-label="재생 또는 일시정지">▶</button>
+        <div class="radio-mono-time"><span class="radio-mono-current">0:00</span> <span class="radio-mono-divider">/</span> <span class="radio-mono-duration">0:00</span></div>
+        <input type="range" class="radio-mono-progress" min="0" max="1000" value="0" step="1" aria-label="재생 위치">
+        <button type="button" class="radio-mono-mute" aria-label="음소거">🔈</button>
+      </div>
+      <div class="radio-mono-volume-row">
+        <span class="radio-mono-volume-label">VOL</span>
+        <input type="range" class="radio-mono-volume" min="0" max="100" value="80" step="1" aria-label="볼륨 조절">
+      </div>
+    </div>
+  `;
+}
+
+function setupRadioMonochromePlayers(root = document) {
+  root.querySelectorAll('[data-radio-player]').forEach((player) => {
+    if (player.dataset.bound === 'yes') return;
+
+    const audio = player.querySelector('audio');
+    const playBtn = player.querySelector('.radio-mono-play');
+    const current = player.querySelector('.radio-mono-current');
+    const duration = player.querySelector('.radio-mono-duration');
+    const progress = player.querySelector('.radio-mono-progress');
+    const muteBtn = player.querySelector('.radio-mono-mute');
+    const volume = player.querySelector('.radio-mono-volume');
+
+    if (!audio || !playBtn || !current || !duration || !progress || !muteBtn || !volume) return;
+
+    player.dataset.bound = 'yes';
+    audio.volume = 0.8;
+    audio.muted = false;
+    volume.value = '80';
+    audio.setAttribute('playsinline', '');
+
+    player.addEventListener('click', (event) => event.stopPropagation());
+    player.querySelectorAll('button, input').forEach((control) => {
+      control.addEventListener('click', (event) => event.stopPropagation());
+      control.addEventListener('mousedown', (event) => event.stopPropagation());
+    });
+
+    const syncVolumeUi = () => {
+      const volumeValue = audio.muted ? 0 : Math.round(audio.volume * 100);
+      muteBtn.textContent = audio.muted || audio.volume === 0 ? '🔇' : '🔈';
+      volume.value = String(volumeValue);
+    };
+
+    const syncPlayUi = () => {
+      playBtn.textContent = audio.paused ? '▶' : '❚❚';
+    };
+
+    playBtn.addEventListener('click', async () => {
+      if (!audio.src) return;
+      try {
+        if (audio.paused) {
+          await audio.play();
+        } else {
+          audio.pause();
+        }
+      } catch (error) {
+        console.error('라디오 재생 오류', error);
+      }
+    });
+
+    muteBtn.addEventListener('click', () => {
+      audio.muted = !audio.muted;
+      syncVolumeUi();
+    });
+
+    volume.addEventListener('input', () => {
+      const value = Number(volume.value) / 100;
+      audio.volume = value;
+      audio.muted = value === 0;
+      syncVolumeUi();
+    });
+
+    progress.addEventListener('input', () => {
+      if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+      audio.currentTime = (Number(progress.value) / 1000) * audio.duration;
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+      duration.textContent = formatPlayerTime(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      current.textContent = formatPlayerTime(audio.currentTime);
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
+      } else {
+        progress.value = '0';
+      }
+    });
+
+    audio.addEventListener('play', syncPlayUi);
+    audio.addEventListener('pause', syncPlayUi);
+    audio.addEventListener('ended', () => {
+      progress.value = '0';
+      syncPlayUi();
+    });
+    audio.addEventListener('volumechange', syncVolumeUi);
+
+    syncPlayUi();
+    syncVolumeUi();
+  });
+}
+
 function renderList(id, items) {
   const box = document.getElementById(id);
   if (!box) return;
@@ -1467,7 +1583,7 @@ function renderList(id, items) {
         ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
         ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
         ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
-        ${item.mediaType === "audio" ? `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>` : ""}
+        ${item.mediaType === "audio" ? (id === "radioList" ? renderRadioMonochromePlayer(item.mediaUrl, `radio-list-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`) : ""}
         <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
         <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
         ${createdDateMarkup(item)}
@@ -1617,6 +1733,9 @@ function renderDetailMedia(item) {
 
   if (category === "songs" || category === "radios") {
     if (mediaUrl) {
+      if (category === "radios") {
+        return `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(mediaUrl, `radio-detail-${item.id || "detail"}`)}</div>`;
+      }
       return `<div class="detail-audio-box"><audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${escapeHtml(mediaUrl)}"></audio></div>`;
     }
 
@@ -1675,6 +1794,7 @@ function openContentDetail(id) {
     hardenMediaDownloadControls();
   }
   bindDetailPhotoZoom();
+  setupRadioMonochromePlayers(mediaArea);
   document.body.style.overflow = "hidden";
 }
 
