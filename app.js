@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v72-upload-firebase-token";
+const APP_VERSION = "v73-cors-safe-upload";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -217,6 +217,7 @@ async function uploadFileToGitHubWorker(file, folder) {
   formData.append("file", file);
   formData.append("folder", folder || "");
   formData.append("kind", folder || "");
+  formData.append("idToken", token);
 
   let response;
   let text = "";
@@ -226,15 +227,12 @@ async function uploadFileToGitHubWorker(file, folder) {
       method: "POST",
       body: formData,
       mode: "cors",
-      cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      cache: "no-store"
     });
 
     text = await response.text();
   } catch (error) {
-    throw new Error(`Cloudflare Worker에 연결하지 못했습니다. 현재 사용 중인 Worker 주소: ${workerUrl}. health 확인: ${workerUrl}/health. 원문: ${error.message}`);
+    throw new Error(`Cloudflare Worker에 연결하지 못했습니다. CORS 또는 Worker Deploy 문제일 가능성이 큽니다. 현재 사용 중인 Worker 주소: ${workerUrl}. health 확인: ${workerUrl}/health. 원문: ${error.message}`);
   }
 
   let data = null;

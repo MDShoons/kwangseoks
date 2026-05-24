@@ -1,35 +1,35 @@
 
 // kwangseoks Cloudflare Worker GitHub uploader
-// v69: Git Data API upload 방식
-// GitHub Contents API가 큰 파일에서 "Sorry, the file is too large to be processed"를 내는 문제를 줄이기 위해
-// blobs -> tree -> commit -> ref 업데이트 방식으로 저장합니다.
+// v73: CORS-safe upload. Accepts token via formData idToken or Authorization.
 
-function jsonResponse(data, status = 200, origin = "*") {
+function buildCorsHeaders(request, env) {
+  const requestOrigin = request.headers.get("Origin") || "";
+  const allowed = env.ALLOWED_ORIGIN || "https://mdshoons.github.io";
+  const origin = requestOrigin && requestOrigin === allowed ? requestOrigin : allowed;
+
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin"
+  };
+}
+
+function jsonResponse(data, status, request, env) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      "content-type": "application/json; charset=utf-8",
-      "access-control-allow-origin": origin,
-      "access-control-allow-methods": "GET, POST, OPTIONS",
-      "access-control-allow-headers": "content-type, authorization",
-      "access-control-max-age": "86400"
+      "Content-Type": "application/json; charset=utf-8",
+      ...buildCorsHeaders(request, env)
     }
   });
 }
 
-function getAllowedOrigin(env) {
-  return env.ALLOWED_ORIGIN || "https://mdshoons.github.io";
-}
-
-function corsResponse(origin) {
+function optionsResponse(request, env) {
   return new Response(null, {
     status: 204,
-    headers: {
-      "access-control-allow-origin": origin,
-      "access-control-allow-methods": "GET, POST, OPTIONS",
-      "access-control-allow-headers": "content-type, authorization",
-      "access-control-max-age": "86400"
-    }
+    headers: buildCorsHeaders(request, env)
   });
 }
 
@@ -81,10 +81,10 @@ async function githubFetch(env, path, options = {}) {
   const res = await fetch(`https://api.github.com/repos/${owner}/${repo}${path}`, {
     ...options,
     headers: {
-      "accept": "application/vnd.github+json",
-      "authorization": `Bearer ${token}`,
-      "x-github-api-version": "2022-11-28",
-      "user-agent": "kwangseoks-cloudflare-worker",
+      "Accept": "application/vnd.github+json",
+      "Authorization": `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "kwangseoks-cloudflare-worker",
       ...(options.headers || {})
     }
   });
@@ -109,15 +109,12 @@ async function githubFetch(env, path, options = {}) {
 async function uploadViaGitDataAPI(env, filePath, base64Content, message) {
   const branch = env.GITHUB_BRANCH || "main";
 
-  // 1. 현재 branch ref 확인
   const ref = await githubFetch(env, `/git/ref/heads/${encodeURIComponent(branch)}`);
   const latestCommitSha = ref.object.sha;
 
-  // 2. 현재 commit 확인
   const latestCommit = await githubFetch(env, `/git/commits/${latestCommitSha}`);
   const baseTreeSha = latestCommit.tree.sha;
 
-  // 3. blob 생성
   const blob = await githubFetch(env, `/git/blobs`, {
     method: "POST",
     body: JSON.stringify({
@@ -126,7 +123,6 @@ async function uploadViaGitDataAPI(env, filePath, base64Content, message) {
     })
   });
 
-  // 4. tree 생성
   const tree = await githubFetch(env, `/git/trees`, {
     method: "POST",
     body: JSON.stringify({
@@ -142,7 +138,6 @@ async function uploadViaGitDataAPI(env, filePath, base64Content, message) {
     })
   });
 
-  // 5. commit 생성
   const commit = await githubFetch(env, `/git/commits`, {
     method: "POST",
     body: JSON.stringify({
@@ -152,7 +147,6 @@ async function uploadViaGitDataAPI(env, filePath, base64Content, message) {
     })
   });
 
-  // 6. branch ref 업데이트
   await githubFetch(env, `/git/refs/heads/${encodeURIComponent(branch)}`, {
     method: "PATCH",
     body: JSON.stringify({
@@ -168,18 +162,32 @@ async function uploadViaGitDataAPI(env, filePath, base64Content, message) {
   };
 }
 
-async function handleUpload(request, env, origin) {
+function getTokenFromRequest(request, form) {
+  const auth = request.headers.get("Authorization") || "";
+  const bearer = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  const formToken = form.get("idToken");
+
+  return bearer || String(formToken || "");
+}
+
+async function handleUpload(request, env) {
   const contentType = request.headers.get("content-type") || "";
   if (!contentType.includes("multipart/form-data")) {
-    return jsonResponse({ ok: false, error: "multipart/form-data 요청만 지원합니다." }, 400, origin);
+    return jsonResponse({ ok: false, error: "multipart/form-data 요청만 지원합니다." }, 400, request, env);
   }
 
   const form = await request.formData();
+
+  const idToken = getTokenFromRequest(request, form);
+  if (!idToken) {
+    return jsonResponse({ ok: false, error: "Firebase ID Token이 없습니다." }, 401, request, env);
+  }
+
   const file = form.get("file");
   const kind = String(form.get("kind") || form.get("folder") || form.get("category") || "");
 
   if (!file || typeof file === "string") {
-    return jsonResponse({ ok: false, error: "file 필드가 필요합니다." }, 400, origin);
+    return jsonResponse({ ok: false, error: "file 필드가 필요합니다." }, 400, request, env);
   }
 
   const maxBytes = Number(env.MAX_UPLOAD_BYTES || 95 * 1024 * 1024);
@@ -189,7 +197,7 @@ async function handleUpload(request, env, origin) {
       error: `파일이 너무 큽니다. 현재 Worker 제한은 ${Math.floor(maxBytes / 1024 / 1024)}MB입니다. 더 큰 파일은 Cloudflare R2/Firebase Storage를 사용해야 합니다.`,
       size: file.size,
       maxBytes
-    }, 413, origin);
+    }, 413, request, env);
   }
 
   const safeName = sanitizeFilename(file.name);
@@ -218,15 +226,13 @@ async function handleUpload(request, env, origin) {
     type: file.type || "",
     name: file.name,
     commitSha: result.commitSha
-  }, 200, origin);
+  }, 200, request, env);
 }
 
 export default {
   async fetch(request, env) {
-    const origin = getAllowedOrigin(env);
-
     if (request.method === "OPTIONS") {
-      return corsResponse(origin);
+      return optionsResponse(request, env);
     }
 
     const url = new URL(request.url);
@@ -236,29 +242,29 @@ export default {
         return jsonResponse({
           ok: true,
           service: "kwangseoks-github-uploader",
-          version: "v69-git-data-api",
+          version: "v73-cors-safe-upload",
           hasOwner: Boolean(env.GITHUB_OWNER),
           hasRepo: Boolean(env.GITHUB_REPO),
           hasToken: Boolean(env.GITHUB_TOKEN),
           branch: env.GITHUB_BRANCH || "main",
-          allowedOrigin: origin
-        }, 200, origin);
+          allowedOrigin: env.ALLOWED_ORIGIN || "https://mdshoons.github.io"
+        }, 200, request, env);
       }
 
       if (url.pathname === "/upload") {
         if (request.method !== "POST") {
-          return jsonResponse({ ok: false, error: "POST만 지원합니다." }, 405, origin);
+          return jsonResponse({ ok: false, error: "POST만 지원합니다." }, 405, request, env);
         }
 
-        return await handleUpload(request, env, origin);
+        return await handleUpload(request, env);
       }
 
-      return jsonResponse({ ok: false, error: "Not found" }, 404, origin);
+      return jsonResponse({ ok: false, error: "Not found" }, 404, request, env);
     } catch (error) {
       return jsonResponse({
         ok: false,
         error: error?.message || String(error)
-      }, 500, origin);
+      }, 500, request, env);
     }
   }
 };
