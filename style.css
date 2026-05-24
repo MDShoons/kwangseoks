@@ -2604,3 +2604,86 @@ body.screen-protect-blur footer {
   padding: 2px 5px;
   border-radius: 5px;
 }
+
+/* v83: GitHub Pages 미디어 폴더 안내 */
+.github-pages-media-notice {
+  margin: 12px 0 16px;
+  padding: 13px 15px;
+  border: 1px solid #c7b79f;
+  border-radius: 14px;
+  background: #fff9ef;
+  color: #3a2a20;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.github-pages-media-notice strong {
+  font-weight: 900;
+}
+
+.github-pages-media-notice code {
+  font-size: 12px;
+  background: #eee1d3;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+/* v84: Internet Archive 링크 안내 */
+.archive-link-notice {
+  margin: 12px 0 16px;
+  padding: 13px 15px;
+  border: 1px solid #c2c2c2;
+  border-radius: 14px;
+  background: #f7f7f7;
+  color: #2d2d2d;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.archive-link-notice strong {
+  font-weight: 900;
+}
+
+.archive-link-notice code {
+  font-size: 12px;
+  background: #e8e8e8;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+
+/* v85: 상세보기에서 songs/radios 자켓 이미지도 함께 표시 */
+.detail-media-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+  margin: 0 0 22px 0;
+}
+
+.detail-media-stack .detail-media-box,
+.detail-media-stack .detail-audio-box {
+  margin: 0;
+}
+
+.detail-audio-cover {
+  width: 100%;
+}
+
+.detail-audio-cover img {
+  width: 260px;
+  max-width: 100%;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid #e0cdb9;
+  box-shadow: 0 6px 18px rgba(60, 48, 41, 0.08);
+  background: #f6efe8;
+}
+
+@media (max-width: 768px) {
+  .detail-audio-cover img {
+    width: 100%;
+  }
+}

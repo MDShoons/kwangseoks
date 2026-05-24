@@ -1,49 +1,23 @@
-이 ZIP은 GitHub Pages 루트 업로드 전용 v82입니다.
+v83 GitHub Pages 미디어 폴더 방식
 
-압축을 풀었을 때 바로 아래 파일들이 보여야 정상입니다.
+이 ZIP을 압축 풀면 바로 index.html, app.js, style.css, audios 폴더 등이 보여야 합니다.
 
-index.html
-app.js
-style.css
-firebase-config.js
-cloudflare-worker-github-uploader.js
+추천 미디어 저장 위치:
+- Songs 음원: audios/song-001.mp3
+- Radios 음원: radios/radio-001.mp3
+- Videos 영상: videos/video-001.mp4
+- Photos 사진: images/photos/photo-001.jpg
 
-GitHub 저장소에서 올바른 위치:
-kwangseoks/
-  index.html
-  app.js
-  style.css
-  firebase-config.js
-  cloudflare-worker-github-uploader.js
-  images/
-  audios/
-  videos/
-  radios/
+사이트에 넣을 URL:
+- https://mdshoons.github.io/kwangseoks/audios/song-001.mp3
+- https://mdshoons.github.io/kwangseoks/radios/radio-001.mp3
+- https://mdshoons.github.io/kwangseoks/videos/video-001.mp4
+- https://mdshoons.github.io/kwangseoks/images/photos/photo-001.jpg
 
-잘못된 위치:
-kwangseoks/
-  kwangseoks-v82-ROOT-ONLY-upload-this/
-    index.html
-    app.js
+편의 기능:
+Songs/Radios URL 칸에 song-001.mp3처럼 파일명만 넣으면 audios/song-001.mp3 주소로 자동 변환됩니다.
+videos/photo는 확장자 기준으로 videos 또는 images/photos 폴더로 자동 연결됩니다.
 
-GitHub 적용 후 확인:
-1. https://mdshoons.github.io/kwangseoks/
-2. Ctrl + F5
-3. 사이트 하단 버전이 아래처럼 보여야 함:
-   v82-http-link-proxy
-
-Cloudflare Worker도 반드시 별도로 교체:
-1. 이 ZIP 안의 cloudflare-worker-github-uploader.js 열기
-2. 내용 전체 복사
-3. Cloudflare → Workers & Pages → kwangseoks-uploader
-4. Edit code
-5. 기존 코드 전체 삭제 후 붙여넣기
-6. Deploy
-
-Worker 확인:
-https://kwangseoks-uploader.kos20050627.workers.dev/health
-
-정상이라면:
-version: v82-http-link-proxy
-
-두 조건이 모두 맞아야 http://oneum.net/...mp3 링크가 재생됩니다.
+중요:
+GitHub 저장소 최상단에 파일과 폴더를 덮어써야 합니다.
+폴더째 한 번 더 감싸서 올리면 안 됩니다.

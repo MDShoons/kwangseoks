@@ -933,3 +933,51 @@ v82-http-link-proxy
 
 HTTP mp3 링크는 Worker의 /proxy 기능이 있어야 재생됩니다.
 따라서 GitHub Pages와 Cloudflare Worker 둘 다 v82여야 합니다.
+
+
+## v83 수정 사항 - GitHub Pages 미디어 폴더 방식
+HTTP 외부 링크 대신 GitHub 저장소 안에 미디어 폴더를 만들고 그 URL로 재생하는 방식을 권장 구조로 정리했습니다.
+
+폴더:
+- audios/
+- radios/
+- videos/
+- images/photos/
+
+예:
+- audios/song-001.mp3
+  → https://mdshoons.github.io/kwangseoks/audios/song-001.mp3
+
+편의:
+- URL 칸에 song-001.mp3처럼 파일명만 넣어도 audios/song-001.mp3 주소로 자동 변환
+- 상대경로 audios/song-001.mp3도 가능
+- 절대 URL https://mdshoons.github.io/kwangseoks/audios/song-001.mp3도 가능
+
+적용 후 사이트 하단 버전:
+v83-github-pages-media-folders
+
+
+## v84 수정 사항 - Internet Archive 링크 자동 변환
+Internet Archive 링크를 Songs/Radios 미디어 URL에 넣을 때 details 링크도 자동으로 download 링크로 변환합니다.
+
+지원:
+- https://archive.org/details/아이템명/파일명.mp3
+- https://archive.org/details/아이템명/1/파일명.flac
+- https://archive.org/download/아이템명/파일명.mp3
+
+예:
+입력:
+https://archive.org/details/8_20260524_20260524/1/1.flac
+
+내부 변환:
+https://archive.org/download/8_20260524_20260524/1.flac
+
+주의:
+브라우저 재생 안정성은 FLAC보다 MP3가 더 좋습니다.
+가능하면 Internet Archive의 VBR MP3 파일 링크를 쓰는 것을 권장합니다.
+
+
+## v85 수정 사항
+- Songs/Radios 상세보기 창에서 오디오 플레이어만 보이던 문제를 수정했습니다.
+- 이제 상세보기 모달에서도 음반 자켓(썸네일 이미지)이 함께 표시됩니다.
+- 표시 순서: 자켓 이미지 -> 재생 플레이어 -> 메타정보 -> 본문
