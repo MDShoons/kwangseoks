@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v25-cache-bust-worker-url";
+const APP_VERSION = "v28-no-media-download";
 console.log("광석이네집", APP_VERSION, "worker:", GITHUB_UPLOAD_WORKER_URL);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -93,6 +93,7 @@ function showAdminForm(type) {
   if (type === "template") { fillSettingsFormFromCurrent(); bindDesignPreviewEvents(); }
   if (type === "category") renderCategoryList();
   if (type === "manage") renderAdminManageList();
+  hardenMediaDownloadControls();
 }
 
 async function fileToCompressedDataUrl(file, maxWidth = 1400, quality = 0.74) {
@@ -563,20 +564,38 @@ async function applySavedTemplates() {
   }
 }
 
+
+
+function hardenMediaDownloadControls() {
+  document.querySelectorAll("audio, video").forEach((media) => {
+    media.setAttribute("controlsList", "nodownload noplaybackrate");
+    media.setAttribute("oncontextmenu", "return false");
+    media.addEventListener("contextmenu", (event) => event.preventDefault());
+    if (media.tagName.toLowerCase() === "video") {
+      media.setAttribute("disablePictureInPicture", "");
+    }
+  });
+}
+
+function renderAllContentSections() {
+  renderLatest(allContents);
+  renderVideos(filterBySelectedSubCategory("videos", allContents.filter(i => i.category === "videos")));
+  renderPhotos(filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
+  renderList("songList", filterBySelectedSubCategory("songs", allContents.filter(i => i.category === "songs")));
+  renderList("radioList", filterBySelectedSubCategory("radios", allContents.filter(i => i.category === "radios")));
+  renderList("storyList", filterBySelectedSubCategory("stories", allContents.filter(i => i.category === "stories")));
+  renderList("aboutList", filterBySelectedSubCategory("about", allContents.filter(i => i.category === "about")));
+  renderList("oneumList", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
+  renderAdminManageList();
+}
+
 async function loadContents() {
   try {
     const snap = await getDocs(query(collection(db, "contents"), orderBy("createdAt", "desc")));
     allContents = [];
     snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
-    renderLatest(allContents);
-    renderVideos(filterBySelectedSubCategory("videos", allContents.filter(i => i.category === "videos")));
-    renderPhotos(filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
-    renderList("songList", filterBySelectedSubCategory("songs", allContents.filter(i => i.category === "songs")));
-    renderList("radioList", filterBySelectedSubCategory("radios", allContents.filter(i => i.category === "radios")));
-    renderList("storyList", filterBySelectedSubCategory("stories", allContents.filter(i => i.category === "stories")));
-    renderList("aboutList", filterBySelectedSubCategory("about", allContents.filter(i => i.category === "about")));
-    renderList("oneumList", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
-    await applySavedTemplates(); renderAdminManageList();
+    renderAllContentSections();
+    await applySavedTemplates();
   } catch(e) { console.error(e); }
 }
 function filterBySelectedSubCategory(page, items) {
@@ -599,7 +618,7 @@ function renderList(id, items) {
     div.className = (item.mediaUrl || item.thumbnailUrl) && item.mediaType !== "youtube" ? "list-item with-image" : "list-item";
     div.onclick = () => openContentDetail(item.id);
     const img = item.thumbnailUrl || (item.mediaType !== "audio" && item.mediaType !== "video" ? item.mediaUrl : "");
-    div.innerHTML = `${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}<div><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.body || item.description || "")}</p>${item.mediaType === "audio" ? `<audio controls src="${item.mediaUrl}"></audio>` : ""}<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p></div>`;
+    div.innerHTML = `${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}<div><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.body || item.description || "")}</p>${item.mediaType === "audio" ? `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>` : ""}<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p></div>`;
     box.appendChild(div);
   });
 }
@@ -607,8 +626,8 @@ function createCard(item) {
   const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id);
   let media = "";
   if (item.mediaType === "youtube") media = `<iframe src="${item.mediaUrl}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video") media = `<video controls src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
-  else if (item.mediaType === "audio") media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls src="${item.mediaUrl}"></audio>`;
+  else if (item.mediaType === "video") media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  else if (item.mediaType === "audio") media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.description || item.body || "")}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p></div>`;
@@ -623,11 +642,12 @@ function openContentDetail(id) {
   document.getElementById("detailDescription").textContent = item.body || item.description || "";
   const area = document.getElementById("detailMediaArea"); area.innerHTML = "";
   if (item.mediaType === "youtube") area.innerHTML = `<iframe src="${item.mediaUrl}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video") area.innerHTML = `<video controls src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
-  else if (item.mediaType === "audio") area.innerHTML = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : ""}<audio controls src="${item.mediaUrl}"></audio>`;
+  else if (item.mediaType === "video") area.innerHTML = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${item.mediaUrl}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  else if (item.mediaType === "audio") area.innerHTML = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : ""}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`;
   else if (item.mediaUrl) area.innerHTML = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}">`;
   else area.innerHTML = `<div class="card-placeholder">글 자료</div>`;
   document.getElementById("contentDetailModal").classList.remove("hidden");
+  hardenMediaDownloadControls();
   document.body.style.overflow = "hidden";
 }
 function closeContentDetail(event) {
@@ -666,7 +686,22 @@ function editContent(id) {
 async function deleteContentItem(id) {
   if (!isAdmin) return alert("관리자만 삭제할 수 있습니다.");
   if (!confirm("정말 삭제하시겠습니까?")) return;
-  await deleteDoc(doc(db, "contents", id)); alert("삭제되었습니다."); await loadContents();
+
+  try {
+    await deleteDoc(doc(db, "contents", id));
+
+    // 화면에 남아 보이는 문제 방지: 로컬 목록에서도 즉시 제거 후 전체 재렌더링
+    allContents = allContents.filter(item => item.id !== id);
+    closeContentDetail();
+    renderAllContentSections();
+
+    // Firestore 서버 상태를 다시 읽어 최종 동기화
+    await loadContents();
+
+    alert("삭제되었습니다. 목록에서도 제거했습니다.");
+  } catch (error) {
+    alert("삭제 오류: " + error.message);
+  }
 }
 
 loadSiteSettings();

@@ -127,3 +127,53 @@ Cloudflare Worker WebCrypto는 Firebase의 X.509 인증서 PEM을 그대로 `spk
 6. Save and deploy
 7. https://kwangseoks-uploader.kos20050627.workers.dev/health 확인
 8. 작은 mp3 파일부터 업로드 테스트
+
+
+## v27 수정 사항 - 삭제 후 목록에 남는 문제 보정
+자료를 삭제했는데 Radios 등 페이지 목록에 계속 남아 보이는 문제를 보정했습니다.
+
+수정 내용:
+- 삭제 성공 후 Firestore뿐 아니라 브라우저의 `allContents` 배열에서도 즉시 제거
+- Radios/Songs/Photos/Videos/Stories/About/Oneum 전체 목록을 강제 재렌더링
+- 상세창이 열려 있으면 닫기
+- Firestore를 다시 읽어 최종 동기화
+- index.html의 app 로딩 주소에 v27 캐시 방지 쿼리 추가
+
+주의:
+- Firestore 문서 삭제는 사이트 목록에서 제거하는 기능입니다.
+- 이미 GitHub audios/radios/videos 폴더에 올라간 실제 mp3/wav/mp4 파일은 자동 삭제되지 않습니다.
+- GitHub 폴더 파일까지 지우려면 GitHub 저장소에서 직접 삭제하거나, 별도 파일 삭제 Worker 기능이 필요합니다.
+
+
+## v28 수정 사항 - mp3/mp4/wav 다운로드 버튼 숨김
+사이트 화면에서 mp3, mp4, wav 파일을 쉽게 다운로드하지 못하도록 보정했습니다.
+
+적용 내용:
+- audio/video 태그에 `controlsList="nodownload noplaybackrate"` 적용
+- video 태그에 `disablePictureInPicture` 적용
+- audio/video 우클릭 메뉴 차단
+- 상세창의 audio/video에도 동일하게 적용
+- 렌더링 후 모든 미디어 요소에 다운로드 방지 속성을 다시 부여
+- 캐시 방지를 위해 app 로딩 쿼리를 v28로 변경
+
+중요한 한계:
+GitHub Pages에 공개 저장된 mp3/mp4/wav 파일은 주소를 아는 사용자가 개발자도구나 직접 URL 접근으로 받을 수 있습니다.
+이 수정은 일반 사용자 화면에서 다운로드 버튼/우클릭 저장을 막는 수준입니다.
+
+진짜 다운로드 차단이 필요하면:
+- 공개 GitHub Pages 폴더에 파일을 두면 안 됩니다.
+- Cloudflare R2 같은 비공개 저장소
+- 서명 URL
+- 로그인 검증 후 스트리밍 프록시
+같은 구조가 필요합니다.
+
+
+## v29 수정 사항 - 라디오/음원 카드 폭 축소
+라디오(Radios) / 음원(Songs) 카드가 내용에 비해 너무 넓게 보이는 문제를 수정했습니다.
+
+적용 내용:
+- `#radioList`, `#songList`를 왼쪽 정렬 column 레이아웃으로 조정
+- `#radioList .content-card`, `#songList .content-card` 폭을 `fit-content`로 축소
+- 최대 폭 520px, 최소 폭 320px 적용
+- 오디오 플레이어 폭을 280px로 제한
+- 캐시 방지를 위해 app 로딩 쿼리를 v29로 변경

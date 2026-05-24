@@ -241,3 +241,55 @@ footer {
   .hero { padding: 48px 28px; }
   .detail-media-area iframe, .detail-media-area video { min-height: 220px; }
 }
+
+
+/* v28: 미디어 다운로드 버튼 숨김 및 저장 방지 보조 */
+audio,
+video {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+video::-internal-media-controls-download-button,
+audio::-internal-media-controls-download-button {
+  display: none;
+}
+
+video::-webkit-media-controls-enclosure,
+audio::-webkit-media-controls-enclosure {
+  overflow: hidden;
+}
+
+.no-download-note {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 6px;
+}
+
+
+/* v29: 라디오/음원 카드 폭 축소 */
+#radioList,
+#songList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+#radioList .content-card,
+#songList .content-card {
+  width: fit-content;
+  max-width: 520px;
+  min-width: 320px;
+}
+
+#radioList .content-body,
+#songList .content-body {
+  width: 100%;
+}
+
+#radioList audio,
+#songList audio {
+  width: 280px;
+  max-width: 100%;
+}
