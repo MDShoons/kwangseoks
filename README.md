@@ -258,103 +258,21 @@ PC 화면 기준으로 레이아웃을 다시 정리했습니다.
 - 다운로드 방지 기능 유지
 
 
-## v35 수정 사항 - 우클릭/F12 방지
-일반 사용자가 사이트 화면에서 쉽게 저장하거나 개발자도구를 여는 것을 막기 위한 기본 방지 기능을 추가했습니다.
-
-적용 내용:
-- 우클릭 메뉴 차단
-- 이미지/오디오/비디오 드래그 저장 방지
-- 일반 텍스트 선택 방지
-- F12 차단
-- Ctrl+Shift+I 차단
-- Ctrl+Shift+J 차단
-- Ctrl+Shift+C 차단
-- Ctrl+U 차단
-- Ctrl+S 차단
-- Ctrl+P 차단
-- Mac의 Command 조합 일부 차단
-- 입력창/textarea/select에서는 텍스트 입력과 선택 가능 유지
-- 다운로드 버튼 숨김 기능 유지
-
-중요한 한계:
-이 기능은 일반 사용자 편의 기능 차단 수준입니다.
-브라우저 메뉴, 확장 프로그램, 직접 URL 접근, 네트워크 분석, GitHub 공개 파일 접근까지 완전히 막을 수는 없습니다.
-진짜 다운로드/소스 접근을 제한하려면 공개 GitHub Pages가 아니라 비공개 저장소와 서버 인증 구조가 필요합니다.
-
-
-## v36 수정 사항 - 페이지별 주소 표시
-기존 사이트는 SPA 구조라 Radios를 보고 있어도 주소가 `/kwangseoks/`로만 표시되었습니다.
-v36에서는 hash routing을 적용해 메뉴 클릭 시 주소가 함께 바뀝니다.
-
-주소 예:
-- 홈: https://mdshoons.github.io/kwangseoks/#home
-- Videos: https://mdshoons.github.io/kwangseoks/#videos
-- Songs: https://mdshoons.github.io/kwangseoks/#songs
-- Radios: https://mdshoons.github.io/kwangseoks/#radios
-- Photos: https://mdshoons.github.io/kwangseoks/#photos
-- Stories: https://mdshoons.github.io/kwangseoks/#stories
-- About Seok: https://mdshoons.github.io/kwangseoks/#about
-- Oneum: https://mdshoons.github.io/kwangseoks/#oneum
-
-GitHub Pages에서는 `/radios` 같은 서버 경로 방식보다 `#radios` 방식이 안전합니다.
-
-
-## v40 수정 사항 - 자바스크립트 시작 오류 해결
-v39에서 메뉴가 계속 반응하지 않던 원인을 수정했습니다.
-
-확인된 원인:
-- `const APP_VERSION`이 중복 선언되어 자바스크립트가 시작 단계에서 멈춤
-- 일부 시작 코드가 로그인 상태 확인 함수 내부로 잘못 들어갈 수 있는 구조
-
-수정:
-- APP_VERSION 선언을 하나로 정리
-- 새 파일 `app-v40.js` 사용
-- index.html은 `app-v40.js?v=40-js-startup-fix`를 읽음
-- v36 기준 기능에 검색/회원정보/로그인 제한만 안전하게 다시 추가
-
-적용:
-1. ZIP 전체를 GitHub에 덮어쓰기
-2. Commit changes
-3. Firestore Rules도 다시 게시
-4. Ctrl + F5
-
-
-## v41 수정 사항 - 비로그인 최신자료 클릭 제한
-메인 화면의 자료별 최신 자료에서도 로그인 제한을 적용했습니다.
-
-동작:
-- 비로그인 상태에서 Videos / Radios / Photos / Oneum 최신 자료 클릭
-  → 상세 자료가 열리지 않음
-  → “로그인을 하지 않으셨네요!” 화면으로 이동
-- 로그인 상태에서 클릭
-  → 해당 페이지로 이동 후 상세 자료 열림
-- 비로그인 상태의 제한 자료에는 “로그인 후 볼 수 있습니다.” 안내 표시
-
-새 JS:
-- app-v41.js
-- index.html은 app-v41.js?v=41-latest-login-gate를 읽습니다.
-
-
-## v42 수정 사항 - app.js 단일 파일 복구
-v41에서 `app-v41.js`를 읽지 못하거나 캐시/파일명 문제로 클릭이 멈추는 문제를 피하기 위해,
-다시 `app.js` 하나만 읽도록 정리했습니다.
-
-핵심:
-- index.html → `app.js?v=42-single-appjs-fix`
-- app-v41.js 의존 제거
-- app.js에 모든 기능 통합
-- Node syntax check 결과: 정상
+## v43 수정 사항 - 안정판 app.js 복구
+v34의 정상 작동 레이아웃을 기준으로 다시 구성했습니다.
+index.html은 app.js 하나만 읽습니다.
 
 포함 기능:
 - 자료별 최신 자료
-- 비로그인 최신자료 클릭 제한
+- 비로그인 상태의 제한 자료 최신자료 클릭 차단
 - 페이지별 검색
 - Videos/Radios/Photos/Oneum 로그인 제한
+- “로그인을 하지 않으셨네요!” 화면
 - 회원정보 수정
 - 회원탈퇴
+- v34의 깔끔한 프레임형 Radios/Songs 레이아웃 유지
 
-적용:
-1. ZIP 전체를 GitHub에 덮어쓰기
-2. 반드시 `index.html`과 `app.js`가 새 파일로 올라갔는지 확인
-3. Commit changes
-4. Ctrl + F5
+중요:
+GitHub에는 ZIP 안의 파일을 루트에 덮어쓰기해야 합니다.
+index.html의 마지막 script는 아래여야 합니다.
+<script type="module" src="app.js?v=43-stable-appjs-member"></script>

@@ -3,7 +3,7 @@ import {
   ADMIN_EMAILS,
   ADMIN_LOGIN_IDS,
   GITHUB_UPLOAD_WORKER_URL
-} from "./firebase-config-v41-latest-login-gate.js";
+} from "./firebase-config.js";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v42-single-appjs-fix";
+const APP_VERSION = "v43-stable-appjs-member";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -56,6 +56,29 @@ const DEFAULT_SETTINGS = {
 };
 let currentSettings = { ...DEFAULT_SETTINGS };
 
+
+const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
+
+function getPageFromHash() {
+  const page = window.location.hash.replace("#", "").trim();
+  return VALID_PAGES.includes(page) ? page : "home";
+}
+
+function goPage(pageId) {
+  if (!VALID_PAGES.includes(pageId)) pageId = "home";
+
+  if (window.location.hash !== `#${pageId}`) {
+    window.location.hash = pageId;
+  } else {
+    showPage(pageId, true);
+  }
+}
+
+function handleHashRoute() {
+  showPage(getPageFromHash(), true);
+}
+
 window.showPage = showPage;
 window.goPage = goPage;
 window.showAdminForm = showAdminForm;
@@ -74,28 +97,6 @@ function normalizeEmail(v) { return String(v || "").trim().toLowerCase(); }
 function isValidLoginId(v) { return /^[a-z0-9_]{4,20}$/.test(v); }
 function escapeHtml(text) {
   return String(text || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-
-
-const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
-const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
-
-function getPageFromHash() {
-  const page = window.location.hash.replace("#", "").trim();
-  return VALID_PAGES.includes(page) ? page : "home";
-}
-
-function goPage(pageId) {
-  if (!VALID_PAGES.includes(pageId)) pageId = "home";
-  if (window.location.hash !== `#${pageId}`) {
-    window.location.hash = pageId;
-  } else {
-    showPage(pageId, true);
-  }
-}
-
-function handleHashRoute() {
-  showPage(getPageFromHash(), true);
 }
 
 function showPage(pageId, fromHash = false) {
@@ -154,7 +155,6 @@ function showAdminForm(type) {
   if (type === "category") renderCategoryList();
   if (type === "manage") renderAdminManageList();
   hardenMediaDownloadControls();
-  installBasicContentProtection();
 }
 
 async function fileToCompressedDataUrl(file, maxWidth = 1400, quality = 0.74) {
@@ -236,7 +236,7 @@ async function uploadFileToGitHubWorker(file, folder = "images") {
   }
 
   if (!result.imageUrl) {
-    throw new Error("Worker가 파일 URL을 반환하지 않았습니다. Worker 코드가 최신 v41-latest-login-gate인지 확인하세요.");
+    throw new Error("Worker가 파일 URL을 반환하지 않았습니다. Worker 코드가 최신 v23인지 확인하세요.");
   }
 
   return result.imageUrl;
@@ -338,7 +338,6 @@ onAuthStateChanged(auth, async (user) => {
     adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-  if (typeof installBasicContentProtection === "function") installBasicContentProtection();
   await window.addEventListener("hashchange", handleHashRoute);
 window.addEventListener("DOMContentLoaded", handleHashRoute);
 loadSiteSettings(); await loadPageCategories(); await loadContents();
@@ -699,51 +698,6 @@ async function applySavedTemplates() {
 
 
 
-
-function installBasicContentProtection() {
-  const block = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-  };
-
-  document.addEventListener("contextmenu", block, true);
-  document.addEventListener("dragstart", block, true);
-  document.addEventListener("selectstart", (event) => {
-    const tag = (event.target && event.target.tagName || "").toLowerCase();
-    if (["input", "textarea", "select"].includes(tag)) return true;
-    event.preventDefault();
-    return false;
-  }, true);
-
-  document.addEventListener("keydown", (event) => {
-    const key = String(event.key || "").toLowerCase();
-
-    const blocked =
-      event.key === "F12" ||
-      (event.ctrlKey && event.shiftKey && ["i", "j", "c"].includes(key)) ||
-      (event.metaKey && event.altKey && ["i", "j", "c"].includes(key)) ||
-      (event.ctrlKey && ["u", "s", "p"].includes(key)) ||
-      (event.metaKey && ["u", "s", "p"].includes(key));
-
-    if (blocked) {
-      event.preventDefault();
-      event.stopPropagation();
-      alert("이 사이트에서는 해당 기능을 사용할 수 없습니다.");
-      return false;
-    }
-
-    return true;
-  }, true);
-
-  // 오디오/비디오 위 우클릭도 다시 한번 방지
-  document.querySelectorAll("audio, video, img").forEach((el) => {
-    el.setAttribute("draggable", "false");
-    el.addEventListener("contextmenu", block, true);
-    el.addEventListener("dragstart", block, true);
-  });
-}
-
 function hardenMediaDownloadControls() {
   document.querySelectorAll("audio, video").forEach((media) => {
     media.setAttribute("controlsList", "nodownload noplaybackrate");
@@ -766,7 +720,6 @@ function renderAllContentSections() {
   renderList("aboutList", filterBySelectedSubCategory("about", allContents.filter(i => i.category === "about")));
   renderList("oneumList", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
   renderAdminManageList();
-  installBasicContentProtection();
 }
 
 async function loadContents() {
@@ -803,7 +756,6 @@ function filterBySelectedSubCategory(page, items) {
   return filtered.filter(item => matchesPageSearch(page, item));
 }
 
-
 function openLatestItem(page, itemId) {
   if (RESTRICTED_PAGES.includes(page) && !currentUser) {
     goPage("loginRequired");
@@ -836,17 +788,18 @@ function renderLatestByCategory(contents) {
     const div = document.createElement("div");
     div.className = "latest-category-box";
 
-    const isLockedLatest = RESTRICTED_PAGES.includes(page) && !currentUser;
     if (!item) {
       div.innerHTML = `<h3>${labels[page]}</h3><p class="helper-text">아직 등록된 자료가 없습니다.</p>`;
     } else {
+      const isLockedLatest = RESTRICTED_PAGES.includes(page) && !currentUser;
       div.innerHTML = `
         <h3>${labels[page]}</h3>
         <div class="latest-mini-card" onclick="openLatestItem('${page}', '${item.id}');">
           <strong>${escapeHtml(item.title || "제목 없음")}</strong>
           <p>${escapeHtml((item.description || item.body || "").slice(0, 70))}</p>
           <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
-          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${isLockedLatest ? `<p class="login-lock-note">로그인 후 볼 수 있습니다.</p>` : ""}
+          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+          ${isLockedLatest ? `<p class="login-lock-note">로그인 후 볼 수 있습니다.</p>` : ""}
         </div>
       `;
     }
