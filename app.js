@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v52-hero-hover-pause-resume";
+const APP_VERSION = "v53-pagination-sort-date";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -81,6 +81,8 @@ function handleHashRoute() {
 
 window.showPage = showPage;
 window.goPage = goPage;
+window.goContentPage = goContentPage;
+window.resetPageAndReload = resetPageAndReload;
 window.showAdminForm = showAdminForm;
 window.loadContents = loadContents;
 window.renderAdminManageList = renderAdminManageList;
@@ -877,13 +879,23 @@ function hardenMediaDownloadControls() {
 function renderAllContentSections() {
   renderLatest(allContents);
   renderLatestByCategory(allContents);
-  renderVideos(filterBySelectedSubCategory("videos", allContents.filter(i => i.category === "videos")));
-  renderPhotos(filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
-  renderList("songList", filterBySelectedSubCategory("songs", allContents.filter(i => i.category === "songs")));
-  renderList("radioList", filterBySelectedSubCategory("radios", allContents.filter(i => i.category === "radios")));
-  renderList("storyList", filterBySelectedSubCategory("stories", allContents.filter(i => i.category === "stories")));
-  renderList("aboutList", filterBySelectedSubCategory("about", allContents.filter(i => i.category === "about")));
-  renderList("oneumList", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
+
+  const videos = prepareItemsForPage("videos", filterBySelectedSubCategory("videos", allContents.filter(i => i.category === "videos")));
+  const songs = prepareItemsForPage("songs", filterBySelectedSubCategory("songs", allContents.filter(i => i.category === "songs")));
+  const radios = prepareItemsForPage("radios", filterBySelectedSubCategory("radios", allContents.filter(i => i.category === "radios")));
+  const photos = prepareItemsForPage("photos", filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
+  const stories = prepareItemsForPage("stories", filterBySelectedSubCategory("stories", allContents.filter(i => i.category === "stories")));
+  const about = prepareItemsForPage("about", filterBySelectedSubCategory("about", allContents.filter(i => i.category === "about")));
+  const oneum = prepareItemsForPage("oneum", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
+
+  renderVideos(videos);
+  renderPhotos(photos);
+  renderList("songList", songs);
+  renderList("radioList", radios);
+  renderList("storyList", stories);
+  renderList("aboutList", about);
+  renderList("oneumList", oneum);
+
   renderAdminManageList();
   installBasicContentProtection();
 }
@@ -897,6 +909,124 @@ async function loadContents() {
     await applySavedTemplates();
   applyHomeVoiceSettings(currentSettings);
   } catch(e) { console.error(e); }
+}
+
+
+const PAGE_SIZE = 6;
+const pageState = {
+  videos: 1,
+  songs: 1,
+  radios: 1,
+  photos: 1,
+  stories: 1,
+  about: 1,
+  oneum: 1
+};
+
+function getItemTimestamp(item) {
+  const raw = item.createdAt || item.updatedAt || item.createdDate || item.date || "";
+  if (!raw) return 0;
+
+  if (typeof raw === "number") return raw;
+
+  if (typeof raw === "string") {
+    const parsed = Date.parse(raw);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  if (raw.seconds) return raw.seconds * 1000;
+  if (typeof raw.toDate === "function") return raw.toDate().getTime();
+
+  return 0;
+}
+
+function formatKoreanDate(value) {
+  const timestamp = typeof value === "object" ? getItemTimestamp({ createdAt: value }) : getItemTimestamp({ createdAt: value });
+  if (!timestamp) return "등록일 미기재";
+
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}년 ${month}월 ${day}일`;
+}
+
+function getItemCreatedDateText(item) {
+  return formatKoreanDate(item.createdAt || item.updatedAt || item.createdDate || item.date || "");
+}
+
+function resetPageAndReload(page) {
+  if (pageState[page]) pageState[page] = 1;
+  loadContents();
+}
+
+function goContentPage(page, pageNumber) {
+  pageState[page] = pageNumber;
+  loadContents();
+
+  const target = document.getElementById(page);
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function sortItemsForPage(page, items) {
+  const sortValue = document.getElementById(`${page}SortSelect`)?.value || "desc";
+  return [...items].sort((a, b) => {
+    const at = getItemTimestamp(a);
+    const bt = getItemTimestamp(b);
+    return sortValue === "asc" ? at - bt : bt - at;
+  });
+}
+
+function paginateItemsForPage(page, items) {
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const currentPage = Math.min(Math.max(pageState[page] || 1, 1), totalPages);
+  pageState[page] = currentPage;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  return {
+    pageItems: items.slice(start, start + PAGE_SIZE),
+    currentPage,
+    totalPages
+  };
+}
+
+function renderPagination(page, totalPages, currentPage) {
+  const box = document.getElementById(`${page}Pagination`);
+  if (!box) return;
+
+  if (totalPages <= 1) {
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  if (currentPage > 1) {
+    html += `<button type="button" onclick="goContentPage('${page}', ${currentPage - 1})">이전</button>`;
+  }
+
+  for (let i = 1; i <= totalPages; i += 1) {
+    html += `<button type="button" class="${i === currentPage ? "active" : ""}" onclick="goContentPage('${page}', ${i})">${i}</button>`;
+  }
+
+  if (currentPage < totalPages) {
+    html += `<button type="button" onclick="goContentPage('${page}', ${currentPage + 1})">다음</button>`;
+  }
+
+  box.innerHTML = html;
+}
+
+
+function createdDateMarkup(item) {
+  return `<p class="created-date"><strong>등록일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</p>`;
+}
+
+function prepareItemsForPage(page, items) {
+  const sorted = sortItemsForPage(page, items);
+  const paged = paginateItemsForPage(page, sorted);
+  renderPagination(page, paged.totalPages, paged.currentPage);
+  return paged.pageItems;
 }
 
 function matchesPageSearch(page, item) {
@@ -965,7 +1095,7 @@ function renderLatestByCategory(contents) {
           <strong>${escapeHtml(item.title || "제목 없음")}</strong>
           <p>${escapeHtml((item.description || item.body || "").slice(0, 70))}</p>
           <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
-          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}
           ${isLockedLatest ? `<p class="login-lock-note">로그인 후 볼 수 있습니다.</p>` : ""}
         </div>
       `;
@@ -991,7 +1121,7 @@ function renderList(id, items) {
     div.className = (item.mediaUrl || item.thumbnailUrl) && item.mediaType !== "youtube" ? "list-item with-image" : "list-item";
     div.onclick = () => openContentDetail(item.id);
     const img = item.thumbnailUrl || (item.mediaType !== "audio" && item.mediaType !== "video" ? item.mediaUrl : "");
-    div.innerHTML = `${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}<div><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.body || item.description || "")}</p>${item.mediaType === "audio" ? `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>` : ""}<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p></div>`;
+    div.innerHTML = `${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}<div><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.body || item.description || "")}</p>${item.mediaType === "audio" ? `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>` : ""}<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
     box.appendChild(div);
   });
 }
@@ -1003,7 +1133,7 @@ function createCard(item) {
   else if (item.mediaType === "audio") media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${item.mediaUrl}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.description || item.body || "")}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p></div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p>${escapeHtml(item.description || item.body || "")}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
   return card;
 }
 

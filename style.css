@@ -1236,3 +1236,47 @@ video {
 #home .hero {
   cursor: pointer;
 }
+
+/* v53: 자료 목록 6개 단위 페이지네이션 / 정렬 / 등록일 표시 */
+.page-sort-select {
+  min-width: 130px;
+  padding: 11px 12px;
+  border: 1px solid #d8c2ad;
+  border-radius: 10px;
+  background: #fffaf4;
+  font-weight: 700;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 28px 0 8px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #d8c2ad;
+  border-radius: 10px;
+  background: #fffaf4;
+  color: #5a3826;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pagination button:hover,
+.pagination button.active {
+  background: #8a5235;
+  color: #fff;
+  border-color: #8a5235;
+}
+
+.created-date {
+  margin-top: 6px !important;
+  font-size: 13px !important;
+  opacity: 0.88;
+}

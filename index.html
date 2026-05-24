@@ -53,44 +53,79 @@
 
     <section id="videos" class="page content-page">
       <div class="page-title"><h1>Videos</h1><p id="videosDesc">김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.</p></div>
-      <div class="toolbar"><input id="videosSearchInput" class="page-search-input" type="search" placeholder="영상 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="videosTemplateSelect" onchange="quickTemplate('videos', this.value)"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option></select><select id="videosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="videosSearchInput" class="page-search-input" type="search" placeholder="영상 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="videosSortSelect" class="page-sort-select" onchange="resetPageAndReload('videos')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="videosTemplateSelect" onchange="quickTemplate('videos', this.value)"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option></select><select id="videosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="videoList" class="card-grid"></div>
+        <div id="videosPagination" class="pagination"></div>
     </section>
 
     <section id="songs" class="page content-page">
       <div class="page-title"><h1>Songs</h1><p id="songsDesc">김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.</p></div>
-      <div class="toolbar"><input id="songsSearchInput" class="page-search-input" type="search" placeholder="음원 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="songsCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="songsSearchInput" class="page-search-input" type="search" placeholder="음원 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="songsSortSelect" class="page-sort-select" onchange="resetPageAndReload('songs')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="songsCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="songList" class="list-box"></div>
+        <div id="songsPagination" class="pagination"></div>
     </section>
 
     <section id="radios" class="page content-page">
       <div class="page-title"><h1>Radios</h1><p id="radiosDesc">김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.</p></div>
-      <div class="toolbar"><input id="radiosSearchInput" class="page-search-input" type="search" placeholder="라디오 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="radiosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="radiosSearchInput" class="page-search-input" type="search" placeholder="라디오 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="radiosSortSelect" class="page-sort-select" onchange="resetPageAndReload('radios')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="radiosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="radioList" class="list-box"></div>
+        <div id="radiosPagination" class="pagination"></div>
     </section>
 
     <section id="photos" class="page content-page">
       <div class="page-title"><h1>Photos</h1><p id="photosDesc">김광석의 시간과 표정을 담은 사진 아카이브입니다.</p></div>
-      <div class="toolbar"><input id="photosSearchInput" class="page-search-input" type="search" placeholder="사진 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="photosTemplateSelect" onchange="quickTemplate('photos', this.value)"><option value="gallery">갤러리형</option><option value="card">카드형</option><option value="timeline">연도별형</option><option value="list">리스트형</option></select><select id="photosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="photosSearchInput" class="page-search-input" type="search" placeholder="사진 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="photosSortSelect" class="page-sort-select" onchange="resetPageAndReload('photos')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="photosTemplateSelect" onchange="quickTemplate('photos', this.value)"><option value="gallery">갤러리형</option><option value="card">카드형</option><option value="timeline">연도별형</option><option value="list">리스트형</option></select><select id="photosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="photoList" class="card-grid"></div>
+        <div id="photosPagination" class="pagination"></div>
     </section>
 
     <section id="stories" class="page content-page">
       <div class="page-title"><h1>Stories</h1><p id="storiesDesc">김광석의 일기입니다.</p></div>
-      <div class="toolbar"><input id="storiesSearchInput" class="page-search-input" type="search" placeholder="일기 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="storiesCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="storiesSearchInput" class="page-search-input" type="search" placeholder="일기 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="storiesSortSelect" class="page-sort-select" onchange="resetPageAndReload('stories')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="storiesCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="storyList" class="list-box"></div>
+        <div id="storiesPagination" class="pagination"></div>
     </section>
 
     <section id="about" class="page content-page">
       <div class="page-title"><h1>About Seok</h1><p id="aboutDesc">김광석에 대한 정보를 볼 수 있는 곳입니다.</p></div>
-      <div class="toolbar"><input id="aboutSearchInput" class="page-search-input" type="search" placeholder="정보 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="aboutCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="aboutSearchInput" class="page-search-input" type="search" placeholder="정보 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="aboutSortSelect" class="page-sort-select" onchange="resetPageAndReload('about')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="aboutCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="aboutList" class="list-box"></div>
+        <div id="aboutPagination" class="pagination"></div>
     </section>
 
     <section id="oneum" class="page content-page">
       <div class="page-title"><h1>Oneum</h1><p id="oneumDesc">김광석의 둥근소리글을 모아둔 곳입니다.</p></div>
-      <div class="toolbar"><input id="oneumSearchInput" class="page-search-input" type="search" placeholder="둥근소리글 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" /><select id="oneumCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div class="toolbar"><input id="oneumSearchInput" class="page-search-input" type="search" placeholder="둥근소리글 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="oneumSortSelect" class="page-sort-select" onchange="resetPageAndReload('oneum')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="oneumCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="oneumList" class="list-box"></div>
+        <div id="oneumPagination" class="pagination"></div>
     </section>
 
 
@@ -314,8 +349,8 @@
       <div class="detail-text-area"><h2 id="detailTitle"></h2><p id="detailCategory"></p><p id="detailMeta"></p><div id="detailDescription"></div></div>
     </div>
   </div>
-<div class="version-marker">v52-hero-hover-pause-resume</div>
+<div class="version-marker">v53-pagination-sort-date</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=52-hero-hover-pause-resume"></script>
+  <script type="module" src="app.js?v=53-pagination-sort-date"></script>
 </body>
 </html>

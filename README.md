@@ -411,3 +411,27 @@ https://mdshoons.github.io/kwangseoks/audios/kim-kwangseok-voice-greeting.mp3
 
 주의:
 일부 브라우저는 hover만으로 소리 재생을 막을 수 있으므로, 그 경우 사진 영역을 한 번 클릭하면 됩니다.
+
+
+## v53 수정 사항 - 페이지네이션 / 정렬 / 등록일 표시
+홈 화면과 관리자 화면을 제외한 자료 페이지에 목록 운영 기능을 추가했습니다.
+
+적용 페이지:
+- Videos
+- Songs
+- Radios
+- Photos
+- Stories
+- About Seok
+- Oneum
+
+추가 기능:
+- 한 페이지에 자료 6개씩 표시
+- 6개 초과 시 페이지 번호 표시
+- 이전 / 다음 버튼 표시
+- 최신 순 / 오래된 순 정렬 선택
+- 각 자료 카드에 등록일 표시: 20nn년 nn월 nn일
+
+주의:
+등록일은 Firestore의 createdAt 값을 기준으로 표시합니다.
+createdAt 값이 없는 오래된 자료는 updatedAt/date를 보조로 사용하며, 그래도 없으면 ‘등록일 미기재’로 표시됩니다.
