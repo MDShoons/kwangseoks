@@ -1,23 +1,29 @@
-v83 GitHub Pages 미디어 폴더 방식
+이 ZIP은 GitHub Pages 루트 업로드 전용입니다.
 
-이 ZIP을 압축 풀면 바로 index.html, app.js, style.css, audios 폴더 등이 보여야 합니다.
+압축을 풀면 바로 index.html, app.js, style.css가 보여야 정상입니다.
 
-추천 미디어 저장 위치:
-- Songs 음원: audios/song-001.mp3
-- Radios 음원: radios/radio-001.mp3
-- Videos 영상: videos/video-001.mp4
-- Photos 사진: images/photos/photo-001.jpg
+GitHub 저장소에서 올바른 위치:
+kwangseoks/
+  index.html
+  app.js
+  style.css
+  firebase-config.js
+  cloudflare-worker-github-uploader.js
 
-사이트에 넣을 URL:
-- https://mdshoons.github.io/kwangseoks/audios/song-001.mp3
-- https://mdshoons.github.io/kwangseoks/radios/radio-001.mp3
-- https://mdshoons.github.io/kwangseoks/videos/video-001.mp4
-- https://mdshoons.github.io/kwangseoks/images/photos/photo-001.jpg
+잘못된 위치:
+kwangseoks/
+  kwangseoks-v74-ROOT-ONLY-upload-this/
+    index.html
 
-편의 기능:
-Songs/Radios URL 칸에 song-001.mp3처럼 파일명만 넣으면 audios/song-001.mp3 주소로 자동 변환됩니다.
-videos/photo는 확장자 기준으로 videos 또는 images/photos 폴더로 자동 연결됩니다.
+적용 후 확인:
+1. GitHub 저장소 최상단의 index.html을 열기
+2. 맨 아래 script가 아래인지 확인
+   <script type="module" src="app.js?v=74-worker-origin-bypass"></script>
 
-중요:
-GitHub 저장소 최상단에 파일과 폴더를 덮어써야 합니다.
-폴더째 한 번 더 감싸서 올리면 안 됩니다.
+3. 사이트 접속 후 Ctrl + F5
+4. 사이트 하단 버전이 아래인지 확인
+   v74-worker-origin-bypass
+
+Cloudflare Worker도 별도 확인:
+https://kwangseoks-uploader.kos20050627.workers.dev/health
+version이 v74-origin-bypass-upload이면 Worker도 최신입니다.

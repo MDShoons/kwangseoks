@@ -52,83 +52,6 @@ function getThumbnailUrlForPrefix(prefix) {
 
 
 
-
-function isHttpOnlyMediaUrl(url) {
-  return String(url || "").trim().toLowerCase().startsWith("http://");
-}
-
-function toWorkerProxyMediaUrl(url) {
-  const value = String(url || "").trim();
-  if (!value) return "";
-
-  const base = typeof ACTIVE_UPLOAD_WORKER_URL !== "undefined"
-    ? ACTIVE_UPLOAD_WORKER_URL
-    : "https://kwangseoks-uploader.kos20050627.workers.dev";
-
-  return `${base.replace(/\/$/, "")}/proxy?url=${encodeURIComponent(value)}`;
-}
-
-
-function getSiteBaseUrl() {
-  if (typeof location !== "undefined" && location.origin && location.pathname) {
-    const parts = location.pathname.split("/").filter(Boolean);
-    const repo = parts[0] || "kwangseoks";
-    return `${location.origin}/${repo}`;
-  }
-
-  return "https://mdshoons.github.io/kwangseoks";
-}
-
-function isAbsoluteUrl(value) {
-  return /^https?:\/\//i.test(String(value || "").trim());
-}
-
-function normalizeGithubPagesMediaPath(url, type = "media") {
-  const value = String(url || "").trim();
-  if (!value) return "";
-
-  if (isAbsoluteUrl(value)) return value;
-
-  const clean = value.replace(/^\.?\//, "");
-
-  if (clean.includes("/")) {
-    return `${getSiteBaseUrl()}/${clean}`;
-  }
-
-  const lower = clean.toLowerCase();
-  let folder = "uploads";
-
-  if (type === "audio" || /\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(lower)) {
-    folder = "audios";
-  } else if (type === "radio") {
-    folder = "radios";
-  } else if (type === "video" || /\.(mp4|webm|mov|m4v)$/i.test(lower)) {
-    folder = "videos";
-  } else if (type === "image" || /\.(png|jpe?g|webp|gif)$/i.test(lower)) {
-    folder = "images/photos";
-  }
-
-  return `${getSiteBaseUrl()}/${folder}/${clean}`;
-}
-
-
-
-function normalizeMediaUrlForPlayback(url, type = "media") {
-  const value = String(url || "").trim();
-  if (!value) return "";
-
-  const localOrAbsolute = normalizeGithubPagesMediaPath(value, type);
-
-  if (localOrAbsolute.includes("drive.google.com")) {
-    return normalizeGoogleDriveMediaUrl(localOrAbsolute, type);
-  }
-
-  if (isHttpOnlyMediaUrl(localOrAbsolute)) {
-    return toWorkerProxyMediaUrl(localOrAbsolute);
-  }
-
-  return localOrAbsolute;
-}
 function getGoogleDriveFileId(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -168,7 +91,16 @@ function normalizeGoogleDriveMediaUrl(url, type = "media") {
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
 }
 
+function normalizeMediaUrlForPlayback(url, type = "media") {
+  const value = String(url || "").trim();
+  if (!value) return "";
 
+  if (value.includes("drive.google.com")) {
+    return normalizeGoogleDriveMediaUrl(value, type);
+  }
+
+  return value;
+}
 
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
@@ -208,7 +140,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v84-startup-loading-fix";
+const APP_VERSION = "v78-songs-match-radios-ui";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -539,6 +471,9 @@ onAuthStateChanged(auth, async (user) => {
     adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
+  await window.addEventListener("hashchange", handleHashRoute);
+window.addEventListener("DOMContentLoaded", handleHashRoute);
+loadSiteSettings(); await loadPageCategories(); await loadContents();
   handleHashRoute();
 });
 
@@ -697,7 +632,7 @@ async function saveAudioLike(category, prefix) {
 
   if (!title) return alert("제목을 입력하세요.");
   if (!urlInput && !file) {
-    return alert("미디어 URL 칸에 mp3 링크를 입력하세요. http://oneum.net/...mp3 같은 HTTP 링크도 가능합니다.");
+    return alert("미디어 URL 칸에 링크를 입력하세요. 예: https://drive.google.com/file/d/.../view 또는 https://drive.google.com/uc?export=download&id=...");
   }
 
   try {
@@ -1013,14 +948,39 @@ async function applySavedTemplates() {
 
 function showScreenProtectOverlay(reason = "protect") {
   const overlay = document.getElementById("screenProtectOverlay");
-  if (overlay) overlay.classList.add("hidden");
-  document.body.classList.remove("screen-protect-blur");
+  if (!overlay) return;
+
+  overlay.classList.remove("hidden");
+  document.body.classList.add("screen-protect-blur");
+
+  clearTimeout(window.__screenProtectTimer);
+  window.__screenProtectTimer = setTimeout(() => {
+    overlay.classList.add("hidden");
+    document.body.classList.remove("screen-protect-blur");
+  }, reason === "printscreen" ? 1800 : 900);
 }
 
 function installScreenProtection() {
-  const overlay = document.getElementById("screenProtectOverlay");
-  if (overlay) overlay.classList.add("hidden");
-  document.body.classList.remove("screen-protect-blur");
+  window.addEventListener("blur", () => {
+    showScreenProtectOverlay("blur");
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      document.body.classList.add("screen-protect-blur");
+    } else {
+      setTimeout(() => document.body.classList.remove("screen-protect-blur"), 600);
+    }
+  });
+
+  window.addEventListener("beforeprint", () => {
+    document.body.classList.add("print-protect");
+    showScreenProtectOverlay("print");
+  });
+
+  window.addEventListener("afterprint", () => {
+    document.body.classList.remove("print-protect");
+  });
 }
 
 function installBasicContentProtection() {
@@ -1654,63 +1614,7 @@ function renderAboutArticle(items) {
 }
 
 
-
-function isGoogleDriveUrl(url) {
-  return String(url || "").includes("drive.google.com");
-}
-
-function toGoogleDrivePreviewUrl(url) {
-  const id = getGoogleDriveFileId(url);
-  return id ? `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview` : url;
-}
-
-
-function renderGoogleDriveListButton(url, label = "Google Drive media") {
-  const previewUrl = toGoogleDrivePreviewUrl(url);
-  return `
-    <div class="gdrive-list-player" onclick="event.stopPropagation()">
-      <button type="button" class="gdrive-list-play-btn" onclick="window.open('${escapeHtml(previewUrl)}', '_blank', 'noopener,noreferrer')">▶</button>
-      <div class="gdrive-list-text">
-        <strong>구글드라이브 음원</strong>
-        <span>클릭하면 새 창에서 재생됩니다.</span>
-      </div>
-    </div>
-  `;
-}
-
-function renderGoogleDriveDetailPlayer(url, label = "Google Drive media") {
-  const previewUrl = toGoogleDrivePreviewUrl(url);
-  return `
-    <div class="gdrive-detail-player" onclick="event.stopPropagation()">
-      <div class="gdrive-detail-toolbar">
-        <strong>구글드라이브 미리보기</strong>
-        <button type="button" onclick="window.open('${escapeHtml(previewUrl)}', '_blank', 'noopener,noreferrer')">새 창에서 열기</button>
-      </div>
-      <iframe
-        src="${escapeHtml(previewUrl)}"
-        title="${escapeHtml(label)}"
-        allow="autoplay"
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade">
-      </iframe>
-      <p class="gdrive-preview-note">파일이 보이지 않으면 구글드라이브 공유 설정을 “링크가 있는 모든 사용자: 뷰어”로 바꿔야 합니다.</p>
-    </div>
-  `;
-}
-
-function renderGoogleDrivePreviewPlayer(url, label = "Google Drive media") {
-  return renderGoogleDriveDetailPlayer(url, label);
-}
-
 function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
-  if (isGoogleDriveUrl(mediaUrl)) {
-    const idText = String(playerId || "");
-    if (idText.includes("detail")) {
-      return renderGoogleDriveDetailPlayer(mediaUrl, playerId || "Google Drive audio");
-    }
-    return renderGoogleDriveListButton(mediaUrl, playerId || "Google Drive audio");
-  }
-
   const safeUrl = escapeHtml(mediaUrl || "");
   const safeId = escapeHtml(playerId || "");
   if (!safeUrl) return "";
@@ -2138,34 +2042,8 @@ async function deleteContentItem(id) {
   }
 }
 
-
-let appBootStarted = false;
-
-async function bootKwangseoksApp() {
-  if (appBootStarted) return;
-  appBootStarted = true;
-
-  try {
-    handleHashRoute();
-
-    await Promise.allSettled([
-      loadSiteSettings(),
-      loadPageCategories(),
-      loadContents()
-    ]);
-
-    handleHashRoute();
-  } catch (error) {
-    console.error("사이트 초기화 오류:", error);
-    handleHashRoute();
-  }
-}
-
-window.addEventListener("hashchange", handleHashRoute);
-window.addEventListener("DOMContentLoaded", bootKwangseoksApp);
-
-if (document.readyState === "interactive" || document.readyState === "complete") {
-  bootKwangseoksApp();
-}
+loadSiteSettings();
+loadPageCategories();
+loadContents();
 
 window.closeDailyRecommendPlayer = closeDailyRecommendPlayer;
