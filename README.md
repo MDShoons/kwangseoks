@@ -107,3 +107,23 @@ GitHub에 `index.html`, `app-v25.js`, `firebase-config-v25.js`, `app.js`, `fireb
 그 다음 사이트에서 Ctrl+F5를 누르세요.
 오류 메시지에 `kwangseoks.kos20050627.workers.dev`가 나오면 아직 예전 파일을 읽는 것입니다.
 정상이라면 `kwangseoks-uploader.kos20050627.workers.dev`가 사용됩니다.
+
+
+## v26 수정 사항 - Worker Invalid SPKI input 해결
+WAV/MP3/MP4 업로드 시 `Invalid SPKI input` 오류가 나는 문제를 수정했습니다.
+
+원인:
+Cloudflare Worker WebCrypto는 Firebase의 X.509 인증서 PEM을 그대로 `spki` 키로 import하지 못합니다.
+
+수정:
+`cloudflare-worker-github-uploader.js`에서 X.509 인증서 DER 내부의 SubjectPublicKeyInfo 영역을 추출해 `crypto.subtle.importKey("spki")`에 넣도록 수정했습니다.
+
+적용 방법:
+1. ZIP 안의 `cloudflare-worker-github-uploader.js` 파일 열기
+2. 내용 전체 복사
+3. Cloudflare → Workers & Pages → kwangseoks-uploader
+4. 코드 편집 화면에서 기존 코드 전체 삭제
+5. 붙여넣기
+6. Save and deploy
+7. https://kwangseoks-uploader.kos20050627.workers.dev/health 확인
+8. 작은 mp3 파일부터 업로드 테스트
