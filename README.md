@@ -86,3 +86,24 @@ https://kwangseoks-uploader.kos20050627.workers.dev/health
 중요:
 GitHub에 firebase-config.js와 app.js를 반드시 덮어쓰기 업로드하고 Commit changes를 눌러야 합니다.
 그 후 사이트에서 Ctrl+F5로 강력 새로고침하세요.
+
+
+## v25 수정 사항 - 캐시 우회 및 새 Worker 주소 강제 적용
+아직도 예전 Worker 주소가 오류에 표시되는 문제는 브라우저/GitHub Pages가 예전 `app.js`를 읽고 있다는 뜻입니다.
+
+v25에서는 파일명을 바꿨습니다.
+- `app-v25.js`
+- `firebase-config-v25.js`
+- `index.html`은 `app-v25.js?v=25`를 불러옵니다.
+
+새 Worker 주소:
+https://kwangseoks-uploader.kos20050627.workers.dev/upload
+
+상태 확인:
+https://kwangseoks-uploader.kos20050627.workers.dev/health
+
+중요:
+GitHub에 `index.html`, `app-v25.js`, `firebase-config-v25.js`, `app.js`, `firebase-config.js`를 모두 올리세요.
+그 다음 사이트에서 Ctrl+F5를 누르세요.
+오류 메시지에 `kwangseoks.kos20050627.workers.dev`가 나오면 아직 예전 파일을 읽는 것입니다.
+정상이라면 `kwangseoks-uploader.kos20050627.workers.dev`가 사용됩니다.
