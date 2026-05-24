@@ -3,7 +3,7 @@ import {
   ADMIN_EMAILS,
   ADMIN_LOGIN_IDS,
   GITHUB_UPLOAD_WORKER_URL
-} from "./firebase-config-v25.js";
+} from "./firebase-config-v41-latest-login-gate.js";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v40-js-startup-fix";
+const APP_VERSION = "v41-latest-login-gate";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -65,6 +65,7 @@ window.editContent = editContent;
 window.deleteContentItem = deleteContentItem;
 window.deleteCustomCategory = deleteCustomCategory;
 window.openContentDetail = openContentDetail;
+window.openLatestItem = openLatestItem;
 window.closeContentDetail = closeContentDetail;
 window.quickTemplate = quickTemplate;
 
@@ -235,7 +236,7 @@ async function uploadFileToGitHubWorker(file, folder = "images") {
   }
 
   if (!result.imageUrl) {
-    throw new Error("Worker가 파일 URL을 반환하지 않았습니다. Worker 코드가 최신 v23인지 확인하세요.");
+    throw new Error("Worker가 파일 URL을 반환하지 않았습니다. Worker 코드가 최신 v41-latest-login-gate인지 확인하세요.");
   }
 
   return result.imageUrl;
@@ -802,6 +803,17 @@ function filterBySelectedSubCategory(page, items) {
   return filtered.filter(item => matchesPageSearch(page, item));
 }
 
+
+function openLatestItem(page, itemId) {
+  if (RESTRICTED_PAGES.includes(page) && !currentUser) {
+    goPage("loginRequired");
+    return;
+  }
+
+  goPage(page);
+  setTimeout(() => openContentDetail(itemId), 250);
+}
+
 function renderLatestByCategory(contents) {
   const box = document.getElementById("latestByCategory");
   if (!box) return;
@@ -824,16 +836,17 @@ function renderLatestByCategory(contents) {
     const div = document.createElement("div");
     div.className = "latest-category-box";
 
+    const isLockedLatest = RESTRICTED_PAGES.includes(page) && !currentUser;
     if (!item) {
       div.innerHTML = `<h3>${labels[page]}</h3><p class="helper-text">아직 등록된 자료가 없습니다.</p>`;
     } else {
       div.innerHTML = `
         <h3>${labels[page]}</h3>
-        <div class="latest-mini-card" onclick="goPage('${page}'); setTimeout(() => openContentDetail('${item.id}'), 250);">
+        <div class="latest-mini-card" onclick="openLatestItem('${page}', '${item.id}');">
           <strong>${escapeHtml(item.title || "제목 없음")}</strong>
           <p>${escapeHtml((item.description || item.body || "").slice(0, 70))}</p>
           <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
-          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${isLockedLatest ? `<p class="login-lock-note">로그인 후 볼 수 있습니다.</p>` : ""}
         </div>
       `;
     }
