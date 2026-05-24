@@ -904,7 +904,7 @@ video {
   user-drag: none;
 }
 
-/* v39: 안정형 회원/검색 기능 UI */
+/* v40: 안정형 회원/검색 UI */
 .latest-category-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

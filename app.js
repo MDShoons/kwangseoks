@@ -15,9 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v31-small-cards-no-download";
-console.log("광석이네집", APP_VERSION, "worker:", GITHUB_UPLOAD_WORKER_URL);
-const APP_VERSION = "v39-stable-member-fix";
+const APP_VERSION = "v40-js-startup-fix";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -339,10 +337,11 @@ onAuthStateChanged(auth, async (user) => {
     adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-  await installBasicContentProtection();
-window.addEventListener("hashchange", handleHashRoute);
+  if (typeof installBasicContentProtection === "function") installBasicContentProtection();
+  await window.addEventListener("hashchange", handleHashRoute);
 window.addEventListener("DOMContentLoaded", handleHashRoute);
 loadSiteSettings(); await loadPageCategories(); await loadContents();
+  handleHashRoute();
 });
 
 async function loadPageCategories() {

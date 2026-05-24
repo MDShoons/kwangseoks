@@ -299,25 +299,21 @@ v36에서는 hash routing을 적용해 메뉴 클릭 시 주소가 함께 바뀝
 GitHub Pages에서는 `/radios` 같은 서버 경로 방식보다 `#radios` 방식이 안전합니다.
 
 
-## v39 수정 사항 - v36 기준 안정 복구판
-v37/v38에서 메뉴 클릭이 멈추는 문제를 피하기 위해,
-정상 작동하던 v36을 기준으로 기능을 다시 안전하게 붙였습니다.
+## v40 수정 사항 - 자바스크립트 시작 오류 해결
+v39에서 메뉴가 계속 반응하지 않던 원인을 수정했습니다.
 
-핵심:
-- 새 파일 `app-v39.js` 사용
-- index.html이 `app-v39.js?v=39-stable-member-fix`를 읽음
-- 기존 app-v25.js 캐시/꼬임 회피
+확인된 원인:
+- `const APP_VERSION`이 중복 선언되어 자바스크립트가 시작 단계에서 멈춤
+- 일부 시작 코드가 로그인 상태 확인 함수 내부로 잘못 들어갈 수 있는 구조
 
-포함 기능:
-- 자료별 최신 자료
-- 페이지별 검색
-- 비로그인 접근 제한: Videos, Radios, Photos, Oneum
-- “로그인을 하지 않으셨네요!” 안내 화면
-- 회원 정보 수정
-- 회원 탈퇴
+수정:
+- APP_VERSION 선언을 하나로 정리
+- 새 파일 `app-v40.js` 사용
+- index.html은 `app-v40.js?v=40-js-startup-fix`를 읽음
+- v36 기준 기능에 검색/회원정보/로그인 제한만 안전하게 다시 추가
 
 적용:
 1. ZIP 전체를 GitHub에 덮어쓰기
 2. Commit changes
-3. Firestore Rules도 ZIP의 firestore.rules로 다시 게시
+3. Firestore Rules도 다시 게시
 4. Ctrl + F5
