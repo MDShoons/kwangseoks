@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v64-player-volume-mute";
+const APP_VERSION = "v65-compact-volume-ui";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1015,7 +1015,7 @@ function setupDailyRecommendPlayer() {
   audio.volume = Number.isFinite(initialVolume) ? initialVolume : 0.7;
   audio.muted = savedMuted === "yes";
   volumeSlider.value = String(Math.round(audio.volume * 100));
-  muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
+  muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
 
   const songs = allContents.filter((item) => item.category === "songs");
   const selected = pickDailyRecommendedSong(songs);
@@ -1092,18 +1092,18 @@ function setupDailyRecommendPlayer() {
 
     localStorage.setItem("kwangseoks_daily_player_volume", String(audio.volume));
     localStorage.setItem("kwangseoks_daily_player_muted", audio.muted ? "yes" : "no");
-    muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
   });
 
   muteBtn.addEventListener("click", () => {
     audio.muted = !audio.muted;
     localStorage.setItem("kwangseoks_daily_player_muted", audio.muted ? "yes" : "no");
-    muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
   });
 
   audio.addEventListener("volumechange", () => {
     volumeSlider.value = String(Math.round(audio.volume * 100));
-    muteBtn.textContent = audio.muted || audio.volume === 0 ? "🔇" : "🔊";
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
   });
 
   playBtn.addEventListener("click", async () => {

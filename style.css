@@ -1870,3 +1870,88 @@ body.screen-protect-blur footer {
   accent-color: #fff !important;
   cursor: pointer !important;
 }
+
+/* v65: 볼륨 조절 UI 소형화 */
+#dailyRecommendPlayer .daily-volume-row,
+#dailyRecommendPlayer .compact-volume-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  margin-top: 8px !important;
+  width: 96px !important;
+  max-width: 96px !important;
+  height: 20px !important;
+}
+
+#dailyRecommendPlayer .daily-mute-btn {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.18) !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider {
+  width: 68px !important;
+  max-width: 68px !important;
+  min-width: 68px !important;
+  height: 3px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  accent-color: #ffffff !important;
+  cursor: pointer !important;
+}
+
+/* Chrome / Edge */
+#dailyRecommendPlayer .daily-volume-slider::-webkit-slider-runnable-track {
+  height: 3px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.38) !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  margin-top: -4px !important;
+  border: 0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+}
+
+/* Firefox */
+#dailyRecommendPlayer .daily-volume-slider::-moz-range-track {
+  height: 3px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.38) !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider::-moz-range-thumb {
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+}
+
+#dailyRecommendPlayer .daily-volume-slider:disabled {
+  opacity: 0.42 !important;
+  cursor: not-allowed !important;
+}
