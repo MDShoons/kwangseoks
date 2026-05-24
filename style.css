@@ -1955,3 +1955,107 @@ body.screen-protect-blur footer {
   opacity: 0.42 !important;
   cursor: not-allowed !important;
 }
+
+/* v66: 볼륨 UI 강제 소형화 - id 기준 최종 override */
+#dailyRecommendPlayer #dailyPlayerMuteBtn {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,0.22) !important;
+  color: #fff !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 54px !important;
+  max-width: 54px !important;
+  min-width: 54px !important;
+  height: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  accent-color: #ffffff !important;
+  display: inline-block !important;
+  flex: 0 0 54px !important;
+}
+
+#dailyRecommendPlayer .daily-volume-row,
+#dailyRecommendPlayer .compact-volume-row {
+  width: 78px !important;
+  max-width: 78px !important;
+  min-width: 78px !important;
+  height: 18px !important;
+  max-height: 18px !important;
+  margin-top: 6px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  overflow: visible !important;
+}
+
+/* Chrome / Edge / Safari */
+#dailyRecommendPlayer #dailyPlayerVolume::-webkit-slider-runnable-track {
+  -webkit-appearance: none !important;
+  height: 2px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.36) !important;
+  border: 0 !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  margin-top: -3px !important;
+  box-shadow: none !important;
+}
+
+/* Firefox */
+#dailyRecommendPlayer #dailyPlayerVolume::-moz-range-track {
+  height: 2px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.36) !important;
+  border: 0 !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-moz-range-thumb {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-ms-track {
+  width: 54px !important;
+  height: 2px !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  color: transparent !important;
+}
+
+#dailyRecommendPlayer #dailyPlayerVolume::-ms-thumb {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 0 !important;
+}

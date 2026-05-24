@@ -15,7 +15,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v65-compact-volume-ui";
+const APP_VERSION = "v66-tiny-volume-ui";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1016,6 +1016,24 @@ function setupDailyRecommendPlayer() {
   audio.muted = savedMuted === "yes";
   volumeSlider.value = String(Math.round(audio.volume * 100));
   muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
+
+  
+  // 브라우저 기본 range 스타일이 크게 보이는 문제를 막기 위해 inline style도 강제 적용
+  muteBtn.style.width = "18px";
+  muteBtn.style.height = "18px";
+  muteBtn.style.minWidth = "18px";
+  muteBtn.style.padding = "0";
+  muteBtn.style.fontSize = "9px";
+  muteBtn.style.lineHeight = "1";
+  muteBtn.style.boxShadow = "none";
+
+  volumeSlider.style.width = "54px";
+  volumeSlider.style.maxWidth = "54px";
+  volumeSlider.style.minWidth = "54px";
+  volumeSlider.style.height = "2px";
+  volumeSlider.style.margin = "0";
+  volumeSlider.style.padding = "0";
+  volumeSlider.style.accentColor = "#ffffff";
 
   const songs = allContents.filter((item) => item.category === "songs");
   const selected = pickDailyRecommendedSong(songs);
