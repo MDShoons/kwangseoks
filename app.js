@@ -8,7 +8,7 @@ import {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged, deleteUser
+  signOut, onAuthStateChanged, deleteUser, deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
@@ -17,7 +17,7 @@ import {
 
 const APP_VERSION = "v31-small-cards-no-download";
 console.log("광석이네집", APP_VERSION, "worker:", GITHUB_UPLOAD_WORKER_URL);
-const APP_VERSION = "v37-member-search-gate";
+const APP_VERSION = "v38-js-error-fix";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -101,29 +101,50 @@ function handleHashRoute() {
 }
 
 function showPage(pageId, fromHash = false) {
-  if (!fromHash && VALID_PAGES.includes(pageId)) {
-    goPage(pageId);
+  if (!VALID_PAGES.includes(pageId)) pageId = "home";
+
+  if (!fromHash && window.location.hash !== `#${pageId}`) {
+    window.location.hash = pageId;
     return;
   }
+
   if (RESTRICTED_PAGES.includes(pageId) && !currentUser) {
     pageId = "loginRequired";
-    if (!fromHash && window.location.hash !== "#loginRequired") {
-      window.location.hash = "loginRequired";
-      return;
-    }
   }
 
   if (pageId === "mypage" && !currentUser) {
     pageId = "loginRequired";
   }
 
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  if (pageId === "admin" && !isAdmin) {
+    alert("관리자만 접근할 수 있습니다.");
+    pageId = "home";
+    if (window.location.hash !== "#home") {
+      window.location.hash = "home";
+      return;
+    }
+  }
+
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+
   const target = document.getElementById(pageId);
   if (target) target.classList.add("active");
-  if (pageId === "admin" && !isAdmin) { alert("관리자만 접근할 수 있습니다."); showPage("home"); return; }
-  if (pageId === "admin") { fillSettingsFormFromCurrent(); renderAdminManageList(); bindDesignPreviewEvents(); }
-  if (pageId === "mypage") fillMyPageForm();
-  if (["videos","songs","radios","photos","stories","about","oneum"].includes(pageId)) loadContents();
+
+  if (pageId === "admin") {
+    fillSettingsFormFromCurrent();
+    renderAdminManageList();
+    bindDesignPreviewEvents();
+  }
+
+  if (pageId === "mypage") {
+    fillMyPageForm();
+  }
+
+  if (["videos", "songs", "radios", "photos", "stories", "about", "oneum"].includes(pageId)) {
+    loadContents();
+  }
+
+  installBasicContentProtection?.();
 }
 
 function showAdminForm(type) {
@@ -843,7 +864,7 @@ function renderLatestByCategory(contents) {
 }
 
 function renderLatest(contents) {
-  const box = document.getElementById("latestContents"); box.innerHTML = "";
+  const box = document.getElementById("latestContents"); if (!box) return; box.innerHTML = "";
   const source = contents.filter(i => i.isFeatured).length ? contents.filter(i => i.isFeatured) : contents;
   if (!source.length) { box.innerHTML = "<p>등록된 최신 자료가 없습니다.</p>"; return; }
   source.slice(0,4).forEach(i => box.appendChild(createCard(i)));

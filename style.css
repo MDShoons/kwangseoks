@@ -987,3 +987,27 @@ video {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* v38: 오류 복구 보정 */
+.login-required-page,
+.mypage-page {
+  max-width: 620px;
+}
+
+.latest-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.latest-category-box {
+  border: 1px solid #e0cdb9;
+  border-radius: 20px;
+  background: rgba(255, 250, 244, 0.82);
+  padding: 20px;
+}
+
+.page-search-input {
+  min-width: 320px;
+  flex: 1;
+}
