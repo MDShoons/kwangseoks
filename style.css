@@ -2581,3 +2581,26 @@ body.screen-protect-blur footer {
   padding: 2px 5px;
   border-radius: 5px;
 }
+
+/* v82: HTTP 음원 프록시 안내 */
+.http-proxy-notice {
+  margin: 12px 0 16px;
+  padding: 13px 15px;
+  border: 1px solid #b9c7d8;
+  border-radius: 14px;
+  background: #f2f7ff;
+  color: #1f3248;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.http-proxy-notice strong {
+  font-weight: 900;
+}
+
+.http-proxy-notice code {
+  font-size: 12px;
+  background: #e2ebf7;
+  padding: 2px 5px;
+  border-radius: 5px;
+}

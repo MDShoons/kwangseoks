@@ -1,14 +1,15 @@
 
-// kwangseoks Cloudflare Worker GitHub uploader
-// v74: permissive CORS + origin bypass for upload troubleshooting.
-// Accepts Firebase token via formData idToken.
+// kwangseoks Cloudflare Worker
+// v82: GitHub uploader + HTTP media proxy for http:// mp3 links
 
-function corsHeaders() {
+function corsHeaders(extra = {}) {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "*",
-    "Access-Control-Max-Age": "86400"
+    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges, Content-Type",
+    "Access-Control-Max-Age": "86400",
+    ...extra
   };
 }
 
@@ -217,6 +218,71 @@ async function handleUpload(request, env) {
   }, 200);
 }
 
+async function handleProxy(request) {
+  const url = new URL(request.url);
+  const target = url.searchParams.get("url") || "";
+
+  if (!target) {
+    return jsonResponse({ ok: false, error: "proxy url 파라미터가 필요합니다." }, 400);
+  }
+
+  let targetUrl;
+  try {
+    targetUrl = new URL(target);
+  } catch {
+    return jsonResponse({ ok: false, error: "올바른 URL이 아닙니다." }, 400);
+  }
+
+  if (!["http:", "https:"].includes(targetUrl.protocol)) {
+    return jsonResponse({ ok: false, error: "http 또는 https URL만 지원합니다." }, 400);
+  }
+
+  // 필요하면 보안을 위해 도메인 제한 가능. 현재는 직접 mp3 링크 재생을 위해 범용 허용.
+  const headers = new Headers();
+  const range = request.headers.get("Range");
+  if (range) headers.set("Range", range);
+  headers.set("User-Agent", "Mozilla/5.0 KwangseoksAudioProxy");
+
+  const upstream = await fetch(targetUrl.toString(), {
+    method: "GET",
+    headers,
+    redirect: "follow"
+  });
+
+  const responseHeaders = new Headers();
+  const passHeaders = [
+    "Content-Type",
+    "Content-Length",
+    "Content-Range",
+    "Accept-Ranges",
+    "Last-Modified",
+    "ETag",
+    "Cache-Control"
+  ];
+
+  for (const key of passHeaders) {
+    const value = upstream.headers.get(key);
+    if (value) responseHeaders.set(key, value);
+  }
+
+  if (!responseHeaders.has("Content-Type")) {
+    responseHeaders.set("Content-Type", "audio/mpeg");
+  }
+
+  const cors = corsHeaders();
+  for (const [key, value] of Object.entries(cors)) {
+    responseHeaders.set(key, value);
+  }
+
+  responseHeaders.set("Cache-Control", responseHeaders.get("Cache-Control") || "public, max-age=3600");
+
+  return new Response(upstream.body, {
+    status: upstream.status,
+    statusText: upstream.statusText,
+    headers: responseHeaders
+  });
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -230,13 +296,17 @@ export default {
         return jsonResponse({
           ok: true,
           service: "kwangseoks-github-uploader",
-          version: "v74-origin-bypass-upload",
+          version: "v82-http-link-proxy",
           hasOwner: Boolean(env.GITHUB_OWNER),
           hasRepo: Boolean(env.GITHUB_REPO),
           hasToken: Boolean(env.GITHUB_TOKEN),
           branch: env.GITHUB_BRANCH || "main",
-          allowedOrigin: "*"
+          proxy: true
         }, 200);
+      }
+
+      if (url.pathname === "/proxy") {
+        return await handleProxy(request);
       }
 
       if (url.pathname === "/upload") {

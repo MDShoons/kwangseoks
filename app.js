@@ -52,6 +52,39 @@ function getThumbnailUrlForPrefix(prefix) {
 
 
 
+
+function isHttpOnlyMediaUrl(url) {
+  return String(url || "").trim().toLowerCase().startsWith("http://");
+}
+
+function toWorkerProxyMediaUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  const base = typeof ACTIVE_UPLOAD_WORKER_URL !== "undefined"
+    ? ACTIVE_UPLOAD_WORKER_URL
+    : "https://kwangseoks-uploader.kos20050627.workers.dev";
+
+  return `${base.replace(/\/$/, "")}/proxy?url=${encodeURIComponent(value)}`;
+}
+
+function normalizeMediaUrlForPlayback(url, type = "media") {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  if (value.includes("drive.google.com")) {
+    return normalizeGoogleDriveMediaUrl(value, type);
+  }
+
+  // HTTPS 사이트에서 HTTP 음원을 직접 재생하면 브라우저가 막을 수 있으므로
+  // Cloudflare Worker 프록시를 통해 HTTPS 주소로 변환합니다.
+  if (isHttpOnlyMediaUrl(value)) {
+    return toWorkerProxyMediaUrl(value);
+  }
+
+  return value;
+}
+
 function getGoogleDriveFileId(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -91,22 +124,7 @@ function normalizeGoogleDriveMediaUrl(url, type = "media") {
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
 }
 
-function normalizeMediaUrlForPlayback(url, type = "media") {
-  const value = String(url || "").trim();
-  if (!value) return "";
 
-  if (value.includes("drive.google.com")) {
-    return normalizeGoogleDriveMediaUrl(value, type);
-  }
-
-  // GitHub Pages는 https 사이트이므로 http 음원은 브라우저에서 차단될 수 있습니다.
-  // 서버가 https를 지원하면 자동으로 https로 바꿔 재생을 시도합니다.
-  if (typeof location !== "undefined" && location.protocol === "https:" && value.startsWith("http://")) {
-    return "https://" + value.slice("http://".length);
-  }
-
-  return value;
-}
 
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
@@ -146,7 +164,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v81-direct-mp3-link-player";
+const APP_VERSION = "v82-http-link-proxy";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -638,7 +656,7 @@ async function saveAudioLike(category, prefix) {
 
   if (!title) return alert("제목을 입력하세요.");
   if (!urlInput && !file) {
-    return alert("미디어 URL 칸에 mp3 링크를 입력하세요. 예: http://oneum.net/.../song.mp3 또는 https://.../song.mp3");
+    return alert("미디어 URL 칸에 mp3 링크를 입력하세요. http://oneum.net/...mp3 같은 HTTP 링크도 가능합니다.");
   }
 
   try {
