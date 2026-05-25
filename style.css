@@ -2755,7 +2755,7 @@ body.screen-protect-blur footer {
 }
 
 
-/* v87: 오늘의 추천곡 숨기기 옵션 + 곡 상세 앨범 자켓 확대 + 음원 수정 시 바로듣기 보존 */
+/* v88: 오늘의 추천곡에 곡 앨범/분류 표시 */
 #dailyRecommendPlayer .daily-hide-options {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
@@ -2873,4 +2873,11 @@ body.screen-protect-blur footer {
     width: 96vw;
     padding: 46px 12px 16px;
   }
+}
+
+
+/* v88: 오늘의 추천곡 앨범/분류 정보 가독성 */
+#dailyRecommendPlayer .daily-player-sub {
+  line-height: 1.35 !important;
+  word-break: keep-all !important;
 }

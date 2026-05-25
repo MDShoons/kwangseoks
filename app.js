@@ -170,7 +170,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v87-song-edit-preserve-audio-list-player";
+const APP_VERSION = "v88-daily-song-subcategory-label";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1215,6 +1215,22 @@ function formatPlayerDuration(seconds) {
   return formatPlayerTime(seconds);
 }
 
+function getDailySongCategoryLabel(item) {
+  const candidates = [
+    item?.subCategory,
+    item?.album,
+    item?.albumTitle,
+    item?.collection,
+    item?.disc,
+    item?.releaseTitle
+  ];
+
+  const found = candidates
+    .map((value) => String(value || "").trim())
+    .find(Boolean);
+
+  return found || "앨범/분류 미지정";
+}
 
 function getDailyPlayerClosedKey() {
   return `kwangseoks_daily_player_closed_${getKoreanDateKey()}`;
@@ -1360,8 +1376,9 @@ function setupDailyRecommendPlayer() {
   playBtn.classList.remove("disabled");
   progress.disabled = false;
 
+  const songCategoryLabel = getDailySongCategoryLabel(selected);
   title.textContent = selected.title || "제목 없는 추천곡";
-  sub.textContent = `${getKoreanDateKey()} · 매일 00:00 추천 변경`;
+  sub.textContent = `앨범/분류: ${songCategoryLabel} · ${getKoreanDateKey()} · 매일 00:00 추천 변경`;
 
   if (dailyRecommendedItemId !== selected.id) {
     dailyRecommendedItemId = selected.id;
