@@ -4573,3 +4573,23 @@ body.content-protected iframe {
     font-size: 10.5px !important;
   }
 }
+
+
+/* v117: 오늘의 추천곡과 내 플레이리스트 겹침 방지 */
+@media (min-width: 821px) {
+  #userPlaylistPlayer.daily-player {
+    top: 545px !important;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1500px) {
+  #userPlaylistPlayer.daily-player {
+    top: 525px !important;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1180px) {
+  #userPlaylistPlayer.daily-player {
+    top: 500px !important;
+  }
+}
