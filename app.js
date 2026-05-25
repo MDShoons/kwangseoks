@@ -2585,39 +2585,6 @@ function renderDetailMedia(item) {
   return "";
 }
 
-
-function resetMobileDetailViewState() {
-  const modal = document.getElementById("contentDetailModal");
-  const inner = modal ? modal.querySelector(".detail-modal-inner") : null;
-
-  if (inner) {
-    inner.scrollTop = 0;
-    inner.style.transform = "";
-    inner.style.zoom = "";
-  }
-
-  document.body.classList.remove("detail-open-mobile");
-  document.documentElement.style.overflowX = "";
-  document.body.style.overflowX = "";
-  document.documentElement.scrollLeft = 0;
-  document.body.scrollLeft = 0;
-
-  if (window.matchMedia && window.matchMedia("(max-width: 820px)").matches) {
-    requestAnimationFrame(() => {
-      document.documentElement.scrollLeft = 0;
-      document.body.scrollLeft = 0;
-    });
-  }
-}
-
-function pauseDetailMediaBeforeClose() {
-  const mediaArea = document.getElementById("detailMediaArea");
-  if (!mediaArea) return;
-  mediaArea.querySelectorAll("video, audio").forEach((media) => {
-    try { media.pause(); } catch(e) {}
-  });
-}
-
 function openContentDetail(id) {
   const item = allContents.find((content) => content.id === id);
   if (!item) return;
@@ -2653,12 +2620,6 @@ function openContentDetail(id) {
   }
   descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
-  if (window.matchMedia && window.matchMedia("(max-width: 820px)").matches) {
-    document.body.classList.add("detail-open-mobile");
-    document.documentElement.scrollLeft = 0;
-    document.body.scrollLeft = 0;
-  }
-
   modal.classList.remove("hidden");
   installBasicContentProtection();
   if (typeof hardenMediaDownloadControls === "function") {
@@ -2680,8 +2641,6 @@ function closeContentDetail(event) {
   const descEl = document.getElementById("detailDescription");
   const modal = document.getElementById("contentDetailModal");
 
-  pauseDetailMediaBeforeClose();
-
   if (mediaArea) mediaArea.innerHTML = "";
   if (titleEl) titleEl.textContent = "";
   if (categoryEl) categoryEl.innerHTML = "";
@@ -2690,7 +2649,6 @@ function closeContentDetail(event) {
   if (modal) modal.classList.add("hidden");
 
   document.body.style.overflow = "";
-  resetMobileDetailViewState();
 }
 
 document.addEventListener("keydown", e => {
