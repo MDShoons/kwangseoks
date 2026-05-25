@@ -2682,7 +2682,7 @@ loadContents();
 
 window.closeDailyRecommendPlayer = closeDailyRecommendPlayer;
 
-// v98: 모바일 기기에서는 모바일형 UI, PC에서는 기존 UI 유지
+// v99: 모바일 기기에서는 모바일형 UI, PC에서는 기존 UI 유지
 function setupMobileResponsiveMode() {
   const toggle = document.getElementById("mobileMenuToggle");
   const media = window.matchMedia("(max-width: 820px)");
