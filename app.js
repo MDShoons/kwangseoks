@@ -132,22 +132,6 @@ function isAudioContentItem(item = {}) {
   return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
 
-function isVideoContentItem(item = {}) {
-  return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube";
-}
-
-function getPlayableVideoUrl(item = {}) {
-  return item.mediaUrl || item.videoUrl || item.fileUrl || "";
-}
-
-function getVideoMediaType(item = {}) {
-  const youtubeCandidate = item.youtubeUrl || item.url || item.mediaUrl || "";
-  if (item.mediaType === "youtube" || String(youtubeCandidate).includes("youtube.com") || String(youtubeCandidate).includes("youtu.be")) {
-    return "youtube";
-  }
-  return "video";
-}
-
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -607,7 +591,6 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
   const editId = document.getElementById("editContentId").value;
   const originalItem = editId ? allContents.find(i => i.id === editId) : null;
   const editingAudioItem = Boolean(originalItem && isAudioContentItem(originalItem));
-  const editingVideoItem = Boolean(originalItem && isVideoContentItem(originalItem));
   const category = document.getElementById("contentCategory").value;
   const subCategory = document.getElementById("contentSubCategory").value;
   const title = document.getElementById("contentTitle").value.trim();
@@ -618,7 +601,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
     const payload = {
       category,
       subCategory,
-      mediaType: editingAudioItem ? "audio" : (editingVideoItem ? getVideoMediaType(originalItem) : (mediaUrl ? "imageText" : "text")),
+      mediaType: editingAudioItem ? "audio" : (mediaUrl ? "imageText" : "text"),
       title,
       body,
       description: body,
@@ -634,15 +617,6 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
       // 목록의 바로듣기 플레이어가 사라지므로, 기존 음원 URL은 반드시 보존합니다.
       const audioUrl = getPlayableAudioUrl(originalItem);
       if (audioUrl) payload.mediaUrl = audioUrl;
-      if (mediaUrl) payload.thumbnailUrl = mediaUrl;
-      else if (originalItem.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
-    } else if (editingVideoItem) {
-      // Videos를 일반 수정 화면에서 고칠 때 영상 URL이 대표 이미지 URL로 덮이면서
-      // 목록 카드의 영상이 검은 이미지처럼 깨지는 문제를 방지합니다.
-      const videoUrl = getPlayableVideoUrl(originalItem);
-      if (videoUrl) payload.mediaUrl = videoUrl;
-      if (originalItem.youtubeUrl) payload.youtubeUrl = originalItem.youtubeUrl;
-      if (originalItem.url) payload.url = originalItem.url;
       if (mediaUrl) payload.thumbnailUrl = mediaUrl;
       else if (originalItem.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
     } else if (mediaUrl) {
@@ -2356,11 +2330,8 @@ function renderList(id, items) {
 function createCard(item) {
   const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id);
   let media = "";
-  if (isVideoContentItem(item) && getVideoMediaType(item) === "youtube") {
-    const youtubeSource = item.youtubeUrl || item.url || item.mediaUrl || "";
-    media = youtubeEmbedHtml(youtubeSource);
-  }
-  else if (isVideoContentItem(item) && getPlayableVideoUrl(item)) media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(normalizeMediaUrlForPlayback(getPlayableVideoUrl(item), "video"))}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  if (item.mediaType === "youtube") media = `<iframe src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" allowfullscreen></iframe>`;
+  else if (item.mediaType === "video") media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
@@ -2517,15 +2488,12 @@ function renderDetailMedia(item) {
   const title = escapeHtml(item.title || "");
 
   if (category === "videos") {
-    const videoSourceUrl = getPlayableVideoUrl(item);
-    const youtubeSource = youtubeUrl || videoSourceUrl;
-
-    if (youtubeSource && (youtubeSource.includes("youtube.com") || youtubeSource.includes("youtu.be"))) {
-      return `<div class="detail-media-box">${youtubeEmbedHtml(youtubeSource)}</div>`;
+    if (youtubeUrl && (youtubeUrl.includes("youtube.com") || youtubeUrl.includes("youtu.be"))) {
+      return `<div class="detail-media-box">${youtubeEmbedHtml(youtubeUrl)}</div>`;
     }
 
-    if (videoSourceUrl) {
-      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(normalizeMediaUrlForPlayback(videoSourceUrl, "video"))}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video></div>`;
+    if (mediaUrl) {
+      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></video></div>`;
     }
 
     if (imageUrl) {
@@ -2703,7 +2671,7 @@ function editContent(id) {
   document.getElementById("contentBody").value = item.body || item.description || "";
   document.getElementById("contentYear").value = item.year || "";
   document.getElementById("contentSource").value = item.source || "";
-  document.getElementById("contentImageUrl").value = (isAudioContentItem(item) || isVideoContentItem(item)) ? (item.thumbnailUrl || "") : (item.mediaUrl || "");
+  document.getElementById("contentImageUrl").value = isAudioContentItem(item) ? (item.thumbnailUrl || "") : (item.mediaUrl || "");
   document.getElementById("contentFeatured").checked = Boolean(item.isFeatured);
   document.getElementById("saveContentBtn").textContent = "수정 저장하기";
 }
