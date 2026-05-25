@@ -4271,3 +4271,37 @@ body {
     transform: none !important;
   }
 }
+
+/* v113: Oneum 김광석 답글은 상세보기 본문 안에서만 표시 */
+#detailDescription .oneum-kks-reply-box {
+  white-space: normal;
+}
+#detailDescription .oneum-kks-reply-body {
+  white-space: pre-wrap;
+}
+
+
+/* v114: 사이트 전체 우클릭/드래그/텍스트 선택 방지 보강 */
+body.content-protected,
+body.content-protected * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body.content-protected input,
+body.content-protected textarea,
+body.content-protected select,
+body.content-protected option,
+body.content-protected [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+body.content-protected img,
+body.content-protected video,
+body.content-protected audio,
+body.content-protected iframe {
+  -webkit-user-drag: none;
+  user-drag: none;
+}

@@ -3,8 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <script>
+    // v114: 우클릭, 개발자도구 단축키, 저장/소스보기 단축키 차단
+    (function () {
+      function blockEvent(event) {
+        if (!event) return false;
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
+
+      document.addEventListener("contextmenu", blockEvent, true);
+      document.addEventListener("dragstart", blockEvent, true);
+
+      document.addEventListener("keydown", function (event) {
+        var key = String(event.key || "").toLowerCase();
+        var code = event.keyCode || event.which;
+        var ctrl = event.ctrlKey || event.metaKey;
+        var shift = event.shiftKey;
+
+        var blocked =
+          code === 123 || key === "f12" ||
+          (ctrl && shift && ["i", "j", "c", "k"].indexOf(key) !== -1) ||
+          (ctrl && ["u", "s"].indexOf(key) !== -1);
+
+        if (blocked) return blockEvent(event);
+      }, true);
+
+      document.addEventListener("selectstart", function (event) {
+        var tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : "";
+        if (["input", "textarea", "select", "option"].indexOf(tag) !== -1 || event.target?.isContentEditable) return true;
+        return blockEvent(event);
+      }, true);
+    })();
+  </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v112-mobile-video-zoom-reset" />
+  <link rel="stylesheet" href="style.css?v=v114-rightclick-f12-block" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -578,8 +613,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v112-mobile-video-zoom-reset</div>
+<div class="version-marker">v114-rightclick-f12-block</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v112-mobile-video-zoom-reset"></script>
+  <script type="module" src="app.js?v=v114-rightclick-f12-block"></script>
 </body>
 </html>

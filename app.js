@@ -183,7 +183,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v112-mobile-video-zoom-reset";
+const APP_VERSION = "v114-rightclick-f12-block";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1176,23 +1176,54 @@ function showScreenProtectOverlay(reason = "protect") {
 }
 
 function installScreenProtection() {
-  // v109: blur/visibility 이벤트가 모바일·PC에서 오버레이를 띄워 클릭을 막지 않도록 비활성화합니다.
+  // v114: 우클릭/F12 차단은 유지하되, 예전 화면 가림 오버레이는 사용하지 않습니다.
   const overlay = document.getElementById("screenProtectOverlay");
   if (overlay) overlay.classList.add("hidden");
   document.body.classList.remove("screen-protect-blur", "print-protect");
 }
 
 function installBasicContentProtection() {
-  // v109: 메뉴/버튼 반응 복구를 위해 전역 캡처 차단을 제거하고, 미디어 우클릭 방지만 최소 적용합니다.
-  document.querySelectorAll("img, audio, video").forEach((el) => {
+  // v114: 전체 페이지 우클릭, 드래그, 개발자도구 주요 단축키 차단 재적용
+  if (document.body) document.body.classList.add("content-protected");
+
+  const block = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+  };
+
+  if (!window.__kksContentProtectionBound) {
+    window.__kksContentProtectionBound = true;
+
+    document.addEventListener("contextmenu", block, true);
+    document.addEventListener("dragstart", block, true);
+
+    document.addEventListener("selectstart", (event) => {
+      const target = event.target;
+      const tag = target?.tagName?.toLowerCase() || "";
+      if (["input", "textarea", "select", "option"].includes(tag) || target?.isContentEditable) return true;
+      return block(event);
+    }, true);
+
+    document.addEventListener("keydown", (event) => {
+      const key = String(event.key || "").toLowerCase();
+      const code = event.keyCode || event.which;
+      const ctrl = event.ctrlKey || event.metaKey;
+      const shift = event.shiftKey;
+
+      const blocked =
+        code === 123 || key === "f12" ||
+        (ctrl && shift && ["i", "j", "c", "k"].includes(key)) ||
+        (ctrl && ["u", "s"].includes(key));
+
+      if (blocked) return block(event);
+      return true;
+    }, true);
+  }
+
+  document.querySelectorAll("img, audio, video, iframe").forEach((el) => {
     el.setAttribute("draggable", "false");
-    if (!el.dataset.protectBound) {
-      el.dataset.protectBound = "1";
-      el.addEventListener("contextmenu", (event) => {
-        event.preventDefault();
-        return false;
-      });
-    }
+    el.setAttribute("oncontextmenu", "return false");
   });
 }
 
@@ -2536,7 +2567,9 @@ function openContentDetail(id) {
   } else {
     metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
   }
-  descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
+  const detailBodyHtml = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
+  const oneumReplyHtml = isOneumItem(item) ? renderOneumKksReplyMarkup(item) : "";
+  descEl.innerHTML = `${detailBodyHtml}${oneumReplyHtml}`;
 
   forceMobileViewportZoomReset();
   modal.classList.remove("hidden");
