@@ -188,7 +188,7 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 이 곳, 광석이네 집",
+  homeTitle: "노래가 머무는 이 곳, 광석이네집",
   homeDescription: "김광석 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
@@ -981,7 +981,7 @@ function applySiteSettings(settings) {
   applyDesignSettings(settings);
   document.getElementById("siteLogoText").textContent = settings.siteName;
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
-  renderHomeTitle(settings.homeTitle);
+  document.getElementById("homeTitle").textContent = settings.homeTitle;
   document.getElementById("homeDescription").textContent = settings.homeDescription;
   ["videos","songs","radios","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
@@ -991,40 +991,6 @@ function applySiteSettings(settings) {
   const hero = document.getElementById("homeHero");
   const bg = settings.homeBgDataUrl || settings.homeBgUrl;
   hero.style.backgroundImage = bg ? `url("${bg}${bg.startsWith("data:") ? "" : (bg.includes("?") ? "&" : "?") + "v=" + Date.now()}")` : "";
-}
-
-
-function escapeHtml(value = "") {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function renderHomeTitle(title = "") {
-  const titleEl = document.getElementById("homeTitle");
-  if (!titleEl) return;
-
-  const rawTitle = (title || "").trim();
-  const normalizedTitle = rawTitle.replace(/광석이네집/g, "광석이네 집");
-  const isMobile = document.body.classList.contains("is-mobile-site");
-
-  if (!isMobile) {
-    titleEl.textContent = normalizedTitle;
-    return;
-  }
-
-  const commaIndex = normalizedTitle.indexOf(",");
-  if (commaIndex === -1) {
-    titleEl.innerHTML = `<span class="hero-title-bottom">${escapeHtml(normalizedTitle)}</span>`;
-    return;
-  }
-
-  const topText = normalizedTitle.slice(0, commaIndex + 1).trim();
-  const bottomText = normalizedTitle.slice(commaIndex + 1).trim();
-  titleEl.innerHTML = `<span class="hero-title-top">${escapeHtml(topText)}</span><span class="hero-title-bottom">${escapeHtml(bottomText)}</span>`;
 }
 
 function applyDesignSettings(s = currentSettings) {
@@ -2724,7 +2690,6 @@ function setupMobileResponsiveMode() {
   const applyMode = () => {
     const isMobile = media.matches;
     document.body.classList.toggle("is-mobile-site", isMobile);
-    renderHomeTitle(currentSettings.homeTitle || DEFAULT_SETTINGS.homeTitle);
     if (!isMobile) {
       document.body.classList.remove("mobile-nav-open");
       if (toggle) toggle.setAttribute("aria-expanded", "false");
