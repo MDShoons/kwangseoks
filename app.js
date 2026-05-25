@@ -2585,52 +2585,36 @@ function renderDetailMedia(item) {
   return "";
 }
 
-let detailModalSavedScrollY = 0;
 
-function resetMobileViewportAfterDetail() {
+function resetMobileDetailViewState() {
   const modal = document.getElementById("contentDetailModal");
   const inner = modal ? modal.querySelector(".detail-modal-inner") : null;
 
   if (inner) {
     inner.scrollTop = 0;
-    inner.style.transform = "none";
-    inner.style.zoom = "1";
+    inner.style.transform = "";
+    inner.style.zoom = "";
   }
 
-  document.documentElement.style.overflow = "";
-  document.documentElement.style.width = "";
-  document.documentElement.style.maxWidth = "";
-  document.body.style.overflow = "";
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.left = "";
-  document.body.style.right = "";
-  document.body.style.width = "";
-  document.body.style.maxWidth = "";
-  document.body.style.transform = "";
-  document.body.style.zoom = "";
   document.body.classList.remove("detail-open-mobile");
+  document.documentElement.style.overflowX = "";
+  document.body.style.overflowX = "";
+  document.documentElement.scrollLeft = 0;
+  document.body.scrollLeft = 0;
 
   if (window.matchMedia && window.matchMedia("(max-width: 820px)").matches) {
-    document.documentElement.scrollLeft = 0;
-    document.body.scrollLeft = 0;
     requestAnimationFrame(() => {
-      window.scrollTo(0, detailModalSavedScrollY || 0);
       document.documentElement.scrollLeft = 0;
       document.body.scrollLeft = 0;
     });
   }
 }
 
-function stopDetailMediaBeforeClose() {
+function pauseDetailMediaBeforeClose() {
   const mediaArea = document.getElementById("detailMediaArea");
   if (!mediaArea) return;
   mediaArea.querySelectorAll("video, audio").forEach((media) => {
     try { media.pause(); } catch(e) {}
-    try { media.removeAttribute("src"); media.load(); } catch(e) {}
-  });
-  mediaArea.querySelectorAll("iframe").forEach((frame) => {
-    try { frame.src = "about:blank"; } catch(e) {}
   });
 }
 
@@ -2670,16 +2654,9 @@ function openContentDetail(id) {
   descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
   if (window.matchMedia && window.matchMedia("(max-width: 820px)").matches) {
-    detailModalSavedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    document.documentElement.style.overflow = "hidden";
     document.body.classList.add("detail-open-mobile");
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${detailModalSavedScrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.width = "100vw";
-    document.body.style.maxWidth = "100vw";
-    document.body.style.overflow = "hidden";
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
   }
 
   modal.classList.remove("hidden");
@@ -2703,7 +2680,7 @@ function closeContentDetail(event) {
   const descEl = document.getElementById("detailDescription");
   const modal = document.getElementById("contentDetailModal");
 
-  stopDetailMediaBeforeClose();
+  pauseDetailMediaBeforeClose();
 
   if (mediaArea) mediaArea.innerHTML = "";
   if (titleEl) titleEl.textContent = "";
@@ -2712,7 +2689,8 @@ function closeContentDetail(event) {
   if (descEl) descEl.innerHTML = "";
   if (modal) modal.classList.add("hidden");
 
-  resetMobileViewportAfterDetail();
+  document.body.style.overflow = "";
+  resetMobileDetailViewState();
 }
 
 document.addEventListener("keydown", e => {
