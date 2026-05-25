@@ -132,6 +132,22 @@ function isAudioContentItem(item = {}) {
   return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
 
+function isVideoContentItem(item = {}) {
+  return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube";
+}
+
+function getPlayableVideoUrl(item = {}) {
+  return item.mediaUrl || item.videoUrl || item.fileUrl || "";
+}
+
+function getVideoMediaType(item = {}) {
+  const youtubeCandidate = item.youtubeUrl || item.url || item.mediaUrl || "";
+  if (item.mediaType === "youtube" || String(youtubeCandidate).includes("youtube.com") || String(youtubeCandidate).includes("youtu.be")) {
+    return "youtube";
+  }
+  return "video";
+}
+
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -188,7 +204,7 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 이 곳, 광석이네집",
+  homeTitle: "노래가 머무는 이 곳, 광석이네 집",
   homeDescription: "김광석 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
@@ -591,6 +607,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
   const editId = document.getElementById("editContentId").value;
   const originalItem = editId ? allContents.find(i => i.id === editId) : null;
   const editingAudioItem = Boolean(originalItem && isAudioContentItem(originalItem));
+  const editingVideoItem = Boolean(originalItem && isVideoContentItem(originalItem));
   const category = document.getElementById("contentCategory").value;
   const subCategory = document.getElementById("contentSubCategory").value;
   const title = document.getElementById("contentTitle").value.trim();
@@ -601,7 +618,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
     const payload = {
       category,
       subCategory,
-      mediaType: editingAudioItem ? "audio" : (mediaUrl ? "imageText" : "text"),
+      mediaType: editingAudioItem ? "audio" : (editingVideoItem ? getVideoMediaType(originalItem) : (mediaUrl ? "imageText" : "text")),
       title,
       body,
       description: body,
@@ -617,6 +634,15 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
       // 목록의 바로듣기 플레이어가 사라지므로, 기존 음원 URL은 반드시 보존합니다.
       const audioUrl = getPlayableAudioUrl(originalItem);
       if (audioUrl) payload.mediaUrl = audioUrl;
+      if (mediaUrl) payload.thumbnailUrl = mediaUrl;
+      else if (originalItem.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
+    } else if (editingVideoItem) {
+      // Videos를 일반 수정 화면에서 고칠 때 영상 URL이 대표 이미지 URL로 덮이면서
+      // 목록 카드의 영상이 검은 이미지처럼 깨지는 문제를 방지합니다.
+      const videoUrl = getPlayableVideoUrl(originalItem);
+      if (videoUrl) payload.mediaUrl = videoUrl;
+      if (originalItem.youtubeUrl) payload.youtubeUrl = originalItem.youtubeUrl;
+      if (originalItem.url) payload.url = originalItem.url;
       if (mediaUrl) payload.thumbnailUrl = mediaUrl;
       else if (originalItem.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
     } else if (mediaUrl) {
@@ -981,7 +1007,7 @@ function applySiteSettings(settings) {
   applyDesignSettings(settings);
   document.getElementById("siteLogoText").textContent = settings.siteName;
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
-  document.getElementById("homeTitle").textContent = settings.homeTitle;
+  renderHomeTitle(settings.homeTitle);
   document.getElementById("homeDescription").textContent = settings.homeDescription;
   ["videos","songs","radios","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
@@ -991,6 +1017,40 @@ function applySiteSettings(settings) {
   const hero = document.getElementById("homeHero");
   const bg = settings.homeBgDataUrl || settings.homeBgUrl;
   hero.style.backgroundImage = bg ? `url("${bg}${bg.startsWith("data:") ? "" : (bg.includes("?") ? "&" : "?") + "v=" + Date.now()}")` : "";
+}
+
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderHomeTitle(title = "") {
+  const titleEl = document.getElementById("homeTitle");
+  if (!titleEl) return;
+
+  const rawTitle = (title || "").trim();
+  const normalizedTitle = rawTitle.replace(/광석이네집/g, "광석이네 집");
+  const isMobile = document.body.classList.contains("is-mobile-site");
+
+  if (!isMobile) {
+    titleEl.textContent = normalizedTitle;
+    return;
+  }
+
+  const commaIndex = normalizedTitle.indexOf(",");
+  if (commaIndex === -1) {
+    titleEl.innerHTML = `<span class="hero-title-bottom">${escapeHtml(normalizedTitle)}</span>`;
+    return;
+  }
+
+  const topText = normalizedTitle.slice(0, commaIndex + 1).trim();
+  const bottomText = normalizedTitle.slice(commaIndex + 1).trim();
+  titleEl.innerHTML = `<span class="hero-title-top">${escapeHtml(topText)}</span><span class="hero-title-bottom">${escapeHtml(bottomText)}</span>`;
 }
 
 function applyDesignSettings(s = currentSettings) {
@@ -2296,8 +2356,11 @@ function renderList(id, items) {
 function createCard(item) {
   const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id);
   let media = "";
-  if (item.mediaType === "youtube") media = `<iframe src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video") media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  if (isVideoContentItem(item) && getVideoMediaType(item) === "youtube") {
+    const youtubeSource = item.youtubeUrl || item.url || item.mediaUrl || "";
+    media = youtubeEmbedHtml(youtubeSource);
+  }
+  else if (isVideoContentItem(item) && getPlayableVideoUrl(item)) media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(normalizeMediaUrlForPlayback(getPlayableVideoUrl(item), "video"))}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
@@ -2454,12 +2517,15 @@ function renderDetailMedia(item) {
   const title = escapeHtml(item.title || "");
 
   if (category === "videos") {
-    if (youtubeUrl && (youtubeUrl.includes("youtube.com") || youtubeUrl.includes("youtu.be"))) {
-      return `<div class="detail-media-box">${youtubeEmbedHtml(youtubeUrl)}</div>`;
+    const videoSourceUrl = getPlayableVideoUrl(item);
+    const youtubeSource = youtubeUrl || videoSourceUrl;
+
+    if (youtubeSource && (youtubeSource.includes("youtube.com") || youtubeSource.includes("youtu.be"))) {
+      return `<div class="detail-media-box">${youtubeEmbedHtml(youtubeSource)}</div>`;
     }
 
-    if (mediaUrl) {
-      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></video></div>`;
+    if (videoSourceUrl) {
+      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(normalizeMediaUrlForPlayback(videoSourceUrl, "video"))}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video></div>`;
     }
 
     if (imageUrl) {
@@ -2519,6 +2585,55 @@ function renderDetailMedia(item) {
   return "";
 }
 
+let detailModalSavedScrollY = 0;
+
+function resetMobileViewportAfterDetail() {
+  const modal = document.getElementById("contentDetailModal");
+  const inner = modal ? modal.querySelector(".detail-modal-inner") : null;
+
+  if (inner) {
+    inner.scrollTop = 0;
+    inner.style.transform = "none";
+    inner.style.zoom = "1";
+  }
+
+  document.documentElement.style.overflow = "";
+  document.documentElement.style.width = "";
+  document.documentElement.style.maxWidth = "";
+  document.body.style.overflow = "";
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  document.body.style.maxWidth = "";
+  document.body.style.transform = "";
+  document.body.style.zoom = "";
+  document.body.classList.remove("detail-open-mobile");
+
+  if (window.matchMedia && window.matchMedia("(max-width: 820px)").matches) {
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, detailModalSavedScrollY || 0);
+      document.documentElement.scrollLeft = 0;
+      document.body.scrollLeft = 0;
+    });
+  }
+}
+
+function stopDetailMediaBeforeClose() {
+  const mediaArea = document.getElementById("detailMediaArea");
+  if (!mediaArea) return;
+  mediaArea.querySelectorAll("video, audio").forEach((media) => {
+    try { media.pause(); } catch(e) {}
+    try { media.removeAttribute("src"); media.load(); } catch(e) {}
+  });
+  mediaArea.querySelectorAll("iframe").forEach((frame) => {
+    try { frame.src = "about:blank"; } catch(e) {}
+  });
+}
+
 function openContentDetail(id) {
   const item = allContents.find((content) => content.id === id);
   if (!item) return;
@@ -2554,6 +2669,19 @@ function openContentDetail(id) {
   }
   descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
+  if (window.matchMedia && window.matchMedia("(max-width: 820px)").matches) {
+    detailModalSavedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.style.overflow = "hidden";
+    document.body.classList.add("detail-open-mobile");
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${detailModalSavedScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100vw";
+    document.body.style.maxWidth = "100vw";
+    document.body.style.overflow = "hidden";
+  }
+
   modal.classList.remove("hidden");
   installBasicContentProtection();
   if (typeof hardenMediaDownloadControls === "function") {
@@ -2575,6 +2703,8 @@ function closeContentDetail(event) {
   const descEl = document.getElementById("detailDescription");
   const modal = document.getElementById("contentDetailModal");
 
+  stopDetailMediaBeforeClose();
+
   if (mediaArea) mediaArea.innerHTML = "";
   if (titleEl) titleEl.textContent = "";
   if (categoryEl) categoryEl.innerHTML = "";
@@ -2582,7 +2712,7 @@ function closeContentDetail(event) {
   if (descEl) descEl.innerHTML = "";
   if (modal) modal.classList.add("hidden");
 
-  document.body.style.overflow = "";
+  resetMobileViewportAfterDetail();
 }
 
 document.addEventListener("keydown", e => {
@@ -2637,7 +2767,7 @@ function editContent(id) {
   document.getElementById("contentBody").value = item.body || item.description || "";
   document.getElementById("contentYear").value = item.year || "";
   document.getElementById("contentSource").value = item.source || "";
-  document.getElementById("contentImageUrl").value = isAudioContentItem(item) ? (item.thumbnailUrl || "") : (item.mediaUrl || "");
+  document.getElementById("contentImageUrl").value = (isAudioContentItem(item) || isVideoContentItem(item)) ? (item.thumbnailUrl || "") : (item.mediaUrl || "");
   document.getElementById("contentFeatured").checked = Boolean(item.isFeatured);
   document.getElementById("saveContentBtn").textContent = "수정 저장하기";
 }
@@ -2690,6 +2820,7 @@ function setupMobileResponsiveMode() {
   const applyMode = () => {
     const isMobile = media.matches;
     document.body.classList.toggle("is-mobile-site", isMobile);
+    renderHomeTitle(currentSettings.homeTitle || DEFAULT_SETTINGS.homeTitle);
     if (!isMobile) {
       document.body.classList.remove("mobile-nav-open");
       if (toggle) toggle.setAttribute("aria-expanded", "false");
