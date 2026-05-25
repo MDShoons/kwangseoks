@@ -1172,105 +1172,31 @@ async function applySavedTemplates() {
 
 
 function showScreenProtectOverlay(reason = "protect") {
+  // v107: 클릭/터치 반응 저하를 막기 위해 화면 보호 오버레이를 비활성화합니다.
   const overlay = document.getElementById("screenProtectOverlay");
-  if (!overlay) return;
-
-  overlay.classList.remove("hidden");
-  document.body.classList.add("screen-protect-blur");
-
-  clearTimeout(window.__screenProtectTimer);
-  window.__screenProtectTimer = setTimeout(() => {
-    overlay.classList.add("hidden");
-    document.body.classList.remove("screen-protect-blur");
-  }, reason === "printscreen" ? 1800 : 900);
+  if (overlay) overlay.classList.add("hidden");
+  document.body.classList.remove("screen-protect-blur", "print-protect");
 }
 
 function installScreenProtection() {
-  window.addEventListener("blur", () => {
-    showScreenProtectOverlay("blur");
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      document.body.classList.add("screen-protect-blur");
-    } else {
-      setTimeout(() => document.body.classList.remove("screen-protect-blur"), 600);
-    }
-  });
-
-  window.addEventListener("beforeprint", () => {
-    document.body.classList.add("print-protect");
-    showScreenProtectOverlay("print");
-  });
-
-  window.addEventListener("afterprint", () => {
-    document.body.classList.remove("print-protect");
-  });
+  // v107: 모바일/PC 클릭 반응 문제를 막기 위해 blur/visibility 보호 이벤트를 붙이지 않습니다.
+  document.body.classList.remove("screen-protect-blur", "print-protect");
+  const overlay = document.getElementById("screenProtectOverlay");
+  if (overlay) overlay.classList.add("hidden");
 }
 
 function installBasicContentProtection() {
-  const allowEditable = (target) => {
-    const tag = String(target?.tagName || "").toLowerCase();
-    return ["input", "textarea", "select", "option"].includes(tag) || target?.isContentEditable;
-  };
-
-  const blockEvent = (event) => {
-    if (allowEditable(event.target)) return true;
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-  };
-
-  // 오른쪽 클릭 차단
-  document.addEventListener("contextmenu", blockEvent, true);
-
-  // 드래그 저장 차단
-  document.addEventListener("dragstart", blockEvent, true);
-
-  // 일반 텍스트 선택 차단. 입력창은 허용.
-  document.addEventListener("selectstart", (event) => {
-    if (allowEditable(event.target)) return true;
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-  }, true);
-
-  // 단축키 차단
-  document.addEventListener("keydown", (event) => {
-    const key = String(event.key || "").toLowerCase();
-
-    const blocked =
-      event.key === "F12" ||
-      event.key === "PrintScreen" ||
-      (event.ctrlKey && event.shiftKey && ["i", "j", "c"].includes(key)) ||
-      (event.metaKey && event.altKey && ["i", "j", "c"].includes(key)) ||
-      (event.ctrlKey && ["u", "s", "p"].includes(key)) ||
-      (event.metaKey && ["u", "s", "p"].includes(key));
-
-    if (blocked) {
-      event.preventDefault();
-      event.stopPropagation();
-      showScreenProtectOverlay(event.key === "PrintScreen" ? "printscreen" : "shortcut");
-      alert("이 사이트에서는 해당 기능을 사용할 수 없습니다.");
-      return false;
-    }
-
-    return true;
-  }, true);
-
-  // 미디어/이미지 저장 방지 보강
+  // v107: 사이트 메뉴/버튼 클릭이 막히지 않도록 전역 캡처 차단을 제거합니다.
+  // 이미지/미디어의 우클릭 방지만 최소 적용합니다.
   document.querySelectorAll("img, audio, video").forEach((el) => {
     el.setAttribute("draggable", "false");
-    el.addEventListener("contextmenu", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }, true);
-    el.addEventListener("dragstart", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }, true);
+    if (!el.dataset.protectBound) {
+      el.dataset.protectBound = "1";
+      el.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        return false;
+      });
+    }
   });
 }
 
@@ -2795,3 +2721,14 @@ if (document.readyState === "loading") {
 } else {
   setupMobileResponsiveMode();
 }
+
+
+// v107: 메뉴/버튼 반응 복구용 안전 클릭 위임
+document.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-page-fallback]");
+  if (!btn) return;
+  const page = btn.getAttribute("data-page-fallback");
+  if (!page) return;
+  event.preventDefault();
+  goPage(page);
+}, false);

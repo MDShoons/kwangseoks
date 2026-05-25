@@ -4212,3 +4212,26 @@ body.is-mobile-site iframe {
     font-size: 10.5px !important;
   }
 }
+
+
+/* v107: 반응 없음 긴급 복구 - 보호 오버레이가 클릭을 가로막지 않도록 강제 숨김 */
+#screenProtectOverlay,
+.screen-protect-overlay {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+body.screen-protect-blur main,
+body.screen-protect-blur header,
+body.screen-protect-blur footer {
+  filter: none !important;
+}
+
+/* 메뉴/버튼은 항상 클릭 가능하게 보장 */
+button,
+.logo,
+.card,
+.list-item,
+.mobile-menu-toggle {
+  pointer-events: auto !important;
+}

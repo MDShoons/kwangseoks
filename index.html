@@ -4,7 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v106-emergency-stable-rollback" />
+  <link rel="stylesheet" href="style.css?v=v107-click-response-repair" />
+
+  <script>
+    // v107: app.js가 외부 모듈 오류로 늦게 뜨더라도 기본 메뉴 클릭은 작동하게 하는 안전장치
+    (function () {
+      var VALID_PAGES = ["home","siteinfo","videos","songs","radios","photos","stories","about","oneum","loginRequired","login","signup","mypage","admin"];
+      function fallbackShowPage(pageId) {
+        if (VALID_PAGES.indexOf(pageId) === -1) pageId = "home";
+        document.querySelectorAll(".page").forEach(function (page) {
+          page.classList.remove("active");
+        });
+        var target = document.getElementById(pageId);
+        if (target) target.classList.add("active");
+        if (history && history.replaceState) {
+          history.replaceState(null, "", "#" + pageId);
+        } else {
+          location.hash = pageId;
+        }
+        document.body.classList.remove("mobile-nav-open", "screen-protect-blur", "print-protect");
+        var overlay = document.getElementById("screenProtectOverlay");
+        if (overlay) overlay.classList.add("hidden");
+        var toggle = document.getElementById("mobileMenuToggle");
+        if (toggle) {
+          toggle.textContent = "☰ 메뉴";
+          toggle.setAttribute("aria-expanded", "false");
+        }
+      }
+
+      window.__fallbackShowPage = fallbackShowPage;
+      window.goPage = window.goPage || fallbackShowPage;
+
+      document.addEventListener("click", function (event) {
+        var target = event.target.closest("[data-page-fallback]");
+        if (!target) return;
+        var page = target.getAttribute("data-page-fallback");
+        if (!page) return;
+        event.preventDefault();
+        if (typeof window.goPage === "function") {
+          window.goPage(page);
+        } else {
+          fallbackShowPage(page);
+        }
+      }, false);
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var overlay = document.getElementById("screenProtectOverlay");
+        if (overlay) overlay.classList.add("hidden");
+        document.body.classList.remove("screen-protect-blur", "print-protect");
+      });
+    })();
+  </script>
+
 </head>
 <body>
 
@@ -40,7 +91,7 @@
     <div>화면 보호 모드입니다.</div>
   </div>
   <header class="site-header">
-    <div class="logo" onclick="goPage('home')">
+    <div class="logo" data-page-fallback="home" onclick="goPage('home')">
       <strong id="siteLogoText">광석이네 집</strong>
       <small id="siteLogoSubText">김광석 디지털 아카이브</small>
     </div>
@@ -48,22 +99,22 @@
     <button type="button" id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="모바일 메뉴 열기" aria-expanded="false">☰ 메뉴</button>
 
     <nav id="siteNav">
-      <button onclick="goPage('home')">광석이네집</button>
-      <button onclick="goPage('siteinfo')">사이트 안내</button>
-      <button onclick="goPage('videos')">Videos</button>
-      <button onclick="goPage('songs')">Songs</button>
-      <button onclick="goPage('radios')">Radios</button>
-      <button onclick="goPage('photos')">Photos</button>
-      <button onclick="goPage('stories')">Stories</button>
-      <button onclick="goPage('about')">About Seok</button>
-      <button onclick="goPage('oneum')">Oneum</button>
+      <button data-page-fallback="home" onclick="goPage('home')">광석이네집</button>
+      <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 안내</button>
+      <button data-page-fallback="videos" onclick="goPage('videos')">Videos</button>
+      <button data-page-fallback="songs" onclick="goPage('songs')">Songs</button>
+      <button data-page-fallback="radios" onclick="goPage('radios')">Radios</button>
+      <button data-page-fallback="photos" onclick="goPage('photos')">Photos</button>
+      <button data-page-fallback="stories" onclick="goPage('stories')">Stories</button>
+      <button data-page-fallback="about" onclick="goPage('about')">About Seok</button>
+      <button data-page-fallback="oneum" onclick="goPage('oneum')">Oneum</button>
     </nav>
 
     <div class="auth-area">
       <span id="userStatus">로그인 전</span>
-      <button id="loginBtn" onclick="goPage('login')">로그인</button>
-      <button id="signupBtn" onclick="goPage('signup')">회원가입</button>
-      <button id="mypageBtn" class="hidden" onclick="goPage('mypage')">내 정보</button>
+      <button id="loginBtn" data-page-fallback="login" onclick="goPage('login')">로그인</button>
+      <button id="signupBtn" data-page-fallback="signup" onclick="goPage('signup')">회원가입</button>
+      <button id="mypageBtn" class="hidden" data-page-fallback="mypage" onclick="goPage('mypage')">내 정보</button>
       <button id="logoutBtn" class="hidden">로그아웃</button>
     </div>
   </header>
@@ -75,8 +126,8 @@
         <h1 id="homeTitle">노래가 머무는 이 곳, 광석이네집</h1>
         <p id="homeDescription">김광석 아카이브</p>
         <div>
-          <button onclick="goPage('videos')">영상 보러가기</button>
-          <button onclick="goPage('photos')">사진 보러가기</button>
+          <button data-page-fallback="videos" onclick="goPage('videos')">영상 보러가기</button>
+          <button data-page-fallback="photos" onclick="goPage('photos')">사진 보러가기</button>
         </div>
       </section>
 <section class="content-section latest-by-category-section">
@@ -240,8 +291,8 @@
       <h1>로그인을 하지 않으셨네요!</h1>
       <p>이 자료실은 로그인한 회원만 볼 수 있습니다.</p>
       <div class="login-required-actions">
-        <button onclick="goPage('login')">로그인하기</button>
-        <button onclick="goPage('signup')">회원가입하기</button>
+        <button data-page-fallback="login" onclick="goPage('login')">로그인하기</button>
+        <button data-page-fallback="signup" onclick="goPage('signup')">회원가입하기</button>
       </div>
     </section>
 
@@ -497,6 +548,6 @@
   </div>
 <div class="version-marker">v99-mobile-fixed-width-release</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v106-emergency-stable-rollback"></script>
+  <script type="module" src="app.js?v=v107-click-response-repair"></script>
 </body>
 </html>
