@@ -2217,6 +2217,28 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   `;
 }
 
+function renderTextArchiveCard(item, id, img, previewText) {
+  const isStoryList = id === "storyList";
+  const isOneumList = id === "oneumList";
+  const fallbackLabel = isOneumList ? "원음 글" : "일기 자료";
+  const metaMarkup = isOneumList
+    ? oneumMetaMarkup(item)
+    : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`;
+  const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 일기는 상세보기에서 볼 수 있습니다.";
+
+  return `
+    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
+    <div class="card-body text-archive-card-body">
+      <h3>${escapeHtml(item.title)}</h3>
+      ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
+      ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
+      <p class="read-more-hint">${hintText}</p>
+      ${metaMarkup}
+      ${createdDateMarkup(item)}
+    </div>
+  `;
+}
+
 function renderList(id, items) {
   const box = document.getElementById(id);
   if (!box) return;
@@ -2229,7 +2251,11 @@ function renderList(id, items) {
   }
 
   const isStoryList = id === "storyList";
+  const isOneumList = id === "oneumList";
+  const isTextArchiveGrid = isStoryList || isOneumList;
   const isAudioArchiveList = id === "songList" || id === "radioList";
+
+  if (isTextArchiveGrid) box.classList.add("card-grid", "text-archive-grid");
 
   items.forEach(item => {
     const div = document.createElement("div");
@@ -2238,14 +2264,17 @@ function renderList(id, items) {
     div.className = (item.mediaUrl || item.thumbnailUrl) && item.mediaType !== "youtube" ? "list-item with-image" : "list-item";
     if (isStoryList) div.classList.add("story-preview-card");
     if (shouldRenderAudioArchive) div.classList.add("audio-archive-card");
+    if (isTextArchiveGrid) div.className = "card text-archive-card" + (isStoryList ? " story-preview-card" : " oneum-preview-card");
 
     div.onclick = () => openContentDetail(item.id);
 
     const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (!isAudioContentItem(item) && item.mediaType !== "video" ? item.mediaUrl : ""), "image");
-    const previewLength = isStoryList ? 110 : 90;
+    const previewLength = isStoryList ? 120 : isOneumList ? 130 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
-    if (shouldRenderAudioArchive) {
+    if (isTextArchiveGrid) {
+      div.innerHTML = renderTextArchiveCard(item, id, img, previewText);
+    } else if (shouldRenderAudioArchive) {
       div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
     } else {
       div.innerHTML = `
@@ -2254,7 +2283,6 @@ function renderList(id, items) {
           <h3>${escapeHtml(item.title)}</h3>
           ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
           ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
-          ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
           ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
           ${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}
           ${createdDateMarkup(item)}
@@ -2653,3 +2681,50 @@ loadPageCategories();
 loadContents();
 
 window.closeDailyRecommendPlayer = closeDailyRecommendPlayer;
+
+// v98: 모바일 기기에서는 모바일형 UI, PC에서는 기존 UI 유지
+function setupMobileResponsiveMode() {
+  const toggle = document.getElementById("mobileMenuToggle");
+  const media = window.matchMedia("(max-width: 820px)");
+
+  const applyMode = () => {
+    const isMobile = media.matches;
+    document.body.classList.toggle("is-mobile-site", isMobile);
+    if (!isMobile) {
+      document.body.classList.remove("mobile-nav-open");
+      if (toggle) toggle.setAttribute("aria-expanded", "false");
+    }
+  };
+
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const opened = document.body.classList.toggle("mobile-nav-open");
+      toggle.setAttribute("aria-expanded", opened ? "true" : "false");
+      toggle.textContent = opened ? "× 닫기" : "☰ 메뉴";
+    });
+  }
+
+  document.querySelectorAll("#siteNav button").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!media.matches) return;
+      document.body.classList.remove("mobile-nav-open");
+      if (toggle) {
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.textContent = "☰ 메뉴";
+      }
+    });
+  });
+
+  applyMode();
+  if (typeof media.addEventListener === "function") {
+    media.addEventListener("change", applyMode);
+  } else if (typeof media.addListener === "function") {
+    media.addListener(applyMode);
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupMobileResponsiveMode);
+} else {
+  setupMobileResponsiveMode();
+}
