@@ -183,7 +183,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v120-playlist-resume-position";
+const APP_VERSION = "v121-playlist-next-autoplay-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1772,6 +1772,19 @@ function scheduleUserPlaylistPlaybackStateSave() {
   }, 700);
 }
 
+async function attemptPlaylistAutoplay(audio) {
+  if (!audio || !audio.src) return;
+  try {
+    pauseOtherMediaElements(audio);
+    await audio.play();
+    delete audio.dataset.playlistAutoplayAfterLoad;
+    saveUserPlaylistPlaybackState(0);
+  } catch (error) {
+    // 모바일 브라우저가 자동 재생을 막는 경우에는 버튼만 재생 가능 상태로 남깁니다.
+    console.log("플레이리스트 다음곡 자동 재생 대기:", error?.message || error);
+  }
+}
+
 function bindPlaylistResumeBeforeUnload() {
   if (playlistBeforeUnloadBound) return;
   playlistBeforeUnloadBound = true;
@@ -1905,14 +1918,17 @@ function updatePlaylistAddButtons() {
   });
 }
 
-function movePlaylistSelection(direction) {
+function movePlaylistSelection(direction, options = {}) {
+  const audio = document.getElementById("playlistPlayerAudio");
+  const shouldAutoPlay = options.autoPlay === true || Boolean(audio && !audio.paused && !audio.ended);
   saveUserPlaylistPlaybackState();
   const songs = getUserPlaylistSongs();
   if (!songs.length) return;
-  const currentIndex = Math.max(0, songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)));
+  const foundIndex = songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId));
+  const currentIndex = foundIndex >= 0 ? foundIndex : 0;
   const nextIndex = (currentIndex + direction + songs.length) % songs.length;
   playlistRequestedItemId = songs[nextIndex].id;
-  setupUserPlaylistPlayer({ forceOpen: true });
+  setupUserPlaylistPlayer({ forceOpen: true, autoPlay: shouldAutoPlay });
 }
 
 function setupUserPlaylistPlayer(options = {}) {
@@ -1962,6 +1978,7 @@ function setupUserPlaylistPlayer(options = {}) {
   const selectedIndex = requestedIndex >= 0 ? requestedIndex : (currentIndex >= 0 ? currentIndex : 0);
   const selected = songs[selectedIndex] || songs[0];
   const sourceUrl = normalizeMediaUrlForPlayback(getPlayableAudioUrl(selected), "audio");
+  const shouldAutoPlaySelected = options.autoPlay === true;
   const coverUrl = getItemVisualImageUrl(selected);
   if (card) {
     if (coverUrl) {
@@ -1991,10 +2008,14 @@ function setupUserPlaylistPlayer(options = {}) {
     audio.dataset.pendingPlaylistResumeTime = String(restoreTime);
     audio.currentTime = 0;
     progress.value = "0";
-    playBtn.textContent = "▶";
+    playBtn.textContent = shouldAutoPlaySelected ? "Ⅱ" : "▶";
     current.textContent = formatPlayerTime(restoreTime);
     duration.textContent = "0:00";
     saveUserPlaylistPlaybackState(restoreTime);
+    if (shouldAutoPlaySelected) {
+      audio.dataset.playlistAutoplayAfterLoad = "yes";
+      setTimeout(() => attemptPlaylistAutoplay(audio), 0);
+    }
   } else if (restoreTime > 0 && Math.abs(Number(audio.currentTime || 0) - restoreTime) > 1.5) {
     audio.dataset.pendingPlaylistResumeTime = String(restoreTime);
     try { audio.currentTime = restoreTime; } catch (_) {}
@@ -2003,6 +2024,11 @@ function setupUserPlaylistPlayer(options = {}) {
       progress.value = String(Math.round((restoreTime / audio.duration) * 1000));
     }
   }
+  if (shouldAutoPlaySelected && audio.paused) {
+    audio.dataset.playlistAutoplayAfterLoad = "yes";
+    setTimeout(() => attemptPlaylistAutoplay(audio), 0);
+  }
+
   playlistRequestedItemId = "";
 
   bindPlaylistResumeBeforeUnload();
@@ -2105,6 +2131,15 @@ function setupUserPlaylistPlayer(options = {}) {
       saveUserPlaylistPlaybackState(safeTime);
     }
     delete audio.dataset.pendingPlaylistResumeTime;
+    if (audio.dataset.playlistAutoplayAfterLoad === "yes") {
+      setTimeout(() => attemptPlaylistAutoplay(audio), 0);
+    }
+  });
+
+  audio.addEventListener("canplay", () => {
+    if (audio.dataset.playlistAutoplayAfterLoad === "yes") {
+      attemptPlaylistAutoplay(audio);
+    }
   });
 
   audio.addEventListener("timeupdate", () => {
@@ -2126,7 +2161,7 @@ function setupUserPlaylistPlayer(options = {}) {
     playBtn.textContent = "▶";
     progress.value = "0";
     clearUserPlaylistPlaybackState();
-    movePlaylistSelection(1);
+    movePlaylistSelection(1, { autoPlay: true });
     saveUserPlaylistPlaybackState(0);
   });
 }
