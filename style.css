@@ -4185,3 +4185,40 @@ body.is-mobile-site iframe {
     max-width: 72% !important;
   }
 }
+
+
+/* v109: 사이트 먹통 복구 - 화면 보호 오버레이와 클릭 차단 강제 해제 */
+#screenProtectOverlay,
+.screen-protect-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.screen-protect-blur main,
+body.screen-protect-blur header,
+body.screen-protect-blur footer {
+  filter: none !important;
+}
+
+button,
+.logo,
+.card,
+.list-item,
+.mobile-menu-toggle,
+.site-header,
+.site-header *,
+main,
+main * {
+  pointer-events: auto;
+}
+
+.version-marker {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

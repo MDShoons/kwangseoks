@@ -132,6 +132,19 @@ function isAudioContentItem(item = {}) {
   return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
 
+function isYoutubeUrl(url = "") {
+  const value = String(url || "").trim();
+  return value.includes("youtube.com") || value.includes("youtu.be");
+}
+
+function getVideoMediaUrl(item = {}) {
+  return item.mediaUrl || item.fileUrl || item.videoUrl || item.videoFileUrl || "";
+}
+
+function isVideoContentItem(item = {}) {
+  return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube";
+}
+
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -170,7 +183,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v88-daily-song-subcategory-label";
+const APP_VERSION = "v110-video-edit-preserve-media";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -591,6 +604,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
   const editId = document.getElementById("editContentId").value;
   const originalItem = editId ? allContents.find(i => i.id === editId) : null;
   const editingAudioItem = Boolean(originalItem && isAudioContentItem(originalItem));
+  const editingVideoItem = Boolean(originalItem && isVideoContentItem(originalItem));
   const category = document.getElementById("contentCategory").value;
   const subCategory = document.getElementById("contentSubCategory").value;
   const title = document.getElementById("contentTitle").value.trim();
@@ -601,7 +615,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
     const payload = {
       category,
       subCategory,
-      mediaType: editingAudioItem ? "audio" : (mediaUrl ? "imageText" : "text"),
+      mediaType: editingAudioItem ? "audio" : (editingVideoItem ? (originalItem.mediaType === "youtube" ? "youtube" : "video") : (mediaUrl ? "imageText" : "text")),
       title,
       body,
       description: body,
@@ -617,6 +631,22 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
       // 목록의 바로듣기 플레이어가 사라지므로, 기존 음원 URL은 반드시 보존합니다.
       const audioUrl = getPlayableAudioUrl(originalItem);
       if (audioUrl) payload.mediaUrl = audioUrl;
+      if (mediaUrl) payload.thumbnailUrl = mediaUrl;
+      else if (originalItem.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
+    } else if (editingVideoItem) {
+      // Videos를 일반 글 수정 화면에서 고칠 때 기존 영상 URL/유튜브 URL이
+      // 이미지 URL로 바뀌거나 mediaType이 text/imageText로 바뀌면 카드와 상세보기에서 영상이 사라집니다.
+      // 따라서 제목/본문/연도/출처만 수정하더라도 영상 재생 정보는 반드시 보존합니다.
+      const videoUrl = getVideoMediaUrl(originalItem);
+      const youtubeUrl = originalItem.youtubeUrl || (isYoutubeUrl(originalItem.mediaUrl) ? originalItem.mediaUrl : "");
+      if (youtubeUrl) {
+        payload.mediaType = "youtube";
+        payload.youtubeUrl = youtubeUrl;
+        payload.mediaUrl = originalItem.mediaUrl || normalizeYoutubeEmbedUrl(youtubeUrl);
+      } else if (videoUrl) {
+        payload.mediaType = "video";
+        payload.mediaUrl = videoUrl;
+      }
       if (mediaUrl) payload.thumbnailUrl = mediaUrl;
       else if (originalItem.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
     } else if (mediaUrl) {
@@ -649,26 +679,53 @@ document.getElementById("savePhotoBtn").addEventListener("click", async () => {
 
 document.getElementById("saveVideoBtn").addEventListener("click", async () => {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
+  const editId = document.getElementById("editVideoId")?.value || "";
+  const originalItem = editId ? allContents.find(i => i.id === editId) : null;
   const title = document.getElementById("videoTitle").value.trim();
   if (!title) return alert("영상 제목을 입력하세요.");
   const youtubeUrl = document.getElementById("youtubeUrl").value.trim();
   const videoFile = document.getElementById("videoFile").files[0];
   const directVideoUrl = document.getElementById("videoFileUrl").value.trim();
-  if (!youtubeUrl && !videoFile && !directVideoUrl) return alert("유튜브 URL, mp4 파일, 또는 영상 URL 중 하나를 입력하세요.");
+  if (!editId && !youtubeUrl && !videoFile && !directVideoUrl) return alert("유튜브 URL, mp4 파일, 또는 영상 URL 중 하나를 입력하세요.");
   try {
     const embedUrl = youtubeUrl ? getYoutubeEmbedUrl(youtubeUrl) : "";
     if (youtubeUrl && !embedUrl) return alert("올바른 유튜브 URL을 입력하세요.");
     const uploadedVideoUrl = videoFile ? await uploadFileToGitHubWorker(videoFile, "videos") : "";
-    const mediaUrl = embedUrl || directVideoUrl || uploadedVideoUrl;
+    const existingVideoUrl = originalItem ? getVideoMediaUrl(originalItem) : "";
+    const existingYoutubeUrl = originalItem ? (originalItem.youtubeUrl || (isYoutubeUrl(originalItem.mediaUrl) ? originalItem.mediaUrl : "")) : "";
+    const finalYoutubeUrl = youtubeUrl || existingYoutubeUrl;
+    const finalEmbedUrl = youtubeUrl ? embedUrl : (originalItem?.mediaType === "youtube" ? (originalItem.mediaUrl || normalizeYoutubeEmbedUrl(existingYoutubeUrl)) : "");
+    const finalVideoUrl = directVideoUrl || uploadedVideoUrl || (originalItem?.mediaType !== "youtube" ? existingVideoUrl : "");
+    const mediaType = (finalEmbedUrl || (finalYoutubeUrl && !finalVideoUrl)) ? "youtube" : "video";
+    const mediaUrl = mediaType === "youtube" ? (finalEmbedUrl || normalizeYoutubeEmbedUrl(finalYoutubeUrl)) : finalVideoUrl;
+    if (!mediaUrl) return alert("기존 영상 주소를 찾을 수 없습니다. 영상 URL을 다시 입력하세요.");
     const thumbnailUrl = await getImageDataUrlOrDirectUrl(document.getElementById("videoImageFile").files[0], document.getElementById("videoImageUrl").value, 1000);
-    await addDoc(collection(db, "contents"), { category:"videos", subCategory:document.getElementById("videoSubCategory").value,
-      mediaType: embedUrl ? "youtube" : "video", title, youtubeUrl, mediaUrl, thumbnailUrl,
+    const payload = { category:"videos", subCategory:document.getElementById("videoSubCategory").value,
+      mediaType, title, youtubeUrl: finalYoutubeUrl || "", mediaUrl,
       year:document.getElementById("videoYear").value.trim(), source:document.getElementById("videoSource").value.trim(),
       description:document.getElementById("videoDescription").value.trim(), body:document.getElementById("videoDescription").value.trim(),
-      isPublic:true, createdBy:currentUser.uid, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
-    alert("영상이 저장되었습니다."); document.getElementById("adminVideoForm").reset(); await loadContents();
+      isPublic:true, updatedAt:serverTimestamp() };
+    if (thumbnailUrl) payload.thumbnailUrl = thumbnailUrl;
+    else if (originalItem?.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
+
+    if (editId) await updateDoc(doc(db, "contents", editId), payload);
+    else await addDoc(collection(db, "contents"), { ...payload, createdBy:currentUser.uid, createdAt:serverTimestamp() });
+    alert(editId ? "영상이 수정되었습니다." : "영상이 저장되었습니다.");
+    resetVideoForm();
+    await loadContents();
   } catch(e) { alert("영상 저장 오류: " + e.message); }
 });
+function resetVideoForm() {
+  const form = document.getElementById("adminVideoForm");
+  if (form) form.reset();
+  const id = document.getElementById("editVideoId");
+  if (id) id.value = "";
+  const title = document.getElementById("videoFormTitle");
+  if (title) title.textContent = "영상 등록";
+  const btn = document.getElementById("saveVideoBtn");
+  if (btn) btn.textContent = "영상 저장";
+}
+document.getElementById("resetVideoBtn")?.addEventListener("click", resetVideoForm);
 
 document.getElementById("saveAudioBtn").addEventListener("click", () => saveAudioLike("songs", "audio"));
 document.getElementById("saveRadioBtn").addEventListener("click", () => saveAudioLike("radios", "radio"));
@@ -1112,105 +1169,30 @@ async function applySavedTemplates() {
 
 
 function showScreenProtectOverlay(reason = "protect") {
+  // v109: 화면 보호 오버레이가 사이트 클릭을 막는 문제를 방지하기 위해 비활성화합니다.
   const overlay = document.getElementById("screenProtectOverlay");
-  if (!overlay) return;
-
-  overlay.classList.remove("hidden");
-  document.body.classList.add("screen-protect-blur");
-
-  clearTimeout(window.__screenProtectTimer);
-  window.__screenProtectTimer = setTimeout(() => {
-    overlay.classList.add("hidden");
-    document.body.classList.remove("screen-protect-blur");
-  }, reason === "printscreen" ? 1800 : 900);
+  if (overlay) overlay.classList.add("hidden");
+  document.body.classList.remove("screen-protect-blur", "print-protect");
 }
 
 function installScreenProtection() {
-  window.addEventListener("blur", () => {
-    showScreenProtectOverlay("blur");
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      document.body.classList.add("screen-protect-blur");
-    } else {
-      setTimeout(() => document.body.classList.remove("screen-protect-blur"), 600);
-    }
-  });
-
-  window.addEventListener("beforeprint", () => {
-    document.body.classList.add("print-protect");
-    showScreenProtectOverlay("print");
-  });
-
-  window.addEventListener("afterprint", () => {
-    document.body.classList.remove("print-protect");
-  });
+  // v109: blur/visibility 이벤트가 모바일·PC에서 오버레이를 띄워 클릭을 막지 않도록 비활성화합니다.
+  const overlay = document.getElementById("screenProtectOverlay");
+  if (overlay) overlay.classList.add("hidden");
+  document.body.classList.remove("screen-protect-blur", "print-protect");
 }
 
 function installBasicContentProtection() {
-  const allowEditable = (target) => {
-    const tag = String(target?.tagName || "").toLowerCase();
-    return ["input", "textarea", "select", "option"].includes(tag) || target?.isContentEditable;
-  };
-
-  const blockEvent = (event) => {
-    if (allowEditable(event.target)) return true;
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-  };
-
-  // 오른쪽 클릭 차단
-  document.addEventListener("contextmenu", blockEvent, true);
-
-  // 드래그 저장 차단
-  document.addEventListener("dragstart", blockEvent, true);
-
-  // 일반 텍스트 선택 차단. 입력창은 허용.
-  document.addEventListener("selectstart", (event) => {
-    if (allowEditable(event.target)) return true;
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-  }, true);
-
-  // 단축키 차단
-  document.addEventListener("keydown", (event) => {
-    const key = String(event.key || "").toLowerCase();
-
-    const blocked =
-      event.key === "F12" ||
-      event.key === "PrintScreen" ||
-      (event.ctrlKey && event.shiftKey && ["i", "j", "c"].includes(key)) ||
-      (event.metaKey && event.altKey && ["i", "j", "c"].includes(key)) ||
-      (event.ctrlKey && ["u", "s", "p"].includes(key)) ||
-      (event.metaKey && ["u", "s", "p"].includes(key));
-
-    if (blocked) {
-      event.preventDefault();
-      event.stopPropagation();
-      showScreenProtectOverlay(event.key === "PrintScreen" ? "printscreen" : "shortcut");
-      alert("이 사이트에서는 해당 기능을 사용할 수 없습니다.");
-      return false;
-    }
-
-    return true;
-  }, true);
-
-  // 미디어/이미지 저장 방지 보강
+  // v109: 메뉴/버튼 반응 복구를 위해 전역 캡처 차단을 제거하고, 미디어 우클릭 방지만 최소 적용합니다.
   document.querySelectorAll("img, audio, video").forEach((el) => {
     el.setAttribute("draggable", "false");
-    el.addEventListener("contextmenu", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }, true);
-    el.addEventListener("dragstart", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }, true);
+    if (!el.dataset.protectBound) {
+      el.dataset.protectBound = "1";
+      el.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        return false;
+      });
+    }
   });
 }
 
@@ -2268,7 +2250,7 @@ function renderList(id, items) {
 
     div.onclick = () => openContentDetail(item.id);
 
-    const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (!isAudioContentItem(item) && item.mediaType !== "video" ? item.mediaUrl : ""), "image");
+    const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (!isAudioContentItem(item) && !isVideoContentItem(item) ? item.mediaUrl : ""), "image");
     const previewLength = isStoryList ? 120 : isOneumList ? 130 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
@@ -2296,10 +2278,12 @@ function renderList(id, items) {
 function createCard(item) {
   const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id);
   let media = "";
-  if (item.mediaType === "youtube") media = `<iframe src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video") media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  const videoMediaUrl = getVideoMediaUrl(item);
+  const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
+  if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
+  else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(videoMediaUrl, "video")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
-  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" alt="${escapeHtml(item.title)}">`;
+  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}</div>`;
   return card;
@@ -2605,6 +2589,21 @@ function renderAdminManageList() {
 }
 function editContent(id) {
   const item = allContents.find(i => i.id === id); if (!item) return;
+  if (item.category === "videos") {
+    showAdminForm("video");
+    document.getElementById("editVideoId").value = item.id;
+    document.getElementById("videoFormTitle").textContent = "영상 수정";
+    populateSpecificSubCategorySelect("videos", "videoSubCategory", item.subCategory || "");
+    document.getElementById("videoTitle").value = item.title || "";
+    document.getElementById("youtubeUrl").value = item.youtubeUrl || (item.mediaType === "youtube" ? (item.mediaUrl || "") : "");
+    document.getElementById("videoFileUrl").value = item.mediaType === "video" ? (getVideoMediaUrl(item) || "") : "";
+    document.getElementById("videoYear").value = item.year || "";
+    document.getElementById("videoSource").value = item.source || "";
+    document.getElementById("videoDescription").value = item.body || item.description || "";
+    document.getElementById("videoImageUrl").value = item.thumbnailUrl || "";
+    document.getElementById("saveVideoBtn").textContent = "영상 수정 저장";
+    return;
+  }
   if (item.category === "oneum") {
     showAdminForm("oneum");
     document.getElementById("editOneumId").value = item.id;
@@ -2637,7 +2636,7 @@ function editContent(id) {
   document.getElementById("contentBody").value = item.body || item.description || "";
   document.getElementById("contentYear").value = item.year || "";
   document.getElementById("contentSource").value = item.source || "";
-  document.getElementById("contentImageUrl").value = isAudioContentItem(item) ? (item.thumbnailUrl || "") : (item.mediaUrl || "");
+  document.getElementById("contentImageUrl").value = (isAudioContentItem(item) || isVideoContentItem(item)) ? (item.thumbnailUrl || "") : (item.mediaUrl || "");
   document.getElementById("contentFeatured").checked = Boolean(item.isFeatured);
   document.getElementById("saveContentBtn").textContent = "수정 저장하기";
 }
@@ -2728,3 +2727,23 @@ if (document.readyState === "loading") {
 } else {
   setupMobileResponsiveMode();
 }
+
+
+// v109: 모듈 실행 후에도 메뉴 클릭을 보장하는 안전 클릭 위임
+document.addEventListener("click", (event) => {
+  const menuToggle = event.target.closest("#mobileMenuToggle");
+  if (menuToggle) {
+    event.preventDefault();
+    const opened = document.body.classList.toggle("mobile-nav-open");
+    menuToggle.setAttribute("aria-expanded", opened ? "true" : "false");
+    menuToggle.textContent = opened ? "× 닫기" : "☰ 메뉴";
+    return;
+  }
+
+  const btn = event.target.closest("[data-page-fallback]");
+  if (!btn) return;
+  const page = btn.getAttribute("data-page-fallback");
+  if (!page) return;
+  event.preventDefault();
+  goPage(page);
+}, false);
