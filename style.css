@@ -2923,3 +2923,131 @@ video:-ms-fullscreen {
   object-position: center center !important;
   background: #000 !important;
 }
+
+
+/* v90: 사이트 안내 페이지 */
+.site-info-page .page-title {
+  margin-bottom: 24px;
+}
+
+.site-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 1120px;
+  margin: 0 auto 32px;
+}
+
+.site-guide-card {
+  background: rgba(255, 250, 244, 0.94);
+  border: 1px solid #dfcdbb;
+  border-radius: 22px;
+  padding: 26px 28px;
+  box-shadow: 0 8px 20px rgba(60, 48, 41, 0.06);
+  line-height: 1.78;
+}
+
+.site-guide-card-wide {
+  grid-column: 1 / -1;
+}
+
+.site-guide-card h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+}
+
+.site-guide-card p {
+  margin: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.site-guide-card ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.site-guide-card li {
+  margin: 6px 0;
+}
+
+.notice-card {
+  background: rgba(255, 246, 236, 0.98);
+}
+
+@media (max-width: 760px) {
+  .site-guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-guide-card {
+    padding: 22px 20px;
+  }
+}
+
+
+/* v92: Oneum 김광석 답글 동시 등록/표시 */
+.checkbox-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #3a261d;
+}
+
+.checkbox-line input[type="checkbox"] {
+  width: auto;
+  max-width: none;
+}
+
+.oneum-reply-fields {
+  border: 1px solid #e2d3c4;
+  border-radius: 16px;
+  padding: 18px;
+  background: #fffaf5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.oneum-reply-fields h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.oneum-kks-reply-box {
+  margin-top: 26px;
+  padding: 20px;
+  border: 1px solid #d8b896;
+  border-radius: 18px;
+  background: #fff8ee;
+}
+
+.oneum-kks-reply-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #8b5436;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.oneum-kks-reply-box h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.oneum-kks-reply-body {
+  margin: 14px 0;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.oneum-reply-badge {
+  background: #f1d5bd;
+  color: #6f3f28;
+}

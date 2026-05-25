@@ -213,7 +213,7 @@ const DEFAULT_SETTINGS = {
 let currentSettings = { ...DEFAULT_SETTINGS };
 
 
-const VALID_PAGES = ["home", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
 const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
 
 function getPageFromHash() {
@@ -312,12 +312,13 @@ installScreenProtection();
 }
 
 function showAdminForm(type) {
-  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminManageForm","adminTemplateForm","adminCategoryForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
-  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm"};
+  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
+  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm"};
   document.getElementById(map[type])?.classList.remove("hidden");
   if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory");
   if (type === "audio") populateSpecificSubCategorySelect("songs", "audioSubCategory");
   if (type === "radio") populateSpecificSubCategorySelect("radios", "radioSubCategory");
+  if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory");
   if (type === "template") { fillSettingsFormFromCurrent(); bindDesignPreviewEvents(); }
   if (type === "category") renderCategoryList();
   if (type === "manage") renderAdminManageList();
@@ -521,6 +522,7 @@ async function loadPageCategories() {
     populateSpecificSubCategorySelect("videos","videoSubCategory");
     populateSpecificSubCategorySelect("songs","audioSubCategory");
     populateSpecificSubCategorySelect("radios","radioSubCategory");
+    populateSpecificSubCategorySelect("oneum","oneumSubCategory");
     renderCategoryList();
   } catch (e) { console.warn(e); }
 }
@@ -670,6 +672,108 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
 
 document.getElementById("saveAudioBtn").addEventListener("click", () => saveAudioLike("songs", "audio"));
 document.getElementById("saveRadioBtn").addEventListener("click", () => saveAudioLike("radios", "radio"));
+document.getElementById("saveOneumBtn")?.addEventListener("click", saveOneumPost);
+document.getElementById("resetOneumBtn")?.addEventListener("click", resetOneumForm);
+document.getElementById("oneumHasKksReply")?.addEventListener("change", toggleOneumReplyFields);
+
+function getOneumReplyFormData() {
+  const checked = !!document.getElementById("oneumHasKksReply")?.checked;
+  const title = document.getElementById("oneumReplyTitle")?.value.trim() || "";
+  const author = document.getElementById("oneumReplyAuthor")?.value.trim() || "";
+  const dateTime = document.getElementById("oneumReplyDateTime")?.value.trim() || "";
+  const body = document.getElementById("oneumReplyBody")?.value.trim() || "";
+  const source = document.getElementById("oneumReplySource")?.value.trim() || "";
+  return { checked, title, author, dateTime, body, source };
+}
+
+function toggleOneumReplyFields() {
+  const box = document.getElementById("oneumReplyFields");
+  const checked = !!document.getElementById("oneumHasKksReply")?.checked;
+  if (box) box.classList.toggle("hidden", !checked);
+  if (checked) {
+    const authorInput = document.getElementById("oneumReplyAuthor");
+    if (authorInput && !authorInput.value.trim()) authorInput.value = "김광석";
+  }
+}
+
+async function saveOneumPost() {
+  if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
+
+  const editId = document.getElementById("editOneumId")?.value || "";
+  const title = document.getElementById("oneumTitle")?.value.trim() || "";
+  const body = document.getElementById("oneumBody")?.value.trim() || "";
+  const author = document.getElementById("oneumAuthor")?.value.trim() || "";
+  const dateTime = document.getElementById("oneumDateTime")?.value.trim() || "";
+  const source = document.getElementById("oneumSource")?.value.trim() || "";
+  const subCategory = document.getElementById("oneumSubCategory")?.value || "";
+  const reply = getOneumReplyFormData();
+
+  if (!title) return alert("글 제목을 입력하세요.");
+  if (!body) return alert("본문을 입력하세요.");
+  if (!author) return alert("올린이를 입력하세요.");
+  if (!dateTime) return alert("날짜와 시간을 입력하세요.");
+  if (reply.checked) {
+    if (!reply.title) return alert("김광석 답글의 제목을 입력하세요.");
+    if (!reply.author) return alert("김광석 답글의 올린이를 입력하세요.");
+    if (!reply.dateTime) return alert("김광석 답글의 날짜와 시간을 입력하세요.");
+    if (!reply.body) return alert("김광석 답글 본문을 입력하세요.");
+  }
+
+  try {
+    const payload = {
+      category: "oneum",
+      subCategory,
+      mediaType: "text",
+      title,
+      body,
+      description: body,
+      author,
+      uploadedByName: author,
+      oneumDateTime: dateTime,
+      year: dateTime,
+      source,
+      hasKksReply: reply.checked,
+      kksReply: reply.checked ? {
+        title: reply.title,
+        author: reply.author,
+        dateTime: reply.dateTime,
+        body: reply.body,
+        source: reply.source
+      } : null,
+      kksReplyTitle: reply.checked ? reply.title : "",
+      kksReplyAuthor: reply.checked ? reply.author : "",
+      kksReplyDateTime: reply.checked ? reply.dateTime : "",
+      kksReplyBody: reply.checked ? reply.body : "",
+      kksReplySource: reply.checked ? reply.source : "",
+      isPublic: true,
+      updatedAt: serverTimestamp()
+    };
+
+    if (editId) {
+      await updateDoc(doc(db, "contents", editId), payload);
+    } else {
+      await addDoc(collection(db, "contents"), {
+        ...payload,
+        createdBy: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    alert(editId ? "원음 글이 수정되었습니다." : "원음 글이 저장되었습니다.");
+    resetOneumForm();
+    await loadContents();
+  } catch (error) {
+    alert("원음 글 저장 오류: " + error.message);
+  }
+}
+
+function resetOneumForm() {
+  document.getElementById("editOneumId").value = "";
+  document.getElementById("adminOneumForm")?.reset();
+  toggleOneumReplyFields();
+  const btn = document.getElementById("saveOneumBtn");
+  if (btn) btn.textContent = "원음 글 저장";
+}
 
 async function saveAudioLike(category, prefix) {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
@@ -1616,6 +1720,60 @@ function createdDateMarkup(item) {
   return `<p class="created-date"><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</p>`;
 }
 
+function isOneumItem(item) {
+  return item?.category === "oneum";
+}
+
+function getOneumAuthor(item) {
+  return String(item?.uploadedByName || item?.author || item?.writer || item?.createdByName || "").trim();
+}
+
+function getOneumDateTime(item) {
+  return String(item?.oneumDateTime || item?.dateTime || item?.writtenAtText || "").trim();
+}
+
+function oneumMetaMarkup(item) {
+  if (!isOneumItem(item)) return "";
+  const author = getOneumAuthor(item);
+  const dateTime = getOneumDateTime(item);
+  const parts = [];
+  if (author) parts.push(`<p><strong>올린이:</strong> ${escapeHtml(author)}</p>`);
+  if (dateTime) parts.push(`<p><strong>날짜/시간:</strong> ${escapeHtml(dateTime)}</p>`);
+  if (hasOneumKksReply(item)) parts.push(`<p><span class="category-badge oneum-reply-badge">김광석 답글 포함</span></p>`);
+  return parts.join("");
+}
+
+function getOneumKksReply(item) {
+  const nested = item?.kksReply && typeof item.kksReply === "object" ? item.kksReply : {};
+  return {
+    title: String(nested.title || item?.kksReplyTitle || "").trim(),
+    author: String(nested.author || item?.kksReplyAuthor || "김광석").trim(),
+    dateTime: String(nested.dateTime || item?.kksReplyDateTime || "").trim(),
+    body: String(nested.body || item?.kksReplyBody || "").trim(),
+    source: String(nested.source || item?.kksReplySource || "").trim()
+  };
+}
+
+function hasOneumKksReply(item) {
+  if (!isOneumItem(item)) return false;
+  const reply = getOneumKksReply(item);
+  return !!(item?.hasKksReply && (reply.title || reply.body));
+}
+
+function renderOneumKksReplyMarkup(item) {
+  if (!hasOneumKksReply(item)) return "";
+  const reply = getOneumKksReply(item);
+  const source = reply.source ? `<p><strong>출처:</strong> ${escapeHtml(reply.source)}</p>` : "";
+  return `<section class="oneum-kks-reply-box">
+    <div class="oneum-kks-reply-label">김광석의 답글</div>
+    <h3>${escapeHtml(reply.title || "답글")}</h3>
+    <p><strong>올린이:</strong> ${escapeHtml(reply.author || "김광석")}</p>
+    <p><strong>날짜/시간:</strong> ${escapeHtml(reply.dateTime || "미기재")}</p>
+    <div class="oneum-kks-reply-body">${escapeHtml(reply.body).replace(/\n/g, "<br>")}</div>
+    ${source}
+  </section>`;
+}
+
 function prepareItemsForPage(page, items) {
   const sorted = sortItemsForPage(page, items);
   const paged = paginateItemsForPage(page, sorted);
@@ -1635,6 +1793,9 @@ function matchesPageSearch(page, item) {
     item.year,
     item.source,
     item.subCategory,
+    item.author,
+    item.uploadedByName,
+    item.oneumDateTime,
     item.category
   ].join(" ").toLowerCase();
 
@@ -1687,8 +1848,7 @@ function renderLatestByCategory(contents) {
         <div class="latest-mini-card" onclick="openLatestItem('${page}', '${item.id}');">
           <strong>${escapeHtml(item.title || "제목 없음")}</strong>
           <p>${escapeHtml((item.description || item.body || "").slice(0, 70))}</p>
-          <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
-          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}
+          ${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}
           ${isLockedLatest ? `<p class="login-lock-note">로그인 후 볼 수 있습니다.</p>` : ""}
         </div>
       `;
@@ -2030,8 +2190,7 @@ function renderList(id, items) {
           ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
           ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
           ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
-          <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
-          <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
+          ${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}
           ${createdDateMarkup(item)}
         </div>
       `;
@@ -2048,7 +2207,7 @@ function createCard(item) {
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}</div>`;
   return card;
 }
 
@@ -2290,7 +2449,14 @@ function openContentDetail(id) {
 
   titleEl.textContent = item.title || "제목 없음";
   categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
-  metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
+  if (isOneumItem(item)) {
+    const author = getOneumAuthor(item) || "미기재";
+    const dateTime = getOneumDateTime(item) || "미기재";
+    const source = item.source ? `<br><strong>출처:</strong> ${escapeHtml(item.source)}` : "";
+    metaEl.innerHTML = `<strong>올린이:</strong> ${escapeHtml(author)}<br><strong>날짜/시간:</strong> ${escapeHtml(dateTime)}${source}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
+  } else {
+    metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
+  }
   descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
   modal.classList.remove("hidden");
@@ -2344,6 +2510,28 @@ function renderAdminManageList() {
 }
 function editContent(id) {
   const item = allContents.find(i => i.id === id); if (!item) return;
+  if (item.category === "oneum") {
+    showAdminForm("oneum");
+    document.getElementById("editOneumId").value = item.id;
+    document.getElementById("oneumTitle").value = item.title || "";
+    populateSpecificSubCategorySelect("oneum", "oneumSubCategory", item.subCategory || "");
+    document.getElementById("oneumAuthor").value = getOneumAuthor(item) || "";
+    document.getElementById("oneumDateTime").value = getOneumDateTime(item) || item.year || "";
+    document.getElementById("oneumBody").value = item.body || item.description || "";
+    document.getElementById("oneumSource").value = item.source || "";
+    const reply = getOneumKksReply(item);
+    const hasReply = hasOneumKksReply(item);
+    document.getElementById("oneumHasKksReply").checked = hasReply;
+    document.getElementById("oneumReplyTitle").value = hasReply ? reply.title : "";
+    document.getElementById("oneumReplyAuthor").value = hasReply ? (reply.author || "김광석") : "";
+    document.getElementById("oneumReplyDateTime").value = hasReply ? reply.dateTime : "";
+    document.getElementById("oneumReplyBody").value = hasReply ? reply.body : "";
+    document.getElementById("oneumReplySource").value = hasReply ? reply.source : "";
+    toggleOneumReplyFields();
+    const btn = document.getElementById("saveOneumBtn");
+    if (btn) btn.textContent = "원음 글 수정 저장";
+    return;
+  }
   showAdminForm("content");
   document.getElementById("editContentId").value = item.id;
   document.getElementById("contentCategory").value = item.category || "stories";

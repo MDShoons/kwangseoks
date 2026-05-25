@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=89-video-aspect-ratio-fix" />
+  <link rel="stylesheet" href="style.css?v=92-oneum-kks-reply" />
 </head>
 <body>
 
@@ -47,6 +47,7 @@
 
     <nav>
       <button onclick="goPage('home')">광석이네집</button>
+      <button onclick="goPage('siteinfo')">사이트 안내</button>
       <button onclick="goPage('videos')">Videos</button>
       <button onclick="goPage('songs')">Songs</button>
       <button onclick="goPage('radios')">Radios</button>
@@ -81,6 +82,82 @@
         <p class="helper-text">각 자료실에 최근 등록된 자료를 모았습니다.</p>
         <div id="latestByCategory" class="latest-category-grid"></div>
       </section>
+    </section>
+
+
+
+    <section id="siteinfo" class="page content-page site-info-page">
+      <div class="page-title">
+        <h1>사이트 안내</h1>
+        <p>광석이네 집은 김광석의 노래, 영상, 사진, 라디오, 글 자료를 한곳에서 정리해 보는 디지털 아카이브입니다.</p>
+      </div>
+
+      <div class="site-guide-grid">
+        <article class="site-guide-card site-guide-card-wide">
+          <h2>광석이네 집은 어떤 공간인가요?</h2>
+          <p>
+            흩어져 있는 김광석 관련 자료를 자료 유형별로 모아두고, 제목·연도·출처·분류를 함께 기록해
+            나중에 다시 찾기 쉽게 만든 개인형 디지털 아카이브입니다. 단순히 파일을 올리는 공간이 아니라,
+            자료의 맥락과 출처를 함께 남기는 것을 목표로 합니다.
+          </p>
+        </article>
+
+        <article class="site-guide-card">
+          <h2>자료실 구성</h2>
+          <ul>
+            <li><strong>Videos</strong> — 공연, 방송, 인터뷰 영상</li>
+            <li><strong>Songs</strong> — 음원과 앨범별 노래 자료</li>
+            <li><strong>Radios</strong> — 라디오 방송과 음성 자료</li>
+            <li><strong>Photos</strong> — 사진과 이미지 기록</li>
+            <li><strong>Stories</strong> — 일기, 글, 이야기 자료</li>
+            <li><strong>About Seok</strong> — 김광석 관련 설명 자료</li>
+            <li><strong>Oneum</strong> — 둥근소리글 모음</li>
+          </ul>
+        </article>
+
+        <article class="site-guide-card">
+          <h2>이용 방법</h2>
+          <ul>
+            <li>상단 메뉴에서 원하는 자료실로 이동합니다.</li>
+            <li>검색창에서 제목, 설명, 연도, 출처를 검색할 수 있습니다.</li>
+            <li>카테고리 필터로 앨범·방송·자료 분류를 좁혀 볼 수 있습니다.</li>
+            <li>자료 카드를 누르면 자세히 보기를 통해 설명과 미디어를 확인할 수 있습니다.</li>
+          </ul>
+        </article>
+
+        <article class="site-guide-card">
+          <h2>오늘의 추천곡</h2>
+          <p>
+            오른쪽 추천곡 카드에서는 매일 하나의 노래를 바로 들을 수 있습니다.
+            같은 제목의 곡이 여러 앨범에 있을 수 있으므로, 곡명 아래에 앨범/분류 정보도 함께 표시됩니다.
+          </p>
+        </article>
+
+        <article class="site-guide-card">
+          <h2>로그인 안내</h2>
+          <p>
+            일부 자료실은 로그인한 회원만 볼 수 있도록 설정되어 있습니다.
+            회원가입 시 이름, 전화번호, 아이디, 이메일, 비밀번호와 개인정보 수집·이용 동의가 필요합니다.
+          </p>
+        </article>
+
+        <article class="site-guide-card site-guide-card-wide">
+          <h2>자료 등록 기준</h2>
+          <p>
+            자료를 등록할 때는 가능하면 제목, 연도, 출처, 세부 카테고리를 함께 남기는 것이 좋습니다.
+            특히 노래는 같은 제목이라도 정규앨범, 다시부르기, 라이브 자료가 다를 수 있으므로
+            앨범/분류를 구분해 두면 나중에 자료를 찾고 비교하기 쉬워집니다.
+          </p>
+        </article>
+
+        <article class="site-guide-card site-guide-card-wide notice-card">
+          <h2>저작권 및 자료 이용 안내</h2>
+          <p>
+            이 사이트의 자료 저작권은 원저작자와 권리자에게 있습니다. 자료는 감상과 기록, 연구 목적의
+            아카이브 성격으로 정리하며, 외부 공유나 재배포가 필요한 경우에는 반드시 권리 관계를 먼저 확인해야 합니다.
+          </p>
+        </article>
+      </div>
     </section>
 
     <section id="videos" class="page content-page">
@@ -212,6 +289,7 @@
         <button onclick="showAdminForm('photo')">사진 등록</button>
         <button onclick="showAdminForm('audio')">음원 등록</button>
         <button onclick="showAdminForm('radio')">라디오 등록</button>
+        <button onclick="showAdminForm('oneum')">원음 글 등록</button>
         <button onclick="showAdminForm('manage')">자료 수정/삭제</button>
         <button onclick="showAdminForm('template')">템플릿/사이트 수정</button>
         <button onclick="showAdminForm('category')">페이지별 카테고리 만들기</button>
@@ -221,7 +299,7 @@
         <h2>각 페이지 글/사진 등록</h2>
         <input type="hidden" id="editContentId" value="" />
         <label>등록할 페이지</label>
-        <select id="contentCategory"><option value="videos">Videos</option><option value="songs">Songs</option><option value="radios">Radios</option><option value="photos">Photos</option><option value="stories">Stories - 김광석의 일기</option><option value="about">About Seok</option><option value="oneum">Oneum</option></select>
+        <select id="contentCategory"><option value="videos">Videos</option><option value="songs">Songs</option><option value="radios">Radios</option><option value="photos">Photos</option><option value="stories">Stories - 김광석의 일기</option><option value="about">About Seok</option></select>
         <label>자료 카테고리</label>
         <select id="contentSubCategory"><option value="">카테고리 없음</option></select>
         <input id="contentTitle" type="text" placeholder="제목" />
@@ -296,6 +374,36 @@
         <input id="radioImageFile" type="file" accept="image/*" />
         <input id="radioImageUrl" type="url" placeholder="https:// 로 시작하는 미디어 링크를 입력하세요" />
         <button type="button" id="saveRadioBtn">라디오 저장</button>
+      </form>
+
+      <form id="adminOneumForm" class="admin-form hidden">
+        <h2>원음 글 등록</h2>
+        <input type="hidden" id="editOneumId" value="" />
+        <p class="helper-text">Oneum 페이지에 올라갈 원음/둥근소리 글을 별도로 등록합니다. 제목, 올린이, 날짜와 시간, 본문을 함께 남겨 자료 맥락을 보존합니다.</p>
+        <label>자료 카테고리</label><select id="oneumSubCategory"><option value="">카테고리 없음</option></select>
+        <input id="oneumTitle" type="text" placeholder="글 제목" />
+        <input id="oneumAuthor" type="text" placeholder="올린이 예: 관리자, 광석이네 집" />
+        <input id="oneumDateTime" type="text" placeholder="날짜와 시간 예: 1995년 6월 3일 10:25" />
+        <textarea id="oneumBody" placeholder="본문"></textarea>
+        <input id="oneumSource" type="text" placeholder="출처 또는 비고" />
+
+        <label class="checkbox-line oneum-reply-toggle">
+          <input id="oneumHasKksReply" type="checkbox" />
+          <span>김광석의 답글</span>
+        </label>
+
+        <div id="oneumReplyFields" class="oneum-reply-fields hidden">
+          <h3>김광석의 답글 등록</h3>
+          <p class="helper-text">누군가의 글 아래에 김광석이 답글을 단 자료일 때만 체크하고 함께 입력합니다.</p>
+          <input id="oneumReplyTitle" type="text" placeholder="답글 제목" />
+          <input id="oneumReplyAuthor" type="text" placeholder="올린이 예: 김광석" />
+          <input id="oneumReplyDateTime" type="text" placeholder="날짜와 시간 예: 1995년 6월 3일 10:31" />
+          <textarea id="oneumReplyBody" placeholder="김광석의 답글 본문"></textarea>
+          <input id="oneumReplySource" type="text" placeholder="답글 출처 또는 비고" />
+        </div>
+
+        <button type="button" id="saveOneumBtn">원음 글 저장</button>
+        <button type="button" id="resetOneumBtn" class="secondary-btn">입력 초기화</button>
       </form>
 
       <section id="adminManageForm" class="admin-form hidden">
@@ -385,8 +493,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v78-songs-match-radios-ui</div>
+<div class="version-marker">v92-oneum-kks-reply</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=89-video-aspect-ratio-fix"></script>
+  <script type="module" src="app.js?v=92-oneum-kks-reply"></script>
 </body>
 </html>
