@@ -2881,3 +2881,45 @@ body.screen-protect-blur footer {
   line-height: 1.35 !important;
   word-break: keep-all !important;
 }
+
+/* v89: 업로드 영상 비율 고정 - 카드/상세/전체화면에서 원본 종횡비 유지 */
+.card video,
+.detail-media-box video,
+.detail-media-area video {
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #000 !important;
+}
+
+/* 카드에서는 고정 높이 안에서 자르지 않고 검은 여백으로 원본 비율 유지 */
+.card video {
+  height: 190px !important;
+}
+
+.content-page.template-gallery .card video {
+  height: 260px !important;
+}
+
+/* 상세보기에서는 강제 min-height/aspect-ratio 때문에 영상이 늘어나는 것을 차단 */
+.detail-media-box video,
+.detail-media-area video {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(92vh - 180px) !important;
+  aspect-ratio: auto !important;
+  border-radius: 18px;
+}
+
+/* 브라우저 전체화면에서도 화면에 맞추되 영상 자체는 늘리지 않음 */
+video:fullscreen,
+video:-webkit-full-screen,
+video:-moz-full-screen,
+video:-ms-fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #000 !important;
+}
