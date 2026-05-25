@@ -2755,7 +2755,7 @@ body.screen-protect-blur footer {
 }
 
 
-/* v85: 오늘의 추천곡 숨기기 옵션 + 곡 상세 앨범 자켓 확대 */
+/* v87: 오늘의 추천곡 숨기기 옵션 + 곡 상세 앨범 자켓 확대 + 음원 수정 시 바로듣기 보존 */
 #dailyRecommendPlayer .daily-hide-options {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;

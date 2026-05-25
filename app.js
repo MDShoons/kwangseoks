@@ -124,6 +124,14 @@ function normalizeMediaUrlForPlayback(url, type = "media") {
   return value;
 }
 
+function getPlayableAudioUrl(item = {}) {
+  return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
+}
+
+function isAudioContentItem(item = {}) {
+  return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
+}
+
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -162,7 +170,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v85-cover-zoom-daily-hide-options";
+const APP_VERSION = "v87-song-edit-preserve-audio-list-player";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -579,6 +587,8 @@ function renderCategoryList() {
 document.getElementById("saveContentBtn").addEventListener("click", async () => {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
   const editId = document.getElementById("editContentId").value;
+  const originalItem = editId ? allContents.find(i => i.id === editId) : null;
+  const editingAudioItem = Boolean(originalItem && isAudioContentItem(originalItem));
   const category = document.getElementById("contentCategory").value;
   const subCategory = document.getElementById("contentSubCategory").value;
   const title = document.getElementById("contentTitle").value.trim();
@@ -587,13 +597,30 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
   try {
     const mediaUrl = await getImageDataUrlOrDirectUrl(document.getElementById("contentImageFile").files[0], document.getElementById("contentImageUrl").value, 1400);
     const payload = {
-      category, subCategory, mediaType: mediaUrl ? "imageText" : "text", title, body, description: body,
+      category,
+      subCategory,
+      mediaType: editingAudioItem ? "audio" : (mediaUrl ? "imageText" : "text"),
+      title,
+      body,
+      description: body,
       year: document.getElementById("contentYear").value.trim(),
       source: document.getElementById("contentSource").value.trim(),
       isFeatured: document.getElementById("contentFeatured").checked,
-      isPublic: true, updatedAt: serverTimestamp()
+      isPublic: true,
+      updatedAt: serverTimestamp()
     };
-    if (mediaUrl) payload.mediaUrl = mediaUrl;
+
+    if (editingAudioItem) {
+      // Songs/Radios를 일반 수정 화면에서 고칠 때 음원 URL을 이미지 URL로 덮어쓰면
+      // 목록의 바로듣기 플레이어가 사라지므로, 기존 음원 URL은 반드시 보존합니다.
+      const audioUrl = getPlayableAudioUrl(originalItem);
+      if (audioUrl) payload.mediaUrl = audioUrl;
+      if (mediaUrl) payload.thumbnailUrl = mediaUrl;
+      else if (originalItem.thumbnailUrl) payload.thumbnailUrl = originalItem.thumbnailUrl;
+    } else if (mediaUrl) {
+      payload.mediaUrl = mediaUrl;
+    }
+
     if (editId) await updateDoc(doc(db, "contents", editId), payload);
     else await addDoc(collection(db, "contents"), { ...payload, createdBy: currentUser.uid, createdAt: serverTimestamp() });
     alert(editId ? "자료가 수정되었습니다." : "자료가 저장되었습니다.");
@@ -1134,7 +1161,7 @@ function seededNumberFromString(text) {
 
 function pickDailyRecommendedSong(songs) {
   const playable = songs.filter((item) => {
-    const url = item.mediaUrl || item.fileUrl || item.audioUrl || "";
+    const url = getPlayableAudioUrl(item);
     return !!url;
   });
 
@@ -1916,7 +1943,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const safeYear = escapeHtml(item.year || "미상");
   const safeSource = escapeHtml(item.source || "미기재");
   const created = createdDateMarkup(item);
-  const player = renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`);
+  const player = renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`);
   const showCover = id === "songList";
   const thumb = showCover
     ? (img
@@ -1963,17 +1990,19 @@ function renderList(id, items) {
 
   items.forEach(item => {
     const div = document.createElement("div");
+    const playableAudioUrl = getPlayableAudioUrl(item);
+    const shouldRenderAudioArchive = isAudioArchiveList && Boolean(playableAudioUrl);
     div.className = (item.mediaUrl || item.thumbnailUrl) && item.mediaType !== "youtube" ? "list-item with-image" : "list-item";
     if (isStoryList) div.classList.add("story-preview-card");
-    if (isAudioArchiveList && item.mediaType === "audio") div.classList.add("audio-archive-card");
+    if (shouldRenderAudioArchive) div.classList.add("audio-archive-card");
 
     div.onclick = () => openContentDetail(item.id);
 
-    const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (item.mediaType !== "audio" && item.mediaType !== "video" ? item.mediaUrl : ""), "image");
+    const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (!isAudioContentItem(item) && item.mediaType !== "video" ? item.mediaUrl : ""), "image");
     const previewLength = isStoryList ? 110 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
-    if (isAudioArchiveList && item.mediaType === "audio") {
+    if (shouldRenderAudioArchive) {
       div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
     } else {
       div.innerHTML = `
@@ -1983,7 +2012,7 @@ function renderList(id, items) {
           ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
           ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
           ${isStoryList ? `<p class="read-more-hint">전체 일기는 상세보기에서 볼 수 있습니다.</p>` : ""}
-          ${item.mediaType === "audio" ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`) : ""}
+          ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
           <p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p>
           <p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>
           ${createdDateMarkup(item)}
@@ -1999,7 +2028,7 @@ function createCard(item) {
   let media = "";
   if (item.mediaType === "youtube") media = `<iframe src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" allowfullscreen></iframe>`;
   else if (item.mediaType === "video") media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
-  else if (item.mediaType === "audio") media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}"></audio>`;
+  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "audio")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p><p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>${createdDateMarkup(item)}</div>`;
@@ -2147,7 +2176,7 @@ function closeCoverZoom(event) {
 
 function renderDetailMedia(item) {
   const category = item.category || "";
-  const mediaUrl = item.mediaUrl || item.fileUrl || item.videoUrl || "";
+  const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
   const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
@@ -2306,7 +2335,7 @@ function editContent(id) {
   document.getElementById("contentBody").value = item.body || item.description || "";
   document.getElementById("contentYear").value = item.year || "";
   document.getElementById("contentSource").value = item.source || "";
-  document.getElementById("contentImageUrl").value = item.mediaUrl || "";
+  document.getElementById("contentImageUrl").value = isAudioContentItem(item) ? (item.thumbnailUrl || "") : (item.mediaUrl || "");
   document.getElementById("contentFeatured").checked = Boolean(item.isFeatured);
   document.getElementById("saveContentBtn").textContent = "수정 저장하기";
 }
