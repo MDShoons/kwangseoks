@@ -183,7 +183,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v114-rightclick-f12-block";
+const APP_VERSION = "v115-oneum-page-size-8";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1635,6 +1635,14 @@ async function loadContents() {
 
 
 const PAGE_SIZE = 6;
+const PAGE_SIZE_BY_PAGE = {
+  oneum: 8
+};
+
+function getPageSizeForPage(page) {
+  return PAGE_SIZE_BY_PAGE[page] || PAGE_SIZE;
+}
+
 const pageState = {
   videos: 1,
   songs: 1,
@@ -1739,13 +1747,14 @@ function sortItemsForPage(page, items) {
 }
 
 function paginateItemsForPage(page, items) {
-  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pageSize = getPageSizeForPage(page);
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const currentPage = Math.min(Math.max(pageState[page] || 1, 1), totalPages);
   pageState[page] = currentPage;
 
-  const start = (currentPage - 1) * PAGE_SIZE;
+  const start = (currentPage - 1) * pageSize;
   return {
-    pageItems: items.slice(start, start + PAGE_SIZE),
+    pageItems: items.slice(start, start + pageSize),
     currentPage,
     totalPages
   };
