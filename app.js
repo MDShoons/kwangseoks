@@ -162,7 +162,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v84-song-detail-cover-radio-no-cover";
+const APP_VERSION = "v85-cover-zoom-daily-hide-options";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1193,6 +1193,25 @@ function getDailyPlayerClosedKey() {
   return `kwangseoks_daily_player_closed_${getKoreanDateKey()}`;
 }
 
+function getDailyPlayerHideUntilKey() {
+  return "kwangseoks_daily_player_hide_until";
+}
+
+function isDailyRecommendPlayerHiddenByTime() {
+  const hideUntil = Number(localStorage.getItem(getDailyPlayerHideUntilKey()) || 0);
+
+  if (!Number.isFinite(hideUntil) || hideUntil <= 0) {
+    return false;
+  }
+
+  if (Date.now() < hideUntil) {
+    return true;
+  }
+
+  localStorage.removeItem(getDailyPlayerHideUntilKey());
+  return false;
+}
+
 function closeDailyRecommendPlayer() {
   const player = document.getElementById("dailyRecommendPlayer");
   const audio = document.getElementById("dailyPlayerAudio");
@@ -1204,8 +1223,14 @@ function closeDailyRecommendPlayer() {
   if (player) {
     player.classList.add("closed");
   }
+}
 
-  localStorage.setItem(getDailyPlayerClosedKey(), "yes");
+function hideDailyRecommendPlayerForHours(hours) {
+  const safeHours = Number(hours);
+  if (!Number.isFinite(safeHours) || safeHours <= 0) return;
+
+  localStorage.setItem(getDailyPlayerHideUntilKey(), String(Date.now() + safeHours * 60 * 60 * 1000));
+  closeDailyRecommendPlayer();
 }
 
 function setupDailyRecommendPlayer() {
@@ -1220,10 +1245,16 @@ function setupDailyRecommendPlayer() {
   const muteBtn = document.getElementById("dailyPlayerMuteBtn");
   const volumeSlider = document.getElementById("dailyPlayerVolume");
   const closeBtn = document.getElementById("dailyPlayerCloseBtn");
+  const hide1hBtn = document.getElementById("dailyPlayerHide1hBtn");
+  const hide24hBtn = document.getElementById("dailyPlayerHide24hBtn");
 
   if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider || !closeBtn) return;
 
-  if (localStorage.getItem(getDailyPlayerClosedKey()) === "yes") {
+  // v85: 기존 “오늘 닫힘” 저장 방식은 더 이상 사용하지 않습니다.
+  // X 버튼은 현재 화면에서만 닫고, 1시간/24시간 버튼만 만료시간을 localStorage에 저장합니다.
+  localStorage.removeItem(getDailyPlayerClosedKey());
+
+  if (isDailyRecommendPlayerHiddenByTime()) {
     player.classList.add("closed");
     audio.pause();
     return;
@@ -1329,6 +1360,22 @@ function setupDailyRecommendPlayer() {
     event.stopPropagation();
     closeDailyRecommendPlayer();
   });
+
+  if (hide1hBtn) {
+    hide1hBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      hideDailyRecommendPlayerForHours(1);
+    });
+  }
+
+  if (hide24hBtn) {
+    hide24hBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      hideDailyRecommendPlayerForHours(24);
+    });
+  }
 
   volumeSlider.addEventListener("input", () => {
     const value = Math.min(100, Math.max(0, Number(volumeSlider.value || 0)));
@@ -2062,6 +2109,42 @@ function bindDetailPhotoZoom() {
   };
 }
 
+function openCoverZoom(src, title) {
+  const modal = document.getElementById("coverZoomModal");
+  const img = document.getElementById("coverZoomImage");
+  const caption = document.getElementById("coverZoomCaption");
+
+  if (!modal || !img) return;
+  if (!src) return;
+
+  img.src = src;
+  img.alt = title || "앨범 자켓";
+  if (caption) caption.textContent = title || "앨범 자켓";
+
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function openCoverZoomFromElement(element) {
+  if (!element) return;
+  openCoverZoom(element.dataset.coverSrc || "", element.dataset.coverTitle || "앨범 자켓");
+}
+
+function closeCoverZoom(event) {
+  if (event && event.target !== event.currentTarget) return;
+
+  const modal = document.getElementById("coverZoomModal");
+  const img = document.getElementById("coverZoomImage");
+  const contentDetailModal = document.getElementById("contentDetailModal");
+
+  if (modal) modal.classList.add("hidden");
+  if (img) img.removeAttribute("src");
+
+  if (!contentDetailModal || contentDetailModal.classList.contains("hidden")) {
+    document.body.style.overflow = "";
+  }
+}
+
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = item.mediaUrl || item.fileUrl || item.videoUrl || "";
@@ -2091,7 +2174,9 @@ function renderDetailMedia(item) {
     if (mediaUrl && imageUrl) {
       return `
         <div class="detail-song-audio-layout">
-          <div class="detail-song-cover-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>
+          <button type="button" class="detail-song-cover-box detail-song-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기">
+            <img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" />
+          </button>
           <div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>
         </div>
       `;
@@ -2102,7 +2187,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+      return `<button type="button" class="detail-media-box detail-cover-only detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></button>`;
     }
 
     return "";
@@ -2193,7 +2278,12 @@ function closeContentDetail(event) {
   document.body.style.overflow = "";
 }
 
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeContentDetail(); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  const coverZoomModal = document.getElementById("coverZoomModal");
+  if (coverZoomModal && !coverZoomModal.classList.contains("hidden")) return;
+  closeContentDetail();
+});
 
 function renderAdminManageList() {
   const box = document.getElementById("adminContentList"); if (!box || !isAdmin) return;
@@ -2240,6 +2330,20 @@ async function deleteContentItem(id) {
     alert("삭제 오류: " + error.message);
   }
 }
+
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+
+  const coverZoomModal = document.getElementById("coverZoomModal");
+  if (coverZoomModal && !coverZoomModal.classList.contains("hidden")) {
+    closeCoverZoom();
+  }
+});
+
+window.openCoverZoom = openCoverZoom;
+window.openCoverZoomFromElement = openCoverZoomFromElement;
+window.closeCoverZoom = closeCoverZoom;
+window.hideDailyRecommendPlayerForHours = hideDailyRecommendPlayerForHours;
 
 loadSiteSettings();
 loadPageCategories();

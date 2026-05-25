@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=84-song-detail-cover-radio-no-cover" />
+  <link rel="stylesheet" href="style.css?v=85-cover-zoom-daily-hide-options" />
 </head>
 <body>
 
@@ -27,6 +27,10 @@
       <div class="daily-volume-row compact-volume-row" style="width:78px;max-width:78px;height:18px;margin-top:6px;display:flex;align-items:center;gap:5px;">
         <button type="button" id="dailyPlayerMuteBtn" class="daily-mute-btn" aria-label="음소거" style="width:18px;height:18px;min-width:18px;padding:0;font-size:9px;line-height:1;">V</button>
         <input id="dailyPlayerVolume" class="daily-volume-slider" type="range" min="0" max="100" value="70" step="1" aria-label="볼륨 조절" style="width:54px;max-width:54px;min-width:54px;height:2px;margin:0;padding:0;accent-color:#ffffff;" />
+      </div>
+      <div class="daily-hide-options" aria-label="오늘의 추천곡 숨기기 옵션">
+        <button type="button" id="dailyPlayerHide1hBtn" class="daily-hide-option-btn">1시간 숨기기</button>
+        <button type="button" id="dailyPlayerHide24hBtn" class="daily-hide-option-btn">24시간 숨기기</button>
       </div>
       <audio id="dailyPlayerAudio" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
     </div>
@@ -373,8 +377,16 @@
       <div class="detail-text-area"><h2 id="detailTitle"></h2><p id="detailCategory"></p><p id="detailMeta"></p><div id="detailDescription"></div></div>
     </div>
   </div>
+
+  <div id="coverZoomModal" class="cover-zoom-modal hidden" onclick="closeCoverZoom(event)" aria-label="앨범 자켓 크게 보기">
+    <div class="cover-zoom-inner" onclick="event.stopPropagation()">
+      <button type="button" class="cover-zoom-close" onclick="closeCoverZoom()">닫기 ×</button>
+      <img id="coverZoomImage" src="" alt="앨범 자켓" draggable="false" oncontextmenu="return false" />
+      <div id="coverZoomCaption" class="cover-zoom-caption"></div>
+    </div>
+  </div>
 <div class="version-marker">v78-songs-match-radios-ui</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=84-song-detail-cover-radio-no-cover"></script>
+  <script type="module" src="app.js?v=85-cover-zoom-daily-hide-options"></script>
 </body>
 </html>
