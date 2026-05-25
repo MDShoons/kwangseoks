@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
   <script>
-    // v115: Oneum 페이지당 8개 표시, 우클릭/F12 차단 유지
+    // v116: 사용자 플레이리스트 미니 플레이어 추가, Oneum 8개 유지
     (function () {
       function blockEvent(event) {
         if (!event) return false;
@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v115-oneum-page-size-8" />
+  <link rel="stylesheet" href="style.css?v=v116-song-playlist-player" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -149,6 +149,36 @@
         <button type="button" id="dailyPlayerHide24hBtn" class="daily-hide-option-btn">24시간 숨기기</button>
       </div>
       <audio id="dailyPlayerAudio" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
+    </div>
+  </aside>
+
+  <aside id="userPlaylistPlayer" class="daily-player playlist-player closed" aria-label="내 플레이리스트 플레이어">
+    <div class="daily-player-card playlist-player-card">
+      <button type="button" id="playlistPlayerCloseBtn" class="daily-player-close" aria-label="플레이리스트 닫기">×</button>
+      <div class="daily-player-label playlist-player-label">내 플레이리스트</div>
+      <div id="playlistPlayerTitle" class="daily-player-title">선택한 곡이 없습니다</div>
+      <div id="playlistPlayerSub" class="daily-player-sub">Songs에서 듣고 싶은 곡을 담으면 표시됩니다.</div>
+
+      <div class="daily-player-controls playlist-player-controls">
+        <button type="button" id="playlistPlayerPrevBtn" class="playlist-nav-btn" aria-label="이전 곡">‹</button>
+        <button type="button" id="playlistPlayerPlayBtn" class="daily-play-btn" aria-label="재생">▶</button>
+        <button type="button" id="playlistPlayerNextBtn" class="playlist-nav-btn" aria-label="다음 곡">›</button>
+        <div class="daily-player-time playlist-player-time">
+          <span id="playlistPlayerCurrent">0:00</span>
+          <span id="playlistPlayerDuration">0:00</span>
+        </div>
+      </div>
+
+      <input id="playlistPlayerProgress" class="daily-player-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="재생 위치" />
+      <div class="daily-volume-row compact-volume-row playlist-volume-row" style="width:78px;max-width:78px;height:18px;margin-top:6px;display:flex;align-items:center;gap:5px;">
+        <button type="button" id="playlistPlayerMuteBtn" class="daily-mute-btn" aria-label="음소거" style="width:18px;height:18px;min-width:18px;padding:0;font-size:9px;line-height:1;">V</button>
+        <input id="playlistPlayerVolume" class="daily-volume-slider" type="range" min="0" max="100" value="70" step="1" aria-label="볼륨 조절" style="width:54px;max-width:54px;min-width:54px;height:2px;margin:0;padding:0;accent-color:#ffffff;" />
+      </div>
+      <div class="playlist-player-actions" aria-label="플레이리스트 조작">
+        <button type="button" id="playlistPlayerRemoveBtn" class="daily-hide-option-btn playlist-action-btn">현재곡 빼기</button>
+        <button type="button" id="playlistPlayerClearBtn" class="daily-hide-option-btn playlist-action-btn">비우기</button>
+      </div>
+      <audio id="playlistPlayerAudio" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
     </div>
   </aside>
 
@@ -613,8 +643,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v115-oneum-page-size-8</div>
+<div class="version-marker">v116-song-playlist-player</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v115-oneum-page-size-8"></script>
+  <script type="module" src="app.js?v=v116-song-playlist-player"></script>
 </body>
 </html>

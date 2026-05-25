@@ -1265,6 +1265,9 @@ function renderAllContentSections() {
 
 let dailyRecommendedItemId = "";
 let dailyPlayerBound = false;
+let playlistPlayerBound = false;
+let playlistCurrentItemId = "";
+let playlistRequestedItemId = "";
 
 function getKoreanDateKey() {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -1618,6 +1621,287 @@ function setupDailyRecommendPlayer() {
   audio.addEventListener("ended", () => {
     playBtn.textContent = "▶";
     progress.value = "0";
+  });
+}
+
+
+function getUserPlaylistStorageKey() {
+  return "kwangseoks_user_playlist_song_ids_v1";
+}
+
+function loadUserPlaylistIds() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(getUserPlaylistStorageKey()) || "[]");
+    return Array.isArray(parsed) ? parsed.map((id) => String(id || "")).filter(Boolean) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveUserPlaylistIds(ids) {
+  const unique = [];
+  (ids || []).forEach((id) => {
+    const value = String(id || "").trim();
+    if (value && !unique.includes(value)) unique.push(value);
+  });
+  localStorage.setItem(getUserPlaylistStorageKey(), JSON.stringify(unique));
+}
+
+function getUserPlaylistSongs() {
+  const ids = loadUserPlaylistIds();
+  const validSongs = [];
+  ids.forEach((id) => {
+    const item = allContents.find((content) => String(content.id) === String(id));
+    if (item && item.category === "songs" && getPlayableAudioUrl(item)) {
+      validSongs.push(item);
+    }
+  });
+  if (validSongs.length !== ids.length) saveUserPlaylistIds(validSongs.map((item) => item.id));
+  return validSongs;
+}
+
+function resetPlaylistPlayerUi(audio, playBtn, progress, current, duration) {
+  if (audio) {
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load?.();
+  }
+  if (playBtn) {
+    playBtn.textContent = "▶";
+    playBtn.disabled = true;
+    playBtn.classList.add("disabled");
+  }
+  if (progress) {
+    progress.value = "0";
+    progress.disabled = true;
+  }
+  if (current) current.textContent = "0:00";
+  if (duration) duration.textContent = "0:00";
+}
+
+function closeUserPlaylistPlayerTemporarily() {
+  const player = document.getElementById("userPlaylistPlayer");
+  const audio = document.getElementById("playlistPlayerAudio");
+  if (audio) audio.pause();
+  if (player) player.classList.add("closed");
+}
+
+function clearUserPlaylist() {
+  saveUserPlaylistIds([]);
+  playlistCurrentItemId = "";
+  playlistRequestedItemId = "";
+  setupUserPlaylistPlayer({ forceOpen: false });
+  updatePlaylistAddButtons();
+}
+
+function removeCurrentSongFromPlaylist() {
+  if (!playlistCurrentItemId) return;
+  const ids = loadUserPlaylistIds().filter((id) => String(id) !== String(playlistCurrentItemId));
+  saveUserPlaylistIds(ids);
+  playlistCurrentItemId = "";
+  playlistRequestedItemId = ids[0] || "";
+  setupUserPlaylistPlayer({ forceOpen: ids.length > 0 });
+  updatePlaylistAddButtons();
+}
+
+function addSongToUserPlaylist(songId) {
+  const id = String(songId || "").trim();
+  if (!id) return;
+  const item = allContents.find((content) => String(content.id) === id);
+  if (!item || item.category !== "songs" || !getPlayableAudioUrl(item)) {
+    alert("재생 가능한 Songs 음원만 플레이리스트에 담을 수 있습니다.");
+    return;
+  }
+  const ids = loadUserPlaylistIds();
+  if (!ids.includes(id)) ids.push(id);
+  saveUserPlaylistIds(ids);
+  playlistRequestedItemId = id;
+  setupUserPlaylistPlayer({ forceOpen: true });
+  updatePlaylistAddButtons();
+}
+window.addSongToUserPlaylist = addSongToUserPlaylist;
+
+function updatePlaylistAddButtons() {
+  const ids = loadUserPlaylistIds();
+  document.querySelectorAll(".playlist-add-btn").forEach((btn) => {
+    const onclick = btn.getAttribute("onclick") || "";
+    const match = onclick.match(/addSongToUserPlaylist\(\"([^\"]+)\"\)/);
+    const id = match ? match[1] : "";
+    const added = id && ids.includes(id);
+    btn.textContent = added ? "✓ 플레이리스트에 담김" : "＋ 플레이리스트 담기";
+    btn.classList.toggle("added", Boolean(added));
+  });
+}
+
+function movePlaylistSelection(direction) {
+  const songs = getUserPlaylistSongs();
+  if (!songs.length) return;
+  const currentIndex = Math.max(0, songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)));
+  const nextIndex = (currentIndex + direction + songs.length) % songs.length;
+  playlistRequestedItemId = songs[nextIndex].id;
+  setupUserPlaylistPlayer({ forceOpen: true });
+}
+
+function setupUserPlaylistPlayer(options = {}) {
+  const player = document.getElementById("userPlaylistPlayer");
+  const audio = document.getElementById("playlistPlayerAudio");
+  const title = document.getElementById("playlistPlayerTitle");
+  const sub = document.getElementById("playlistPlayerSub");
+  const playBtn = document.getElementById("playlistPlayerPlayBtn");
+  const progress = document.getElementById("playlistPlayerProgress");
+  const current = document.getElementById("playlistPlayerCurrent");
+  const duration = document.getElementById("playlistPlayerDuration");
+  const muteBtn = document.getElementById("playlistPlayerMuteBtn");
+  const volumeSlider = document.getElementById("playlistPlayerVolume");
+  const closeBtn = document.getElementById("playlistPlayerCloseBtn");
+  const prevBtn = document.getElementById("playlistPlayerPrevBtn");
+  const nextBtn = document.getElementById("playlistPlayerNextBtn");
+  const clearBtn = document.getElementById("playlistPlayerClearBtn");
+  const removeBtn = document.getElementById("playlistPlayerRemoveBtn");
+
+  if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider) return;
+
+  const songs = getUserPlaylistSongs();
+  if (!songs.length) {
+    player.classList.add("closed");
+    playlistCurrentItemId = "";
+    title.textContent = "선택한 곡이 없습니다";
+    sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
+    resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
+    return;
+  }
+
+  if (options.forceOpen) player.classList.remove("closed");
+  if (!player.classList.contains("closed")) player.classList.remove("closed");
+
+  const requestedIndex = playlistRequestedItemId ? songs.findIndex((item) => String(item.id) === String(playlistRequestedItemId)) : -1;
+  const currentIndex = playlistCurrentItemId ? songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)) : -1;
+  const selectedIndex = requestedIndex >= 0 ? requestedIndex : (currentIndex >= 0 ? currentIndex : 0);
+  const selected = songs[selectedIndex] || songs[0];
+  const sourceUrl = normalizeMediaUrlForPlayback(getPlayableAudioUrl(selected), "audio");
+
+  playBtn.disabled = false;
+  playBtn.classList.remove("disabled");
+  progress.disabled = false;
+
+  title.textContent = selected.title || "제목 없는 곡";
+  sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
+
+  if (playlistCurrentItemId !== selected.id || audio.dataset.playlistSrc !== sourceUrl) {
+    playlistCurrentItemId = selected.id;
+    audio.pause();
+    audio.src = sourceUrl;
+    audio.dataset.playlistSrc = sourceUrl;
+    audio.currentTime = 0;
+    progress.value = "0";
+    playBtn.textContent = "▶";
+    current.textContent = "0:00";
+    duration.textContent = "0:00";
+  }
+  playlistRequestedItemId = "";
+
+  if (playlistPlayerBound) return;
+  playlistPlayerBound = true;
+
+  const savedVolume = localStorage.getItem("kwangseoks_playlist_player_volume");
+  const savedMuted = localStorage.getItem("kwangseoks_playlist_player_muted");
+  const initialVolume = savedVolume !== null ? Math.min(1, Math.max(0, Number(savedVolume))) : 0.7;
+  audio.volume = Number.isFinite(initialVolume) ? initialVolume : 0.7;
+  audio.muted = savedMuted === "yes";
+  volumeSlider.value = String(Math.round(audio.volume * 100));
+  muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
+  audio.setAttribute("controlsList", "nodownload noplaybackrate");
+  audio.setAttribute("oncontextmenu", "return false");
+
+  closeBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeUserPlaylistPlayerTemporarily();
+  });
+
+  prevBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    movePlaylistSelection(-1);
+  });
+
+  nextBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    movePlaylistSelection(1);
+  });
+
+  clearBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    clearUserPlaylist();
+  });
+
+  removeBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    removeCurrentSongFromPlaylist();
+  });
+
+  volumeSlider.addEventListener("input", () => {
+    const value = Math.min(100, Math.max(0, Number(volumeSlider.value || 0)));
+    audio.volume = value / 100;
+    audio.muted = audio.volume === 0;
+    localStorage.setItem("kwangseoks_playlist_player_volume", String(audio.volume));
+    localStorage.setItem("kwangseoks_playlist_player_muted", audio.muted ? "yes" : "no");
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
+  });
+
+  muteBtn.addEventListener("click", () => {
+    audio.muted = !audio.muted;
+    localStorage.setItem("kwangseoks_playlist_player_muted", audio.muted ? "yes" : "no");
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
+  });
+
+  audio.addEventListener("volumechange", () => {
+    volumeSlider.value = String(Math.round(audio.volume * 100));
+    muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
+  });
+
+  playBtn.addEventListener("click", async () => {
+    if (playBtn.disabled || !audio.src) return;
+    try {
+      if (audio.paused) await audio.play();
+      else audio.pause();
+    } catch (error) {
+      console.log("플레이리스트 재생 오류:", error?.message || error);
+    }
+  });
+
+  audio.addEventListener("play", () => {
+    playBtn.textContent = "Ⅱ";
+  });
+
+  audio.addEventListener("pause", () => {
+    playBtn.textContent = "▶";
+  });
+
+  audio.addEventListener("loadedmetadata", () => {
+    duration.textContent = formatPlayerTime(audio.duration);
+  });
+
+  audio.addEventListener("timeupdate", () => {
+    current.textContent = formatPlayerTime(audio.currentTime);
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
+    }
+  });
+
+  progress.addEventListener("input", () => {
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      audio.currentTime = (Number(progress.value) / 1000) * audio.duration;
+    }
+  });
+
+  audio.addEventListener("ended", () => {
+    playBtn.textContent = "▶";
+    progress.value = "0";
+    movePlaylistSelection(1);
   });
 }
 
@@ -2230,6 +2514,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
       <div class="audio-archive-player-row">
         ${player}
       </div>
+      ${id === "songList" ? `<div class="playlist-add-row"><button type="button" class="playlist-add-btn" onclick='event.stopPropagation(); addSongToUserPlaylist(${JSON.stringify(item.id || "")})'>＋ 플레이리스트 담기</button></div>` : ""}
       <div class="audio-archive-info-row">
         <p><strong>연도:</strong> ${safeYear}</p>
         <p><strong>출처:</strong> ${safeSource}</p>
