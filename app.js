@@ -183,7 +183,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v118-playlist-midnight-cover-sync";
+const APP_VERSION = "v119-daily-recommend-cover-bg";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1491,6 +1491,7 @@ function setupDailyRecommendPlayer() {
   const closeBtn = document.getElementById("dailyPlayerCloseBtn");
   const hide1hBtn = document.getElementById("dailyPlayerHide1hBtn");
   const hide24hBtn = document.getElementById("dailyPlayerHide24hBtn");
+  const card = player?.querySelector(".daily-player-card");
 
   if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider || !closeBtn) return;
 
@@ -1542,6 +1543,10 @@ function setupDailyRecommendPlayer() {
 
   if (!selected) {
     dailyRecommendedItemId = "";
+    if (card) {
+      card.classList.remove("has-daily-cover");
+      card.style.removeProperty("--daily-cover-image");
+    }
     audio.pause();
     audio.removeAttribute("src");
     title.textContent = "재생할 곡이 없습니다";
@@ -1559,6 +1564,10 @@ function setupDailyRecommendPlayer() {
   const sourceUrl = normalizeMediaUrlForPlayback(selected.mediaUrl || selected.fileUrl || selected.audioUrl || "", "audio");
   if (!sourceUrl) {
     dailyRecommendedItemId = "";
+    if (card) {
+      card.classList.remove("has-daily-cover");
+      card.style.removeProperty("--daily-cover-image");
+    }
     audio.pause();
     audio.removeAttribute("src");
     title.textContent = "재생할 곡이 없습니다";
@@ -1578,6 +1587,16 @@ function setupDailyRecommendPlayer() {
   progress.disabled = false;
 
   const songCategoryLabel = getDailySongCategoryLabel(selected);
+  const coverUrl = getItemVisualImageUrl(selected);
+  if (card) {
+    if (coverUrl) {
+      card.classList.add("has-daily-cover");
+      card.style.setProperty("--daily-cover-image", `url("${coverUrl.replace(/"/g, "%22")}")`);
+    } else {
+      card.classList.remove("has-daily-cover");
+      card.style.removeProperty("--daily-cover-image");
+    }
+  }
   title.textContent = selected.title || "제목 없는 추천곡";
   sub.textContent = `앨범/분류: ${songCategoryLabel} · ${getKoreanDateKey()} · 매일 00:00 추천 변경`;
 

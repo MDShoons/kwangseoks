@@ -4628,3 +4628,38 @@ body.content-protected iframe {
 #userPlaylistPlayer .playlist-player-card.has-playlist-cover .daily-player-label {
   text-shadow: 0 2px 8px rgba(0,0,0,0.36) !important;
 }
+
+
+/* v119: 오늘의 추천곡에도 현재 추천곡 앨범 자켓 배경 적용 */
+#dailyRecommendPlayer .daily-player-card {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+#dailyRecommendPlayer .daily-player-card.has-daily-cover::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -2 !important;
+  background-image: var(--daily-cover-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  filter: blur(8px) saturate(1.08) brightness(0.72) !important;
+  transform: scale(1.12) !important;
+  opacity: 0.92 !important;
+}
+
+#dailyRecommendPlayer .daily-player-card.has-daily-cover::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  background: linear-gradient(145deg, rgba(64, 23, 68, 0.84), rgba(158, 45, 101, 0.76) 54%, rgba(217, 91, 42, 0.78)) !important;
+}
+
+#dailyRecommendPlayer .daily-player-card.has-daily-cover .daily-player-title,
+#dailyRecommendPlayer .daily-player-card.has-daily-cover .daily-player-sub,
+#dailyRecommendPlayer .daily-player-card.has-daily-cover .daily-player-label {
+  text-shadow: 0 2px 8px rgba(0,0,0,0.42) !important;
+}
