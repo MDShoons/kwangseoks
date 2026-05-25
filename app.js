@@ -1619,7 +1619,40 @@ const pageState = {
   oneum: 1
 };
 
+function parseFlexibleDateText(text) {
+  const value = String(text || "").trim();
+  if (!value) return 0;
+
+  const normalized = value
+    .replace(/년|\./g, "-")
+    .replace(/월/g, "-")
+    .replace(/일/g, " ")
+    .replace(/시/g, ":")
+    .replace(/분/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const direct = Date.parse(normalized);
+  if (!Number.isNaN(direct)) return direct;
+
+  const match = value.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})(?:\D+(\d{1,2})[:시\s]*(\d{1,2})?)?/);
+  if (!match) return 0;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const hour = match[4] ? Number(match[4]) : 0;
+  const minute = match[5] ? Number(match[5]) : 0;
+  return new Date(year, month, day, hour, minute).getTime();
+}
+
 function getItemTimestamp(item) {
+  if (item?.category === "oneum") {
+    const manualOneumDate = String(item.oneumDateTime || item.dateTime || item.writtenAtText || "").trim();
+    const manualTimestamp = parseFlexibleDateText(manualOneumDate);
+    if (manualTimestamp) return manualTimestamp;
+  }
+
   const raw = item.createdAt || item.updatedAt || item.createdDate || item.date || "";
   if (!raw) return 0;
 
@@ -1651,6 +1684,10 @@ function formatKoreanDate(value) {
 }
 
 function getItemCreatedDateText(item) {
+  if (item?.category === "oneum") {
+    const manualOneumDate = String(item.oneumDateTime || item.dateTime || item.writtenAtText || "").trim();
+    if (manualOneumDate) return manualOneumDate;
+  }
   return formatKoreanDate(item.createdAt || item.updatedAt || item.createdDate || item.date || "");
 }
 
@@ -1717,6 +1754,7 @@ function renderPagination(page, totalPages, currentPage) {
 
 
 function createdDateMarkup(item) {
+  if (item?.category === "oneum") return "";
   return `<p class="created-date"><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}</p>`;
 }
 
@@ -1738,7 +1776,7 @@ function oneumMetaMarkup(item) {
   const dateTime = getOneumDateTime(item);
   const parts = [];
   if (author) parts.push(`<p><strong>올린이:</strong> ${escapeHtml(author)}</p>`);
-  if (dateTime) parts.push(`<p><strong>날짜/시간:</strong> ${escapeHtml(dateTime)}</p>`);
+  if (dateTime) parts.push(`<p><strong>업로드일:</strong> ${escapeHtml(dateTime)}</p>`);
   if (hasOneumKksReply(item)) parts.push(`<p><span class="category-badge oneum-reply-badge">김광석 답글 포함</span></p>`);
   return parts.join("");
 }
@@ -2453,7 +2491,7 @@ function openContentDetail(id) {
     const author = getOneumAuthor(item) || "미기재";
     const dateTime = getOneumDateTime(item) || "미기재";
     const source = item.source ? `<br><strong>출처:</strong> ${escapeHtml(item.source)}` : "";
-    metaEl.innerHTML = `<strong>올린이:</strong> ${escapeHtml(author)}<br><strong>날짜/시간:</strong> ${escapeHtml(dateTime)}${source}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
+    metaEl.innerHTML = `<strong>올린이:</strong> ${escapeHtml(author)}<br><strong>업로드일:</strong> ${escapeHtml(dateTime)}${source}`;
   } else {
     metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
   }
