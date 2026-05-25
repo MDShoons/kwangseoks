@@ -162,7 +162,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v88-emergency-radios-fix-song-ui";
+const APP_VERSION = "v83-audio-align-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -490,22 +490,14 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("mypageBtn")?.classList.toggle("hidden", !user);
   let adminBtn = document.getElementById("adminNavBtn");
   if (isAdmin && !adminBtn) {
-    adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => goPage("admin"); document.querySelector("nav").appendChild(adminBtn);
+    adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-  await loadSiteSettings();
-  await loadPageCategories();
-  await loadContents();
+  await window.addEventListener("hashchange", handleHashRoute);
+window.addEventListener("DOMContentLoaded", handleHashRoute);
+loadSiteSettings(); await loadPageCategories(); await loadContents();
   handleHashRoute();
 });
-
-window.addEventListener("hashchange", handleHashRoute);
-window.addEventListener("DOMContentLoaded", () => {
-  handleHashRoute();
-});
-
-// GitHub Pages에서 인증 초기화가 늦어져도 화면 전환이 멈추지 않도록 즉시 한 번 실행
-handleHashRoute();
 
 async function loadPageCategories() {
   try {
@@ -1872,25 +1864,23 @@ function setupRadioMonochromePlayers(root = document) {
 
 function renderAudioArchiveCard(item, id, img, previewText) {
   const safeTitle = escapeHtml(item.title || "제목 없음");
+  const safeCategory = item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : "";
   const safePreview = previewText ? `<p class="audio-archive-summary">${escapeHtml(previewText)}</p>` : `<p class="audio-archive-summary empty">설명 정보가 없습니다.</p>`;
   const safeYear = escapeHtml(item.year || "미상");
   const safeSource = escapeHtml(item.source || "미기재");
   const created = createdDateMarkup(item);
   const player = renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`);
-  const showCover = id === "songList";
-  const thumb = showCover
-    ? (img
-        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
-        : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`)
-    : "";
-  const topClass = showCover ? "audio-archive-top" : "audio-archive-top no-cover";
+  const thumb = img
+    ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
+    : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`;
 
   return `
-    <div class="audio-archive-shell ${showCover ? "has-cover" : "no-cover"}">
-      <div class="${topClass}">
+    <div class="audio-archive-shell">
+      <div class="audio-archive-top">
         ${thumb}
         <div class="audio-archive-meta">
           <h3>${safeTitle}</h3>
+          ${safeCategory}
           ${safePreview}
         </div>
       </div>
@@ -2068,39 +2058,6 @@ function bindDetailPhotoZoom() {
   };
 }
 
-
-function renderSongDetailPanel(item) {
-  const title = escapeHtml(item.title || "제목 없음");
-  const categoryHtml = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
-  const metaHtml = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
-  const bodyText = item.body || item.description || "";
-  const bodyHtml = bodyText ? escapeHtml(bodyText).replace(/
-/g, "<br>") : "";
-  const mediaUrl = item.mediaUrl || item.fileUrl || "";
-  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
-  const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, "songs");
-  const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
-  const playerHtml = playbackMediaUrl ? renderRadioMonochromePlayer(playbackMediaUrl, `songs-detail-${item.id || "detail"}`) : "";
-  const coverHtml = playbackImageUrl
-    ? `<div class="song-detail-cover"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`
-    : "";
-
-  return `
-    <div class="song-detail-panel">
-      <div class="song-detail-top ${coverHtml ? "with-cover" : "no-cover"}">
-        <div class="song-detail-info">
-          ${playerHtml ? `<div class="detail-audio-box detail-radio-audio-box song-detail-player-box">${playerHtml}</div>` : ""}
-          <h2 class="song-detail-title">${title}</h2>
-          <p class="song-detail-category">${categoryHtml}</p>
-          <p class="song-detail-meta">${metaHtml}</p>
-        </div>
-        ${coverHtml}
-      </div>
-      ${bodyHtml ? `<div class="song-detail-description">${bodyHtml}</div>` : ""}
-    </div>
-  `;
-}
-
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = item.mediaUrl || item.fileUrl || item.videoUrl || "";
@@ -2126,28 +2083,7 @@ function renderDetailMedia(item) {
     return "";
   }
 
-  if (category === "songs") {
-    if (mediaUrl && imageUrl) {
-      return `
-        <div class="detail-song-audio-layout">
-          <div class="detail-song-cover-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>
-          <div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>
-        </div>
-      `;
-    }
-
-    if (mediaUrl) {
-      return `<div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>`;
-    }
-
-    if (imageUrl) {
-      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
-    }
-
-    return "";
-  }
-
-  if (category === "radios") {
+  if (category === "songs" || category === "radios") {
     if (mediaUrl) {
       return `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>`;
     }
@@ -2190,33 +2126,16 @@ function openContentDetail(id) {
     return;
   }
 
-  const detailTextArea = modal.querySelector(".detail-text-area");
-  const isSongDetail = item.category === "songs";
+  const mediaHtml = renderDetailMedia(item);
+  const bodyText = item.body || item.description || "";
 
-  if (isSongDetail) {
-    mediaArea.innerHTML = renderSongDetailPanel(item);
-    mediaArea.classList.remove("hidden");
-    if (detailTextArea) detailTextArea.classList.add("hidden");
-    modal.classList.add("song-detail-mode");
-    titleEl.textContent = "";
-    categoryEl.innerHTML = "";
-    metaEl.innerHTML = "";
-    descEl.innerHTML = "";
-  } else {
-    const mediaHtml = renderDetailMedia(item);
-    const bodyText = item.body || item.description || "";
+  mediaArea.innerHTML = mediaHtml || "";
+  mediaArea.classList.toggle("hidden", !mediaHtml);
 
-    mediaArea.innerHTML = mediaHtml || "";
-    mediaArea.classList.toggle("hidden", !mediaHtml);
-    if (detailTextArea) detailTextArea.classList.remove("hidden");
-    modal.classList.remove("song-detail-mode");
-
-    titleEl.textContent = item.title || "제목 없음";
-    categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
-    metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
-    descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/
-/g, "<br>") : "";
-  }
+  titleEl.textContent = item.title || "제목 없음";
+  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
+  metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
+  descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
   modal.classList.remove("hidden");
   installBasicContentProtection();
@@ -2238,18 +2157,13 @@ function closeContentDetail(event) {
   const metaEl = document.getElementById("detailMeta");
   const descEl = document.getElementById("detailDescription");
   const modal = document.getElementById("contentDetailModal");
-  const detailTextArea = modal?.querySelector(".detail-text-area");
 
   if (mediaArea) mediaArea.innerHTML = "";
   if (titleEl) titleEl.textContent = "";
   if (categoryEl) categoryEl.innerHTML = "";
   if (metaEl) metaEl.innerHTML = "";
   if (descEl) descEl.innerHTML = "";
-  if (detailTextArea) detailTextArea.classList.remove("hidden");
-  if (modal) {
-    modal.classList.remove("song-detail-mode");
-    modal.classList.add("hidden");
-  }
+  if (modal) modal.classList.add("hidden");
 
   document.body.style.overflow = "";
 }
