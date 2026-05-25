@@ -183,7 +183,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v110-video-edit-preserve-media";
+const APP_VERSION = "v112-mobile-video-zoom-reset";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -2281,7 +2281,7 @@ function createCard(item) {
   const videoMediaUrl = getVideoMediaUrl(item);
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
   if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) media = `<video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(videoMediaUrl, "video")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) media = `<video controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(videoMediaUrl, "video")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
@@ -2443,7 +2443,7 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
-      return `<div class="detail-media-box"><video controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></video></div>`;
+      return `<div class="detail-media-box"><video controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></video></div>`;
     }
 
     if (imageUrl) {
@@ -2538,6 +2538,7 @@ function openContentDetail(id) {
   }
   descEl.innerHTML = bodyText ? escapeHtml(bodyText).replace(/\n/g, "<br>") : "";
 
+  forceMobileViewportZoomReset();
   modal.classList.remove("hidden");
   installBasicContentProtection();
   if (typeof hardenMediaDownloadControls === "function") {
@@ -2567,6 +2568,7 @@ function closeContentDetail(event) {
   if (modal) modal.classList.add("hidden");
 
   document.body.style.overflow = "";
+  forceMobileViewportZoomReset();
 }
 
 document.addEventListener("keydown", e => {
@@ -2659,6 +2661,81 @@ async function deleteContentItem(id) {
   } catch (error) {
     alert("삭제 오류: " + error.message);
   }
+}
+
+
+
+// v112: 모바일에서 영상 상세/전체화면을 닫은 뒤 브라우저 확대 상태가 남는 문제 보정
+function isMobileViewportForZoomReset() {
+  return window.matchMedia && window.matchMedia("(max-width: 820px)").matches;
+}
+
+function forceMobileViewportZoomReset() {
+  if (!isMobileViewportForZoomReset()) return;
+
+  const viewport = document.querySelector('meta[name="viewport"]');
+  const stableViewport = "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
+  const top = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
+
+  if (viewport) {
+    // Android Chrome/Samsung Internet에서 video fullscreen 또는 상세창 종료 후
+    // visual viewport scale이 남는 경우가 있어 viewport 값을 다시 주입합니다.
+    viewport.setAttribute("content", stableViewport);
+    setTimeout(() => viewport.setAttribute("content", stableViewport), 80);
+    setTimeout(() => viewport.setAttribute("content", stableViewport), 250);
+  }
+
+  document.documentElement.style.width = "100%";
+  document.documentElement.style.maxWidth = "100%";
+  document.documentElement.style.overflowX = "hidden";
+  document.body.style.width = "100%";
+  document.body.style.maxWidth = "100%";
+  document.body.style.overflowX = "hidden";
+
+  requestAnimationFrame(() => {
+    try { window.scrollTo({ left: 0, top, behavior: "auto" }); }
+    catch (e) { window.scrollTo(0, top); }
+  });
+}
+
+function installMobileVideoZoomResetGuards() {
+  const resetSoon = () => {
+    forceMobileViewportZoomReset();
+    setTimeout(forceMobileViewportZoomReset, 120);
+    setTimeout(forceMobileViewportZoomReset, 450);
+  };
+
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement) resetSoon();
+  });
+  document.addEventListener("webkitfullscreenchange", () => {
+    if (!document.webkitFullscreenElement) resetSoon();
+  });
+  document.addEventListener("webkitendfullscreen", resetSoon, true);
+  window.addEventListener("orientationchange", resetSoon);
+  window.addEventListener("pageshow", resetSoon);
+
+  // 모바일 브라우저의 video UI에서 뒤로 나오거나 닫기/일시정지를 했을 때도 보정합니다.
+  document.addEventListener("pause", (event) => {
+    if (event.target && event.target.tagName && event.target.tagName.toLowerCase() === "video") {
+      resetSoon();
+    }
+  }, true);
+
+  document.addEventListener("play", (event) => {
+    if (event.target && event.target.tagName && event.target.tagName.toLowerCase() === "video") {
+      const video = event.target;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      document.body.classList.add("is-video-playing-mobile");
+    }
+  }, true);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", installMobileVideoZoomResetGuards);
+} else {
+  installMobileVideoZoomResetGuards();
 }
 
 window.addEventListener("keydown", (event) => {
