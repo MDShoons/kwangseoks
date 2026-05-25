@@ -183,7 +183,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v113-mobile-hero-title-face-visible";
+const APP_VERSION = "v112-mobile-video-zoom-reset";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -201,7 +201,7 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 이 곳, 광석이네 집",
+  homeTitle: "노래가 머무는 이 곳, 광석이네집",
   homeDescription: "김광석 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
@@ -1034,43 +1034,11 @@ async function loadSiteSettings() {
   applySiteSettings(currentSettings);
 }
 
-function splitHomeHeroTitle(rawTitle = "") {
-  const normalized = String(rawTitle || "")
-    .replace(/광석이네집/g, "광석이네 집")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!normalized) return { kicker: "", title: DEFAULT_SETTINGS.siteName };
-
-  const separators = [",", "|", "
-"];
-  for (const sep of separators) {
-    if (normalized.includes(sep)) {
-      const parts = normalized.split(sep).map(v => v.trim()).filter(Boolean);
-      if (parts.length >= 2) {
-        return { kicker: parts[0], title: parts.slice(1).join(" ") };
-      }
-    }
-  }
-  return { kicker: "", title: normalized };
-}
-
-function renderHomeHeroTitle(rawTitle = "") {
-  const kickerEl = document.getElementById("homeKicker");
-  const titleEl = document.getElementById("homeTitle");
-  const { kicker, title } = splitHomeHeroTitle(rawTitle);
-
-  if (kickerEl) {
-    kickerEl.textContent = kicker || "";
-    kickerEl.style.display = kicker ? "block" : "none";
-  }
-  if (titleEl) titleEl.textContent = title || DEFAULT_SETTINGS.siteName;
-}
-
 function applySiteSettings(settings) {
   applyDesignSettings(settings);
   document.getElementById("siteLogoText").textContent = settings.siteName;
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
-  renderHomeHeroTitle(settings.homeTitle);
+  document.getElementById("homeTitle").textContent = settings.homeTitle;
   document.getElementById("homeDescription").textContent = settings.homeDescription;
   ["videos","songs","radios","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
