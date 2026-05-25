@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=92-oneum-kks-reply" />
+  <link rel="stylesheet" href="style.css?v=96-oneum-author-paren" />
 </head>
 <body>
 
@@ -382,7 +382,7 @@
         <p class="helper-text">Oneum 페이지에 올라갈 원음/둥근소리 글을 별도로 등록합니다. 여기서 입력한 날짜와 시간이 사이트 등록 시간이 아니라 Oneum 화면의 업로드일로 표시됩니다.</p>
         <label>자료 카테고리</label><select id="oneumSubCategory"><option value="">카테고리 없음</option></select>
         <input id="oneumTitle" type="text" placeholder="글 제목" />
-        <input id="oneumAuthor" type="text" placeholder="올린이 예: 관리자, 광석이네 집" />
+        <div class="form-two-col"><input id="oneumAuthor" type="text" placeholder="올린이 닉네임 예: 바람소리" /><input id="oneumAuthorName" type="text" placeholder="이름 예: 홍길동" /></div>
         <input id="oneumDateTime" type="text" placeholder="원음글 업로드일/시간 예: 1995년 6월 3일 10:25" />
         <textarea id="oneumBody" placeholder="본문"></textarea>
         <input id="oneumSource" type="text" placeholder="출처 또는 비고" />
@@ -396,7 +396,7 @@
           <h3>김광석의 답글 등록</h3>
           <p class="helper-text">누군가의 글 아래에 김광석이 답글을 단 자료일 때만 체크하고 함께 입력합니다.</p>
           <input id="oneumReplyTitle" type="text" placeholder="답글 제목" />
-          <input id="oneumReplyAuthor" type="text" placeholder="올린이 예: 김광석" />
+          <div class="form-two-col"><input id="oneumReplyAuthor" type="text" placeholder="답글 올린이 닉네임 예: 김광석" /><input id="oneumReplyAuthorName" type="text" placeholder="답글 이름 예: 김광석" /></div>
           <input id="oneumReplyDateTime" type="text" placeholder="답글 날짜/시간 예: 1995년 6월 3일 10:31" />
           <textarea id="oneumReplyBody" placeholder="김광석의 답글 본문"></textarea>
           <input id="oneumReplySource" type="text" placeholder="답글 출처 또는 비고" />
@@ -493,8 +493,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v94-oneum-manual-upload-date</div>
+<div class="version-marker">v95-oneum-nickname-realname</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=94-oneum-manual-upload-date"></script>
+  <script type="module" src="app.js?v=96-oneum-author-paren"></script>
 </body>
 </html>

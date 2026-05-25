@@ -680,10 +680,11 @@ function getOneumReplyFormData() {
   const checked = !!document.getElementById("oneumHasKksReply")?.checked;
   const title = document.getElementById("oneumReplyTitle")?.value.trim() || "";
   const author = document.getElementById("oneumReplyAuthor")?.value.trim() || "";
+  const authorName = document.getElementById("oneumReplyAuthorName")?.value.trim() || "";
   const dateTime = document.getElementById("oneumReplyDateTime")?.value.trim() || "";
   const body = document.getElementById("oneumReplyBody")?.value.trim() || "";
   const source = document.getElementById("oneumReplySource")?.value.trim() || "";
-  return { checked, title, author, dateTime, body, source };
+  return { checked, title, author, authorName, dateTime, body, source };
 }
 
 function toggleOneumReplyFields() {
@@ -692,7 +693,9 @@ function toggleOneumReplyFields() {
   if (box) box.classList.toggle("hidden", !checked);
   if (checked) {
     const authorInput = document.getElementById("oneumReplyAuthor");
+    const authorNameInput = document.getElementById("oneumReplyAuthorName");
     if (authorInput && !authorInput.value.trim()) authorInput.value = "김광석";
+    if (authorNameInput && !authorNameInput.value.trim()) authorNameInput.value = "김광석";
   }
 }
 
@@ -703,6 +706,7 @@ async function saveOneumPost() {
   const title = document.getElementById("oneumTitle")?.value.trim() || "";
   const body = document.getElementById("oneumBody")?.value.trim() || "";
   const author = document.getElementById("oneumAuthor")?.value.trim() || "";
+  const authorName = document.getElementById("oneumAuthorName")?.value.trim() || "";
   const dateTime = document.getElementById("oneumDateTime")?.value.trim() || "";
   const source = document.getElementById("oneumSource")?.value.trim() || "";
   const subCategory = document.getElementById("oneumSubCategory")?.value || "";
@@ -710,11 +714,13 @@ async function saveOneumPost() {
 
   if (!title) return alert("글 제목을 입력하세요.");
   if (!body) return alert("본문을 입력하세요.");
-  if (!author) return alert("올린이를 입력하세요.");
+  if (!author) return alert("올린이 닉네임을 입력하세요.");
+  if (!authorName) return alert("올린이 이름을 입력하세요.");
   if (!dateTime) return alert("날짜와 시간을 입력하세요.");
   if (reply.checked) {
     if (!reply.title) return alert("김광석 답글의 제목을 입력하세요.");
-    if (!reply.author) return alert("김광석 답글의 올린이를 입력하세요.");
+    if (!reply.author) return alert("김광석 답글의 올린이 닉네임을 입력하세요.");
+    if (!reply.authorName) return alert("김광석 답글의 이름을 입력하세요.");
     if (!reply.dateTime) return alert("김광석 답글의 날짜와 시간을 입력하세요.");
     if (!reply.body) return alert("김광석 답글 본문을 입력하세요.");
   }
@@ -728,7 +734,10 @@ async function saveOneumPost() {
       body,
       description: body,
       author,
+      authorNickname: author,
+      authorName,
       uploadedByName: author,
+      uploaderName: authorName,
       oneumDateTime: dateTime,
       year: dateTime,
       source,
@@ -736,12 +745,15 @@ async function saveOneumPost() {
       kksReply: reply.checked ? {
         title: reply.title,
         author: reply.author,
+        authorNickname: reply.author,
+        authorName: reply.authorName,
         dateTime: reply.dateTime,
         body: reply.body,
         source: reply.source
       } : null,
       kksReplyTitle: reply.checked ? reply.title : "",
       kksReplyAuthor: reply.checked ? reply.author : "",
+      kksReplyAuthorName: reply.checked ? reply.authorName : "",
       kksReplyDateTime: reply.checked ? reply.dateTime : "",
       kksReplyBody: reply.checked ? reply.body : "",
       kksReplySource: reply.checked ? reply.source : "",
@@ -1763,7 +1775,20 @@ function isOneumItem(item) {
 }
 
 function getOneumAuthor(item) {
-  return String(item?.uploadedByName || item?.author || item?.writer || item?.createdByName || "").trim();
+  return String(item?.authorNickname || item?.uploadedByName || item?.author || item?.writer || item?.createdByName || "").trim();
+}
+
+function getOneumAuthorName(item) {
+  return String(item?.authorName || item?.uploaderName || item?.realName || "").trim();
+}
+
+function formatOneumAuthorLine(nickname, name) {
+  const nick = String(nickname || "").trim();
+  const real = String(name || "").trim();
+  if (nick && real) return `${escapeHtml(nick)} <span class="real-name-paren">(${escapeHtml(real)})</span>`;
+  if (nick) return escapeHtml(nick);
+  if (real) return `<span class="real-name-paren">(${escapeHtml(real)})</span>`;
+  return "";
 }
 
 function getOneumDateTime(item) {
@@ -1773,9 +1798,11 @@ function getOneumDateTime(item) {
 function oneumMetaMarkup(item) {
   if (!isOneumItem(item)) return "";
   const author = getOneumAuthor(item);
+  const authorName = getOneumAuthorName(item);
   const dateTime = getOneumDateTime(item);
+  const authorLine = formatOneumAuthorLine(author, authorName);
   const parts = [];
-  if (author) parts.push(`<p><strong>올린이:</strong> ${escapeHtml(author)}</p>`);
+  if (authorLine) parts.push(`<p><strong>올린이:</strong> ${authorLine}</p>`);
   if (dateTime) parts.push(`<p><strong>업로드일:</strong> ${escapeHtml(dateTime)}</p>`);
   if (hasOneumKksReply(item)) parts.push(`<p><span class="category-badge oneum-reply-badge">김광석 답글 포함</span></p>`);
   return parts.join("");
@@ -1785,7 +1812,8 @@ function getOneumKksReply(item) {
   const nested = item?.kksReply && typeof item.kksReply === "object" ? item.kksReply : {};
   return {
     title: String(nested.title || item?.kksReplyTitle || "").trim(),
-    author: String(nested.author || item?.kksReplyAuthor || "김광석").trim(),
+    author: String(nested.authorNickname || nested.author || item?.kksReplyAuthor || "김광석").trim(),
+    authorName: String(nested.authorName || item?.kksReplyAuthorName || "김광석").trim(),
     dateTime: String(nested.dateTime || item?.kksReplyDateTime || "").trim(),
     body: String(nested.body || item?.kksReplyBody || "").trim(),
     source: String(nested.source || item?.kksReplySource || "").trim()
@@ -1805,7 +1833,7 @@ function renderOneumKksReplyMarkup(item) {
   return `<section class="oneum-kks-reply-box">
     <div class="oneum-kks-reply-label">김광석의 답글</div>
     <h3>${escapeHtml(reply.title || "답글")}</h3>
-    <p><strong>올린이:</strong> ${escapeHtml(reply.author || "김광석")}</p>
+    <p><strong>올린이:</strong> ${formatOneumAuthorLine(reply.author || "김광석", reply.authorName || "김광석")}</p>
     <p><strong>날짜/시간:</strong> ${escapeHtml(reply.dateTime || "미기재")}</p>
     <div class="oneum-kks-reply-body">${escapeHtml(reply.body).replace(/\n/g, "<br>")}</div>
     ${source}
@@ -2489,9 +2517,10 @@ function openContentDetail(id) {
   categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
   if (isOneumItem(item)) {
     const author = getOneumAuthor(item) || "미기재";
+    const authorName = getOneumAuthorName(item);
     const dateTime = getOneumDateTime(item) || "미기재";
     const source = item.source ? `<br><strong>출처:</strong> ${escapeHtml(item.source)}` : "";
-    metaEl.innerHTML = `<strong>올린이:</strong> ${escapeHtml(author)}<br><strong>업로드일:</strong> ${escapeHtml(dateTime)}${source}`;
+    metaEl.innerHTML = `<strong>올린이:</strong> ${formatOneumAuthorLine(author, authorName)}<br><strong>업로드일:</strong> ${escapeHtml(dateTime)}${source}`;
   } else {
     metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
   }
@@ -2554,6 +2583,7 @@ function editContent(id) {
     document.getElementById("oneumTitle").value = item.title || "";
     populateSpecificSubCategorySelect("oneum", "oneumSubCategory", item.subCategory || "");
     document.getElementById("oneumAuthor").value = getOneumAuthor(item) || "";
+    document.getElementById("oneumAuthorName").value = getOneumAuthorName(item) || "";
     document.getElementById("oneumDateTime").value = getOneumDateTime(item) || item.year || "";
     document.getElementById("oneumBody").value = item.body || item.description || "";
     document.getElementById("oneumSource").value = item.source || "";
@@ -2562,6 +2592,7 @@ function editContent(id) {
     document.getElementById("oneumHasKksReply").checked = hasReply;
     document.getElementById("oneumReplyTitle").value = hasReply ? reply.title : "";
     document.getElementById("oneumReplyAuthor").value = hasReply ? (reply.author || "김광석") : "";
+    document.getElementById("oneumReplyAuthorName").value = hasReply ? (reply.authorName || "김광석") : "";
     document.getElementById("oneumReplyDateTime").value = hasReply ? reply.dateTime : "";
     document.getElementById("oneumReplyBody").value = hasReply ? reply.body : "";
     document.getElementById("oneumReplySource").value = hasReply ? reply.source : "";

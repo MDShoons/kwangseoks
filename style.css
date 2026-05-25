@@ -3051,3 +3051,19 @@ video:-ms-fullscreen {
   background: #f1d5bd;
   color: #6f3f28;
 }
+
+/* v95: Oneum uploader nickname + real name fields */
+.form-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.form-two-col input {
+  width: 100%;
+}
+@media (max-width: 720px) {
+  .form-two-col {
+    grid-template-columns: 1fr;
+  }
+}
