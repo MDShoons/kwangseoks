@@ -162,7 +162,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v83-audio-align-fix";
+const APP_VERSION = "v84-song-detail-cover-radio-no-cover";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1870,13 +1870,17 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const safeSource = escapeHtml(item.source || "미기재");
   const created = createdDateMarkup(item);
   const player = renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(item.mediaUrl, "audio"), `${id}-${item.id}`);
-  const thumb = img
-    ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
-    : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`;
+  const showCover = id === "songList";
+  const thumb = showCover
+    ? (img
+        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
+        : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`)
+    : "";
+  const topClass = showCover ? "audio-archive-top" : "audio-archive-top no-cover";
 
   return `
-    <div class="audio-archive-shell">
-      <div class="audio-archive-top">
+    <div class="audio-archive-shell ${showCover ? "has-cover" : "no-cover"}">
+      <div class="${topClass}">
         ${thumb}
         <div class="audio-archive-meta">
           <h3>${safeTitle}</h3>
@@ -2083,7 +2087,28 @@ function renderDetailMedia(item) {
     return "";
   }
 
-  if (category === "songs" || category === "radios") {
+  if (category === "songs") {
+    if (mediaUrl && imageUrl) {
+      return `
+        <div class="detail-song-audio-layout">
+          <div class="detail-song-cover-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>
+          <div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>
+        </div>
+      `;
+    }
+
+    if (mediaUrl) {
+      return `<div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>`;
+    }
+
+    if (imageUrl) {
+      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+    }
+
+    return "";
+  }
+
+  if (category === "radios") {
     if (mediaUrl) {
       return `<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>`;
     }
