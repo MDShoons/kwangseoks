@@ -4593,3 +4593,38 @@ body.content-protected iframe {
     top: 500px !important;
   }
 }
+
+
+/* v118: 플레이리스트 앨범 자켓 배경 + 자정 초기화/고정 표시 보정 */
+#userPlaylistPlayer .playlist-player-card {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+#userPlaylistPlayer .playlist-player-card.has-playlist-cover::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -2 !important;
+  background-image: var(--playlist-cover-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  filter: blur(8px) saturate(1.05) brightness(0.78) !important;
+  transform: scale(1.12) !important;
+  opacity: 0.9 !important;
+}
+
+#userPlaylistPlayer .playlist-player-card.has-playlist-cover::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  background: linear-gradient(145deg, rgba(24, 31, 47, 0.84), rgba(45, 64, 93, 0.76) 52%, rgba(91, 61, 35, 0.76)) !important;
+}
+
+#userPlaylistPlayer .playlist-player-card.has-playlist-cover .daily-player-title,
+#userPlaylistPlayer .playlist-player-card.has-playlist-cover .daily-player-sub,
+#userPlaylistPlayer .playlist-player-card.has-playlist-cover .daily-player-label {
+  text-shadow: 0 2px 8px rgba(0,0,0,0.36) !important;
+}
