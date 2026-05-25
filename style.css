@@ -89,7 +89,9 @@ main { max-width: 1240px; margin: 0 auto; min-height: 720px; padding: 36px 24px;
   inset: 0;
   background: rgba(20,12,8,.18);
 }
-.hero h1, .hero p, .hero div { position: relative; z-index: 1; text-shadow: 0 2px 10px rgba(0,0,0,.35); }
+.hero h1, .hero p, .hero div, .hero .hero-kicker { position: relative; z-index: 1; text-shadow: 0 2px 10px rgba(0,0,0,.35); }
+.hero .hero-copy { position: relative; z-index: 1; max-width: 560px; }
+.hero .hero-kicker { display: block; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; color: rgba(255,255,255,.92) !important; margin: 0 0 8px; }
 .hero h1 { font-size: var(--hero-title-size) !important; margin: 0 0 16px; color: var(--hero-text-color) !important; }
 .hero p { font-size: var(--hero-desc-size) !important; color: var(--hero-text-color) !important; margin: 0 0 26px; }
 
@@ -4067,21 +4069,34 @@ body.is-mobile-site iframe {
     min-width: 0 !important;
     min-height: 0 !important;
     height: auto !important;
-    padding: 22px 14px 14px !important;
+    padding: 20px 14px 14px !important;
     margin: 0 0 12px 0 !important;
     border-radius: 16px !important;
     overflow: hidden !important;
+    background-position: 62% center !important;
   }
 
+  body.is-mobile-site .hero .hero-copy {
+    max-width: 54% !important;
+  }
+
+  body.is-mobile-site .hero .hero-kicker,
   body.is-mobile-site .hero h1,
   body.is-mobile-site .hero p {
-    max-width: 68% !important;
+    max-width: 100% !important;
+  }
+
+  body.is-mobile-site .hero .hero-kicker {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    margin-bottom: 6px !important;
   }
 
   body.is-mobile-site .hero h1 {
-    font-size: 20px !important;
-    line-height: 1.25 !important;
-    margin-bottom: 7px !important;
+    font-size: 30px !important;
+    line-height: 1.08 !important;
+    margin-bottom: 8px !important;
+    word-break: keep-all !important;
   }
 
   body.is-mobile-site .hero p {
@@ -4180,9 +4195,20 @@ body.is-mobile-site iframe {
     top: 348px !important;
   }
 
-  body.is-mobile-site .hero h1,
-  body.is-mobile-site .hero p {
-    max-width: 72% !important;
+  body.is-mobile-site .hero {
+    background-position: 64% center !important;
+  }
+
+  body.is-mobile-site .hero .hero-copy {
+    max-width: 52% !important;
+  }
+
+  body.is-mobile-site .hero .hero-kicker {
+    font-size: 10px !important;
+  }
+
+  body.is-mobile-site .hero h1 {
+    font-size: 28px !important;
   }
 }
 
