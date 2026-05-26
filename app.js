@@ -179,19 +179,9 @@ function getArchiveOrgEmbedUrl(url = "") {
 }
 
 function buildArchiveOrgInPagePlayerHtml(url = "", title = "") {
-  const embedUrl = getArchiveOrgEmbedUrl(url);
-  if (!embedUrl) return "";
-  const safeEmbedUrl = escapeHtml(embedUrl);
-  const safeDirectUrl = escapeHtml(normalizeMediaUrlForPlayback(url, "video"));
-  const safeTitle = escapeHtml(title || "영상");
-  return `
-    <div class="archive-video-player-wrap">
-      <iframe class="archive-video-iframe" src="${safeEmbedUrl}" title="${safeTitle}" allow="fullscreen; autoplay" allowfullscreen loading="lazy"></iframe>
-      <div class="archive-video-help">
-        <span>iPad/Safari 호환을 위해 이 화면 안에서 Archive 플레이어로 재생합니다.</span>
-        <a href="${safeDirectUrl}" target="_blank" rel="noopener">직접 파일 열기</a>
-      </div>
-    </div>`;
+  // v120: archive.org도 임베드/새창 없이 사이트 안의 기본 <video>로 직접 재생한다.
+  // 함수명은 기존 호출부 호환을 위해 남겨두되, 더 이상 iframe을 만들지 않는다.
+  return buildVideoPlayerHtml(url, "", title || "영상", "detail-video-player archive-direct-video-player");
 }
 
 function getVideoMimeType(url = "") {
@@ -213,14 +203,13 @@ function buildVideoPlayerHtml(url = "", poster = "", title = "", extraClass = ""
   const className = ["site-video-player", extraClass].filter(Boolean).join(" ");
   return `
     <div class="video-player-wrap">
-      <video class="${className}" controls playsinline webkit-playsinline x-webkit-airplay="allow" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"${safePoster}>
+      <video class="${className}" title="${safeTitle}" controls playsinline webkit-playsinline x-webkit-airplay="allow" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"${safePoster}>
         <source src="${safeUrl}" type="${mimeType}">
         <source src="${safeUrl}">
         이 브라우저에서 영상을 바로 재생할 수 없습니다.
       </video>
       <div class="video-fallback-notice" aria-hidden="true">
-        <p>영상이 검은 화면으로 보이면 iPad/Safari의 영상 로딩 문제일 수 있습니다.</p>
-        <a href="${safeUrl}" target="_blank" rel="noopener">직접 파일 열기</a>
+        <p>영상 로딩이 늦으면 잠시 기다린 뒤 재생 버튼을 다시 눌러주세요.</p>
       </div>
     </div>`;
 }
@@ -2973,8 +2962,6 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
-      const archiveEmbed = buildArchiveOrgInPagePlayerHtml(mediaUrl, item.title || "");
-      if (archiveEmbed) return `<div class="detail-media-box">${archiveEmbed}</div>`;
       return `<div class="detail-media-box">${buildVideoPlayerHtml(mediaUrl, imageUrl, item.title || "", "detail-video-player")}</div>`;
     }
 
@@ -3361,7 +3348,7 @@ document.addEventListener("click", (event) => {
 }, false);
 
 
-/* v119: iPad/Safari Archive 영상 인페이지 재생 보정 */
+/* v120: 영상 직접 재생 안정화 - archive.org도 iframe/새창 없이 video 태그로 처리 */
 function isIpadOrSafariLike() {
   const ua = navigator.userAgent || "";
   const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
