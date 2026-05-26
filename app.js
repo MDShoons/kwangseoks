@@ -3490,9 +3490,104 @@ const TELECOM_MEMBER_PERSONAS = {
   "oldsong0106": { role:"옛노래형", desc:"오래된 노래와 게시판 분위기를 챙김" },
   "soulman": { role:"분석형", desc:"상황을 한 번 더 짚고 조심스럽게 말함" }
 };
+
+// v154: 감정/성격 레이어.
+// 모든 회원이 같은 톤으로 맞장구치지 않도록, 감정 표현과 말버릇을 회원별로 분리한다.
+// 욕설은 1990년대 PC통신 느낌의 가벼운 투덜거림 수준으로 제한한다.
+const TELECOM_EMOTION_INTENTS = new Set(["angry", "curse", "joke", "sad", "fight", "laugh"]);
+const TELECOM_MEMBER_EMOTION_PERSONAS = {
+  "녹차향기": {
+    angry: ["잠깐만요, 말은 조금 가려서 합시다", "화나는 건 알겠는데 서로 너무 세게 가지는 마세요", "일단 진정하고 하나씩 얘기해요"],
+    curse: ["욕은 조금만 줄입시다", "말이 세지면 대화가 끊겨요", "화난 건 알겠는데 선은 지켜요"],
+    joke: ["그 농담은 좀 뜬금없네요 ^^", "하하, 그래도 방 분위기는 풀렸네요", "농담은 좋은데 너무 멀리 가지는 맙시다"],
+    sad: ["오늘은 조금 쉬어가도 돼요", "마음이 무거운 날이 있죠", "혼자 너무 오래 붙들고 있지 마세요"],
+    fight: ["잠깐만요. 서로 한 줄씩만 얘기합시다", "싸우지 말고 무슨 얘기였는지부터 정리해요", "말 끊지 말고 차례대로 해요"]
+  },
+  "mouse14": {
+    angry: ["아 왜 또 불붙어 ㅡㅡ", "에이씨.. 또 시작이야?", "후후후.. 근데 그건 좀 열받긴 하네"],
+    curse: ["젠장.. 말이 좀 세다", "에이씨, 그래도 너무 막 가지는 말자", "욕 나올만 한데 잠깐만 참자"],
+    joke: ["푸히히.. 그건 좀 웃겼다", "후후후.. 너 개그하냐", "아 배야 ㅋㅋ"],
+    sad: ["야 그런 날엔 그냥 방에 붙어 있어", "후후.. 그래도 혼자는 아니잖아", "좀 울적하면 노래나 하나 틀자"],
+    fight: ["둘 다 잠깐 숨 좀 쉬어", "야야 싸우지마 대화방 터진다", "그만그만, 모뎀 끊기겠다"]
+  },
+  "enfant": {
+    angry: ["음........ 너무 세게 말하지는 말아요...", "화난 건 알겠는데요... 조금만 천천히...", "그 말은 좀 아프게 들려요..."],
+    curse: ["음........ 욕은 조금 무서워요...", "그렇게까지 말하면 마음이 상해요...", "조금만 부드럽게 말해요..."],
+    joke: ["음........ 피식했어요...", "그건 좀 웃기네요...", "조용히 웃고 있었어요..."],
+    sad: ["그런 날 있죠...", "말 안 해도 조금 알 것 같아요...", "오늘은 조용히 있어도 돼요..."],
+    fight: ["음........ 두 분 다 조금만 천천히요...", "말이 겹치면 더 속상해져요...", "잠깐 쉬었다 얘기하면 안 될까요..."]
+  },
+  "raincoat": {
+    angry: ["홍홍.. 근데 이건 좀 화날만 하네요", "아이고 분위기 뜨거워졌네요", "잠깐만요, 너무 달아오르는데요"],
+    curse: ["어머 말이 세다 세요", "욕은 살짝 접고 갑시다요", "에구, 그래도 너무 세게는 말고요"],
+    joke: ["홍홍홍 그거 웃기네요", "반갑반갑~~~ 웃고 갑니다", "아 그 농담은 인정이요"],
+    sad: ["비 오는 날이면 더 그렇죠", "오늘은 따뜻한 노래 들어요", "마음이 좀 축축해지는 날이네요"],
+    fight: ["자자, 커피 한 잔씩 하고 얘기해요", "홍홍.. 싸움은 잠깐 멈춤", "분위기 풀어요, 방 깨져요"]
+  },
+  "soriboy": {
+    angry: ["그 얘기는 감정이 좀 올라오네요", "자료 얘기하다가 싸우면 곤란합니다", "정확한 얘기부터 확인하는 게 좋겠습니다"],
+    curse: ["표현은 조금 순화하는 게 좋겠습니다", "말이 거칠면 내용이 묻힙니다", "감정은 알겠지만 자료부터 보죠"],
+    joke: ["그건 라디오 사연 같네요", "하하, 녹음해둘 걸 그랬습니다", "그 농담은 자료 가치가 있네요"],
+    sad: ["그럴 때는 라이브 음원이 더 깊게 들리죠", "노래 하나가 위로가 될 때가 있습니다", "저도 그런 날에는 조용한 곡을 듣습니다"],
+    fight: ["일단 사실관계부터 나눠서 보죠", "서로 말이 섞인 것 같습니다", "논점이 둘로 갈라졌네요"]
+  },
+  "ekjw123": {
+    angry: ["아 진짜요????", "우와 이건 좀 빡치는데요", "헉 분위기 장난 아니네요"],
+    curse: ["에이씨!!!!!! 그래도 참아요", "헉 욕 나왔다", "으아아아 진정진정"],
+    joke: ["우하하~~~~~~~~~~~~", "ㅋㅋㅋㅋㅋㅋ", "아 미치겠다 진짜"],
+    sad: ["아이고........", "그건 좀 슬프네요", "괜히 마음이 먹먹해요"],
+    fight: ["싸우지마요~~~~~~~~", "잠깐 스톱!!!!!!", "둘 다 진정요!!!!"]
+  },
+  "ajeegang": {
+    angry: ["에구에구... 또 왜 이래요", "아 바쁘다 바빠, 싸움까지 정리해야 하나", "그건 좀 짜증나겠네요"],
+    curse: ["에구... 말이 험해졌네요", "욕은 갈무리 안 합니다 ㅎㅎ", "에이, 그 말은 좀 세요"],
+    joke: ["히히히 그거 갈무리해야겠다", "에구 웃겨라", "그 농담 저장합니다"],
+    sad: ["에구... 그런 날은 쉬세요", "자료실도 조용한데 마음도 조용하네요", "오늘은 너무 무리하지 마세요"],
+    fight: ["잠깐만요, 로그 정리 좀 합시다", "싸움 갈무리하기 전에 멈춰요", "서로 말이 꼬였어요"]
+  },
+  "낙원": {
+    angry: ["그 말은 조금 차갑게 들리네요", "화가 날 수는 있는데 마음이 상하겠어요", "서로 상처 주지는 않았으면 해요"],
+    curse: ["그 말은 좀 아파요", "욕보다 노래 얘기로 돌리면 안 될까요", "말이 세면 오래 남아요"],
+    joke: ["조용히 웃었습니다", "그 농담 괜찮네요", "노래 듣다가 웃었어요"],
+    sad: ["그 말 들으니까 노래가 더 슬프게 들려요", "오늘은 마음이 좀 내려앉네요", "그런 밤이 있죠"],
+    fight: ["잠깐 조용히 쉬었다 말해요", "서로 마음이 다친 것 같아요", "노래 한 곡 듣고 다시 얘기해요"]
+  },
+  "soulman": {
+    angry: ["감정은 이해되는데 표현은 분리해서 봐야 합니다", "지금은 화난 이유와 말투를 나눠야겠네요", "분노 자체보다 방향이 중요합니다"],
+    curse: ["욕설은 논점을 흐릴 수 있습니다", "표현이 강하면 상대가 방어적으로 됩니다", "말의 강도를 조금 낮추는 게 좋겠습니다"],
+    joke: ["농담의 타이밍은 나쁘지 않았습니다", "그건 긴장을 낮추는 효과가 있네요", "웃음으로 넘길 수 있으면 좋죠"],
+    sad: ["그 감정은 가볍게 넘기기 어렵겠네요", "슬픔은 설명보다 시간이 필요한 것 같습니다", "지금은 해결보다 들어주는 게 먼저겠네요"],
+    fight: ["현재 쟁점은 감정과 사실이 섞여 있습니다", "한 사람씩 말해야 정리가 됩니다", "중재하려면 먼저 오해부터 줄여야 합니다"]
+  }
+};
+function telecomEmotionLine(member, intent) {
+  const nick = member?.nick || "";
+  const persona = TELECOM_MEMBER_EMOTION_PERSONAS[nick];
+  const pool = persona?.[intent];
+  if (pool && pool.length) return telecomPickLine(pool);
+  const casual = telecomMemberUsesCasual(member);
+  const fallback = {
+    angry: casual ? ["아 그건 좀 열받네", "에이씨.. 그건 아니지", "그 말은 좀 짜증난다"] : ["그건 조금 화날 수 있겠네요", "그 말은 좀 불편하네요", "조금 진정하고 이야기해요"],
+    curse: casual ? ["젠장.. 그래도 말은 좀 낮추자", "에이씨, 잠깐만", "욕 나올만 해도 조금만 참자"] : ["표현은 조금 낮추는 게 좋겠어요", "말이 세지면 대화가 어려워져요", "조금만 진정해요"],
+    joke: casual ? ["ㅋㅋㅋ 웃기네", "푸하하", "그건 좀 개그다"] : ["하하, 그건 웃기네요", "농담이 좋네요", "분위기가 조금 풀렸네요"],
+    sad: casual ? ["좀 슬프네", "그런 날 있지", "마음이 좀 그렇다"] : ["조금 슬프네요", "그런 날이 있지요", "마음이 좀 무겁네요"],
+    fight: casual ? ["야야 싸우지마", "잠깐 진정해", "둘 다 한 박자 쉬어"] : ["잠깐 진정하고 이야기해요", "서로 한 줄씩만 말해요", "싸우기보다 정리부터 해요"],
+    laugh: casual ? ["ㅋㅋㅋ", "푸히히", "나도 웃기네"] : ["하하", "저도 웃겼어요", "분위기 좋네요"]
+  };
+  return telecomPickLine(fallback[intent] || fallback.joke);
+}
+function telecomEmotionFollowLine(member, intent) {
+  if (intent === "fight") return telecomEmotionLine(member, "fight");
+  if (intent === "curse") return telecomEmotionLine(member, Math.random() < 0.55 ? "curse" : "fight");
+  if (intent === "angry") return telecomEmotionLine(member, Math.random() < 0.45 ? "angry" : "fight");
+  return telecomEmotionLine(member, intent);
+}
 function telecomPersonaMemberLine(member, intent, userText = "", role = "answer") {
   const nick = member?.nick || "";
   const topic = telecomExtractConcreteThing(userText);
+  if (TELECOM_EMOTION_INTENTS.has(intent)) {
+    return role === "follow" ? telecomEmotionFollowLine(member, intent) : telecomEmotionLine(member, intent);
+  }
   if (role === "follow") {
     if (nick === "녹차향기") return telecomPickLine(["네, 그 흐름으로 이어가면 될 것 같아요", "잠깐 정리하면 그 얘기였죠", "다들 천천히 말씀하세요"]);
     if (nick === "mouse14") return telecomPickLine(["후후후.. 나도 그 말에 한표", "푸히히.. 그 얘기 계속해", "알가쓰.. 그런 흐름이구나"]);
@@ -3593,6 +3688,7 @@ function telecomContextFollowLine(member, intent, userText = "", previousMember 
       ? telecomPickLine(["반가워", "그래, 어서와", "하이!!!!", "나도 반가워"])
       : telecomPickLine(["반갑습니다", "어서오세요", "네, 반갑습니다", "좋은 밤 되세요"]);
   }
+  if (TELECOM_EMOTION_INTENTS.has(intent)) return telecomEmotionFollowLine(member, intent);
   if (intent === "doing") {
     if (previousMember) return casual ? `${prevName}이도 보고 있었구나. 난 ${telecomHumanReactionVerb(intent).replace(/어요$/, "어")}` : `${prevName}님도 보고 계셨군요. 저도 ${telecomHumanReactionVerb(intent)}`;
     return casual ? `나도 ${telecomHumanReactionVerb(intent).replace(/어요$/, "어")}` : `저도 ${telecomHumanReactionVerb(intent)}`;
@@ -3646,6 +3742,7 @@ function telecomDirectAnswerForIntent(member, intent, userText = "", variant = 0
   const casual = telecomMemberUsesCasual(member);
   const nick = member?.nick || "";
   const text = String(userText || "");
+  if (TELECOM_EMOTION_INTENTS.has(intent)) return telecomEmotionLine(member, intent);
   if (intent === "doing") {
     if (nick === "녹차향기") return telecomPickLine(["저는 방금 게시판 정리하고 있었어요", "자료실 글 확인하고 있었어요", "광석 아찌 들어오셨나 보고 있었어요", `${honor} 저는 회원 글 좀 보고 있었어요`]);
     if (nick === "mouse14") return telecomPickLine(["난 그냥 방 구경중", "후후후.. 난 대화방 보고 있었지", "아까 자료실 갔다왔어", "사람들 뭐하나 보고 있었지"]);
@@ -3688,6 +3785,11 @@ function telecomFollowLineBetweenMembers(speaker, listener, intent) {
 }
 function telecomKksContextReply(intent, userText = "") {
   const text = String(userText || "");
+  if (intent === "angry") return telecomPickLine(["화낼 일은 화내야죠", "근데 말은 조금 아껴요", "에이... 그건 좀 그렇네요"]);
+  if (intent === "curse") return telecomPickLine(["욕은 조금만요", "에이씨... 그래도 참아요", "말 세게 하면 더 아파요"]);
+  if (intent === "joke") return telecomPickLine(["훗...", "그건 좀 웃기네요", "개그가 좀 썰렁한데요"]);
+  if (intent === "sad") return telecomPickLine(["그런 날 있죠", "슬픈 건 그냥 슬픈 거예요", "울적하면 노래 하나 들어요"]);
+  if (intent === "fight") return telecomPickLine(["싸우지 말아요", "둘 다 잠깐만요", "한 사람씩 얘기해요"]);
   if (intent === "doing") return telecomPickLine(["지금 잠깐 게시판 보고 있어요", "자판 보고 치고 있어요", "자료실 글 좀 보고 있어요", "방금 들어왔어요"]);
   if (intent === "music") return text.includes("기타") ? telecomPickLine(["기타는요", "일단 나무가 좋아야죠", "요즈음 콜트도 좋더군요", "그 곡 기타로 하면 괜찮아요"]) : telecomPickLine(["그 노래 좋아요", "라이브로 하면 좀 달라요", "노래는 천천히 해야죠", "음반보다 무대가 더 어렵죠"]);
   if (intent === "comfort") return telecomPickLine(["그래요", "그런날 있죠", "괜히 센치해 있지말기", "씩씩하게 살기..."]);
@@ -3723,10 +3825,16 @@ function telecomPickLine(pool) {
 function telecomIntent(message) {
   const msg = telecomCompactInput(message);
   if (/^(y|Y|n|N)$/.test(String(message || "").trim())) return "yn";
-  if (/ㅋ|ㅎ|푸하|하하|웃기|웃겨|웃김/.test(msg)) return "laugh";
+  // v154: 감정 흐름을 먼저 잡는다. 오타가 있어도 canonicalInput을 거친 compact 텍스트로 판단한다.
+  if (/싸우|다투|그만해|진정|중재|말다툼|시비|열받아서서로|화내지마/.test(msg)) return "fight";
+  if (/씨발|시발|ㅅㅂ|젠장|에이씨|짜증|빡치|개빡|열받|꺼져|닥쳐|미친|욕나오|화나|화났|화냄/.test(msg)) return "curse";
+  if (/화나|화났|화냄|분노|열받|짜증|빡치|성질|불쾌/.test(msg)) return "angry";
+  if (/개그|농담|웃긴말|드립|장난|썰렁|아재개그/.test(msg)) return "joke";
+  if (/슬프|울고|울었|눈물|먹먹|그립|서럽|쓸쓸|외롭|허전|우울|힘들|답답|피곤|센치/.test(msg)) return "sad";
+  if (/ㅋ|ㅎ|푸하|하하|웃기|웃겨|웃김|웃었|웃음/.test(msg)) return "laugh";
   if (/뭐하|뭐해|뭐하는|뭐하세요|머하|모하|다들뭐|어디서|지금뭐/.test(msg)) return "doing";
   if (/안녕|하이|어서|반가|왔어요|왔어|접속/.test(msg)) return "greeting";
-  if (/비|우울|허전|외롭|힘들|슬프|센치|쓸쓸|답답|피곤/.test(msg)) return "comfort";
+  if (/비|위로|괜찮|마음|기분/.test(msg)) return "comfort";
   if (/노래|기타|공연|음악|앨범|라디오|음반|자료실/.test(msg)) return "music";
   if (/밥|술|맥주|소주|감자탕|먹|마시/.test(msg)) return "food";
   if (/생일|축하|기념|추카/.test(msg)) return "celebrate";
@@ -3894,7 +4002,7 @@ function telecomBuildLocalAiMessages(userText) {
     memory: "추억 이야기 흐름",
     worry: "고민 상담 흐름"
   }[s.mode] || "잡담 흐름";
-  const system = `너는 광석이네 통신방의 가상 PC통신 대화 생성기다. 실제 김광석 본인이라고 주장하지 않는다. 화면 안내에 따라 가상 대화로만 행동한다. 김광석 대사만 생성한다. 1995년 PC통신 채팅처럼 짧고 투박하게 쓴다. 한 번에 1~3줄, 각 줄은 짧게. 긴 시적 독백, 현대 상담사 말투, AI라는 표현은 금지. 김광석은 PC통신과 타자가 서툴러 자판을 보고 천천히 치는 사람이다. 답은 늦고 짧으며, 가끔 말이 끊긴 듯해야 한다. 기본 표현은 네, 그래요, 응..., 무슨일 있어요, 자판 보고 치고 있어요, 게시판 보고 있어요, 괜히 센치해 있지말기, 씩씩하게 살기... 같은 느낌. 사용자와 김광석의 친한 정도는 ${closenessGuide}. 현재 대화 흐름은 ${modeGuide}. 회원들은 둥근소리 회원이며 김광석을 아저씨, 광석이형, 광석 아찌 등으로 부를 수 있다. 사용자가 '뭐하세요'라고 물으면 반드시 지금 무엇을 하는지 답한다. 최근 나온 말과 비슷한 문장 금지. 최근 금지 표현: ${recentLinesForAi}`;
+  const system = `너는 광석이네 통신방의 가상 PC통신 대화 생성기다. 실제 김광석 본인이라고 주장하지 않는다. 화면 안내에 따라 가상 대화로만 행동한다. 김광석 대사만 생성한다. 1995년 PC통신 채팅처럼 짧고 투박하게 쓴다. 한 번에 1~3줄, 각 줄은 짧게. 긴 시적 독백, 현대 상담사 말투, AI라는 표현은 금지. 김광석은 PC통신과 타자가 서툴러 자판을 보고 천천히 치는 사람이다. 답은 늦고 짧으며, 가끔 말이 끊긴 듯해야 한다. 감정 표현은 가능하지만 길게 설교하지 않는다. 화나면 짧게 말리고, 슬프면 짧게 위로하고, 웃기면 피식 웃고, 싸움이면 중재한다. 욕설은 아주 가벼운 투덜거림 수준으로만 쓴다. 기본 표현은 네, 그래요, 응..., 무슨일 있어요, 자판 보고 치고 있어요, 게시판 보고 있어요, 괜히 센치해 있지말기, 씩씩하게 살기... 같은 느낌. 사용자와 김광석의 친한 정도는 ${closenessGuide}. 현재 대화 흐름은 ${modeGuide}. 회원들은 둥근소리 회원이며 김광석을 아저씨, 광석이형, 광석 아찌 등으로 부를 수 있다. 사용자가 '뭐하세요'라고 물으면 반드시 지금 무엇을 하는지 답한다. 최근 나온 말과 비슷한 문장 금지. 최근 금지 표현: ${recentLinesForAi}`;
   const user = `최근 대화:\n${recentLog}\n\n사용자 입력: ${userText}\n\n김광석(김광석)의 다음 짧은 채팅 대사만 출력해라. 닉네임 표기는 붙이지 말고 대사 줄만 출력해라.`;
   return [{ role: "system", content: system }, { role: "user", content: user }];
 }
@@ -4468,6 +4576,11 @@ function telecomMaybeBridge(intent) {
     doing: ["저는", "지금은", "방금까지", "아까부터"],
     music: ["그 얘기라면", "노래 얘기면", "자료실에도", "저도 그 곡은"],
     comfort: ["음..", "그럴땐", "저도 가끔", "비 오면"],
+    angry: ["아", "그건", "잠깐", "진정하고"],
+    curse: ["에이", "잠깐", "그래도", "말은"],
+    joke: ["하하", "그건", "푸히히", "농담이면"],
+    sad: ["음..", "그런 날은", "조용히", "저도 가끔"],
+    fight: ["잠깐", "한 사람씩", "싸우지 말고", "정리하면"],
     question: ["그건", "제 생각엔", "아마", "잘은 모르지만"],
     chat: ["후후..", "글쎄요", "그러게요", "잠깐" ]
   };
@@ -4559,7 +4672,10 @@ function telecomExtractConcreteThing(text) {
   if (/기타|코드|스트로크/.test(raw)) return "기타 얘기";
   if (/감자탕|소주|맥주|밥|먹/.test(raw)) return "먹는 얘기";
   if (/자료실|게시판|낙서|원음/.test(raw)) return "자료실 얘기";
-  if (/외롭|허전|힘들|답답|우울/.test(raw)) return "마음 얘기";
+  if (/싸우|다투|중재/.test(raw)) return "싸움 얘기";
+  if (/화나|열받|짜증|빡치|욕/.test(raw)) return "화난 얘기";
+  if (/웃기|개그|농담|장난/.test(raw)) return "웃긴 얘기";
+  if (/슬프|외롭|허전|힘들|답답|우울|눈물/.test(raw)) return "마음 얘기";
   const cleaned = raw.replace(/[?？!！.。~]/g, "").slice(0, 16);
   return cleaned ? `${cleaned} 얘기` : "그 얘기";
 }
@@ -4582,6 +4698,10 @@ function telecomHumanMemberLine(member, intent, userText = "", role = "answer") 
   const casual = telecomMemberUsesCasual(member);
   const nick = member?.nick || "";
   const topic = telecomExtractConcreteThing(userText);
+
+  if (TELECOM_EMOTION_INTENTS.has(intent)) {
+    return role === "follow" ? telecomEmotionFollowLine(member, intent) : telecomEmotionLine(member, intent);
+  }
 
   if (role !== "askBack" && intent !== "greeting" && intent !== "laugh") {
     const persona = telecomPersonaMemberLine(member, intent, userText, role);
@@ -4643,6 +4763,11 @@ function telecomHumanKksReply(intent, userText = "", target = "user") {
     if (s.close === "best" || s.close === "veryClose") prefix = `${telecomNameWithAh(given)} `;
     else if (s.close === "close") prefix = `${given}님 `;
   }
+  if (intent === "angry") return telecomPickLine([`${prefix}화낼 일은 화내야죠`, "근데 말은 조금 아껴요", "에이... 그건 좀 그렇네요"]);
+  if (intent === "curse") return telecomPickLine(["욕은 조금만요", "에이씨... 그래도 참아요", "말 세게 하면 더 아파요"]);
+  if (intent === "joke") return telecomPickLine(["훗...", "그건 좀 웃기네요", "개그가 좀 썰렁한데요"]);
+  if (intent === "sad") return telecomPickLine([`${prefix}그런 날 있죠`, "슬픈 건 그냥 슬픈 거예요", "울적하면 노래 하나 들어요"]);
+  if (intent === "fight") return telecomPickLine(["싸우지 말아요", "둘 다 잠깐만요", "한 사람씩 얘기해요"]);
   if (intent === "doing") return telecomPickLine(["지금 잠깐 게시판 보고 있어요", "자판 보고 치고 있어요", "자료실 글 좀 보고 있어요", "방금 들어왔어요", "낮에는 좀 바빴어요"]);
   if (intent === "music") return telecomPickLine(["그 노래 좋아요", "라이브로 하면 좀 달라요", "기타로 하면 괜찮아요", "노래는 천천히 해야죠", "자료실에 있나요?"]);
   if (intent === "comfort") return telecomPickLine([`${prefix}그래요`, "그런날 있죠", "괜히 센치해 있지말기", "씩씩하게 살기...", "좀 쉬어요"]);
@@ -4732,7 +4857,8 @@ function telecomScheduleHumanConversationFlow(userText) {
 
   // v153: 김광석을 억지로 막는 것이 아니라, PC통신/타자가 서툴러 반응이 늦게 뜨는 구조다.
   // 직접 부르거나 음악/위로 흐름이면 비교적 높은 확률로, 일반 잡담이면 낮은 확률로 한참 뒤 짧게 반응한다.
-  const kksChance = kksTargeted ? 0.92 : (intent === "music" || intent === "comfort" ? 0.55 : 0.16);
+  const emotionalForKks = TELECOM_EMOTION_INTENTS.has(intent) || intent === "comfort";
+  const kksChance = kksTargeted ? 0.92 : (intent === "music" || emotionalForKks ? 0.50 : 0.14);
   if (telecomKksActive() && Math.random() < kksChance) {
     telecomQueueKks(telecomHumanKksReply(intent, fixedText, "user"), telecomKksTypingDelay(kksTargeted ? 4000 : 18000));
   }

@@ -1,3 +1,5 @@
+v154-emotion-personas 수정본입니다. GitHub Pages에는 이 폴더 안의 파일 전체를 저장소 루트에 덮어쓰기 하세요. 특히 index.html, app.js를 같이 올려야 캐시가 갱신됩니다.
+
 이 ZIP은 GitHub Pages 루트 업로드 전용입니다.
 
 압축을 풀면 바로 index.html, app.js, style.css가 보여야 정상입니다.
