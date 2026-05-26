@@ -4133,8 +4133,415 @@ function initTelecomChatRoom() {
   }
   telecomSetupCallButton();
 }
+
+
+/* v140: PC통신방 대화 흐름 보정 엔진
+   - 무료/로컬 규칙형에서도 제타처럼 이어지는 느낌을 내기 위한 관계형 대화 상태 엔진
+   - 기존 안정 로직은 유지하고, 사용자 입력 처리/주변 대화 생성 함수만 덮어쓴다.
+*/
+const TELECOM_V140_CONTEXT_KEY = "kwangseokTelecomContextV140";
+const TELECOM_V140_TOPIC_LABELS = {
+  doing: "뭐하는지",
+  greeting: "인사",
+  comfort: "마음 이야기",
+  music: "음악 이야기",
+  food: "먹는 얘기",
+  celebrate: "축하",
+  question: "질문",
+  chat: "잡담"
+};
+const TELECOM_V140_MEMBER_EXTRA = {
+  "녹차향기": {
+    role: "manager",
+    casualToUser: false,
+    callsKks: ["광석 아찌", "아저씨"],
+    activities: ["게시판 정리하고 있어요", "방금 올라온 글 보고 있어요", "아저씨 들어오셨는지 보고 있었어요", "자료실 쪽 보고 있었어요"],
+    fillers: ["천천히 말씀하세요...", "방 분위기 좋네요", "아저씨가 보시면 답하실거예요", "다들 너무 빨리 치시네요"]
+  },
+  "mouse14": {
+    casualToUser: true,
+    callsKks: ["아저씨"],
+    activities: ["난 그냥 대화방 보고 있지", "후후후.. 갈무리하고 있지", "자료실 갔다왔어", "그냥 통신하다가 들어왔어"],
+    fillers: ["후후후..", "알가쓰. 알가쓰...", "푸히히..", "오늘 사람 많네"]
+  },
+  "학궁뎅이": {
+    casualToUser: true,
+    callsKks: ["광석이형"],
+    activities: ["그냥 놀고 있죠", "대화방 구경중", "오홍홍홍~~~ 글 보고 있었죠", "잠깐 들어왔음"],
+    fillers: ["안냐세요??", "오홍홍홍~~~", "그랬군요", "흐흐"]
+  },
+  "raincoat": {
+    casualToUser: true,
+    callsKks: ["광석형"],
+    activities: ["게시판 보고 있었죠", "반갑반갑~~~ 하고 있었죠", "노래 얘기 보던 중", "잠깐 들어왔어요"],
+    fillers: ["반갑반갑~~~", "홍홍", "그렇군요", "좋네요~~~"]
+  },
+  "enfant": {
+    casualToUser: true,
+    callsKks: ["아저씨"],
+    activities: ["음........ 글 읽고 있었어요", "그냥 조용히 보고 있었죠......", "게시판 보고 있었어요", "오늘은 조용하네요..."] ,
+    fillers: ["음........", "그랬구나......", "그렇군요...", "저도요..."]
+  },
+  "ajeegang": {
+    casualToUser: true,
+    callsKks: ["아저씨"],
+    activities: ["자료실 갔다왔어요", "에구에구... 글 보고 있었죠", "대화방 보고 있었어요", "요요마 얘기 생각하고 있었음"],
+    fillers: ["에구에구...", "히히히", "우하하하", "아 바쁘다 바빠..."]
+  },
+  "ekjw123": {
+    casualToUser: true,
+    callsKks: ["광석아저씨"],
+    activities: ["방금 들어왔어요", "HI~~~~~~~~~~~ 치고 있었어요", "대화방 보고 있었어요", "글 읽고 있었어요"],
+    fillers: ["HI~~~~~~~~~~~", "추카!추카!!!!", "우하하~~~~~~~~~~~~", "그려"]
+  },
+  "soriboy": {
+    casualToUser: false,
+    callsKks: ["광석님"],
+    activities: ["자료실 글 보고 있습니다", "음악 얘기 읽고 있습니다", "게시판 보고 있었습니다", "노래 듣고 있었습니다"],
+    fillers: ["그렇군요", "음악 얘기 좋네요", "자료실에도 글이 많네요", "저도 궁금했습니다"]
+  },
+  "sixs": {
+    casualToUser: true,
+    callsKks: ["광석형", "광석이 형"],
+    activities: ["그냥 있습니다", "잠깐 들렀어요", "글 읽고 있었죠", "대화방 보고 있었어요"],
+    fillers: ["그려", "키키...", "응", "좋네요"]
+  },
+  "낙원": {
+    casualToUser: false,
+    callsKks: ["광석이형"],
+    activities: ["노래 듣고 있어요", "곡 얘기 보고 있었습니다", "게시판 보고 있었어요", "노래방 생각하고 있었어요"],
+    fillers: ["저도 궁금하네요", "그 노래 좋죠", "글 잘 봤습니다", "노래 얘기 좋네요"]
+  },
+  "강서대묘": {
+    casualToUser: false,
+    callsKks: ["광석님"],
+    activities: ["게시판 보고 있습니다", "자료실 확인하고 있습니다", "질문 글 읽고 있었습니다", "잠깐 접속했습니다"],
+    fillers: ["그렇군요", "저도 그렇게 생각합니다", "광석님 오시면 여쭤보죠", "좋은 얘기네요"]
+  },
+  "mcgyver": {
+    casualToUser: true,
+    callsKks: ["광석이아저씨", "아저씨"],
+    activities: ["기타 얘기 보고 있었지", "쿠쿠.. 통신중", "대화방 보고 있죠", "자료실 갔다왔어요"],
+    fillers: ["쿠쿠..", "음..", "아저씨 오랜만이네", "기타 얘기 좋죠"]
+  }
+};
+
+function telecomV140Context() {
+  return telecomLoadJson(TELECOM_V140_CONTEXT_KEY, { topic: "chat", target: "room", lastUserText: "", turns: 0, awaitingCall: false });
+}
+function telecomV140SaveContext(patch) {
+  const now = telecomV140Context();
+  telecomSaveJson(TELECOM_V140_CONTEXT_KEY, { ...now, ...patch, updatedAt: telecomNow() });
+}
+function telecomV140IsShortAgree(text) {
+  return /^(응|네|넹|그래|그려|ㅇㅇ|맞아|맞아요|아하|오케이|ok|OK|음|흠)[.!?…\s]*$/.test(String(text || "").trim());
+}
+function telecomV140Target(text) {
+  const mentioned = telecomFindMentionedMember(text);
+  const kks = telecomKksMentioned(text);
+  const msg = String(text || "");
+  if (kks && mentioned) return { type: "kks_member", member: mentioned };
+  if (kks) return { type: "kks", member: null };
+  if (mentioned) return { type: "member", member: mentioned };
+  if (/다들|여러분|회원|팬들|방에|누구|계세요|계신|여기/.test(msg)) return { type: "all", member: null };
+  const ctx = telecomV140Context();
+  if (telecomV140IsShortAgree(msg) && ctx.target === "member" && ctx.memberNick) {
+    const m = DUNGEUNSORI_MEMBERS.find((x) => x.nick === ctx.memberNick);
+    if (m) return { type: "member", member: m };
+  }
+  if (telecomV140IsShortAgree(msg) && ctx.target === "kks") return { type: "kks", member: null };
+  return { type: "all", member: null };
+}
+function telecomV140MemberExtra(member) {
+  return (member && TELECOM_V140_MEMBER_EXTRA[member.nick]) || (member && TELECOM_MEMBER_PROFILES[member.nick]) || {};
+}
+function telecomV140MemberCasual(member) {
+  const extra = telecomV140MemberExtra(member);
+  if (typeof extra.casualToUser === "boolean") return extra.casualToUser;
+  return telecomMemberUsesCasual(member);
+}
+function telecomV140AddressUser(member) {
+  const s = telecomCurrentSettings();
+  const g = telecomGivenName(s.name || s.nick || "손님") || "손님";
+  if (telecomV140MemberCasual(member)) {
+    return Math.random() < 0.55 ? telecomNameWithAh(g) : telecomNameWithYi(g);
+  }
+  return Math.random() < 0.55 ? `${g}님` : `${g}씨`;
+}
+function telecomV140Activity(member) {
+  const extra = telecomV140MemberExtra(member);
+  return telecomPickLine(extra.activities || TELECOM_MEMBER_PROFILES[member?.nick]?.lines || ["게시판 보고 있어요", "자료실 글 보고 있습니다", "대화방 보고 있었어요"]);
+}
+function telecomV140Filler(member) {
+  const extra = telecomV140MemberExtra(member);
+  return telecomPickLine(extra.fillers || extra.lines || TELECOM_MEMBER_LINES);
+}
+function telecomV140FollowupQuestion(member, intent) {
+  const addr = telecomV140AddressUser(member);
+  if (intent === "doing") return telecomV140MemberCasual(member) ? `${addr}는 뭐하고 있었어?` : `${addr}는 뭐하고 계셨어요?`;
+  if (intent === "music") return telecomV140MemberCasual(member) ? `${addr}는 무슨 노래 좋아해?` : `${addr}는 무슨 노래 좋아하세요?`;
+  if (intent === "comfort") return telecomV140MemberCasual(member) ? `${addr} 오늘 무슨 일 있었어?` : `${addr} 오늘 무슨 일 있으셨어요?`;
+  if (intent === "question") return telecomV140MemberCasual(member) ? `${addr} 그건 왜 궁금해?` : `${addr} 그건 왜 궁금하세요?`;
+  return telecomV140MemberCasual(member) ? `${addr} 얘기 더 해봐` : `${addr} 얘기 더 해주세요`;
+}
+function telecomV140MemberReply(member, userText, relation = "user") {
+  const intent = telecomIntent(userText);
+  const addr = telecomV140AddressUser(member);
+  if (intent === "doing") {
+    const line = telecomV140Activity(member);
+    return Math.random() < 0.45 ? line : `${line}. ${telecomV140FollowupQuestion(member, intent)}`;
+  }
+  if (intent === "greeting") {
+    if (telecomV140MemberCasual(member)) return telecomPickLine([`${addr} 어서와`, `${addr} 반가워`, "하이!!!!", "어소세요.."]) ;
+    return telecomPickLine([`${addr} 어서오세요~`, `${addr} 반갑습니다`, "좋은 밤 되세요~~~"]);
+  }
+  if (intent === "comfort") {
+    if (telecomV140MemberCasual(member)) return telecomPickLine([`${addr} 그랬구나...`, "괜히 센치해지지 말기", "오늘은 조금 쉬어", `${addr} 너무 그러지 마`]);
+    return telecomPickLine([`${addr} 그러셨군요...`, "괜히 센치해지지 마세요", "오늘은 조금 쉬세요", `${addr} 천천히 말씀하세요`]);
+  }
+  if (intent === "music") {
+    if (telecomV140MemberCasual(member)) return telecomPickLine([`${addr} 어떤 노래 좋아해?`, "그 노래 나도 좋아해", "자료실에도 좋은 글 많아", "기타 얘기 재밌네요"]);
+    return telecomPickLine([`${addr} 어떤 노래 좋아하세요?`, "그 노래 저도 좋아해요", "자료실에도 좋은 글 많아요", "기타 얘기 재밌네요"]);
+  }
+  if (intent === "food") {
+    return telecomV140MemberCasual(member) ? telecomPickLine(["감자탕 좋지", "소주 얘기하니까 배고프네", "난 맥주 생각난다"]) : telecomPickLine(["감자탕 좋지요", "소주 얘기하니까 배고프네요", "맥주 한 캔 생각나네요"]);
+  }
+  if (intent === "celebrate") {
+    return telecomV140MemberCasual(member) ? telecomPickLine(["추카!추카!!!!", `${addr} 좋은날이네`, "축하해요"]) : telecomPickLine(["축하드립니다.", `${addr} 좋은날이네요`, "행복한 날 되세요~~~"]);
+  }
+  if (intent === "question") {
+    return telecomV140MemberCasual(member) ? telecomPickLine(["음.. 그건 잘 모르겠는데", "광석이형 오면 물어보자", `${addr} 그건 왜 궁금해?`, "아마 그럴걸"]) : telecomPickLine(["그건 저도 잘 모르겠네요", "광석님 오시면 여쭤보죠", `${addr} 그건 왜 궁금하세요?`, "아마 그럴 것 같아요"]);
+  }
+  const ctx = telecomV140Context();
+  if (telecomV140IsShortAgree(userText) && ctx.topic && ctx.topic !== "chat") {
+    return telecomPickLine([`아까 ${TELECOM_V140_TOPIC_LABELS[ctx.topic] || "그 얘기"} 말이죠`, telecomV140Filler(member), telecomV140FollowupQuestion(member, ctx.topic)]);
+  }
+  return telecomPickLine([telecomV140Filler(member), telecomV140FollowupQuestion(member, intent), `${addr} 글쿠나......`]);
+}
+function telecomV140KksReply(userText, audience = "user") {
+  const intent = telecomIntent(userText);
+  if (intent === "doing") return [telecomPickLine(["지금 잠깐 게시판 보고 있어요", "자판 보고 치고 있어요", "자료실 글 좀 보고 있어요", "방금 들어왔어요"] )];
+  if (intent === "greeting") return [telecomPickLine(["네", "오셨네요", "반갑습니다"] )];
+  if (intent === "comfort") return [telecomPickLine(["그래요", "그런날 있죠", "괜히 센치해 있지말기", "씩씩하게 살기..."])];
+  if (intent === "music") return [telecomPickLine(["무슨 노래요", "그 노래 좋아요", "기타로 하면 괜찮아요", "자료실도 보고 있어요"])];
+  if (intent === "food") return [telecomPickLine(["맥주한캔 생각나네요", "하 좋~~~타", "소주랑 감자탕도 좋죠"])];
+  if (intent === "celebrate") return [telecomPickLine(["축하합니다", "좋은날이네요", "사랑과 행복이 가득한 나날을", "빌어드릴께요"])];
+  if (intent === "question") return [telecomPickLine(["그건 저도 잘 모르겠네요", "아직", "좀 더 얘기해봐요", "네"] )];
+  const ctx = telecomV140Context();
+  if (telecomV140IsShortAgree(userText) && ctx.topic && ctx.topic !== "chat") {
+    return [telecomPickLine(["그래요", "그 얘기 계속 해봐요", "네", "좀 더 얘기해봐요"] )];
+  }
+  return [telecomPickLine(["네", "그래요", "응...", "얘기해봐요", "훗..."])];
+}
+function telecomV140MemberToMemberLine(speaker, listener, seedText = "") {
+  const intent = telecomIntent(seedText || telecomV140Context().topic || "chat");
+  const lname = telecomGivenName(listener?.name || listener?.nick || "");
+  const call = TELECOM_V140_MEMBER_EXTRA[listener?.nick]?.casualToUser ? telecomNameWithAh(lname) : (lname ? `${lname}님` : "님");
+  if (intent === "doing") return telecomPickLine([`${call}는 뭐하세요?`, telecomV140Activity(speaker), "전 게시판 보고 있었어요", "난 자료실 갔다왔어"]);
+  if (intent === "music") return telecomPickLine([`${call} 그 노래 들어봤어요?`, "자료실에 그 얘기 있던데요", "기타 얘기 재밌네요", "노래 좋죠"]);
+  if (intent === "comfort") return telecomPickLine(["비 오면 좀 그래요", "괜히 센치해지지 말기", `${call}도 좀 쉬세요`, "그런날 있죠"]);
+  return telecomPickLine([telecomV140Filler(speaker), `${call}는요?`, "글쿠나......", "후후후.."]);
+}
+function telecomV140PlanUserReactions(userText) {
+  const intent = telecomIntent(userText);
+  const target = telecomV140Target(userText);
+  telecomV140SaveContext({ topic: intent === "yn" ? telecomV140Context().topic : intent, target: target.type, memberNick: target.member?.nick || "", lastUserText: userText, turns: (telecomV140Context().turns || 0) + 1 });
+  const plan = [];
+  const manager = DUNGEUNSORI_MEMBERS.find((m) => m.nick === "녹차향기");
+  const memberA = target.member || (Math.random() < 0.30 && manager ? manager : telecomPickMember());
+  const memberB = telecomPickMember([memberA.nick]);
+  if (target.type === "member") {
+    plan.push({ type: "member", member: memberA, text: telecomV140MemberReply(memberA, userText, "direct"), delay: telecomRand(3500, 7500) });
+    if (Math.random() < 0.65) plan.push({ type: "member", member: memberB, text: telecomV140MemberToMemberLine(memberB, memberA, userText), delay: telecomRand(9000, 15000) });
+  } else if (target.type === "kks") {
+    if (manager && Math.random() < 0.55) plan.push({ type: "member", member: manager, text: "아저씨 보시면 답하실거예요", delay: telecomRand(5000, 9000) });
+    else plan.push({ type: "member", member: memberA, text: telecomV140MemberReply(memberA, userText, "kks-wait"), delay: telecomRand(5000, 10000) });
+  } else if (target.type === "kks_member") {
+    plan.push({ type: "member", member: memberA, text: telecomV140MemberReply(memberA, userText, "mixed"), delay: telecomRand(3500, 8000) });
+    if (manager && manager.nick !== memberA.nick) plan.push({ type: "member", member: manager, text: "광석 아찌도 보시면 답하실거예요", delay: telecomRand(9000, 14000) });
+  } else {
+    plan.push({ type: "member", member: memberA, text: telecomV140MemberReply(memberA, userText, "all"), delay: telecomRand(3500, 8000) });
+    plan.push({ type: "member", member: memberB, text: telecomV140MemberReply(memberB, userText, "all"), delay: telecomRand(9000, 15500) });
+  }
+  return { target, plan };
+}
+
+// v140 override: 회원 ↔ 회원 / 김광석 ↔ 회원 / 본인 ↔ 회원 / 본인 ↔ 김광석 / 본인 ↔ 김광석+회원을 명확히 분기한다.
+function telecomSendUserMessage(text) {
+  const raw = String(text || "").trim();
+  const s = telecomCurrentSettings();
+  const away = telecomAwayUntil();
+  const promptFor = localStorage.getItem(TELECOM_STORAGE.callPromptFor);
+  if (!telecomKksActive() && away > 0 && telecomNow() >= away && promptFor === String(away) && /^[YyNn]$/.test(raw)) {
+    telecomSay(s.nick, s.name, raw.toUpperCase());
+    if (/^[Yy]$/.test(raw)) {
+      localStorage.removeItem(TELECOM_STORAGE.callPromptFor);
+      telecomCallKks();
+    } else {
+      telecomSystem("김광석 호출을 취소했습니다. 팬들과 대화를 이어갑니다.");
+      localStorage.setItem(TELECOM_STORAGE.callPromptFor, String(away));
+    }
+    return;
+  }
+  telecomUserMessageCount += 1;
+  telecomSay(s.nick, s.name, text);
+  const { target, plan } = telecomV140PlanUserReactions(text);
+  plan.forEach(({ member, text: replyText, delay }) => {
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(member.nick, member.name, replyText); }, delay);
+  });
+  if (telecomKksActive() && (target.type === "kks" || target.type === "kks_member" || target.type === "all")) {
+    const baseDelay = telecomRand(28000, 34000);
+    if (s.engine === "webllm") {
+      telecomQueue(async () => {
+        if (!telecomRoomOpen() || !telecomKksActive()) return;
+        const ok = await telecomTryLocalAiKksReply(text);
+        if (!ok) telecomV140KksReply(text, "user").forEach((r, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(r); }, i * telecomRand(1200, 2000)));
+      }, baseDelay);
+    } else {
+      telecomV140KksReply(text, "user").forEach((r, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(r); }, baseDelay + i * telecomRand(1200, 2000)));
+    }
+  }
+  const start = Number(localStorage.getItem(TELECOM_STORAGE.sessionStart) || telecomNow());
+  if (telecomKksActive() && telecomNow() - start > 15 * 60 * 1000 && telecomUserMessageCount >= 3 && Math.random() < 0.16) {
+    clearTimeout(telecomExitTimer);
+    telecomExitTimer = telecomQueue(() => telecomKksLeave(), telecomRand(35000, 70000));
+  }
+}
+
+// v140 override: 주변 대화도 한 줄 랜덤이 아니라 말 걸기→대답 구조로 만든다.
+function telecomPostAmbientConversation() {
+  if (!telecomRoomOpen()) return;
+  let speaker = null;
+  if (Math.random() < 0.20) speaker = telecomMemberPresenceEvent();
+  const manager = DUNGEUNSORI_MEMBERS.find((m) => m.nick === "녹차향기");
+  if (!speaker) speaker = Math.random() < 0.22 && manager ? manager : telecomPickMember();
+  const listener = telecomPickMember([speaker.nick]);
+  const ctx = telecomV140Context();
+  const seed = ctx.topic || "chat";
+  const firstLine = Math.random() < 0.55 ? telecomV140MemberToMemberLine(speaker, listener, seed) : telecomV140Filler(speaker);
+  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(speaker.nick, speaker.name, firstLine); }, telecomRand(1200, 3500));
+  telecomQueue(() => {
+    if (!telecomRoomOpen()) return;
+    if (telecomKksActive() && Math.random() < 0.28) {
+      const kksPool = firstLine.includes("광석") || firstLine.includes("아저씨") || firstLine.includes("아찌")
+        ? ["네", "오셨네요", "지금 잠깐 보고 있어요", "금방 가야해요"]
+        : telecomV140KksReply(seed, "member");
+      telecomKks(telecomPickLine(kksPool));
+      return;
+    }
+    telecomSay(listener.nick, listener.name, telecomV140MemberToMemberLine(listener, speaker, seed));
+  }, telecomRand(4800, 9000));
+}
+
 window.addEventListener("resize", () => {
   if (document.getElementById("telecom")?.classList.contains("active")) telecomApplyPcOnlyGate();
 });
 window.initTelecomChatRoom = initTelecomChatRoom;
 
+
+/* v141: AI끼리 질문→답변→끼어들기 대화 묶음 보강 */
+function telecomV141CallMemberName(member, casual = false) {
+  const given = telecomGivenName(member?.name || member?.nick || "");
+  if (!given) return "님";
+  return casual ? telecomNameWithAh(given) : `${given}님`;
+}
+function telecomV141QuestionLine(speaker, listener, topic = "chat") {
+  const extra = TELECOM_V140_MEMBER_EXTRA[speaker?.nick] || {};
+  const casual = !!extra.casualToUser;
+  const call = telecomV141CallMemberName(listener, casual);
+  const poolByTopic = {
+    doing: casual ? [`${call}는 뭐해?`, `${call} 아직 있어?`, `${call} 대화방 보고 있었어?`, `${call} 자료실 갔다왔어?`] : [`${call}는 뭐하세요?`, `${call} 아직 계세요?`, `${call} 대화방 보고 계셨어요?`, `${call} 자료실 다녀오셨어요?`],
+    music: casual ? [`${call} 요즘 무슨 노래 들어?`, `${call} 그 노래 들어봤어?`, `${call} 기타 얘기 봤어?`] : [`${call} 요즘 무슨 노래 들으세요?`, `${call} 그 노래 들어보셨어요?`, `${call} 기타 얘기 보셨어요?`],
+    comfort: casual ? [`${call} 오늘 좀 조용하네`, `${call} 비 오니까 좀 그렇지?`, `${call} 괜찮아?`] : [`${call} 오늘 좀 조용하시네요`, `${call} 비 오니까 좀 그렇죠?`, `${call} 괜찮으세요?`],
+    food: casual ? [`${call} 감자탕 먹고 싶지 않아?`, `${call} 맥주 생각 안 나?`] : [`${call} 감자탕 생각 안 나세요?`, `${call} 맥주 생각 안 나세요?`],
+    celebrate: casual ? [`${call} 오늘 누구 생일이야?`, `${call} 축하글 봤어?`] : [`${call} 오늘 누구 생일이에요?`, `${call} 축하글 보셨어요?`],
+    chat: casual ? [`${call} 아직 안 나갔어?`, `${call} 오늘 사람 많네`, `${call} 글 좀 봤어?`, `${call} 뭐 재밌는 얘기 없어?`] : [`${call} 아직 계세요?`, `${call} 오늘 사람 많네요`, `${call} 글 좀 보셨어요?`, `${call} 재밌는 얘기 없으세요?`]
+  };
+  return telecomPickLine(poolByTopic[topic] || poolByTopic.chat);
+}
+function telecomV141AnswerLine(speaker, askedText = "", topic = "chat") {
+  const extra = TELECOM_V140_MEMBER_EXTRA[speaker?.nick] || {};
+  const casual = !!extra.casualToUser;
+  const activities = extra.activities || [];
+  if (/뭐해|뭐하세요|계세요|있어|있나요|보고|갔다/.test(askedText) || topic === "doing") {
+    return telecomPickLine([...(activities.length ? activities : []), casual ? "난 그냥 대화방 보고 있지" : "저는 게시판 보고 있어요", casual ? "자료실 갔다왔어" : "자료실 다녀왔어요"]);
+  }
+  if (/노래|기타|음악|곡/.test(askedText) || topic === "music") {
+    return casual ? telecomPickLine(["그 노래 나도 좋아해", "기타 얘기 좋지", "자료실에 그 얘기 있더라", "난 다시부르기 자주 들어"]) : telecomPickLine(["그 노래 저도 좋아해요", "기타 얘기 좋죠", "자료실에 그 얘기 있더군요", "저는 다시부르기 자주 들어요"]);
+  }
+  if (/비|조용|괜찮|힘들|센치/.test(askedText) || topic === "comfort") {
+    return casual ? telecomPickLine(["비 오면 좀 그래", "난 괜찮아", "괜히 센치해지지 말자", "오늘은 좀 조용하네"]) : telecomPickLine(["비 오면 좀 그렇죠", "저는 괜찮아요", "괜히 센치해지지 말아야죠", "오늘은 좀 조용하네요"]);
+  }
+  if (/감자탕|맥주|소주|먹/.test(askedText) || topic === "food") {
+    return casual ? telecomPickLine(["감자탕 좋지", "소주 얘기하니까 배고프네", "난 맥주 생각난다", "좋~~~~~지"]) : telecomPickLine(["감자탕 좋죠", "소주 얘기하니까 배고프네요", "맥주 한 캔 생각나네요", "좋죠"]);
+  }
+  if (/생일|축하|추카/.test(askedText) || topic === "celebrate") {
+    return casual ? telecomPickLine(["추카!추카!!!!", "좋은날이네", "축하해요", "히히히"] ) : telecomPickLine(["축하드립니다.", "좋은날이네요", "행복한 날 되세요~~~", "다시 한번 축하드려요"]);
+  }
+  return telecomPickLine([telecomV140Filler(speaker), casual ? "그냥 있었지" : "그냥 보고 있었어요", casual ? "글쿠나......" : "그렇군요", casual ? "후후후.." : "후후.."]);
+}
+function telecomV141KksAskMember(member, topic = "chat") {
+  const given = telecomGivenName(member?.name || member?.nick || "");
+  if (topic === "music") return `${given}씨 무슨 노래 좋아해요`;
+  if (topic === "doing") return `${given}씨 뭐하고 있었어요`;
+  if (topic === "comfort") return `${given}씨 오늘 좀 그래요?`;
+  return telecomPickLine([`${given}씨 오셨네요`, `${given}씨 뭐하세요`, `${given}씨 글 봤어요?`]);
+}
+function telecomV141MemberAskKks(member, topic = "chat") {
+  const call = (TELECOM_V140_MEMBER_EXTRA[member?.nick]?.callsKks || ["아저씨"])[0];
+  if (topic === "doing") return `${call} 지금 뭐하세요?`;
+  if (topic === "music") return `${call} 요즘 기타 많이 치세요?`;
+  if (topic === "comfort") return `${call} 비 오니까 좀 그렇죠?`;
+  return telecomPickLine([`${call} 오셨어요?`, `${call} 잠깐 계세요?`, `${call} 게시판 보셨어요?`]);
+}
+function telecomV141KksAnswer(seed = "") {
+  const intent = telecomIntent(seed || telecomV140Context().topic || "chat");
+  return telecomPickLine(telecomV140KksReply(intent === "chat" ? seed : intent, "member"));
+}
+function telecomV141AiConversationChain(topic = "chat") {
+  if (!telecomRoomOpen()) return;
+  const manager = DUNGEUNSORI_MEMBERS.find((m) => m.nick === "녹차향기");
+  const a = Math.random() < 0.22 && manager ? manager : telecomPickMember();
+  const b = telecomPickMember([a.nick]);
+  const c = telecomPickMember([a.nick, b.nick]);
+  const mode = telecomKksActive() ? telecomRand(1, 4) : telecomRand(1, 2);
+  if (mode === 1) {
+    const q = telecomV141QuestionLine(a, b, topic);
+    telecomSay(a.nick, a.name, q);
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(b.nick, b.name, telecomV141AnswerLine(b, q, topic)); }, telecomRand(2300, 5200));
+    telecomQueue(() => {
+      if (!telecomRoomOpen()) return;
+      if (Math.random() < 0.55) telecomSay(c.nick, c.name, telecomPickLine([telecomV140Filler(c), telecomV141AnswerLine(c, q, topic), telecomV140MemberToMemberLine(c, a, topic)]));
+    }, telecomRand(6200, 9800));
+    if (telecomKksActive() && Math.random() < 0.32) telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomV141KksAnswer(q)); }, telecomRand(10500, 15500));
+    return;
+  }
+  if (mode === 2) {
+    const q = telecomV141QuestionLine(a, b, topic);
+    telecomSay(a.nick, a.name, q);
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(b.nick, b.name, telecomV141AnswerLine(b, q, topic)); }, telecomRand(2500, 5600));
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(a.nick, a.name, telecomPickLine(["아하...", "글쿠나......", "후후후..", "그렇군요", telecomV141QuestionLine(a, c, topic)])); }, telecomRand(6900, 10500));
+    return;
+  }
+  if (mode === 3) {
+    const q = telecomV141MemberAskKks(a, topic);
+    telecomSay(a.nick, a.name, q);
+    telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomV141KksAnswer(q)); }, telecomRand(4500, 8200));
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(b.nick, b.name, telecomPickLine(["갈무리 갈무리..~~", "후후후..", "오셨네요", telecomV140Filler(b)])); }, telecomRand(9200, 14000));
+    return;
+  }
+  const q = telecomV141KksAskMember(a, topic);
+  telecomKks(q);
+  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(a.nick, a.name, telecomV141AnswerLine(a, q, topic)); }, telecomRand(3200, 6800));
+  if (Math.random() < 0.6) telecomQueue(() => { if (telecomRoomOpen()) telecomSay(b.nick, b.name, telecomPickLine(["후후후..", "좋네요", "저도 궁금했어요", telecomV140Filler(b)])); }, telecomRand(7600, 12000));
+}
+function telecomPostAmbientConversation() {
+  if (!telecomRoomOpen()) return;
+  if (Math.random() < 0.20) {
+    const member = telecomMemberPresenceEvent();
+    if (!member) return;
+  }
+  const ctx = telecomV140Context();
+  const topic = ctx.topic && ctx.topic !== "yn" ? ctx.topic : "chat";
+  telecomV141AiConversationChain(topic);
+}
