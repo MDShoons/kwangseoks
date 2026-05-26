@@ -622,11 +622,12 @@ onAuthStateChanged(auth, async (user) => {
   const email = normalizeEmail(user?.email || "");
   const loginId = normalizeLoginId(currentUserProfile?.loginId || "");
   isAdmin = Boolean(user) && (ADMIN_EMAILS.includes(email) || ADMIN_LOGIN_IDS.includes(loginId) || currentUserProfile?.role === "admin");
-  document.getElementById("userStatus").textContent = user ? (isAdmin ? "관리자" : (loginId || email)) : "로그인 전";
+  document.getElementById("userStatus").textContent = user ? (isAdmin ? "관리자 로그인" : (loginId || email)) : "로그인 전";
   document.getElementById("loginBtn").classList.toggle("hidden", Boolean(user));
   document.getElementById("signupBtn").classList.toggle("hidden", Boolean(user));
   document.getElementById("logoutBtn").classList.toggle("hidden", !user);
   document.getElementById("mypageBtn")?.classList.toggle("hidden", !user);
+  if (typeof telecomApplyAccountIdentityToForm === "function") telecomApplyAccountIdentityToForm();
   let adminBtn = document.getElementById("adminNavBtn");
   if (isAdmin && !adminBtn) {
     adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
@@ -3280,7 +3281,7 @@ document.addEventListener("click", (event) => {
 }, false);
 
 
-// v121: 광석이네 통신방 - 둥근소리 회원 목록 보기 버튼 제거, AI 참여 유지
+// v123: 광석이네 통신방 - 계정 닉네임/이름 고정, 모드/친밀도 선택 가독성 보정
 const TELECOM_STORAGE = {
   settings: "kwangseokTelecomSettingsV120",
   log: "kwangseokTelecomLogV120",
@@ -3449,9 +3450,37 @@ function telecomLoadJson(key, fallback) {
 }
 function telecomSaveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function telecomCleanText(v, fallback = "") { return String(v || "").replace(/[<>]/g, "").trim() || fallback; }
+
+function telecomAccountIdentity() {
+  const loginId = telecomCleanText(currentUserProfile?.loginId || currentUser?.email?.split("@")[0] || "", "");
+  const realName = telecomCleanText(currentUserProfile?.name || currentUser?.displayName || loginId || "손님", "손님");
+  return { nick: loginId || realName || "손님", name: realName || loginId || "손님" };
+}
+function telecomApplyAccountIdentityToForm() {
+  const id = telecomAccountIdentity();
+  const nickInput = document.getElementById("telecomNickInput");
+  const nameInput = document.getElementById("telecomNameInput");
+  if (nickInput) {
+    nickInput.value = id.nick;
+    nickInput.readOnly = true;
+    nickInput.classList.add("telecom-readonly");
+  }
+  if (nameInput) {
+    nameInput.value = id.name;
+    nameInput.readOnly = true;
+    nameInput.classList.add("telecom-readonly");
+  }
+  return id;
+}
+
 function telecomCurrentSettings() {
-  return telecomLoadJson(TELECOM_STORAGE.settings, null) || {
-    nick: "손님", name: "손님", mode: "chat", close: "known"
+  const saved = telecomLoadJson(TELECOM_STORAGE.settings, null) || {};
+  const id = telecomAccountIdentity();
+  return {
+    nick: id.nick,
+    name: id.name,
+    mode: saved.mode || "chat",
+    close: saved.close || "known"
   };
 }
 function telecomKksActive() { return localStorage.getItem(TELECOM_STORAGE.active) === "1"; }
@@ -3606,11 +3635,17 @@ function telecomSendUserMessage(text) {
   }
 }
 function telecomEnterRoom() {
-  const nick = telecomCleanText(document.getElementById("telecomNickInput")?.value, "손님");
-  const name = telecomCleanText(document.getElementById("telecomNameInput")?.value, nick);
+  if (!currentUser) {
+    alert("로그인 후 광석이네 통신방을 이용할 수 있습니다.");
+    showPage("login");
+    return;
+  }
+  const account = telecomApplyAccountIdentityToForm();
+  const nick = account.nick;
+  const name = account.name;
   const mode = document.getElementById("telecomModeSelect")?.value || "chat";
   const close = document.getElementById("telecomCloseSelect")?.value || "known";
-  telecomSaveJson(TELECOM_STORAGE.settings, { nick, name, mode, close });
+  telecomSaveJson(TELECOM_STORAGE.settings, { mode, close });
   document.getElementById("telecomSetup")?.classList.add("hidden");
   document.getElementById("telecomRoom")?.classList.remove("hidden");
   localStorage.setItem(TELECOM_STORAGE.sessionStart, String(telecomNow()));
@@ -3651,10 +3686,7 @@ function initTelecomChatRoom() {
   }
   telecomInitialized = true;
   const s = telecomCurrentSettings();
-  const nickInput = document.getElementById("telecomNickInput");
-  const nameInput = document.getElementById("telecomNameInput");
-  if (nickInput) nickInput.value = s.nick || "";
-  if (nameInput) nameInput.value = s.name || "";
+  telecomApplyAccountIdentityToForm();
   const modeSel = document.getElementById("telecomModeSelect");
   const closeSel = document.getElementById("telecomCloseSelect");
   if (modeSel) modeSel.value = s.mode || "chat";

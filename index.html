@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v122-header-admin-overlap-fix" />
+  <link rel="stylesheet" href="style.css?v=v123-telecom-account-fixed-select-visible" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -396,10 +396,11 @@
         <div id="telecomSetup" class="telecom-setup">
           <div class="telecom-connect-box">
             <h2>접속 설정</h2>
-            <label>닉네임</label>
-            <input id="telecomNickInput" type="text" placeholder="예: 녹차향기" maxlength="14" />
-            <label>이름</label>
-            <input id="telecomNameInput" type="text" placeholder="예: 변수진" maxlength="14" />
+            <label>닉네임 <span class="telecom-fixed-label">계정 고정</span></label>
+            <input id="telecomNickInput" type="text" placeholder="로그인 계정 아이디" maxlength="14" readonly />
+            <label>이름 <span class="telecom-fixed-label">계정 고정</span></label>
+            <input id="telecomNameInput" type="text" placeholder="로그인 계정 이름" maxlength="14" readonly />
+            <p class="telecom-account-note">닉네임과 이름은 로그인한 계정 정보로 자동 표시됩니다.</p>
             <label>대화 모드</label>
             <select id="telecomModeSelect">
               <option value="chat">잡담하기</option>
@@ -700,6 +701,6 @@
   </div>
 <div class="version-marker">v118-ipad-detail-video-poster</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v118-ipad-detail-video-poster"></script>
+  <script type="module" src="app.js?v=v123-telecom-account-fixed-select-visible"></script>
 </body>
 </html>
