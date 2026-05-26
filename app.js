@@ -3290,7 +3290,9 @@ const TELECOM_STORAGE = {
   sessionStart: "kwangseokTelecomSessionStartV120",
   callPromptFor: "kwangseokTelecomCallPromptForV136",
   recentSpeakers: "kwangseokTelecomRecentSpeakersV142",
-  recentTopics: "kwangseokTelecomRecentTopicsV142"
+  recentTopics: "kwangseokTelecomRecentTopicsV142",
+  thread: "kwangseokTelecomThreadV143",
+  activeMembers: "kwangseokTelecomActiveMembersV145"
 };
 let telecomInitialized = false;
 let telecomStatusTimer = null;
@@ -3454,7 +3456,7 @@ const TELECOM_MEMBER_REPLY_LINES = [
   "그러셨군요...", "그렇군요", "맞아요", "네 반갑습니다", "좋네요", "아하...", "후후후..", "글쿠나......",
   "조금 있다 나가야겠어요", "좋은 밤 되세요~~~", "요즘 어떠세요", "그러게요", "저도 그렇게 생각했어요",
   "그 얘기는 처음 듣네요", "음.. 그럴 수도 있겠네요", "잠깐 생각 좀 해볼께요", "아까 게시판에서도 비슷한 얘기 봤어요",
-  "그럼 다음 얘기도 해보죠", "누가 더 아는 분 계세요?", "저는 조금 다르게 봤는데요", "그건 광석 아저씨 오시면 물어보죠"
+  "그럼 다음 얘기도 해보죠", "아시는 분 계세요?", "저는 조금 다르게 봤는데요", "그건 광석 아저씨 오시면 물어보죠"
 ];
 const TELECOM_KKS_MEMBER_REPLIES = ["네", "그래요", "참 좋네요...", "오래간만이네요", "무슨일 있어요", "지금 즐거워요", "안녕하세요", "그럼...", "자판이 좀 낮설어요", "지금 잠깐 보고 있어요", "그 얘긴 좀 어렵네요", "천천히 말해요"];
 const TELECOM_KKS_EXIT_LINES = ["금방 가야해요", "좀 바빠서 나가볼께요", "당구치러 갈께요", "안녕..."];
@@ -3501,6 +3503,82 @@ function telecomRememberTopic(intent) {
   list.push(String(intent));
   telecomSaveJson(TELECOM_STORAGE.recentTopics, list.slice(-10));
 }
+
+function telecomSetThread(intent, userText = "") {
+  const text = String(userText || "");
+  let topic = "잡담";
+  if (intent === "doing") topic = "지금 뭐하는지";
+  else if (intent === "music") topic = text.includes("기타") ? "기타와 노래" : "노래 이야기";
+  else if (intent === "comfort") topic = text.includes("비") ? "비 오는 날 마음" : "마음 얘기";
+  else if (intent === "food") topic = text.includes("감자탕") ? "감자탕 얘기" : "먹는 얘기";
+  else if (intent === "celebrate") topic = "축하 얘기";
+  else if (intent === "question") topic = "질문 얘기";
+  else if (intent === "greeting") topic = "인사";
+  telecomSaveJson(TELECOM_STORAGE.thread, { intent, topic, userText: text.slice(0, 60), updatedAt: telecomNow() });
+  return topic;
+}
+function telecomGetThread() {
+  const t = telecomLoadJson(TELECOM_STORAGE.thread, null);
+  if (!t || !t.updatedAt || telecomNow() - t.updatedAt > 8 * 60 * 1000) return null;
+  return t;
+}
+function telecomDirectAnswerForIntent(member, intent, userText = "", variant = 0) {
+  const s = telecomCurrentSettings();
+  const userGiven = telecomGivenName(s.name || s.nick || "손님") || "손님";
+  const honor = telecomMemberAddressUser(member, userGiven);
+  const casual = telecomMemberUsesCasual(member);
+  const nick = member?.nick || "";
+  const text = String(userText || "");
+  if (intent === "doing") {
+    if (nick === "녹차향기") return telecomPickLine(["저는 방금 게시판 정리하고 있었어요", "자료실 글 확인하고 있었어요", "광석 아찌 들어오셨나 보고 있었어요", `${honor} 저는 회원 글 좀 보고 있었어요`]);
+    if (nick === "mouse14") return telecomPickLine(["난 그냥 방 구경중", "후후후.. 난 대화방 보고 있었지", "아까 자료실 갔다왔어", "사람들 뭐하나 보고 있었지"]);
+    if (nick === "enfant") return telecomPickLine(["음........ 저는 글 읽고 있었어요", "그냥 조용히 보고 있었어요...", "낙서장 읽고 있었어요..."]);
+    return casual ? telecomPickLine(["난 글 보고 있어", "그냥 대화방 보고 있지", "잠깐 들어와 있었어", "자료실 갔다왔어"]) : telecomPickLine(["저는 게시판 보고 있어요", "자료실 글 보고 있습니다", "방금 들어와 있었습니다", "노래 듣고 있었어요"]);
+  }
+  if (intent === "music") {
+    if (text.includes("기타")) return casual ? telecomPickLine(["기타 얘기면 재밌지", "난 코드는 잘 모르지만 듣는건 좋아", "그거 광석이형한테 물어봐야지"]) : telecomPickLine(["기타 얘기라면 광석님께 여쭤보면 좋겠네요", "저도 기타 얘기는 늘 궁금해요", "그 곡 기타로 치면 좋을 것 같아요"]);
+    return casual ? telecomPickLine(["그 노래 나도 좋아해", "노래 얘기면 좋지", "어떤 판 얘기야?", "난 라이브가 더 좋더라"]) : telecomPickLine(["그 노래 저도 좋아해요", "어떤 음반 얘기하세요?", "라이브 이야기도 궁금하네요", "자료실에 관련 글 있을거예요"]);
+  }
+  if (intent === "comfort") {
+    return casual ? telecomPickLine(["그랬구나...", "그럴 땐 좀 쉬어", "괜히 혼자 붙들고 있지마", "노래 하나 듣고 와"]) : telecomPickLine(["그러셨군요...", "그럴 땐 조금 쉬셔도 돼요", "혼자 너무 오래 생각하지 마세요", "좋은 노래 한 곡 들으세요"]);
+  }
+  if (intent === "food") {
+    return casual ? telecomPickLine(["감자탕 좋지", "소주 얘기하니까 배고프네", "난 맥주 생각난다", "그 얘기하니까 나가고 싶네"]) : telecomPickLine(["감자탕 좋지요", "소주 얘기하니까 배고프네요", "맥주 한 캔 생각나네요", "먹는 얘기는 늘 좋네요"]);
+  }
+  if (intent === "celebrate") {
+    return casual ? telecomPickLine(["추카추카!!", "좋은날이네", "축하해요", "오늘 방 분위기 좋다"]) : telecomPickLine(["축하드립니다", "좋은 날이네요", "다시 한번 축하드려요", "오늘은 기분 좋은 얘기네요"]);
+  }
+  if (intent === "greeting") {
+    return casual ? telecomPickLine([`${honor} 어서와`, "하이!!!!", "어소세요..", "반가워"]) : telecomPickLine([`${honor} 어서오세요~`, "반갑습니다", "좋은 밤 되세요", "어서오세요"]);
+  }
+  if (intent === "question") {
+    return casual ? telecomPickLine(["그건 잘 모르겠는데", "나도 궁금하네", "광석이형 오면 물어보자", "누가 알면 얘기해줘"]) : telecomPickLine(["그건 저도 잘 모르겠어요", "광석님 오시면 여쭤보죠", "아시는 분 계세요?", "저도 궁금하네요"]);
+  }
+  const thread = telecomGetThread();
+  if (thread && thread.topic && variant > 0) {
+    return casual ? telecomPickLine([`아까 ${thread.topic} 얘기하던거`, "그 얘기 계속 해봐", "그건 좀 재밌네", "후후.. 그렇구나"]) : telecomPickLine([`아까 ${thread.topic} 얘기 이어가면요`, "그 얘기 저도 봤어요", "그 부분은 저도 궁금해요", "저도 듣고 있었어요"]);
+  }
+  return casual ? telecomPickLine(["그렇구나", "음.. 그래서?", "얘기 그렇구나", "후후.. 재밌네"]) : telecomPickLine(["그렇군요", "그렇군요", "그 얘기 좋네요", "저도 들어보고 싶어요"]);
+}
+function telecomFollowLineBetweenMembers(speaker, listener, intent) {
+  const speakerName = telecomGivenName(speaker?.name || "") || speaker?.nick || "";
+  const listenerCall = telecomMemberUsesCasual(listener) ? telecomNameWithAh(speakerName) : `${speakerName}님`;
+  if (intent === "doing") return telecomMemberUsesCasual(listener) ? `${listenerCall} 나도 비슷해` : `${listenerCall} 저도 비슷해요`;
+  if (intent === "music") return telecomMemberUsesCasual(listener) ? `${listenerCall} 그 곡 얘기 맞지?` : `${listenerCall} 그 곡 얘기 맞으세요?`;
+  if (intent === "comfort") return telecomMemberUsesCasual(listener) ? `${listenerCall} 말 들으니까 좀 그렇다` : `${listenerCall} 말씀 들으니까 좀 그렇네요`;
+  if (intent === "food") return telecomMemberUsesCasual(listener) ? `${listenerCall} 그 얘기하니까 배고프다` : `${listenerCall} 그 얘기하니까 배고프네요`;
+  return telecomMemberUsesCasual(listener) ? `${listenerCall} 그 말 맞는듯` : `${listenerCall} 그 말 맞는 것 같아요`;
+}
+function telecomKksContextReply(intent, userText = "") {
+  const text = String(userText || "");
+  if (intent === "doing") return telecomPickLine(["지금 잠깐 게시판 보고 있어요", "자판 보고 치고 있어요", "자료실 글 좀 보고 있어요", "방금 들어왔어요"]);
+  if (intent === "music") return text.includes("기타") ? telecomPickLine(["기타는요", "일단 나무가 좋아야죠", "요즈음 콜트도 좋더군요", "그 곡 기타로 하면 괜찮아요"]) : telecomPickLine(["그 노래 좋아요", "라이브로 하면 좀 달라요", "노래는 천천히 해야죠", "음반보다 무대가 더 어렵죠"]);
+  if (intent === "comfort") return telecomPickLine(["그래요", "그런날 있죠", "괜히 센치해 있지말기", "씩씩하게 살기..."]);
+  if (intent === "food") return telecomPickLine(["감자탕 좋죠", "맥주한캔 생각나네요", "하 좋~~~타", "먹는 얘기 좋네요"]);
+  if (intent === "celebrate") return telecomPickLine(["축하합니다", "좋은날이네요", "사랑과 행복이 가득한 나날을", "빌어드릴께요"]);
+  if (intent === "question") return telecomPickLine(["그건 좀 어렵네요", "잘은 모르겠어요", "천천히 얘기해봐요", "무슨일 있어요"]);
+  return telecomPickLine(["네", "그래요", "응...", "참 좋네요..."]);
+}
 function telecomRememberLine(text) {
   const key = "kwangseokTelecomRecentLinesV142";
   const list = telecomLoadJson(key, []);
@@ -3528,6 +3606,7 @@ function telecomPickLine(pool) {
 function telecomIntent(message) {
   const msg = String(message || "").replace(/\s+/g, "");
   if (/^(y|Y|n|N)$/.test(String(message || "").trim())) return "yn";
+  if (/ㅋ|ㅎ|푸하|하하|웃기|웃겨|웃김/.test(msg)) return "laugh";
   if (/뭐하|뭐해|뭐하는|뭐하세요|머하|모하|다들뭐|어디서|지금뭐/.test(msg)) return "doing";
   if (/안녕|하이|어서|반가|왔어요|왔어|접속/.test(msg)) return "greeting";
   if (/비|우울|허전|외롭|힘들|슬프|센치|쓸쓸|답답|피곤/.test(msg)) return "comfort";
@@ -3791,12 +3870,64 @@ function telecomRenderLog(log = telecomLoadJson(TELECOM_STORAGE.log, [])) {
   }).join("");
   box.scrollTop = box.scrollHeight;
 }
+
+function telecomActiveMemberNicks() {
+  let list = telecomLoadJson(TELECOM_STORAGE.activeMembers, null);
+  if (!Array.isArray(list) || !list.length) {
+    list = ["녹차향기", "mouse14", "enfant", "raincoat", "ajeegang", "ekjw123", "낙원", "soriboy"];
+    telecomSaveJson(TELECOM_STORAGE.activeMembers, list);
+  }
+  return list.filter(Boolean);
+}
+function telecomSetActiveMemberNicks(list) {
+  const unique = [...new Set((list || []).filter(Boolean).filter((nick) => nick !== "김광석"))].slice(0, 12);
+  telecomSaveJson(TELECOM_STORAGE.activeMembers, unique);
+  return unique;
+}
+function telecomIsMemberActive(nick) {
+  return telecomActiveMemberNicks().includes(nick);
+}
+function telecomFindMemberByNick(nick) {
+  return DUNGEUNSORI_MEMBERS.find((m) => m.nick === nick);
+}
+function telecomMemberJoin(member, silent = false) {
+  if (!member || member.nick === "김광석") return;
+  const list = telecomActiveMemberNicks();
+  if (!list.includes(member.nick)) {
+    list.push(member.nick);
+    telecomSetActiveMemberNicks(list);
+    if (!silent) telecomSystem(`${member.nick}(${member.name})님이 접속하셨습니다.`);
+  }
+}
+function telecomMemberLeave(member) {
+  if (!member || member.nick === "김광석") return false;
+  const list = telecomActiveMemberNicks();
+  if (!list.includes(member.nick) || list.length <= 4) return false;
+  telecomSetActiveMemberNicks(list.filter((nick) => nick !== member.nick));
+  telecomSystem(`${member.nick}(${member.name})님이 나가셨습니다.`);
+  return true;
+}
+function telecomEnsureMemberCanSpeak(member) {
+  if (!member || member.nick === "김광석") return false;
+  if (!telecomIsMemberActive(member.nick)) telecomMemberJoin(member, false);
+  return true;
+}
+function telecomSayMember(member, text) {
+  if (!telecomEnsureMemberCanSpeak(member)) return;
+  telecomSay(member.nick, member.name, text);
+}
 function telecomPickMember(excluded = []) {
   const userNick = telecomCurrentSettings().nick;
   const recent = telecomRecentSpeakers().slice(-5);
   const blocked = new Set(["김광석", userNick, ...excluded].filter(Boolean));
-  let pool = DUNGEUNSORI_MEMBERS.filter((m) => !blocked.has(m.nick) && !recent.includes(m.nick));
-  if (!pool.length) pool = DUNGEUNSORI_MEMBERS.filter((m) => !blocked.has(m.nick));
+  let active = telecomActiveMemberNicks().map(telecomFindMemberByNick).filter(Boolean);
+  let pool = active.filter((m) => !blocked.has(m.nick) && !recent.includes(m.nick));
+  if (!pool.length) pool = active.filter((m) => !blocked.has(m.nick));
+  if (!pool.length) {
+    const candidate = DUNGEUNSORI_MEMBERS.find((m) => !blocked.has(m.nick) && m.nick !== "김광석") || { nick: "녹차향기", name: "변수진" };
+    telecomMemberJoin(candidate, false);
+    pool = [candidate];
+  }
   return pool[telecomRand(0, Math.max(0, pool.length - 1))] || { nick: "녹차향기", name: "변수진" };
 }
 function telecomSetupCallButton() {
@@ -3905,7 +4036,7 @@ function telecomGenerateKksReply(message, audience = "user") {
   } else if (isUser && s.mode === "memory") {
     pool = [`${prefix}오래됐네요`, "그때 생각나요", "참 좋네요...", "그럼..."];
   } else if (intent === "question") {
-    pool = ["그건 저도 잘 모르겠네요", "아직", "네", "좀 더 얘기해봐요"];
+    pool = ["그건 저도 잘 모르겠네요", "아직", "네", "좀 그렇구나요"];
   } else {
     pool = [`${prefix}네`, "그래요", "응...", "얘기해봐요", "훗..."];
   }
@@ -3961,7 +4092,7 @@ function telecomGenerateMemberRepliesToUser(message) {
     firstPool = telecomMemberUsesCasual(member1) ? ["축하해요", `${userHonor} 좋은날이네`, "추카!추카!!!!"] : ["축하드립니다.", `${userHonor} 좋은날이네요`, "행복한 날 되세요~~~"];
     secondPool = ["후후후..", "좋네요", "다시한번 축하드려요"];
   } else {
-    firstPool = telecomMemberUsesCasual(member1) ? [`${userHonor} 그랬구나`, `${userHonor} 얘기 더 해봐`, "글쿠나......", "그러게"] : [`${userHonor} 그러셨군요`, `${userHonor} 얘기 더 해주세요`, "글쿠나......", "그러게요"];
+    firstPool = telecomMemberUsesCasual(member1) ? [`${userHonor} 그랬구나`, `${userHonor} 얘기 그렇구나`, "글쿠나......", "그러게"] : [`${userHonor} 그러셨군요`, `${userHonor} 그 얘기 들었어요`, "글쿠나......", "그러게요"];
     secondPool = TELECOM_MEMBER_PROFILES[member2.nick]?.lines || (telecomMemberUsesCasual(member2) ? ["맞아", "좋네", "후후후..", `${userHonor2} 요즘 어때`] : ["맞아요", "좋네요", "후후후..", `${userHonor2} 요즘 어떠세요`]);
   }
   return [
@@ -3994,53 +4125,7 @@ function telecomMemberActionLine(member, userHonor = "") {
   return telecomPickLine(["저는 게시판 보고 있어요", "자료실 글 보고 있습니다", "잠깐 들어와 있었습니다", "노래 듣고 있었어요"]);
 }
 function telecomMemberLineForIntent(member, intent, userText = "", relation = "user") {
-  const s = telecomCurrentSettings();
-  const userGiven = telecomGivenName(s.name || s.nick || "손님") || "손님";
-  const userHonor = telecomMemberAddressUser(member, userGiven);
-  const nick = member?.nick || "";
-  const profile = TELECOM_MEMBER_PROFILES[nick] || {};
-  if (intent === "doing") return telecomMemberActionLine(member, userHonor);
-  if (intent === "greeting") {
-    if (nick === "녹차향기") return telecomPickLine([`${userHonor} 오셨네요`, `${userHonor} 반가워요`, "천천히 얘기하세요", "오늘 방에 사람 좀 있네요"]);
-    return telecomMemberUsesCasual(member)
-      ? telecomPickLine([`${userHonor} 어서와`, `${userHonor} 반가워`, "하이!!!!", "어소세요.."])
-      : telecomPickLine([`${userHonor} 어서오세요~`, `${userHonor} 반갑습니다`, "좋은 밤 되세요~~~", "하이!!!!"]);
-  }
-  if (intent === "comfort") {
-    if (nick === "녹차향기") return telecomPickLine([`${userHonor} 너무 혼자 생각하지 마세요`, "광석 아찌도 그런 얘기 들으면 답해주실거예요", "오늘은 조금 쉬어가세요", "방에 있으면서 천천히 얘기해요"]);
-    return telecomMemberUsesCasual(member)
-      ? telecomPickLine([`${userHonor} 그랬구나...`, "괜히 센치해지지 말기", "좋은 음악 한곡 들어", "좀 쉬어"])
-      : telecomPickLine([`${userHonor} 그러셨군요...`, "괜히 센치해지지 마세요", "좋은 음악 한곡 들으세요", "조금 쉬세요"]);
-  }
-  if (intent === "music") {
-    if (nick === "녹차향기") return telecomPickLine(["자료실에 관련 글 있을거예요", "광석 아찌 노래 얘기면 다들 좋아하죠", `${userHonor} 어떤 노래 찾으세요`, "노래 얘기는 언제 해도 좋네요"]);
-    if (nick === "낙원") return telecomPickLine(["저는 노래방에서 그 노래 자주 불러요", "그 곡 얘기 좋네요", "광석이형 노래는 기타로 해도 좋죠", `${userHonor} 어떤 버전 말하세요`]);
-    return telecomMemberUsesCasual(member)
-      ? telecomPickLine([`${userHonor} 어떤 노래 좋아해`, "그 노래 나도 좋아해", "기타 얘기 재밌네요", "라디오도 좋더군요"])
-      : telecomPickLine([`${userHonor} 어떤 노래 좋아하세요`, "그 노래 저도 좋아해요", "기타 얘기 재밌네요", "라디오도 좋더군요"]);
-  }
-  if (intent === "food") {
-    return telecomMemberUsesCasual(member)
-      ? telecomPickLine(["감자탕 좋지", "소주 얘기하니까 배고프네", "난 맥주 생각난다", "후후후.. 먹는 얘기 나오네"])
-      : telecomPickLine(["감자탕 좋지요", "소주 얘기하니까 배고프네요", "맥주 한 캔 생각나네요", "먹는 얘기 나오네요"]);
-  }
-  if (intent === "celebrate") {
-    if (nick === "ekjw123") return telecomPickLine(["추카!추카!!!!", "HI~~~~~~~~~~~ 축하해요", "좋은날이네요!!!!"]);
-    return telecomMemberUsesCasual(member)
-      ? telecomPickLine(["축하해요", `${userHonor} 좋은날이네`, "추카아~~~", "좋겠다"])
-      : telecomPickLine(["축하드립니다.", `${userHonor} 좋은날이네요`, "행복한 날 되세요~~~", "다시한번 축하드려요"]);
-  }
-  if (intent === "question") {
-    if (nick === "녹차향기") return telecomPickLine(["그건 제가 한번 찾아볼께요", "아저씨 오시면 여쭤보세요", `${userHonor} 그건 조금 기다려봐야겠네요`, "게시판에 비슷한 얘기 있었던 것 같아요"]);
-    return telecomMemberUsesCasual(member)
-      ? telecomPickLine(["그건 잘 모르겠는데", "아저씨 오면 물어보자", "누가 알지 않을까", `${userHonor} 다시 한번 말해봐`])
-      : telecomPickLine(["그건 잘 모르겠네요", "광석님 오시면 여쭤보세요", "누가 아시는 분 있을까요", `${userHonor} 조금 더 설명해주세요`]);
-  }
-  const personal = profile.lines || [];
-  if (personal.length && Math.random() < 0.55) return telecomPickLine(personal);
-  return telecomMemberUsesCasual(member)
-    ? telecomPickLine([`${userHonor} 그랬구나`, `${userHonor} 얘기 더 해봐`, "글쿠나......", "그러게", "후후후.."])
-    : telecomPickLine([`${userHonor} 그러셨군요`, `${userHonor} 얘기 더 해주세요`, "글쿠나......", "그러게요", "좋네요"]);
+  return telecomDirectAnswerForIntent(member, intent, userText, relation === "member" ? 1 : 0);
 }
 function telecomMemberFollowupQuestion(member, intent) {
   const s = telecomCurrentSettings();
@@ -4050,16 +4135,10 @@ function telecomMemberFollowupQuestion(member, intent) {
   if (intent === "music") return telecomMemberUsesCasual(member) ? `${honor}는 어떤 노래 좋아해` : `${honor}는 어떤 노래 좋아하세요`;
   if (intent === "comfort") return telecomMemberUsesCasual(member) ? `${honor} 오늘 무슨일 있어` : `${honor} 오늘 무슨 일 있으셨어요`;
   if (intent === "question") return telecomMemberUsesCasual(member) ? `${honor} 그게 왜 궁금해` : `${honor} 그게 왜 궁금하세요`;
-  return telecomMemberUsesCasual(member) ? `${honor} 더 얘기해봐` : `${honor} 더 얘기해주세요`;
+  return telecomMemberUsesCasual(member) ? `${honor} 그렇구나` : `${honor} 더 얘기해주세요`;
 }
 function telecomGenerateKksReplyToMember(member, intent, userText = "") {
-  const call = telecomMemberCallKks(member);
-  if (intent === "doing") return telecomPickLine(["지금 잠깐 게시판 보고 있어요", "자판 보고 치고 있어요", "자료실 글 좀 보고 있어요", "금방 가야해요"]);
-  if (intent === "music") return telecomPickLine(["그 노래 좋아요", "기타로 하면 괜찮아요", "요즈음 콜트도 좋더군요", "잘 흥정해보시고요"]);
-  if (intent === "comfort") return telecomPickLine(["그래요", "그런날 있죠", "괜히 센치해 있지말기", "씩씩하게 살기..."]);
-  if (intent === "greeting") return telecomPickLine(["네", "오셨네요", "반갑습니다"]);
-  if (intent === "celebrate") return telecomPickLine(["축하합니다", "좋은날이네요", "사랑과 행복이 가득한 나날을"]);
-  return telecomPickLine(["네", "그래요", "응...", "참 좋네요..."]);
+  return telecomKksContextReply(intent, userText);
 }
 function telecomSelectFlowMembers(userText, count = 3) {
   const mentioned = telecomFindMentionedMember(userText);
@@ -4090,60 +4169,200 @@ function telecomScheduleKksResponseForUser(userText, baseDelay = telecomRand(280
     replies.forEach((r, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(r); }, baseDelay + i * telecomRand(1300, 2200)));
   }
 }
-function telecomScheduleConversationFlow(userText) {
+
+function telecomHumanUserDisplayName() {
+  const s = telecomCurrentSettings();
+  return telecomGivenName(s.name || s.nick || "손님") || "손님";
+}
+function telecomRecentLogItems(limit = 12) {
+  const log = telecomLoadJson(TELECOM_STORAGE.log, []);
+  return log.slice(-limit);
+}
+function telecomLastUserText() {
+  const s = telecomCurrentSettings();
+  const log = telecomLoadJson(TELECOM_STORAGE.log, []);
+  for (let i = log.length - 1; i >= 0; i--) {
+    const line = log[i];
+    if (line.kind === "say" && line.nick === s.nick) return String(line.text || "");
+  }
+  return "";
+}
+function telecomExtractConcreteThing(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "그 얘기";
+  if (/비|날씨/.test(raw)) return "비 얘기";
+  if (/노래|음악|앨범|음반|라디오/.test(raw)) return "노래 얘기";
+  if (/기타|코드|스트로크/.test(raw)) return "기타 얘기";
+  if (/감자탕|소주|맥주|밥|먹/.test(raw)) return "먹는 얘기";
+  if (/자료실|게시판|낙서|원음/.test(raw)) return "자료실 얘기";
+  if (/외롭|허전|힘들|답답|우울/.test(raw)) return "마음 얘기";
+  const cleaned = raw.replace(/[?？!！.。~]/g, "").slice(0, 16);
+  return cleaned ? `${cleaned} 얘기` : "그 얘기";
+}
+function telecomHumanReactionVerb(intent) {
+  const choices = {
+    doing: ["보고 있었어요", "정리하고 있었어요", "갈무리하고 있었어요", "잠깐 눈팅중이었어요", "글 읽고 있었어요"],
+    music: ["듣고 있었어요", "자료 찾고 있었어요", "곡 얘기 보고 있었어요", "라이브 생각하고 있었어요"],
+    comfort: ["조금 생각하고 있었어요", "조용히 듣고 있었어요", "그 말 보고 있었어요", "잠깐 멍하니 있었어요"],
+    food: ["먹을 생각하고 있었어요", "배고파졌어요", "그 얘기 보니까 나가고 싶네요"],
+    question: ["저도 궁금했어요", "아까 비슷한 글 봤어요", "누가 알면 좋겠네요"],
+    chat: ["그냥 대화방 보고 있었어요", "잠깐 들어와 있었어요", "글 읽고 있었어요"]
+  };
+  return telecomPickLine(choices[intent] || choices.chat);
+}
+function telecomHumanMemberLine(member, intent, userText = "", role = "answer") {
+  const s = telecomCurrentSettings();
+  const given = telecomHumanUserDisplayName();
+  const honor = telecomMemberAddressUser(member, given);
+  const casual = telecomMemberUsesCasual(member);
+  const nick = member?.nick || "";
+  const topic = telecomExtractConcreteThing(userText);
+
+  if (role === "askBack") {
+    if (intent === "doing") return casual ? `${honor}는 뭐하고 있었어?` : `${honor}는 뭐하고 계셨어요?`;
+    if (intent === "music") return casual ? `${honor}는 그 노래 어디서 들었어?` : `${honor}는 그 노래 어디서 들으셨어요?`;
+    if (intent === "comfort") return casual ? `${honor}는 오늘 무슨 일 있었어?` : `${honor}는 오늘 무슨 일 있으셨어요?`;
+    if (intent === "laugh") return casual ? "뭐가 그렇게 웃겨?" : "뭐가 그렇게 웃기셨어요?";
+    return casual ? `${honor}는 어떻게 생각해?` : `${honor}는 어떻게 생각하세요?`;
+  }
+
+  if (intent === "laugh") {
+    if (nick === "mouse14") return telecomPickLine(["후후후.. 왜 그렇게 웃어", "푸히히.. 나도 웃기네", "알가쓰.. 웃긴 얘기였구나"]);
+    if (nick === "ekjw123") return telecomPickLine(["우하하~~~~~~~~~~~~", "ㅋㅋㅋㅋ 그러게", "HI~~~~~~~~ 웃기다"]);
+    if (nick === "raincoat") return telecomPickLine(["홍홍.. 웃기네요", "반갑반갑~~~ 분위기 좋네요"]);
+    return casual ? telecomPickLine(["ㅋㅋㅋ", "나도 웃기네", "그거 좀 웃겼어"]) : telecomPickLine(["하하.. 그러게요", "저도 좀 웃겼어요", "분위기 좋네요"]);
+  }
+
+  if (intent === "doing") {
+    if (nick === "녹차향기") return telecomPickLine(["저는 게시판 정리하고 있었어요", "광석 아찌 글 올라왔나 보고 있었어요", `${honor} 저는 방금 자료실 확인하고 있었어요`, "방금 들어온 분들 확인하고 있었어요"]);
+    if (nick === "mouse14") return telecomPickLine(["후후후.. 난 대화방 보고 있었지", "난 그냥 구경중", "갈무리할 거 있나 보고 있었어", "알가쓰.. 나는 눈팅중"]);
+    if (nick === "enfant") return telecomPickLine(["음........ 저는 글 읽고 있었어요", "그냥 조용히 보고 있었어요...", "낙서장 읽고 있었어요..."]);
+    if (nick === "raincoat") return telecomPickLine(["반갑반갑~~~ 저는 게시판 보고 있었죠", "홍홍.. 잠깐 들어왔어요", "저는 노래 얘기 보고 있었어요"]);
+    return casual ? telecomPickLine(["난 글 보고 있어", "그냥 방 보고 있었어", "자료실 갔다왔어", "잠깐 들어와 있었지"]) : telecomPickLine(["저는 게시판 보고 있어요", "자료실 글 보고 있습니다", "잠깐 들어와 있었습니다", "노래 듣고 있었어요"]);
+  }
+
+  if (intent === "music") {
+    if (nick === "녹차향기") return telecomPickLine(["자료실에 그 노래 얘기 있었어요", "광석 아찌 오시면 그 얘기 좋아하실 것 같아요", "노래 얘기는 늘 사람이 모이네요"]);
+    if (nick === "mouse14") return telecomPickLine(["후후후.. 그 노래면 다들 말 많아지지", "난 라이브가 더 좋더라", "알가쓰.. 그 얘기 좋네"]);
+    return casual ? telecomPickLine([`${topic} 좋지`, "나도 그거 좋아해", "그건 광석이형한테 물어봐야지", "라이브 얘기면 더 좋고"]) : telecomPickLine([`${topic} 좋네요`, "저도 그 곡 좋아해요", "광석님 오시면 여쭤보죠", "라이브 이야기도 궁금해요"]);
+  }
+
+  if (intent === "comfort") {
+    if (nick === "녹차향기") return telecomPickLine([`${honor} 너무 오래 혼자 생각하지 마세요`, "비 오면 괜히 그럴 때 있죠", "광석 아찌 오시면 한마디 해주실거예요"]);
+    if (nick === "mouse14") return telecomPickLine(["후후후.. 그래도 여기 왔잖아", "그럴 땐 좀 쉬어", "괜히 혼자 그러지마"]);
+    return casual ? telecomPickLine(["그랬구나...", "좀 쉬어", "노래 하나 들어", "그런 날 있지"]) : telecomPickLine(["그러셨군요...", "조금 쉬셔도 돼요", "그럴 때 있지요", "좋은 노래 한 곡 들으세요"]);
+  }
+
+  if (intent === "food") return casual ? telecomPickLine(["감자탕 좋지", "소주 얘기하니까 배고프네", "난 맥주 생각난다"]) : telecomPickLine(["감자탕 좋지요", "먹는 얘기는 늘 좋네요", "맥주 한 캔 생각나네요"]);
+  if (intent === "greeting") return casual ? telecomPickLine([`${honor} 어서와`, "하이!!!!", "어소세요..", "반가워"]) : telecomPickLine([`${honor} 어서오세요~`, "반갑습니다", "좋은 밤 되세요", "어서오세요"]);
+  if (intent === "question") return casual ? telecomPickLine(["그건 나도 궁금하네", "광석이형 오면 물어보자", "누가 알면 말해줘"]) : telecomPickLine(["그건 저도 궁금해요", "아시는 분 계세요?", "광석님 오시면 여쭤보죠"]);
+
+  if (role === "follow") return casual ? telecomPickLine(["그렇구나", "아하.. 그런 얘기였구나", "후후.. 그럴 수도 있지", `${topic}라...`]) : telecomPickLine(["그렇군요", "아하.. 그런 얘기였군요", "저도 봤던 얘기 같아요", `${topic}군요`]);
+  return casual ? telecomPickLine(["음.. 그렇구나", "아하...", "후후.. 재밌네", `${topic}라...`]) : telecomPickLine(["그렇군요", "그 얘기 좋네요", "저도 들어봤어요", `${topic}군요`]);
+}
+function telecomHumanKksReply(intent, userText = "", target = "user") {
+  const s = telecomCurrentSettings();
+  const given = telecomHumanUserDisplayName();
+  let prefix = "";
+  if (target === "user") {
+    if (s.close === "best" || s.close === "veryClose") prefix = `${telecomNameWithAh(given)} `;
+    else if (s.close === "close") prefix = `${given}님 `;
+  }
+  if (intent === "doing") return telecomPickLine(["지금 잠깐 게시판 보고 있어요", "자판 보고 치고 있어요", "자료실 글 좀 보고 있어요", "방금 들어왔어요", "낮에는 좀 바빴어요"]);
+  if (intent === "music") return telecomPickLine(["그 노래 좋아요", "라이브로 하면 좀 달라요", "기타로 하면 괜찮아요", "노래는 천천히 해야죠", "자료실에 있나요?"]);
+  if (intent === "comfort") return telecomPickLine([`${prefix}그래요`, "그런날 있죠", "괜히 센치해 있지말기", "씩씩하게 살기...", "좀 쉬어요"]);
+  if (intent === "food") return telecomPickLine(["감자탕 좋죠", "맥주한캔 생각나네요", "하 좋~~~타", "먹는 얘기 좋네요"]);
+  if (intent === "celebrate") return telecomPickLine(["축하합니다", "좋은날이네요", "사랑과 행복이 가득한 나날을", "빌어드릴께요"]);
+  if (intent === "question") return telecomPickLine(["그건 좀 어렵네요", "잘은 모르겠어요", "천천히 얘기해봐요", "무슨일 있어요"]);
+  return telecomPickLine([`${prefix}네`, "그래요", "응...", "참 좋네요...", "훗..."]);
+}
+function telecomHumanContinueFromLast(userText) {
+  const thread = telecomGetThread();
+  const topic = thread?.topic || telecomExtractConcreteThing(userText);
+  const last = telecomRecentLogItems(8).filter(x => x.kind === "say").slice(-1)[0];
+  if (!last) return null;
+  if (/더|계속|왜|그래서|어떻게|그러면|그럼|맞아|네|응/.test(String(userText || ""))) {
+    return { topic, lastNick: last.nick, lastText: last.text };
+  }
+  return null;
+}
+function telecomScheduleHumanConversationFlow(userText) {
   const intent = telecomIntent(userText);
-  telecomRememberTopic(intent);
-  const members = telecomSelectFlowMembers(userText, 3);
+  const allTargeted = /다들|여러분|님들|회원|팬들|방에|방/.test(String(userText || ""));
   const mentionedMember = telecomFindMentionedMember(userText);
   const kksTargeted = telecomKksMentioned(userText);
-  const allTargeted = /다들|여러분|님들|회원|팬들|방에|방/.test(String(userText || ""));
-  const userAskedDoing = intent === "doing";
-  const recentTopics = telecomLoadJson(TELECOM_STORAGE.recentTopics, []);
-  const repeatedTopic = recentTopics.slice(-4).filter((x) => x === intent).length >= 3;
+  const continuation = telecomHumanContinueFromLast(userText);
+  telecomSetThread(intent, userText);
+  telecomRememberTopic(intent);
+
+  if (mentionedMember) telecomMemberJoin(mentionedMember, false);
+  const members = telecomSelectFlowMembers(userText, allTargeted ? 4 : 3);
+
+  if (continuation) {
+    const m1 = mentionedMember || members[0];
+    const m2 = members[1] || telecomPickMember([m1.nick]);
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m1, telecomHumanMemberLine(m1, intent === "chat" ? "question" : intent, userText, "follow")); }, telecomRand(3000, 6500));
+    if (Math.random() < 0.72) telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m2, telecomHumanMemberLine(m2, intent, userText, "follow")); }, telecomRand(9500, 15500));
+    if (telecomKksActive() && Math.random() < 0.28) telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomHumanKksReply(intent, userText)); }, telecomRand(26000, 35000));
+    return;
+  }
 
   if (mentionedMember && !kksTargeted && !allTargeted) {
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(mentionedMember.nick, mentionedMember.name, telecomMemberLineForIntent(mentionedMember, intent, userText, "user")); }, telecomRand(3500, 7000));
-    const replier = members.find((m) => m.nick !== mentionedMember.nick) || telecomPickMember([mentionedMember.nick]);
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(replier.nick, replier.name, telecomMemberLineForIntent(replier, intent, userText, "member")); }, telecomRand(9000, 15000));
-    if (telecomKksActive() && Math.random() < 0.30) telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomGenerateKksReplyToMember(mentionedMember, intent, userText)); }, telecomRand(24000, 32000));
+    const replier = members.find(m => m.nick !== mentionedMember.nick) || telecomPickMember([mentionedMember.nick]);
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(mentionedMember, telecomHumanMemberLine(mentionedMember, intent, userText, "answer")); }, telecomRand(2500, 5600));
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(replier, telecomHumanMemberLine(replier, intent, userText, "follow")); }, telecomRand(10000, 16000));
+    if (Math.random() < 0.45) telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(mentionedMember, telecomHumanMemberLine(mentionedMember, intent, userText, "askBack")); }, telecomRand(19000, 27000));
     return;
   }
 
   if (kksTargeted && !allTargeted) {
     const helper = members[0];
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(helper.nick, helper.name, helper.nick === "녹차향기" ? "광석 아찌 보시면 답하실거예요" : `${telecomMemberCallKks(helper)} 지금 계시나...`); }, telecomRand(5500, 10000));
-    telecomScheduleKksResponseForUser(userText, telecomRand(28000, 34000));
-    const follow = members[1] || telecomPickMember([helper.nick]);
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(follow.nick, follow.name, userAskedDoing ? telecomMemberActionLine(follow) : telecomMemberLineForIntent(follow, intent, userText, "member")); }, telecomRand(38000, 50000));
+    telecomQueue(() => {
+      if (!telecomRoomOpen()) return;
+      const line = helper.nick === "녹차향기"
+        ? telecomPickLine(["광석 아찌 지금 자판 보고 계실거예요", "아저씨 계시면 금방 보실거예요", "조금 기다려보세요"])
+        : telecomPickLine([`${telecomMemberCallKks(helper)} 계신가요?`, `${telecomMemberCallKks(helper)} 이 얘기 보셨어요?`]);
+      telecomSayMember(helper, line);
+    }, telecomRand(4500, 8500));
+    telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomHumanKksReply(intent, userText, "user")); }, telecomRand(26000, 35000));
+    const after = members[1] || telecomPickMember([helper.nick]);
+    if (Math.random() < 0.64) telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(after, telecomHumanMemberLine(after, intent, userText, "follow")); }, telecomRand(38000, 50000));
     return;
   }
 
-  // 본인 ↔ 김광석 + 회원, 또는 전체 대화방 대상
   const m1 = members[0];
   const m2 = members[1] || telecomPickMember([m1.nick]);
   const m3 = members[2] || telecomPickMember([m1.nick, m2.nick]);
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(m1.nick, m1.name, telecomMemberLineForIntent(m1, intent, userText, "user")); }, telecomRand(3500, 7500));
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(m2.nick, m2.name, telecomMemberLineForIntent(m2, intent, userText, "member")); }, telecomRand(9000, 16000));
-  if (Math.random() < 0.55) {
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(m3.nick, m3.name, telecomMemberFollowupQuestion(m3, intent)); }, telecomRand(17000, 24000));
+  const m4 = members[3] || telecomPickMember([m1.nick, m2.nick, m3.nick]);
+  telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m1, telecomHumanMemberLine(m1, intent, userText, "answer")); }, telecomRand(2800, 6200));
+  telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m2, telecomHumanMemberLine(m2, intent, userText, "follow")); }, telecomRand(9800, 15500));
+  if (Math.random() < 0.60) telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m3, telecomHumanMemberLine(m3, intent, userText, allTargeted ? "answer" : "askBack")); }, telecomRand(18000, 25500));
+  if (telecomKksActive() && (kksTargeted || allTargeted || Math.random() < 0.35)) {
+    if (Math.random() < 0.32) telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m2, `${telecomMemberCallKks(m2)} 이 얘기 보셨어요?`); }, telecomRand(24500, 30000));
+    telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomHumanKksReply(intent, userText, "user")); }, telecomRand(32000, 41000));
+    if (Math.random() < 0.52) telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m4, telecomHumanMemberLine(m4, intent, userText, "follow")); }, telecomRand(43000, 56000));
+  } else if (Math.random() < 0.5) {
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m4, telecomHumanMemberLine(m4, intent, userText, "follow")); }, telecomRand(26000, 36000));
   }
-  if (telecomKksActive()) {
-    if (Math.random() < 0.45) {
-      const caller = Math.random() < 0.55 ? m1 : m2;
-      const q = userAskedDoing ? `${telecomMemberCallKks(caller)} 뭐하세요?` : `${telecomMemberCallKks(caller)} 이 얘기 들으셨어요?`;
-      telecomQueue(() => { if (telecomRoomOpen()) telecomSay(caller.nick, caller.name, q); }, telecomRand(22000, 28000));
-      telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomGenerateKksReplyToMember(caller, intent, userText)); }, telecomRand(30000, 37000));
-    } else {
-      telecomScheduleKksResponseForUser(userText, telecomRand(28000, 36000));
-    }
-  }
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(m3.nick, m3.name, telecomMemberLineForIntent(m3, intent, userText, "member")); }, telecomRand(39000, 52000));
+}
+function telecomScheduleConversationFlow(userText) {
+  telecomScheduleHumanConversationFlow(userText);
 }
 function telecomMemberPresenceEvent() {
-  const m = telecomPickMember();
-  const joined = Math.random() < 0.62;
-  telecomSystem(`${m.nick}(${m.name})님이 ${joined ? "접속하셨습니다." : "나가셨습니다."}`);
-  return joined ? m : null;
+  const active = telecomActiveMemberNicks();
+  const canLeave = active.length > 5;
+  const joined = !canLeave || Math.random() < 0.58;
+  if (joined) {
+    let pool = DUNGEUNSORI_MEMBERS.filter((m) => m.nick !== "김광석" && !active.includes(m.nick));
+    if (!pool.length) return null;
+    const m = pool[telecomRand(0, pool.length - 1)];
+    telecomMemberJoin(m, false);
+    return m;
+  }
+  const leaveNick = active.filter((nick) => !["녹차향기"].includes(nick))[telecomRand(0, active.length - 2)];
+  const m = telecomFindMemberByNick(leaveNick);
+  if (m && telecomMemberLeave(m)) return null;
+  return null;
 }
 function telecomMemberCallKks(member) {
   const calls = TELECOM_MEMBER_PROFILES[member.nick]?.kksCall || ["광석님"];
@@ -4151,32 +4370,29 @@ function telecomMemberCallKks(member) {
 }
 function telecomPostAmbientConversation() {
   if (!telecomRoomOpen()) return;
+  // 먼저 접속/퇴장 이벤트가 가끔 생기고, 새로 들어온 회원만 그 직후 말할 수 있다.
   let speaker = null;
   if (Math.random() < 0.22) speaker = telecomMemberPresenceEvent();
-  const manager = DUNGEUNSORI_MEMBERS.find((m) => m.nick === "녹차향기");
-  if (!speaker) speaker = Math.random() < 0.20 && manager ? manager : telecomPickMember();
-  const profile = TELECOM_MEMBER_PROFILES[speaker.nick] || {};
-  const linePool = profile.lines || TELECOM_MEMBER_LINES;
-  const line = telecomPickLine(linePool);
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(speaker.nick, speaker.name, line); }, telecomRand(1200, 3500));
-  telecomQueue(() => {
-    if (!telecomRoomOpen()) return;
-    const replier = telecomPickMember([speaker.nick]);
-    if (telecomKksActive() && Math.random() < 0.35) {
-      const kksPool = line.includes("광석") || line.includes("아저씨") || line.includes("아찌")
-        ? ["네", "오셨네요", "지금 잠깐 보고 있어요", "금방 가야해요"]
-        : TELECOM_KKS_MEMBER_REPLIES;
-      telecomKks(telecomPickLine(kksPool));
-      return;
-    }
-    const replyPool = TELECOM_MEMBER_PROFILES[replier.nick]?.lines || TELECOM_MEMBER_REPLY_LINES;
-    telecomSay(replier.nick, replier.name, telecomPickLine(replyPool));
-    if (telecomKksActive() && Math.random() < 0.18) {
-      telecomQueue(() => {
-        if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomPickLine(TELECOM_KKS_MEMBER_REPLIES));
-      }, telecomRand(2000, 5200));
-    }
-  }, telecomRand(4800, 9200));
+  const scenarios = [
+    { intent:"music", seed:"자료실에 새 노래 얘기 올라왔나요?" },
+    { intent:"doing", seed:"다들 지금 뭐하세요?" },
+    { intent:"chat", seed:"오늘 방이 좀 조용하네요.." },
+    { intent:"comfort", seed:"비 오니까 괜히 좀 그렇네요" },
+    { intent:"food", seed:"감자탕 얘기하니까 배고프네요" },
+    { intent:"laugh", seed:"후후후.. 갑자기 웃기네요" }
+  ];
+  const sc = scenarios[telecomRand(0, scenarios.length - 1)];
+  const m1 = speaker || telecomPickMember();
+  const m2 = telecomPickMember([m1.nick]);
+  const m3 = telecomPickMember([m1.nick, m2.nick]);
+  telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m1, telecomHumanMemberLine(m1, sc.intent, sc.seed, "answer")); }, telecomRand(1200, 3200));
+  telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m2, telecomHumanMemberLine(m2, sc.intent, sc.seed, "follow")); }, telecomRand(7600, 12500));
+  if (Math.random() < 0.42) {
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m3, telecomHumanMemberLine(m3, sc.intent, sc.seed, "askBack")); }, telecomRand(14500, 21000));
+  }
+  if (telecomKksActive() && Math.random() < 0.23) {
+    telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomHumanKksReply(sc.intent, sc.seed)); }, telecomRand(22000, 30000));
+  }
 }
 function telecomStartMemberNoise(initialDelay = telecomRand(14000, 22000)) {
   clearTimeout(telecomMemberTimer);
@@ -4184,7 +4400,7 @@ function telecomStartMemberNoise(initialDelay = telecomRand(14000, 22000)) {
     if (document.getElementById("telecom")?.classList.contains("active") && telecomRoomOpen()) {
       telecomPostAmbientConversation();
     }
-    telecomMemberTimer = telecomQueue(tick, telecomRand(18000, 34000));
+    telecomMemberTimer = telecomQueue(tick, telecomRand(26000, 52000));
   }, initialDelay);
 }
 function telecomSendUserMessage(text) {
@@ -4245,6 +4461,7 @@ function telecomEnterRoom() {
   document.getElementById("telecomAfterKksExit")?.classList.add("hidden");
   localStorage.setItem(TELECOM_STORAGE.sessionStart, String(telecomNow()));
   telecomUserMessageCount = 0;
+  if (!Array.isArray(telecomLoadJson(TELECOM_STORAGE.activeMembers, null))) telecomSetActiveMemberNicks(["녹차향기", "mouse14", "enfant", "raincoat", "ajeegang", "ekjw123", "낙원", "soriboy"]);
   const previousLog = telecomLoadJson(TELECOM_STORAGE.log, []);
   if (previousLog.length > 0) {
     telecomRenderLog(previousLog);
@@ -4333,6 +4550,7 @@ function initTelecomChatRoom() {
     telecomSaveJson(TELECOM_STORAGE.log, []);
     telecomSaveJson(TELECOM_STORAGE.recentSpeakers, []);
     telecomSaveJson(TELECOM_STORAGE.recentTopics, []);
+    telecomSaveJson(TELECOM_STORAGE.activeMembers, []);
     telecomSaveJson("kwangseokTelecomRecentLinesV142", []);
     telecomSetKksActive(false);
     document.getElementById("telecomRoom")?.classList.add("hidden");
