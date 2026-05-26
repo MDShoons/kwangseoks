@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v125-site-route-version-fix";
+const APP_VERSION = "v126-live-data-login-repair";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -379,6 +379,7 @@ window.zoomDetailPhoto = zoomDetailPhoto;
 window.openLatestItem = openLatestItem;
 window.closeContentDetail = closeContentDetail;
 window.quickTemplate = quickTemplate;
+window.__appReady = true;
 
 function normalizeLoginId(v) { return String(v || "").trim().toLowerCase(); }
 function normalizeEmail(v) { return String(v || "").trim().toLowerCase(); }
@@ -613,31 +614,58 @@ document.getElementById("deleteAccountBtn")?.addEventListener("click", deleteMyA
 
 document.getElementById("logoutBtn").addEventListener("click", async () => { await signOut(auth); alert("로그아웃되었습니다."); showPage("home"); });
 
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user; currentUserProfile = null;
-  if (user) {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    currentUserProfile = snap.exists() ? snap.data() : null;
-  }
-  const email = normalizeEmail(user?.email || "");
+function updateAuthUi() {
+  const email = normalizeEmail(currentUser?.email || "");
   const loginId = normalizeLoginId(currentUserProfile?.loginId || "");
-  isAdmin = Boolean(user) && (ADMIN_EMAILS.includes(email) || ADMIN_LOGIN_IDS.includes(loginId) || currentUserProfile?.role === "admin");
-  document.getElementById("userStatus").textContent = user ? (isAdmin ? "관리자 로그인" : (loginId || email)) : "로그인 전";
-  document.getElementById("loginBtn").classList.toggle("hidden", Boolean(user));
-  document.getElementById("signupBtn").classList.toggle("hidden", Boolean(user));
-  document.getElementById("logoutBtn").classList.toggle("hidden", !user);
-  document.getElementById("mypageBtn")?.classList.toggle("hidden", !user);
-  if (typeof telecomApplyAccountIdentityToForm === "function") telecomApplyAccountIdentityToForm();
+  isAdmin = Boolean(currentUser) && (ADMIN_EMAILS.includes(email) || ADMIN_LOGIN_IDS.includes(loginId) || currentUserProfile?.role === "admin");
+
+  const statusEl = document.getElementById("userStatus");
+  if (statusEl) statusEl.textContent = currentUser ? (isAdmin ? "관리자 로그인" : (loginId || email)) : "로그인 전";
+  document.getElementById("loginBtn")?.classList.toggle("hidden", Boolean(currentUser));
+  document.getElementById("signupBtn")?.classList.toggle("hidden", Boolean(currentUser));
+  document.getElementById("logoutBtn")?.classList.toggle("hidden", !currentUser);
+  document.getElementById("mypageBtn")?.classList.toggle("hidden", !currentUser);
+
   let adminBtn = document.getElementById("adminNavBtn");
   if (isAdmin && !adminBtn) {
-    adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
+    adminBtn = document.createElement("button");
+    adminBtn.id = "adminNavBtn";
+    adminBtn.textContent = "관리자";
+    adminBtn.onclick = () => showPage("admin");
+    document.querySelector("nav")?.appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-  await window.addEventListener("hashchange", handleHashRoute);
-window.addEventListener("DOMContentLoaded", handleHashRoute);
-loadSiteSettings(); await loadPageCategories(); await loadContents();
+
+  if (typeof telecomApplyAccountIdentityToForm === "function") telecomApplyAccountIdentityToForm();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  currentUserProfile = null;
+  if (user) {
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      currentUserProfile = snap.exists() ? snap.data() : null;
+    } catch (e) {
+      console.warn("사용자 정보 로드 실패", e);
+    }
+  }
+  updateAuthUi();
   handleHashRoute();
 });
+
+window.addEventListener("hashchange", handleHashRoute);
+window.addEventListener("DOMContentLoaded", handleHashRoute);
+
+async function bootArchiveApp() {
+  updateAuthUi();
+  handleHashRoute();
+  await loadSiteSettings();
+  await loadPageCategories();
+  await loadContents();
+  handleHashRoute();
+}
+bootArchiveApp().catch((e) => console.error("앱 초기 로드 실패", e));
 
 async function loadPageCategories() {
   try {

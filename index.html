@@ -45,10 +45,10 @@
     .page.active{display:block;}
     #screenProtectOverlay.hidden{display:none!important;}
   </style>
-  <link rel="stylesheet" href="style.css?v=v125-site-route-version-fix" />
+  <link rel="stylesheet" href="style.css?v=v126-live-data-login-repair" />
 
   <script>
-    // v110: 영상글 수정 시 기존 영상 재생 정보 보존
+    // v126: 앱 로딩 전 임시 라우터. 앱 로딩 후에는 실제 app.js 라우터를 방해하지 않음.
     (function () {
       var VALID = ["home","siteinfo","videos","songs","radios","photos","stories","about","oneum","telecom","loginRequired","login","signup","mypage","admin"];
       function qsa(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -81,6 +81,8 @@
       window.goPage = window.goPage || function(page){ show(page); };
 
       document.addEventListener("click", function (ev) {
+        if (window.__appReady && typeof window.goPage === "function") return;
+
         var toggle = ev.target.closest("#mobileMenuToggle");
         if (toggle) {
           ev.preventDefault();
@@ -705,8 +707,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v125-site-route-version-fix</div>
+<div class="version-marker">v126-live-data-login-repair</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v125-site-route-version-fix"></script>
+  <script type="module" src="app.js?v=v126-live-data-login-repair"></script>
 </body>
 </html>
