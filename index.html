@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v156-emotion-persona-models" />
+  <link rel="stylesheet" href="style.css?v=v162-speaker-target-fix" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -128,6 +128,7 @@
     <div class="daily-player-card">
       <button type="button" id="dailyPlayerCloseBtn" class="daily-player-close" aria-label="오늘의 추천곡 닫기">×</button>
       <div class="daily-player-label">오늘의 추천곡</div>
+      <img id="dailyPlayerCover" class="daily-player-cover" src="" alt="오늘의 추천곡 커버" draggable="false" oncontextmenu="return false" />
       <div id="dailyPlayerTitle" class="daily-player-title">재생할 곡이 없습니다</div>
       <div id="dailyPlayerSub" class="daily-player-sub">Songs에 음원을 등록하면 오늘의 추천곡이 표시됩니다.</div>
 
@@ -156,6 +157,7 @@
     <div class="daily-player-card playlist-player-card">
       <button type="button" id="playlistPlayerCloseBtn" class="daily-player-close" aria-label="플레이리스트 닫기">×</button>
       <div class="daily-player-label playlist-player-label">내 플레이리스트</div>
+      <img id="playlistPlayerCover" class="daily-player-cover playlist-player-cover" src="" alt="플레이리스트 곡 커버" draggable="false" oncontextmenu="return false" />
       <div id="playlistPlayerTitle" class="daily-player-title">선택한 곡이 없습니다</div>
       <div id="playlistPlayerSub" class="daily-player-sub">Songs에서 듣고 싶은 곡을 담으면 표시됩니다.</div>
 
@@ -716,6 +718,6 @@
   </div>
 <div class="version-marker">v118-ipad-detail-video-poster</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v159-appjs-stability"></script>
+  <script type="module" src="app.js?v=v163-player-continuity"></script>
 </body>
 </html>

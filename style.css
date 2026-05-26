@@ -4906,3 +4906,44 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   background-color: #00104a !important;
   opacity: 1 !important;
 }
+
+/* v163: 플레이어 커버/위치/가독성 보정 */
+#dailyRecommendPlayer .daily-player-cover,
+#userPlaylistPlayer .daily-player-cover {
+  display: block !important;
+  width: 72px !important;
+  height: 72px !important;
+  margin: 0 0 10px 0 !important;
+  border-radius: 14px !important;
+  object-fit: cover !important;
+  background: rgba(255,255,255,0.16) !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
+}
+
+#dailyRecommendPlayer .daily-player-cover.empty,
+#userPlaylistPlayer .daily-player-cover.empty {
+  display: none !important;
+}
+
+#userPlaylistPlayer.daily-player {
+  top: 470px !important;
+}
+
+@media (max-width: 1500px) {
+  #userPlaylistPlayer.daily-player {
+    right: 16px !important;
+    top: 450px !important;
+    width: 184px !important;
+    max-width: 184px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  #userPlaylistPlayer.daily-player {
+    right: 12px !important;
+    top: 395px !important;
+    width: 168px !important;
+    max-width: 168px !important;
+  }
+}

@@ -1386,6 +1386,44 @@ let dailyPlayerBound = false;
 let playlistPlayerBound = false;
 let playlistCurrentItemId = "";
 let playlistRequestedItemId = "";
+let playlistAutoPlayAfterMove = false;
+let playlistPendingResumeTime = 0;
+let playlistResumeAppliedForId = "";
+let dailyRecommendMidnightTimer = null;
+
+function getAudioItemCoverUrl(item) {
+  const raw = item?.thumbnailUrl || item?.imageUrl || item?.photoUrl || item?.coverUrl || "";
+  return raw ? normalizeMediaUrlForPlayback(raw, "image") : "";
+}
+
+function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
+  if (!imgEl) return;
+  const coverUrl = getAudioItemCoverUrl(item);
+  if (coverUrl) {
+    imgEl.src = coverUrl;
+    imgEl.alt = `${item?.title || "곡"} 커버`;
+    imgEl.classList.remove("empty");
+  } else {
+    imgEl.removeAttribute("src");
+    imgEl.alt = fallbackText;
+    imgEl.classList.add("empty");
+  }
+}
+
+function pauseOtherMedia(activeMedia) {
+  document.querySelectorAll("audio, video").forEach((media) => {
+    if (media !== activeMedia && !media.paused) {
+      try { media.pause(); } catch (_) {}
+    }
+  });
+}
+
+document.addEventListener("play", (event) => {
+  const media = event.target;
+  if (media && (media.tagName === "AUDIO" || media.tagName === "VIDEO")) {
+    pauseOtherMedia(media);
+  }
+}, true);
 
 function getKoreanDateKey() {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -1396,6 +1434,44 @@ function getKoreanDateKey() {
   });
 
   return formatter.format(new Date());
+}
+
+function getKoreanDateParts() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date()).reduce((acc, part) => {
+    if (part.type !== "literal") acc[part.type] = Number(part.value);
+    return acc;
+  }, {});
+  return parts;
+}
+
+function getMsUntilNextKoreanMidnight() {
+  const { year, month, day } = getKoreanDateParts();
+  const nextMidnightUtc = Date.UTC(year, month - 1, day + 1, -9, 0, 2, 0);
+  return Math.max(1000, nextMidnightUtc - Date.now());
+}
+
+function scheduleKoreanMidnightRefresh() {
+  if (dailyRecommendMidnightTimer) clearTimeout(dailyRecommendMidnightTimer);
+  dailyRecommendMidnightTimer = setTimeout(() => {
+    try {
+      clearUserPlaylist({ silent: true });
+      dailyRecommendedItemId = "";
+      playlistCurrentItemId = "";
+      playlistRequestedItemId = "";
+      setupDailyRecommendPlayer({ forceDateRefresh: true });
+      setupUserPlaylistPlayer({ forceOpen: false });
+      updatePlaylistAddButtons();
+    } catch (error) {
+      console.warn("자정 플레이어 갱신 오류:", error?.message || error);
+    } finally {
+      scheduleKoreanMidnightRefresh();
+    }
+  }, getMsUntilNextKoreanMidnight());
 }
 
 function seededNumberFromString(text) {
@@ -1526,12 +1602,13 @@ function hideDailyRecommendPlayerForHours(hours) {
   closeDailyRecommendPlayer();
 }
 
-function setupDailyRecommendPlayer() {
+function setupDailyRecommendPlayer(options = {}) {
   const player = document.getElementById("dailyRecommendPlayer");
   const audio = document.getElementById("dailyPlayerAudio");
   const title = document.getElementById("dailyPlayerTitle");
   const sub = document.getElementById("dailyPlayerSub");
   const playBtn = document.getElementById("dailyPlayerPlayBtn");
+  const cover = document.getElementById("dailyPlayerCover");
   const progress = document.getElementById("dailyPlayerProgress");
   const current = document.getElementById("dailyPlayerCurrent");
   const duration = document.getElementById("dailyPlayerDuration");
@@ -1593,6 +1670,7 @@ function setupDailyRecommendPlayer() {
     dailyRecommendedItemId = "";
     audio.pause();
     audio.removeAttribute("src");
+    setPlayerCoverImage(cover, null);
     title.textContent = "재생할 곡이 없습니다";
     sub.textContent = "Songs에 음원을 등록하면 오늘의 추천곡이 표시됩니다.";
     playBtn.textContent = "▶";
@@ -1610,6 +1688,7 @@ function setupDailyRecommendPlayer() {
     dailyRecommendedItemId = "";
     audio.pause();
     audio.removeAttribute("src");
+    setPlayerCoverImage(cover, null);
     title.textContent = "재생할 곡이 없습니다";
     sub.textContent = "Songs에 재생 가능한 음원 URL이 없습니다.";
     playBtn.textContent = "▶";
@@ -1627,13 +1706,15 @@ function setupDailyRecommendPlayer() {
   progress.disabled = false;
 
   const songCategoryLabel = getDailySongCategoryLabel(selected);
+  setPlayerCoverImage(cover, selected);
   title.textContent = selected.title || "제목 없는 추천곡";
   sub.textContent = `앨범/분류: ${songCategoryLabel} · ${getKoreanDateKey()} · 매일 00:00 추천 변경`;
 
-  if (dailyRecommendedItemId !== selected.id) {
+  if (options.forceDateRefresh || dailyRecommendedItemId !== selected.id || audio.dataset.dailySrc !== sourceUrl) {
     dailyRecommendedItemId = selected.id;
     audio.pause();
     audio.src = sourceUrl;
+    audio.dataset.dailySrc = sourceUrl;
     audio.currentTime = 0;
     progress.value = "0";
     playBtn.textContent = "▶";
@@ -1702,6 +1783,7 @@ function setupDailyRecommendPlayer() {
 
     try {
       if (audio.paused) {
+        pauseOtherMedia(audio);
         await audio.play();
       } else {
         audio.pause();
@@ -1747,7 +1829,32 @@ function getUserPlaylistStorageKey() {
   return "kwangseoks_user_playlist_song_ids_v1";
 }
 
+function getUserPlaylistDayKey() {
+  return "kwangseoks_user_playlist_day_key_v1";
+}
+
+function getUserPlaylistStateKey() {
+  return "kwangseoks_user_playlist_state_v1";
+}
+
+function ensureUserPlaylistFreshForToday() {
+  const todayKey = getKoreanDateKey();
+  const storedKey = localStorage.getItem(getUserPlaylistDayKey());
+  if (!storedKey) {
+    localStorage.setItem(getUserPlaylistDayKey(), todayKey);
+    return;
+  }
+  if (storedKey !== todayKey) {
+    localStorage.setItem(getUserPlaylistStorageKey(), "[]");
+    localStorage.removeItem(getUserPlaylistStateKey());
+    localStorage.setItem(getUserPlaylistDayKey(), todayKey);
+    playlistCurrentItemId = "";
+    playlistRequestedItemId = "";
+  }
+}
+
 function loadUserPlaylistIds() {
+  ensureUserPlaylistFreshForToday();
   try {
     const parsed = JSON.parse(localStorage.getItem(getUserPlaylistStorageKey()) || "[]");
     return Array.isArray(parsed) ? parsed.map((id) => String(id || "")).filter(Boolean) : [];
@@ -1762,7 +1869,31 @@ function saveUserPlaylistIds(ids) {
     const value = String(id || "").trim();
     if (value && !unique.includes(value)) unique.push(value);
   });
+  localStorage.setItem(getUserPlaylistDayKey(), getKoreanDateKey());
   localStorage.setItem(getUserPlaylistStorageKey(), JSON.stringify(unique));
+}
+
+function loadUserPlaylistState() {
+  ensureUserPlaylistFreshForToday();
+  try {
+    const parsed = JSON.parse(localStorage.getItem(getUserPlaylistStateKey()) || "{}");
+    if (!parsed || parsed.dateKey !== getKoreanDateKey()) return null;
+    return parsed;
+  } catch (_) {
+    return null;
+  }
+}
+
+function saveUserPlaylistState(audio) {
+  if (!playlistCurrentItemId || !audio) return;
+  const currentTime = Number(audio.currentTime || 0);
+  localStorage.setItem(getUserPlaylistStateKey(), JSON.stringify({
+    dateKey: getKoreanDateKey(),
+    itemId: String(playlistCurrentItemId),
+    currentTime: Number.isFinite(currentTime) ? Math.max(0, currentTime) : 0,
+    src: audio.dataset.playlistSrc || audio.currentSrc || audio.src || "",
+    updatedAt: Date.now()
+  }));
 }
 
 function getUserPlaylistSongs() {
@@ -1800,22 +1931,29 @@ function resetPlaylistPlayerUi(audio, playBtn, progress, current, duration) {
 function closeUserPlaylistPlayerTemporarily() {
   const player = document.getElementById("userPlaylistPlayer");
   const audio = document.getElementById("playlistPlayerAudio");
-  if (audio) audio.pause();
+  if (audio) { saveUserPlaylistState(audio); audio.pause(); }
   if (player) player.classList.add("closed");
 }
 
-function clearUserPlaylist() {
+function clearUserPlaylist(options = {}) {
   saveUserPlaylistIds([]);
+  localStorage.removeItem(getUserPlaylistStateKey());
+  localStorage.setItem(getUserPlaylistDayKey(), getKoreanDateKey());
   playlistCurrentItemId = "";
   playlistRequestedItemId = "";
-  setupUserPlaylistPlayer({ forceOpen: false });
-  updatePlaylistAddButtons();
+  playlistPendingResumeTime = 0;
+  playlistResumeAppliedForId = "";
+  if (!options.silent) {
+    setupUserPlaylistPlayer({ forceOpen: false });
+    updatePlaylistAddButtons();
+  }
 }
 
 function removeCurrentSongFromPlaylist() {
   if (!playlistCurrentItemId) return;
   const ids = loadUserPlaylistIds().filter((id) => String(id) !== String(playlistCurrentItemId));
   saveUserPlaylistIds(ids);
+  localStorage.removeItem(getUserPlaylistStateKey());
   playlistCurrentItemId = "";
   playlistRequestedItemId = ids[0] || "";
   setupUserPlaylistPlayer({ forceOpen: ids.length > 0 });
@@ -1833,6 +1971,9 @@ function addSongToUserPlaylist(songId) {
   const ids = loadUserPlaylistIds();
   if (!ids.includes(id)) ids.push(id);
   saveUserPlaylistIds(ids);
+  localStorage.removeItem(getUserPlaylistStateKey());
+  playlistPendingResumeTime = 0;
+  playlistResumeAppliedForId = "";
   playlistRequestedItemId = id;
   setupUserPlaylistPlayer({ forceOpen: true });
   updatePlaylistAddButtons();
@@ -1857,6 +1998,8 @@ function movePlaylistSelection(direction) {
   const currentIndex = Math.max(0, songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)));
   const nextIndex = (currentIndex + direction + songs.length) % songs.length;
   playlistRequestedItemId = songs[nextIndex].id;
+  playlistPendingResumeTime = 0;
+  playlistResumeAppliedForId = "";
   setupUserPlaylistPlayer({ forceOpen: true });
 }
 
@@ -1866,6 +2009,7 @@ function setupUserPlaylistPlayer(options = {}) {
   const title = document.getElementById("playlistPlayerTitle");
   const sub = document.getElementById("playlistPlayerSub");
   const playBtn = document.getElementById("playlistPlayerPlayBtn");
+  const cover = document.getElementById("playlistPlayerCover");
   const progress = document.getElementById("playlistPlayerProgress");
   const current = document.getElementById("playlistPlayerCurrent");
   const duration = document.getElementById("playlistPlayerDuration");
@@ -1883,6 +2027,7 @@ function setupUserPlaylistPlayer(options = {}) {
   if (!songs.length) {
     player.classList.add("closed");
     playlistCurrentItemId = "";
+    setPlayerCoverImage(cover, null);
     title.textContent = "선택한 곡이 없습니다";
     sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
     resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
@@ -1892,16 +2037,25 @@ function setupUserPlaylistPlayer(options = {}) {
   if (options.forceOpen) player.classList.remove("closed");
   if (!player.classList.contains("closed")) player.classList.remove("closed");
 
+  const savedState = loadUserPlaylistState();
+  if (!playlistRequestedItemId && !playlistCurrentItemId && savedState?.itemId) {
+    playlistCurrentItemId = String(savedState.itemId);
+    playlistPendingResumeTime = Number(savedState.currentTime || 0);
+    playlistResumeAppliedForId = "";
+  }
+
   const requestedIndex = playlistRequestedItemId ? songs.findIndex((item) => String(item.id) === String(playlistRequestedItemId)) : -1;
   const currentIndex = playlistCurrentItemId ? songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)) : -1;
   const selectedIndex = requestedIndex >= 0 ? requestedIndex : (currentIndex >= 0 ? currentIndex : 0);
   const selected = songs[selectedIndex] || songs[0];
   const sourceUrl = normalizeMediaUrlForPlayback(getPlayableAudioUrl(selected), "audio");
+  const shouldResumeSavedTime = requestedIndex < 0 && savedState && String(savedState.itemId) === String(selected.id);
 
   playBtn.disabled = false;
   playBtn.classList.remove("disabled");
   progress.disabled = false;
 
+  setPlayerCoverImage(cover, selected);
   title.textContent = selected.title || "제목 없는 곡";
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
 
@@ -1910,6 +2064,8 @@ function setupUserPlaylistPlayer(options = {}) {
     audio.pause();
     audio.src = sourceUrl;
     audio.dataset.playlistSrc = sourceUrl;
+    playlistPendingResumeTime = shouldResumeSavedTime ? Number(savedState.currentTime || 0) : 0;
+    playlistResumeAppliedForId = "";
     audio.currentTime = 0;
     progress.value = "0";
     playBtn.textContent = "▶";
@@ -1917,6 +2073,13 @@ function setupUserPlaylistPlayer(options = {}) {
     duration.textContent = "0:00";
   }
   playlistRequestedItemId = "";
+
+  if (playlistAutoPlayAfterMove) {
+    playlistAutoPlayAfterMove = false;
+    setTimeout(async () => {
+      try { pauseOtherMedia(audio); await audio.play(); } catch (error) { console.log("다음 곡 자동 재생 오류:", error?.message || error); }
+    }, 120);
+  }
 
   if (playlistPlayerBound) return;
   playlistPlayerBound = true;
@@ -1984,7 +2147,7 @@ function setupUserPlaylistPlayer(options = {}) {
   playBtn.addEventListener("click", async () => {
     if (playBtn.disabled || !audio.src) return;
     try {
-      if (audio.paused) await audio.play();
+      if (audio.paused) { pauseOtherMedia(audio); await audio.play(); }
       else audio.pause();
     } catch (error) {
       console.log("플레이리스트 재생 오류:", error?.message || error);
@@ -2001,6 +2164,13 @@ function setupUserPlaylistPlayer(options = {}) {
 
   audio.addEventListener("loadedmetadata", () => {
     duration.textContent = formatPlayerTime(audio.duration);
+    if (playlistPendingResumeTime > 0 && playlistResumeAppliedForId !== String(playlistCurrentItemId)) {
+      const safeTime = Number.isFinite(audio.duration) && audio.duration > 0
+        ? Math.min(playlistPendingResumeTime, Math.max(0, audio.duration - 1))
+        : playlistPendingResumeTime;
+      try { audio.currentTime = safeTime; } catch (_) {}
+      playlistResumeAppliedForId = String(playlistCurrentItemId);
+    }
   });
 
   audio.addEventListener("timeupdate", () => {
@@ -2008,6 +2178,7 @@ function setupUserPlaylistPlayer(options = {}) {
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
       progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
     }
+    saveUserPlaylistState(audio);
   });
 
   progress.addEventListener("input", () => {
@@ -2019,6 +2190,9 @@ function setupUserPlaylistPlayer(options = {}) {
   audio.addEventListener("ended", () => {
     playBtn.textContent = "▶";
     progress.value = "0";
+    playlistPendingResumeTime = 0;
+    playlistResumeAppliedForId = "";
+    playlistAutoPlayAfterMove = true;
     movePlaylistSelection(1);
   });
 }
@@ -2030,6 +2204,8 @@ async function loadContents() {
     snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
     renderAllContentSections();
     setupDailyRecommendPlayer();
+    setupUserPlaylistPlayer({ forceOpen: false });
+    scheduleKoreanMidnightRefresh();
     await applySavedTemplates();
   applyHomeVoiceSettings(currentSettings);
   } catch(e) { console.error(e); }
@@ -2532,6 +2708,7 @@ function setupRadioMonochromePlayers(root = document) {
       if (!audio.src && !loadCandidate(candidateIndex)) return;
       try {
         if (audio.paused) {
+          pauseOtherMedia(audio);
           await audio.play();
         } else {
           audio.pause();
@@ -3830,6 +4007,75 @@ function telecomIsKksTypingContext(text) {
   const raw = telecomCanonicalInput(text || "");
   return /광석|김광석|아저씨|아찌|형|타자|자판|오래|느리|어려|서툴|걸리/.test(raw) && /타자|자판|오래|느리|어려|서툴|걸리/.test(raw);
 }
+
+// v161: 아무 글에나 무지성 공감하지 않도록, 먼저 "대화 가능한 말"인지 판별한다.
+// 외국어 문서, 업무자료, 긴 붙여넣기, 깨진 글자는 공감/맞장구 대신 확인 질문으로 돌린다.
+function telecomInputGate(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return { kind: "empty", reason: "blank" };
+  const fixed = telecomCanonicalInput(raw);
+  const hangul = (fixed.match(/[가-힣]/g) || []).length;
+  const latin = (fixed.match(/[A-Za-zÀ-ÿ]/g) || []).length;
+  const digits = (fixed.match(/[0-9]/g) || []).length;
+  const letters = hangul + latin;
+  const latinRatio = letters ? latin / letters : 0;
+  const hangulRatio = letters ? hangul / letters : 0;
+  const hasLineBreak = /\n|\r/.test(raw);
+  const longText = raw.length >= 120;
+  const veryLong = raw.length >= 260;
+  const repeatedNoise = /(.)\1{7,}/.test(raw.replace(/\s/g, ""));
+  const mostlySymbols = raw.length >= 6 && ((raw.match(/[^A-Za-zÀ-ÿ가-힣0-9\s]/g) || []).length / raw.length) > 0.55;
+  const spanishLike = /\b(el|la|los|las|un|una|que|para|con|como|cliente|clientes|interesado|interesados|negociaci[oó]n|propuesta|propuestas|comercial|gesti[oó]n|empresa|ventas|criterios|autom[aá]tica|ingresado|funnel)\b/i.test(raw);
+  const businessLike = /\b(CRM|funnel|lead|pipeline|cliente|clientes|ventas|comercial|negociaci[oó]n|propuesta|empresa|gesti[oó]n|criterios|automatiz|workflow|marketing|KPI|ROI)\b/i.test(raw);
+  const documentLike = hasLineBreak || veryLong || /^\s*\d+[\).]/.test(raw) || /[:：]\s*[^\n]{20,}/.test(raw);
+
+  if (repeatedNoise || mostlySymbols) return { kind: "noise", reason: "repeated_or_symbols" };
+  if ((latinRatio > 0.72 && hangul < 5) || spanishLike) {
+    if (businessLike || documentLike || longText) return { kind: "foreign_document", reason: "foreign_or_spanish_document" };
+    return { kind: "foreign", reason: "foreign_language" };
+  }
+  if (businessLike && (longText || documentLike)) return { kind: "business_document", reason: "business_document" };
+  if (documentLike && hangulRatio < 0.35 && raw.length > 80) return { kind: "pasted_document", reason: "document_like" };
+  return { kind: "chat", reason: "normal" };
+}
+function telecomNonConversationalLine(member, gate, userText = "") {
+  const casual = telecomMemberUsesCasual(member);
+  const nick = member?.nick || "";
+  const kind = gate?.kind || "chat";
+  if (kind === "noise") {
+    return casual
+      ? telecomPickLine(["글자가 좀 깨진 것 같은데?", "어... 이건 뭐라고 친 거야?", "잠깐만, 입력이 이상하게 보여"])
+      : telecomPickLine(["글자가 조금 깨진 것 같아요", "입력이 잘 안 보입니다", "다시 한 번만 적어주실래요?"]);
+  }
+  if (kind === "foreign" || kind === "foreign_document") {
+    if (nick === "soulman") return "외국어 자료처럼 보입니다. 먼저 번역할지, 요약할지 정해야 할 것 같아요";
+    if (nick === "soriboy") return "이건 노래 얘기라기보다 자료 문장 같네요. 뜻을 먼저 봐야겠습니다";
+    return casual
+      ? telecomPickLine(["이거 외국어 같은데, 번역해볼까?", "스페인어 비슷한데? 그냥 공감할 말은 아닌 듯", "잠깐, 이건 내용부터 읽어야겠다"])
+      : telecomPickLine(["외국어 자료처럼 보여요. 번역할까요?", "이건 먼저 뜻을 확인해야 할 것 같아요", "대화라기보다 붙여넣은 자료 같아요"]);
+  }
+  if (kind === "business_document") {
+    if (nick === "soulman") return "업무 자료 같네요. 이건 감정 반응보다 구조를 먼저 봐야 합니다";
+    if (nick === "녹차향기") return "자료를 붙여넣으신 것 같아요. 요약할지, 번역할지 먼저 말씀해주세요";
+    return casual
+      ? telecomPickLine(["이건 무슨 업무 자료야?", "CRM 얘기 같은데, 설명부터 해야겠네", "그냥 맞장구칠 내용은 아닌데"])
+      : telecomPickLine(["업무 자료처럼 보입니다", "이건 먼저 내용을 확인해야겠어요", "요약이 필요하신 건가요?"]);
+  }
+  return casual
+    ? telecomPickLine(["글을 붙여넣은 것 같은데, 뭘 봐주면 돼?", "내용이 좀 긴데, 요약할까?", "이건 먼저 읽어봐야겠다"])
+    : telecomPickLine(["글을 붙여넣으신 것 같아요. 어떤 부분을 봐드릴까요?", "내용이 길어서 먼저 요약이 필요해 보여요", "이건 바로 공감하기보다 내용을 확인해야겠어요"]);
+}
+function telecomHandleNonConversationalInput(gate, userText = "") {
+  const first = telecomFindMemberByNick(gate?.kind === "business_document" ? "soulman" : "녹차향기") || telecomPickMember();
+  const second = telecomPickMember([first?.nick]);
+  if (first) telecomQueueConversation(() => {
+    if (telecomRoomOpen()) telecomSayMemberOwned(first, telecomNonConversationalLine(first, gate, userText), { intent: "clarify", selfQuestion: true });
+  }, telecomRand(900, 2200));
+  if (second && Math.random() < 0.35) telecomQueueConversation(() => {
+    if (telecomRoomOpen()) telecomSayMemberOwned(second, telecomNonConversationalLine(second, gate, userText), { intent: "clarify" });
+  }, telecomRand(3600, 6600));
+  return true;
+}
 function telecomContextFollowLine(member, intent, userText = "", previousMember = null) {
   const casual = telecomMemberUsesCasual(member);
   const topic = telecomExtractConcreteThing(userText);
@@ -4264,6 +4510,71 @@ function telecomNameWithYi(name) {
 }
 function telecomMemberUsesCasual(member) {
   return !!member && !!TELECOM_MEMBER_PROFILES[member.nick]?.casual;
+}
+
+
+// v160: 발화 소유권 보정.
+// 단체방에서는 말한 사람이 자기 상태만 말하게 하고, 다른 사람의 입장/상태를 대신 말하지 않게 한다.
+function telecomSanitizeOwnedLine(member, line, context = {}) {
+  let text = String(line || "").trim();
+  if (!text) return text;
+  const nick = member?.nick || "";
+  const intent = context.intent || "chat";
+  const isPresence = !!context.presence;
+  const isSelfQuestion = !!context.selfQuestion;
+
+  // 실제 입장 이벤트가 아닐 때 "방금 들어왔어요/나 들어왔어" 같은 자기입장 대사를 금지한다.
+  if (!isPresence) {
+    const enteringPatterns = [
+      /\b나\s*잠깐\s*들어왔[어어요습니다]*/g,
+      /\b저는\s*방금\s*들어왔[어어요습니다]*/g,
+      /\b방금\s*들어왔[어어요습니다]*/g,
+      /\b잠깐\s*들어왔[어어요습니다]*/g,
+      /\b다시\s*왔[어어요습니다]*/g,
+      /\b오늘도\s*왔[어어요습니다]*/g
+    ];
+    if (enteringPatterns.some((re) => re.test(text))) {
+      text = telecomMemberUsesCasual(member)
+        ? telecomPickLine(["나도 보고 있었어", "그냥 눈팅중", "게시판 읽고 있었어", "대화 보고 있었어"])
+        : telecomPickLine(["저도 보고 있었어요", "게시판 읽고 있었습니다", "대화 보고 있었습니다", "잠깐 보고 있었습니다"]);
+    }
+  }
+
+  // 질문을 받은 당사자가 아닌데 "저는/난 ~하고 있어요"로 사용자의 질문을 가로채는 느낌을 줄인다.
+  if (intent === "doing" && !isSelfQuestion) {
+    if (/^(저는|난|나도|저도)\s+/.test(text) && Math.random() < 0.55) {
+      text = telecomMemberUsesCasual(member)
+        ? telecomPickLine(["다들 눈팅 중인가봐", "나도 대화 흐름 보고 있어", "방 분위기 보고 있었어"])
+        : telecomPickLine(["다들 대화 흐름을 보고 계신 것 같아요", "저도 흐름을 보고 있었습니다", "방 분위기를 보고 있었어요"]);
+    }
+  }
+
+  // 다른 회원 이름을 주어로 놓고 대신 설명하는 문장을 줄인다.
+  DUNGEUNSORI_MEMBERS.forEach((m) => {
+    if (!m || !m.name || m.nick === nick) return;
+    const given = telecomGivenName(m.name);
+    const names = [m.nick, m.name, given, telecomNameWithYi(given), telecomNameWithAh(given)].filter(Boolean);
+    names.forEach((nm) => {
+      const safe = nm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      text = text
+        .replace(new RegExp(`${safe}\s*(이|가|은|는)\s*방금\s*들어왔[어어요습니다]*`, "g"), "방금 들어오셨네요")
+        .replace(new RegExp(`${safe}\s*(말|얘기|이야기)\s*(듣고|들으니|듣고\s*보니)`, "g"), "그 말 듣고")
+        .replace(new RegExp(`${safe}\s*(도|님도)\s*보고\s*(있었구나|계셨군요|있었네요)`, "g"), telecomMemberUsesCasual(member) ? "나도 보고 있었어" : "저도 보고 있었어요");
+    });
+  });
+
+  return text.replace(/\s+/g, " ").trim();
+}
+function telecomSayMemberOwned(member, line, context = {}) {
+  return telecomSayMember(member, telecomSanitizeOwnedLine(member, line, context));
+}
+function telecomRestartMemberNoiseLater(delay = 85000) {
+  clearTimeout(telecomMemberTimer);
+  telecomMemberTimer = telecomQueue(() => {
+    if (document.getElementById("telecom")?.classList.contains("active") && telecomRoomOpen()) {
+      telecomStartMemberNoise(telecomRand(26000, 42000));
+    }
+  }, delay);
 }
 
 
@@ -4995,7 +5306,7 @@ function telecomHumanContinueFromLast(userText) {
 
 // v158: 카톡 단체방처럼 보이는 관계형 대화 엔진.
 // 핵심: 사용자에게만 답하지 않고, 회원이 회원 말에 반응하고, 짧은 말/끼어듦/웃음/중재가 이어지도록 한다.
-const TELECOM_GROUPCHAT_TURN_KEY = "kwangseokTelecomGroupChatTurnV158";
+const TELECOM_GROUPCHAT_TURN_KEY = "kwangseokTelecomGroupChatTurnV160";
 function telecomGroupName(member) {
   if (!member) return "";
   return telecomGivenName(member.name || member.nick || "") || member.nick || "";
@@ -5044,28 +5355,36 @@ function telecomGroupReplyToPrevious(member, previousMember, intent = "chat", se
   const nick = member?.nick || "";
   const casual = telecomMemberUsesCasual(member);
   if (!previousMember) return telecomGroupShortReaction(member, intent);
-  if (intent === "greeting") return casual ? `${addr} 하이` : `${addr} 반갑습니다`;
+
+  // v160: "누가 누구 말을 대신하는" 느낌을 줄이기 위해
+  // 이전 회원의 상태를 설명하지 말고, 짧게 받아치거나 자기 의견만 말한다.
+  if (intent === "greeting") return casual ? telecomPickLine([`${addr} 하이`, "하이!!!!", "반가워"]) : telecomPickLine([`${addr} 반갑습니다`, "어서오세요", "반갑습니다"]);
   if (intent === "music") {
-    if (nick === "soriboy") return telecomPickLine([`${addr}, 그 얘기 자료실에도 있었어요`, `${addr}, 방송 녹음 쪽도 봐야 합니다`, `${addr}, 그 곡은 공연마다 좀 달라요`]);
-    if (nick === "mouse14") return telecomPickLine([`${addr}, 또 진지해졌네 ㅋㅋ`, `${addr}, 그 노래 나오면 다들 말 많아져`, `${addr}, 나도 라이브가 더 좋더라`]);
+    if (nick === "soriboy") return telecomPickLine(["그 얘기 자료실에도 있었어요", "방송 녹음 쪽도 봐야 합니다", "그 곡은 공연마다 좀 달라요"]);
+    if (nick === "mouse14") return telecomPickLine(["또 진지해졌네 ㅋㅋ", "그 노래 나오면 다들 말 많아져", "나도 라이브가 더 좋더라"]);
+    return casual ? telecomPickLine(["그 곡은 나도 좋아해", "음악 얘기면 나도 낀다", "라이브 쪽이 더 좋더라"]) : telecomPickLine(["그 곡은 저도 좋아해요", "음악 이야기는 늘 좋네요", "라이브 쪽도 궁금하네요"]);
   }
   if (intent === "fight" || intent === "angry" || intent === "curse") {
-    if (nick === "녹차향기") return `${addr}, 일단 말 조금만 낮춰요`;
-    if (nick === "mouse14") return `${addr}, 에이 잠깐만 ㅡㅡ`;
-    if (nick === "soulman") return `${addr}, 그 말은 감정 쪽으로 들릴 수 있습니다`;
+    if (nick === "녹차향기") return "일단 말 조금만 낮춰요";
+    if (nick === "mouse14") return "에이 잠깐만 ㅡㅡ";
+    if (nick === "soulman") return "그 말은 조금 세게 들릴 수 있습니다";
+    return casual ? "잠깐, 싸우진 말자" : "잠깐만요. 말은 조금 낮추면 좋겠습니다";
   }
   if (intent === "sad" || intent === "comfort") {
-    if (nick === "enfant") return `${addr} 말 들으니까 저도 좀 조용해지네요...`;
-    if (nick === "낙원") return `${addr} 말이랑 노래가 같이 떠오르네요`;
+    if (nick === "enfant") return "말 들으니까 저도 좀 조용해지네요...";
+    if (nick === "낙원") return "그 말이랑 노래가 같이 떠오르네요";
+    return casual ? "그건 좀 마음이 그렇다" : "그건 마음이 좀 쓰이네요";
   }
   if (intent === "laugh" || intent === "joke") {
-    if (nick === "ekjw123") return `${addr} 때문에 웃었잖아요!!!!`;
-    if (nick === "mouse14") return `${addr} ㅋㅋㅋ 그건 좀 웃겼다`;
+    if (nick === "ekjw123") return "아 웃겼잖아요!!!!";
+    if (nick === "mouse14") return "ㅋㅋㅋ 그건 좀 웃겼다";
+    return casual ? "ㅋㅋㅋ" : "하하, 그건 좀 웃겼어요";
   }
-  if (intent === "doing") return casual ? `${addr}도 보고 있었구나. 나도 눈팅중` : `${addr}도 보고 계셨군요. 저도 보고 있었어요`;
+  if (intent === "doing") return casual ? telecomPickLine(["나도 눈팅중", "다들 보고 있었나봐", "방이 조용하긴 했어"]) : telecomPickLine(["저도 보고 있었어요", "다들 조용히 보고 계셨나 봐요", "방이 조용하긴 했습니다"]);
+  if (intent === "question") return casual ? telecomPickLine(["그건 나도 궁금해", "누가 알면 말해줘", "잠깐만, 나도 찾아볼게"]) : telecomPickLine(["저도 궁금하네요", "아시는 분 계실까요?", "조금 더 봐야겠어요"]);
   return casual
-    ? telecomPickLine([`${addr} 말이 맞네`, `${addr} 그건 인정`, `${addr} 얘기 듣고 보니 그렇다`, `${addr} 잠깐만, 나도 봤어`])
-    : telecomPickLine([`${addr} 말씀도 맞네요`, `${addr}님 말 들으니 그렇네요`, `${addr}님 얘기와 이어지네요`, `${addr}님 말씀 듣고 보니 그렇습니다`]);
+    ? telecomPickLine(["그건 인정", "맞아", "나도 그렇게 봤어", "잠깐만, 나도 봤어", "그 말은 좀 맞네"])
+    : telecomPickLine(["그건 맞는 것 같아요", "저도 그렇게 봤어요", "잠깐 흐름을 볼게요", "그 말은 일리가 있네요"]);
 }
 function telecomGroupSideLine(member, intent = "chat", seed = "") {
   const nick = member?.nick || "";
@@ -5074,6 +5393,90 @@ function telecomGroupSideLine(member, intent = "chat", seed = "") {
   if (nick === "enfant") return telecomPickLine(["음........ 보고 있었어요...", "조용히 듣고 있었어요...", "말이 빨라요..."]);
   if (nick === "raincoat") return telecomPickLine(["홍홍 분위기 묘하네요", "반갑반갑, 얘기 계속해요", "잠깐 물 마시고 왔어요"]);
   return telecomGroupShortReaction(member, intent);
+}
+
+
+// v162: 발화 책임 보정.
+// 사용자가 욕/화난 말을 했을 때, 회원끼리 서로에게 "말 낮춰요"라고 하는 것처럼 보이지 않게
+// 모든 1차 반응은 반드시 사용자 발화에 대한 반응으로 묶는다.
+function telecomHumanConflictAddress() {
+  const given = telecomHumanUserDisplayName() || "일훈";
+  return given;
+}
+function telecomUserDirectedConflictLine(member, intent = "curse", userText = "") {
+  const nick = member?.nick || "";
+  const casual = telecomMemberUsesCasual(member);
+  const given = telecomHumanConflictAddress();
+  const polite = `${given}님`;
+  const friendly = telecomNameWithAh(given);
+
+  if (intent === "curse") {
+    if (nick === "녹차향기") return `${polite}, 방금 말은 좀 세요. 조금만 낮춰요`;
+    if (nick === "mouse14") return `${friendly}, 욕부터 박으면 방 터진다 ㅋㅋ`;
+    if (nick === "enfant") return `${polite}, 방금 말은 조금 놀랐어요...`;
+    if (nick === "raincoat") return `${polite}, 잠깐 물 마시고 와요. 말이 좀 셌어요`;
+    if (nick === "soulman") return `${polite}, 욕한 이유는 따로 보고 표현은 조금 낮추는 게 좋겠습니다`;
+    if (nick === "ekjw123") return `${polite} 갑자기 욕이라니요!!!!`;
+    return casual ? `${friendly}, 말 세다` : `${polite}, 표현이 조금 세게 들려요`;
+  }
+
+  if (intent === "angry") {
+    if (nick === "녹차향기") return `${polite}, 화난 건 알겠는데 천천히 말해요`;
+    if (nick === "mouse14") return `${friendly}, 왜 그렇게 열받았어?`;
+    if (nick === "enfant") return `${polite}, 많이 화나신 것 같아요...`;
+    if (nick === "soulman") return `${polite}, 화난 이유부터 한 줄로 정리해보면 좋겠습니다`;
+    return casual ? `${friendly}, 일단 진정해` : `${polite}, 일단 조금 진정해요`;
+  }
+
+  if (intent === "fight") {
+    if (nick === "녹차향기") return `${polite}, 누구랑 싸우는 흐름인지 먼저 정리해요`;
+    if (nick === "mouse14") return `${friendly}, 싸움각이면 잠깐 멈춰 ㅡㅡ`;
+    if (nick === "soulman") return `${polite}, 지금은 상대를 정해서 말하기보다 오해부터 줄여야 합니다`;
+    return casual ? `${friendly}, 잠깐 멈춰` : `${polite}, 잠깐 멈추고 이야기해요`;
+  }
+
+  return casual ? `${friendly}, 잠깐만` : `${polite}, 잠깐만요`;
+}
+function telecomUserDirectedConflictFollowLine(member, intent = "curse", userText = "") {
+  const nick = member?.nick || "";
+  const casual = telecomMemberUsesCasual(member);
+  if (nick === "녹차향기") return "욕한 사람이 누구인지 헷갈리면 안 돼요. 방금 말한 분께 하는 말입니다";
+  if (nick === "mouse14") return "아무한테나 뭐라 하는 거 아님 ㅋㅋ 방금 말이 세서 그런 거";
+  if (nick === "enfant") return "그냥 방금 문장이 조금 세게 보여서요...";
+  if (nick === "raincoat") return "홍홍, 사람 잘못 잡고 뭐라 하면 안 되죠";
+  if (nick === "soulman") return "지금 반응 대상은 직전 사용자 발화입니다. 다른 회원을 지적하는 게 아닙니다";
+  return casual ? "방금 말 때문에 그런 거야" : "방금 말에 대한 반응이에요";
+}
+function telecomScheduleUserConflictFlow(fixedText, intent, options = {}) {
+  const first = telecomFindMemberByNick("녹차향기") || telecomWeightedPersonaMembers(intent, 1)[0] || telecomPickMember();
+  const second = telecomPickMember([first?.nick]);
+  const third = telecomPickMember([first?.nick, second?.nick]);
+
+  if (first) {
+    telecomQueueConversation(() => {
+      if (telecomRoomOpen()) telecomSayMemberOwned(first, telecomUserDirectedConflictLine(first, intent, fixedText), { intent, target: "user", selfQuestion: true });
+    }, telecomRand(900, 2200));
+  }
+  if (second && Math.random() < 0.55) {
+    telecomQueueConversation(() => {
+      if (telecomRoomOpen()) telecomSayMemberOwned(second, telecomUserDirectedConflictFollowLine(second, intent, fixedText), { intent, target: "user" });
+    }, telecomRand(3400, 6900));
+  }
+  if (third && Math.random() < 0.22) {
+    telecomQueueConversation(() => {
+      if (telecomRoomOpen()) telecomSayMemberOwned(third, telecomUserDirectedConflictLine(third, intent, fixedText), { intent, target: "user" });
+    }, telecomRand(7200, 11500));
+  }
+
+  if (telecomKksActive() && Math.random() < 0.34) {
+    const given = telecomHumanConflictAddress();
+    const kksLine = intent === "curse"
+      ? `${telecomNameWithAh(given)} 말은 조금 아끼자`
+      : `${telecomNameWithAh(given)} 천천히 얘기해`;
+    telecomQueueKks(kksLine, telecomKksTypingDelay(23000));
+  }
+  localStorage.setItem(TELECOM_GROUPCHAT_TURN_KEY, String(telecomNow()));
+  return true;
 }
 function telecomScheduleRealGroupChatFlow(fixedText, intent, options = {}) {
   const allTargeted = !!options.allTargeted;
@@ -5093,18 +5496,18 @@ function telecomScheduleRealGroupChatFlow(fixedText, intent, options = {}) {
   if (!m1) return false;
 
   // 카톡 단체방처럼: 첫 답변은 빠르게, 두 번째는 첫 사람에게 반응, 세 번째는 짧게 끼어든다.
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m1, telecomHumanMemberLine(m1, intent, fixedText, "answer")); }, telecomRand(900, 2600));
-  if (m2) telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m2, telecomGroupReplyToPrevious(m2, m1, intent, fixedText)); }, telecomRand(3100, 7200));
+  telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(m1, telecomHumanMemberLine(m1, intent, fixedText, "answer"), { intent, selfQuestion: allTargeted || mentionedMember?.nick === m1.nick }); }, telecomRand(900, 2600));
+  if (m2) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(m2, telecomGroupReplyToPrevious(m2, m1, intent, fixedText), { intent }); }, telecomRand(3100, 7200));
 
   const sideChance = allTargeted ? 0.78 : (TELECOM_EMOTION_INTENTS.has(intent) || ["music", "doing", "question"].includes(intent) ? 0.58 : 0.38);
   if (m3 && Math.random() < sideChance) {
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m3, telecomGroupSideLine(m3, intent, fixedText)); }, telecomRand(6500, 11800));
+    telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(m3, telecomGroupSideLine(m3, intent, fixedText), { intent }); }, telecomRand(6500, 11800));
   }
 
   // 너무 설명형이 되지 않게, 네 번째는 짧은 리액션만. 단, 전체 질문/싸움/웃음일 때만.
   const fourthChance = allTargeted ? 0.38 : (["fight", "angry", "curse", "laugh", "joke"].includes(intent) ? 0.32 : 0.16);
   if (m4 && Math.random() < fourthChance) {
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSayMember(m4, telecomGroupShortReaction(m4, intent)); }, telecomRand(9600, 15500));
+    telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(m4, telecomGroupShortReaction(m4, intent), { intent }); }, telecomRand(9600, 15500));
   }
 
   // 김광석은 단체방 흐름을 읽다가 늦게 답하거나, 회원이 광석에게 물어보는 흐름으로 이어진다.
@@ -5125,6 +5528,11 @@ function telecomScheduleRealGroupChatFlow(fixedText, intent, options = {}) {
   return true;
 }
 function telecomScheduleHumanConversationFlow(userText) {
+  const gate = telecomInputGate(userText);
+  if (gate.kind !== "chat") {
+    telecomHandleNonConversationalInput(gate, userText);
+    return;
+  }
   const analysis = telecomEmotionModel(userText);
   const fixedText = analysis.fixed;
   const intent = analysis.intent;
@@ -5143,16 +5551,16 @@ function telecomScheduleHumanConversationFlow(userText) {
   if (continuation) {
     const m1 = mentionedMember || telecomFindMemberByNick(continuation.lastNick) || telecomPickMember();
     const m2 = telecomPickMember([m1?.nick]);
-    if (m1) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMember(m1, telecomHumanMemberLine(m1, intent === "chat" ? "question" : intent, fixedText, "follow")); }, telecomRand(2600, 5200));
-    if (m2 && Math.random() < 0.45) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMember(m2, telecomContextFollowLine(m2, intent, fixedText, m1)); }, telecomRand(9000, 14500));
+    if (m1) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(m1, telecomHumanMemberLine(m1, intent === "chat" ? "question" : intent, fixedText, "follow"), { intent, selfQuestion: true }); }, telecomRand(2600, 5200));
+    if (m2 && Math.random() < 0.45) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(m2, telecomContextFollowLine(m2, intent, fixedText, m1), { intent }); }, telecomRand(9000, 14500));
     return;
   }
 
   if (mentionedMember && !kksTargeted && !allTargeted) {
     const replier = telecomPickMember([mentionedMember.nick]);
-    telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMember(mentionedMember, telecomHumanMemberLine(mentionedMember, intent, fixedText, "answer")); }, telecomRand(2200, 4800));
+    telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(mentionedMember, telecomHumanMemberLine(mentionedMember, intent, fixedText, "answer"), { intent, selfQuestion: true }); }, telecomRand(2200, 4800));
     if (replier && Math.random() < 0.55) {
-      telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMember(replier, telecomContextFollowLine(replier, intent, fixedText, mentionedMember)); }, telecomRand(9000, 14500));
+      telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(replier, telecomContextFollowLine(replier, intent, fixedText, mentionedMember), { intent }); }, telecomRand(9000, 14500));
     }
     return;
   }
@@ -5172,9 +5580,16 @@ function telecomScheduleHumanConversationFlow(userText) {
   if (intent === "greeting") {
     const greeter = telecomFindMemberByNick("녹차향기") || telecomPickMember();
     const second = allTargeted ? telecomPickMember([greeter?.nick]) : null;
-    if (greeter) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMember(greeter, telecomGreetingAnswerLine(greeter, fixedText)); }, telecomRand(1200, 2600));
-    if (second && Math.random() < 0.35) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMember(second, telecomGreetingAnswerLine(second, fixedText)); }, telecomRand(4200, 6800));
+    if (greeter) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(greeter, telecomGreetingAnswerLine(greeter, fixedText), { intent: "greeting" }); }, telecomRand(1200, 2600));
+    if (second && Math.random() < 0.35) telecomQueueConversation(() => { if (telecomRoomOpen()) telecomSayMemberOwned(second, telecomGreetingAnswerLine(second, fixedText), { intent: "greeting" }); }, telecomRand(4200, 6800));
     if (telecomKksActive() && Math.random() < 0.45) telecomQueueKks(telecomKksGreetingAnswerLine(fixedText), telecomKksTypingDelay(2000));
+    return;
+  }
+
+  // v162: 욕/화남/싸움은 "직전 사용자 발화"에 대한 반응으로 고정한다.
+  // 회원끼리 서로에게 욕하지 말라고 하는 것처럼 보이는 오류를 막는다.
+  if (["curse", "angry", "fight"].includes(intent) && !mentionedMember && !kksTargeted) {
+    telecomScheduleUserConflictFlow(fixedText, intent, { allTargeted });
     return;
   }
 
@@ -5384,6 +5799,9 @@ function telecomSendUserMessage(text) {
   const raw = String(text || "").trim();
   telecomConversationTurnId += 1;
   telecomClearConversationTimers();
+  // v160: 사용자가 말한 직후에는 배경 입장/퇴장 잡담을 멈춘다.
+  // 그래야 회원이 다른 사람의 말을 대신하거나 엉뚱한 입장 멘트가 끼어들지 않는다.
+  clearTimeout(telecomMemberTimer);
   const s = telecomCurrentSettings();
   const away = telecomAwayUntil();
   const promptFor = localStorage.getItem(TELECOM_STORAGE.callPromptFor);
@@ -5416,6 +5834,7 @@ function telecomSendUserMessage(text) {
       }, 1200);
     }
   }
+  telecomRestartMemberNoiseLater(90000);
   if (telecomKksActive()) {
     const start = Number(localStorage.getItem(TELECOM_STORAGE.sessionStart) || telecomNow());
     if (telecomNow() - start > 15 * 60 * 1000 && telecomUserMessageCount >= 3 && Math.random() < 0.16) {
