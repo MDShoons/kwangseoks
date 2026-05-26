@@ -4947,3 +4947,60 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
     max-width: 168px !important;
   }
 }
+
+/* v164: 오늘의 추천곡/내 플레이리스트 카드 전체에 현재 앨범 커버를 연하게 깔기 */
+#dailyRecommendPlayer .daily-player-card,
+#userPlaylistPlayer .daily-player-card {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+#dailyRecommendPlayer .daily-player-card.has-cover-bg::before,
+#userPlaylistPlayer .daily-player-card.has-cover-bg::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -26px !important;
+  z-index: 0 !important;
+  background-image: var(--player-cover-bg) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  opacity: 0.22 !important;
+  filter: blur(12px) saturate(1.08) contrast(1.05) !important;
+  transform: scale(1.08) !important;
+  pointer-events: none !important;
+}
+
+#dailyRecommendPlayer .daily-player-card.has-cover-bg::after,
+#userPlaylistPlayer .daily-player-card.has-cover-bg::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+#dailyRecommendPlayer .daily-player-card.has-cover-bg::after {
+  background:
+    linear-gradient(145deg, rgba(107, 49, 95, 0.82), rgba(189, 63, 119, 0.74) 54%, rgba(238, 122, 47, 0.82)),
+    rgba(28, 15, 29, 0.16) !important;
+}
+
+#userPlaylistPlayer .daily-player-card.has-cover-bg::after {
+  background:
+    linear-gradient(145deg, rgba(35, 48, 79, 0.82), rgba(62, 88, 127, 0.74) 54%, rgba(139, 107, 69, 0.84)),
+    rgba(12, 18, 31, 0.18) !important;
+}
+
+#dailyRecommendPlayer .daily-player-card > *,
+#userPlaylistPlayer .daily-player-card > * {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+#dailyRecommendPlayer .daily-player-cover,
+#userPlaylistPlayer .daily-player-cover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.24) !important;
+}

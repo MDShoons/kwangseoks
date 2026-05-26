@@ -1399,14 +1399,28 @@ function getAudioItemCoverUrl(item) {
 function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
   if (!imgEl) return;
   const coverUrl = getAudioItemCoverUrl(item);
+  const card = imgEl.closest(".daily-player-card");
+
   if (coverUrl) {
     imgEl.src = coverUrl;
     imgEl.alt = `${item?.title || "곡"} 커버`;
     imgEl.classList.remove("empty");
+
+    // v164: 미니 플레이어 카드 전체에 현재 곡 커버를 연하게 깔아 준다.
+    // img 태그만 바꾸면 작은 커버만 바뀌므로, 카드 배경용 CSS 변수도 함께 갱신해야 한다.
+    if (card) {
+      card.style.setProperty("--player-cover-bg", `url("${coverUrl.replace(/"/g, "\\"")}")`);
+      card.classList.add("has-cover-bg");
+    }
   } else {
     imgEl.removeAttribute("src");
     imgEl.alt = fallbackText;
     imgEl.classList.add("empty");
+
+    if (card) {
+      card.style.removeProperty("--player-cover-bg");
+      card.classList.remove("has-cover-bg");
+    }
   }
 }
 
@@ -2034,8 +2048,10 @@ function setupUserPlaylistPlayer(options = {}) {
     return;
   }
 
-  if (options.forceOpen) player.classList.remove("closed");
-  if (!player.classList.contains("closed")) player.classList.remove("closed");
+  // v165: 플레이리스트에 곡이 있으면 새로고침 후에도 반드시 다시 보이게 합니다.
+  // 기존에는 HTML의 기본 class="closed"가 그대로 남아 있어, localStorage에 곡이 있어도
+  // 플레이리스트 UI가 닫힌 채로 시작되어 "플리가 사라진 것처럼" 보였습니다.
+  player.classList.remove("closed");
 
   const savedState = loadUserPlaylistState();
   if (!playlistRequestedItemId && !playlistCurrentItemId && savedState?.itemId) {
@@ -3475,6 +3491,7 @@ let telecomInitialized = false;
 let telecomStatusTimer = null;
 let telecomExitTimer = null;
 let telecomMemberTimer = null;
+let telecomPresenceTimer = null;
 let telecomCountdownTimer = null;
 let telecomUserMessageCount = 0;
 
@@ -4575,6 +4592,8 @@ function telecomRestartMemberNoiseLater(delay = 85000) {
       telecomStartMemberNoise(telecomRand(26000, 42000));
     }
   }, delay);
+  // 입장/퇴장 타이머는 별도로 유지한다. 사용자 발화 직후 20초 정도만 쉬었다가 다시 돈다.
+  telecomStartPresenceFlow(Math.max(20000, Math.min(delay, 45000)));
 }
 
 
@@ -4702,6 +4721,7 @@ function telecomHandleUserExitAfterMessage() {
     telecomSystem(`${s.nick}(${s.name})님이 대화방을 나갔습니다.`);
     telecomClearQueuedTimers();
     clearTimeout(telecomMemberTimer);
+    telecomStopPresenceFlow();
     document.getElementById("telecomAfterKksExit")?.classList.add("hidden");
     document.getElementById("telecomRoom")?.classList.add("hidden");
     document.getElementById("telecomSetup")?.classList.remove("hidden");
@@ -5602,18 +5622,44 @@ function telecomScheduleConversationFlow(userText) {
 function telecomMemberPresenceEvent() {
   const active = telecomActiveMemberNicks();
   const canLeave = active.length > 5;
-  const joined = !canLeave || Math.random() < 0.58;
-  if (joined) {
-    let pool = DUNGEUNSORI_MEMBERS.filter((m) => m.nick !== "김광석" && !active.includes(m.nick));
+  const shouldJoin = !canLeave || active.length < 7 || Math.random() < 0.58;
+
+  if (shouldJoin) {
+    const pool = DUNGEUNSORI_MEMBERS.filter((m) => m.nick !== "김광석" && !active.includes(m.nick));
     if (!pool.length) return null;
     const m = pool[telecomRand(0, pool.length - 1)];
     telecomMemberJoin(m, false);
-    return m;
+    return { type: "join", member: m };
   }
-  const leaveNick = active.filter((nick) => !["녹차향기"].includes(nick))[telecomRand(0, active.length - 2)];
+
+  const leaveCandidates = active.filter((nick) => !["녹차향기"].includes(nick));
+  if (!leaveCandidates.length) return null;
+  const leaveNick = leaveCandidates[telecomRand(0, leaveCandidates.length - 1)];
   const m = telecomFindMemberByNick(leaveNick);
-  if (m && telecomMemberLeave(m)) return null;
+  if (m && telecomMemberLeave(m)) return { type: "leave", member: m };
   return null;
+}
+
+// v166: 입장/퇴장 전용 타이머.
+// v160 이후 사용자 발화 타이머 보호 때문에 배경 잡담이 멈추면 입장/퇴장도 같이 사라지는 문제가 있었다.
+// 입장/퇴장은 대화 잡담과 별도 주기로 돌리되, 사용자 입력 직후에는 잠깐 쉬어서 흐름을 깨지 않게 한다.
+function telecomStartPresenceFlow(initialDelay = telecomRand(14000, 26000)) {
+  clearTimeout(telecomPresenceTimer);
+  telecomPresenceTimer = telecomQueue(function presenceTick() {
+    if (document.getElementById("telecom")?.classList.contains("active") && telecomRoomOpen()) {
+      const log = telecomLoadJson(TELECOM_STORAGE.log, []);
+      const lastUser = log.slice().reverse().find((x) => x.kind === "say" && x.nick === telecomCurrentSettings().nick);
+      const userJustSpoke = lastUser && telecomNow() - (lastUser.time || 0) < 16000;
+      if (!userJustSpoke && Math.random() < 0.72) {
+        telecomMemberPresenceEvent();
+      }
+    }
+    telecomPresenceTimer = telecomQueue(presenceTick, telecomRand(42000, 82000));
+  }, initialDelay);
+}
+function telecomStopPresenceFlow() {
+  clearTimeout(telecomPresenceTimer);
+  telecomPresenceTimer = null;
 }
 function telecomMemberCallKks(member) {
   const calls = TELECOM_MEMBER_PROFILES[member.nick]?.kksCall || ["광석님"];
@@ -5764,7 +5810,12 @@ function telecomPostAmbientConversation() {
   if (lastUser && telecomNow() - (lastUser.time || 0) < 38000) return;
 
   let speaker = null;
-  if (Math.random() < 0.14) speaker = telecomMemberPresenceEvent();
+  if (Math.random() < 0.10) {
+    const presence = telecomMemberPresenceEvent();
+    // 입장/퇴장 이벤트가 났으면 그 자체가 한 턴이다.
+    // 바로 이어서 같은 사람이 엉뚱한 잡담을 덧붙이면 "대신 말하는" 느낌이 나므로 여기서 멈춘다.
+    if (presence) return;
+  }
   const thread = telecomGetThread();
   const scenarios = thread ? [
     { intent: thread.intent || "chat", seed: thread.userText || thread.topic || "그 얘기" }
@@ -5854,6 +5905,7 @@ function telecomEnterRoom() {
   clearTimeout(telecomStatusTimer);
   clearTimeout(telecomExitTimer);
   clearTimeout(telecomMemberTimer);
+  telecomStopPresenceFlow();
   const kksWasActiveBeforeEnter = telecomKksActive();
   const account = telecomApplyAccountIdentityToForm();
   const nick = account.nick;
@@ -5890,11 +5942,14 @@ function telecomEnterRoom() {
     }
     telecomScheduleStatusLine();
     telecomScheduleKksExit();
+    telecomStartMemberNoise(telecomRand(18000, 32000));
+    telecomStartPresenceFlow(telecomRand(12000, 24000));
   } else {
     telecomSetKksActive(false);
     const left = telecomFormatLeft(telecomAwayUntil() - telecomNow());
     telecomSystem(`김광석님은 지금 바빠서 접속하지 못합니다. 약 ${left} 후 다시 호출할 수 있습니다.`);
     telecomStartMemberNoise();
+    telecomStartPresenceFlow(telecomRand(12000, 24000));
   }
   telecomSetupCallButton();
 }
@@ -5916,6 +5971,7 @@ function telecomCallKks() {
     telecomSetupCallButton();
     telecomScheduleKksExit();
     telecomStartMemberNoise(3500);
+    telecomStartPresenceFlow(telecomRand(16000, 28000));
   }, 2000);
 }
 function initTelecomChatRoom() {
@@ -5952,11 +6008,13 @@ function initTelecomChatRoom() {
     document.getElementById("telecomAfterKksExit")?.classList.add("hidden");
     telecomSystem("팬들과 대화를 이어갑니다.");
     telecomStartMemberNoise(2500);
+    telecomStartPresenceFlow(telecomRand(14000, 24000));
   });
   document.getElementById("telecomEndRoomBtn")?.addEventListener("click", () => {
     const s = telecomCurrentSettings();
     telecomClearQueuedTimers();
     clearTimeout(telecomMemberTimer);
+    telecomStopPresenceFlow();
     telecomSystem(`${s.nick}(${s.name})님이 대화방을 나갔습니다.`);
     document.getElementById("telecomAfterKksExit")?.classList.add("hidden");
     document.getElementById("telecomRoom")?.classList.add("hidden");
@@ -5969,6 +6027,7 @@ function initTelecomChatRoom() {
     clearTimeout(telecomStatusTimer);
     clearTimeout(telecomExitTimer);
     clearTimeout(telecomMemberTimer);
+    telecomStopPresenceFlow();
     telecomSaveJson(TELECOM_STORAGE.log, []);
     telecomSaveJson(TELECOM_STORAGE.recentSpeakers, []);
     telecomSaveJson(TELECOM_STORAGE.recentTopics, []);
