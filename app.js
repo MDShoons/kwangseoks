@@ -3793,16 +3793,18 @@ async function telecomTryLocalAiKksReply(userText) {
       max_tokens: 110
     });
     const content = reply?.choices?.[0]?.message?.content || "";
-    const lines = telecomCleanAiLines(content);
-    if (!lines.length) return false;
+    let lines = telecomCleanAiLines(content);
+    if (!lines.length) lines = telecomGenerateKksReply(userText, "user");
     lines.forEach((line, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(line); }, i * 900));
     return true;
   } catch (err) {
-    console.warn("WebLLM failed", err);
+    console.warn("WebLLM failed; fallback to local KKS reply", err);
     telecomAiLastError = String(err?.message || err || "알 수 없는 오류");
-    telecomSetAiStatus(`생성형 대화 실패: ${telecomAiLastError}`);
-    telecomSystem(`생성형 모델 오류: ${telecomAiLastError}`);
-    return false;
+    // v147: 모델 오류를 채팅창에 뿌리지 않는다. 사용자는 자연스러운 답만 본다.
+    telecomSetAiStatus("PC WebGPU 생성형 모델 연결이 불안정하여 기본 응답으로 이어갑니다.");
+    const lines = telecomGenerateKksReply(userText, "user");
+    lines.forEach((line, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(line); }, i * 900));
+    return true;
   }
 }
 function telecomFormatClock(ts = telecomNow()) {
@@ -3854,12 +3856,64 @@ function telecomAddLine(kind, data, save = true) {
   return item;
 }
 function telecomSystem(text) { telecomAddLine("system", { text }); }
-function telecomSay(nick, name, text) {
-  telecomRememberSpeaker(nick);
-  telecomRememberLine(text);
-  telecomAddLine("say", { nick, name, text });
+
+// v147: 통신방 상태관리 보강.
+// - 방에 없는 사람은 절대 말하지 못하게 막는다.
+// - 나간 회원을 발화 직전에 다시 자동 입장시키지 않는다.
+// - 김광석이 나간 뒤 남은 예약 발화가 튀어나오지 않게 차단한다.
+function telecomCanNickSpeak(nick) {
+  const cleanNick = String(nick || "").trim();
+  if (!cleanNick) return false;
+  const userNick = telecomCurrentSettings().nick;
+  if (cleanNick === userNick) return true;
+  if (cleanNick === "김광석") return telecomKksActive();
+  return telecomIsMemberActive(cleanNick);
 }
-function telecomKks(text) { telecomSay("김광석", "김광석", text); }
+function telecomSanitizeGeneratedText(nick, text) {
+  let output = String(text || "").trim();
+  if (!output) return "";
+
+  // 사용자가 직접 입력한 글은 손대지 않는다. AI/회원 자동 발화만 정리한다.
+  const userNick = telecomCurrentSettings().nick;
+  if (String(nick || "") === userNick) return output;
+
+  // 이미 나간 회원의 이름을 자동 발화에서 최대한 제거한다.
+  const activeSet = new Set(telecomActiveMemberNicks());
+  DUNGEUNSORI_MEMBERS.forEach((m) => {
+    if (!m || m.nick === "김광석" || activeSet.has(m.nick)) return;
+    [m.nick, m.name, telecomGivenName(m.name)].filter(Boolean).forEach((label) => {
+      const safe = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      output = output.replace(new RegExp(`${safe}(님|형|씨|아저씨|아찌)?[은는이가을를에게도]*`, "g"), "");
+    });
+  });
+
+  // 김광석이 나간 뒤 팬들 대화에서 김광석에게 직접 말을 거는 자동 문장을 줄인다.
+  if (!telecomKksActive() && String(nick || "") !== "김광석") {
+    output = output
+      .replace(/김광석\s*(님|형|이형|아저씨|아찌)?\s*(계신가요\??|보셨어요\??|오시면|오면|한테|에게)/g, "")
+      .replace(/광석\s*(님|형|이형|아저씨|아찌)?\s*(계신가요\??|보셨어요\??|오시면|오면|한테|에게)/g, "");
+  }
+
+  return output.replace(/\s{2,}/g, " ").trim();
+}
+function telecomSay(nick, name, text) {
+  if (!telecomCanNickSpeak(nick)) {
+    console.warn("[telecom blocked] inactive speaker:", nick, text);
+    return null;
+  }
+  const cleaned = telecomSanitizeGeneratedText(nick, text);
+  if (!cleaned) return null;
+  telecomRememberSpeaker(nick);
+  telecomRememberLine(cleaned);
+  return telecomAddLine("say", { nick, name, text: cleaned });
+}
+function telecomKks(text) {
+  if (!telecomKksActive()) {
+    console.warn("[telecom blocked] 김광석 is inactive:", text);
+    return null;
+  }
+  return telecomSay("김광석", "김광석", text);
+}
 function telecomRenderLog(log = telecomLoadJson(TELECOM_STORAGE.log, [])) {
   const box = document.getElementById("telecomLog");
   if (!box) return;
@@ -3909,12 +3963,16 @@ function telecomMemberLeave(member) {
 }
 function telecomEnsureMemberCanSpeak(member) {
   if (!member || member.nick === "김광석") return false;
-  if (!telecomIsMemberActive(member.nick)) telecomMemberJoin(member, false);
-  return true;
+  // v147: 여기서 자동 재입장시키면, 나간 사람이 갑자기 다시 말하는 오류가 생긴다.
+  // 말하기 직전에는 오직 현재 접속자만 통과시킨다.
+  return telecomIsMemberActive(member.nick);
 }
 function telecomSayMember(member, text) {
-  if (!telecomEnsureMemberCanSpeak(member)) return;
-  telecomSay(member.nick, member.name, text);
+  if (!telecomEnsureMemberCanSpeak(member)) {
+    console.warn("[telecom blocked] inactive member tried to speak:", member?.nick, text);
+    return null;
+  }
+  return telecomSay(member.nick, member.name, text);
 }
 function telecomPickMember(excluded = []) {
   const userNick = telecomCurrentSettings().nick;
@@ -4161,7 +4219,8 @@ function telecomScheduleKksResponseForUser(userText, baseDelay = telecomRand(280
       if (!telecomRoomOpen() || !telecomKksActive()) return;
       const ok = await telecomTryLocalAiKksReply(userText);
       if (!ok) {
-        telecomSystem("생성형 답변을 만들지 못했습니다. PC Chrome/Edge WebGPU 상태를 확인해주세요.");
+        const replies = telecomGenerateKksReply(userText, "user");
+        replies.forEach((r, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(r); }, i * 900));
       }
     }, baseDelay);
   } else {
@@ -4442,6 +4501,7 @@ function telecomEnterRoom() {
   clearTimeout(telecomStatusTimer);
   clearTimeout(telecomExitTimer);
   clearTimeout(telecomMemberTimer);
+  const kksWasActiveBeforeEnter = telecomKksActive();
   const account = telecomApplyAccountIdentityToForm();
   const nick = account.nick;
   const name = account.name;
@@ -4471,6 +4531,9 @@ function telecomEnterRoom() {
   }
   if (telecomIsKksAvailable()) {
     telecomSetKksActive(true);
+    if (!kksWasActiveBeforeEnter || previousLog.length === 0) {
+      telecomSystem("김광석(김광석)님이 대화방에 들어왔습니다.");
+    }
     telecomScheduleStatusLine();
     telecomScheduleKksExit();
   } else {
@@ -4489,6 +4552,7 @@ function telecomCallKks() {
   telecomSystem("'김광석'님을 호출했습니다.");
   telecomQueue(() => {
     if (!telecomKksActive()) return;
+    telecomSystem("김광석(김광석)님이 대화방에 들어왔습니다.");
     telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용 중입니다.");
     telecomQueue(() => { if (telecomKksActive() && telecomRoomOpen()) telecomKks(telecomGenerateKksOpener()); }, 1500);
     telecomSetupCallButton();
