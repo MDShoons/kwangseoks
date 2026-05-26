@@ -146,6 +146,38 @@ function isVideoContentItem(item = {}) {
 }
 
 
+function getVideoMimeType(url = "") {
+  const clean = String(url || "").split("?")[0].split("#")[0].toLowerCase();
+  if (clean.endsWith(".webm")) return "video/webm";
+  if (clean.endsWith(".mov")) return "video/quicktime";
+  if (clean.endsWith(".m4v")) return "video/x-m4v";
+  if (clean.endsWith(".ogg") || clean.endsWith(".ogv")) return "video/ogg";
+  return "video/mp4";
+}
+
+function buildVideoPlayerHtml(url = "", poster = "", title = "", extraClass = "") {
+  const playbackUrl = normalizeMediaUrlForPlayback(url, "video");
+  if (!playbackUrl) return "";
+  const safeUrl = escapeHtml(playbackUrl);
+  const safePoster = poster ? ` poster="${escapeHtml(normalizeMediaUrlForPlayback(poster, "image"))}"` : "";
+  const safeTitle = escapeHtml(title || "영상");
+  const mimeType = escapeHtml(getVideoMimeType(playbackUrl));
+  const className = ["site-video-player", extraClass].filter(Boolean).join(" ");
+  return `
+    <div class="video-player-wrap">
+      <video class="${className}" controls playsinline webkit-playsinline x-webkit-airplay="allow" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"${safePoster}>
+        <source src="${safeUrl}" type="${mimeType}">
+        <source src="${safeUrl}">
+        이 브라우저에서 영상을 바로 재생할 수 없습니다.
+      </video>
+      <div class="video-fallback-notice" aria-hidden="true">
+        <p>영상이 검은 화면으로 보이면 iPad/Safari의 영상 로딩 문제일 수 있습니다.</p>
+        <a href="${safeUrl}" target="_blank" rel="noopener">새 창에서 영상 열기</a>
+      </div>
+    </div>`;
+}
+
+
 function sanitizeDownloadFileName(name = "자료") {
   const base = String(name || "자료")
     .replace(/[\\/:*?"<>|]+/g, "_")
@@ -2722,7 +2754,7 @@ function createCard(item) {
   const videoMediaUrl = getVideoMediaUrl(item);
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
   if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) media = `<video controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(videoMediaUrl, "video")}" poster="${escapeHtml(item.thumbnailUrl || "")}"></video>`;
+  else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) media = buildVideoPlayerHtml(videoMediaUrl, item.thumbnailUrl || "", item.title || "", "card-video-player");
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
@@ -2884,7 +2916,7 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
-      return `<div class="detail-media-box"><video controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" src="${escapeHtml(playbackMediaUrl)}"></video></div>`;
+      return `<div class="detail-media-box">${buildVideoPlayerHtml(mediaUrl, imageUrl, item.title || "", "detail-video-player")}</div>`;
     }
 
     if (imageUrl) {
@@ -3268,3 +3300,51 @@ document.addEventListener("click", (event) => {
   event.preventDefault();
   goPage(page);
 }, false);
+
+
+/* v118: iPad/Safari 영상 검은 화면 보정 */
+function isIpadOrSafariLike() {
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  return isIOS || isSafari;
+}
+
+function prepareVideoFallback(video) {
+  if (!video || video.dataset.fallbackReady === "1") return;
+  video.dataset.fallbackReady = "1";
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  video.setAttribute("x-webkit-airplay", "allow");
+  video.removeAttribute("disablePictureInPicture");
+
+  const wrap = video.closest(".video-player-wrap");
+  const reveal = () => {
+    if (!wrap) return;
+    if (isIpadOrSafariLike() && video.readyState < 2) wrap.classList.add("show-video-fallback");
+  };
+  const hide = () => wrap && wrap.classList.remove("show-video-fallback");
+
+  video.addEventListener("loadedmetadata", hide);
+  video.addEventListener("loadeddata", hide);
+  video.addEventListener("canplay", hide);
+  video.addEventListener("error", () => wrap && wrap.classList.add("show-video-fallback"));
+  video.addEventListener("stalled", reveal);
+  video.addEventListener("emptied", reveal);
+
+  if (isIpadOrSafariLike()) {
+    setTimeout(reveal, 2500);
+  }
+}
+
+function prepareAllVideoFallbacks() {
+  document.querySelectorAll("video.site-video-player").forEach(prepareVideoFallback);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", prepareAllVideoFallbacks);
+} else {
+  prepareAllVideoFallbacks();
+}
+const videoFallbackObserver = new MutationObserver(prepareAllVideoFallbacks);
+videoFallbackObserver.observe(document.documentElement, { childList: true, subtree: true });

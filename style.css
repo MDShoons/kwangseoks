@@ -4611,3 +4611,83 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   .admin-download-btn { width: 100%; padding: 10px 12px; }
   .admin-download-btn-detail { width: 100%; }
 }
+
+
+/* v118: iPad/Safari 영상 검은 화면 보정 */
+.video-player-wrap {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.video-player-wrap video {
+  display: block !important;
+  width: 100% !important;
+  background: #000 !important;
+  object-fit: contain !important;
+}
+.video-player-wrap .video-fallback-notice {
+  display: none;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(32,25,20,.88);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.45;
+  z-index: 3;
+}
+.video-player-wrap .video-fallback-notice p { margin: 0 0 8px; }
+.video-player-wrap .video-fallback-notice a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #9a5d3a;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+}
+.video-player-wrap.show-video-fallback .video-fallback-notice { display: block; }
+.card .video-player-wrap {
+  height: 190px;
+  border-radius: 0;
+}
+.card .video-player-wrap video {
+  height: 190px !important;
+}
+.content-page.template-gallery .card .video-player-wrap,
+.content-page.template-gallery .card .video-player-wrap video {
+  height: 260px !important;
+}
+.detail-media-box .video-player-wrap,
+.detail-media-area .video-player-wrap {
+  max-height: calc(92vh - 180px);
+}
+.detail-media-box .video-player-wrap video,
+.detail-media-area .video-player-wrap video {
+  height: auto !important;
+  max-height: calc(92vh - 180px) !important;
+}
+body.is-mobile-site .detail-media-box .video-player-wrap,
+body.is-mobile-site .detail-media-area .video-player-wrap {
+  max-height: 58vh !important;
+}
+body.is-mobile-site .detail-media-box .video-player-wrap video,
+body.is-mobile-site .detail-media-area .video-player-wrap video {
+  max-height: 58vh !important;
+}
+@media (max-width: 760px) {
+  .video-player-wrap .video-fallback-notice {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    font-size: 12px;
+  }
+}
