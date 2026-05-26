@@ -4637,7 +4637,7 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   }
 }
 
-/* v121 광석이네 통신방 */
+/* v123 광석이네 통신방 */
 .telecom-page { background:#001f8f; color:#e9f1ff; min-height:calc(100vh - 92px); padding:22px; }
 .telecom-shell { max-width:1120px; margin:0 auto; border:2px solid #8aa7ff; background:#0027ad; box-shadow:0 0 0 4px rgba(0,0,0,.18) inset; font-family:"D2Coding","Courier New",monospace; }
 .telecom-titlebar { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid #8aa7ff; background:#001b79; }
@@ -4647,7 +4647,13 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
 .telecom-connect-box { width:min(420px,100%); border:1px solid #9fb5ff; padding:18px; background:#002dbf; }
 .telecom-connect-box h2 { margin:0 0 14px; color:#fff; font-size:20px; }
 .telecom-connect-box label { display:block; margin:12px 0 5px; color:#d8e4ff; font-size:13px; }
-.telecom-connect-box input, .telecom-connect-box select, .telecom-input-row input { width:100%; box-sizing:border-box; background:#00165f; color:#fff; border:1px solid #8aa7ff; border-radius:0; padding:10px; font-family:inherit; }
+.telecom-connect-box input, .telecom-input-row input { width:100%; box-sizing:border-box; background:#00165f; color:#fff; border:1px solid #8aa7ff; border-radius:0; padding:10px; font-family:inherit; }
+.telecom-connect-box select { width:100%; box-sizing:border-box; background:#eaf0ff; color:#00165f; border:2px solid #d8e4ff; border-radius:0; padding:11px 10px; font-family:inherit; font-size:16px; font-weight:700; }
+.telecom-connect-box select option { background:#fff; color:#00165f; font-size:16px; }
+.telecom-readonly { background:#00104a !important; color:#d8e4ff !important; opacity:1; }
+.telecom-fixed-label { display:inline-block; margin-left:6px; padding:2px 6px; border:1px solid #8aa7ff; color:#fff; font-size:11px; }
+.telecom-account-note { margin:8px 0 12px; color:#c8d8ff; font-size:12px; line-height:1.5; }
+.telecom-connect-box select:focus, .telecom-connect-box input:focus, .telecom-input-row input:focus { outline:3px solid #fff; outline-offset:1px; }
 .telecom-enter-btn, .telecom-small-btn, .telecom-input-row button { background:#dbe6ff; color:#001b79; border:1px solid #fff; border-radius:0; padding:9px 12px; font-family:inherit; font-weight:700; cursor:pointer; }
 .telecom-enter-btn { width:100%; margin-top:16px; }
 .telecom-small-btn:disabled { opacity:.62; cursor:not-allowed; }
@@ -4678,3 +4684,127 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   .telecom-status-row { align-items:stretch; }
   .telecom-status-row .telecom-small-btn { flex:1 1 auto; }
 }
+
+/* v122: PC header overlap fix after adding telecom/admin nav */
+@media (min-width: 821px) {
+  .site-header {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    column-gap: 14px !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+
+  .site-header .logo,
+  .logo {
+    min-width: 150px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .site-header nav,
+  #siteNav {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+
+  .site-header nav button,
+  #siteNav button {
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    padding: 9px 11px !important;
+    line-height: 1.1 !important;
+  }
+
+  .site-header .auth-area,
+  .auth-area {
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  .site-header .auth-area #userStatus,
+  #userStatus {
+    display: inline-block !important;
+    max-width: 96px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    vertical-align: middle !important;
+    font-size: 13px !important;
+  }
+
+  .site-header .auth-area button,
+  .auth-area button {
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    padding: 9px 11px !important;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1500px) {
+  .site-header {
+    column-gap: 9px !important;
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+  }
+
+  .site-header .logo,
+  .logo {
+    min-width: 135px !important;
+  }
+
+  .logo { font-size: 21px !important; }
+  .logo small { font-size: 11px !important; }
+
+  .site-header nav,
+  #siteNav { gap: 4px !important; }
+
+  .site-header nav button,
+  #siteNav button {
+    font-size: 12px !important;
+    padding: 8px 8px !important;
+  }
+
+  .site-header .auth-area,
+  .auth-area { gap: 4px !important; }
+
+  .site-header .auth-area #userStatus,
+  #userStatus { max-width: 82px !important; font-size: 12px !important; }
+
+  .site-header .auth-area button,
+  .auth-area button {
+    font-size: 12px !important;
+    padding: 8px 9px !important;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1280px) {
+  .site-header nav,
+  #siteNav {
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+  .site-header nav::-webkit-scrollbar,
+  #siteNav::-webkit-scrollbar { display: none !important; }
+}
+
+
+/* v124: telecom group chat readability and flow fix */
+.telecom-system { color:#fff !important; }
+.telecom-line, .telecom-real, .telecom-text { color:#fff !important; }
+.telecom-log { color:#fff !important; }
+.telecom-member-sim { color:#fff !important; }
+#telecomRoomName::before { content:"" !important; }
