@@ -4948,7 +4948,7 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   }
 }
 
-/* v164: 오늘의 추천곡/내 플레이리스트 카드 전체에 현재 앨범 커버를 연하게 깔기 */
+/* v164: floating players cover background + no-overlap layout */
 #dailyRecommendPlayer .daily-player-card,
 #userPlaylistPlayer .daily-player-card {
   position: relative !important;
@@ -4956,41 +4956,30 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   isolation: isolate !important;
 }
 
-#dailyRecommendPlayer .daily-player-card.has-cover-bg::before,
-#userPlaylistPlayer .daily-player-card.has-cover-bg::before {
+#dailyRecommendPlayer .daily-player-card::before,
+#userPlaylistPlayer .daily-player-card::before {
   content: "" !important;
   position: absolute !important;
-  inset: -26px !important;
+  inset: 0 !important;
   z-index: 0 !important;
   background-image: var(--player-cover-bg) !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
-  opacity: 0.22 !important;
-  filter: blur(12px) saturate(1.08) contrast(1.05) !important;
+  opacity: 0.18 !important;
+  filter: blur(1.5px) saturate(1.06) contrast(1.03) !important;
   transform: scale(1.08) !important;
   pointer-events: none !important;
 }
 
-#dailyRecommendPlayer .daily-player-card.has-cover-bg::after,
-#userPlaylistPlayer .daily-player-card.has-cover-bg::after {
+#dailyRecommendPlayer .daily-player-card::after,
+#userPlaylistPlayer .daily-player-card::after {
   content: "" !important;
   position: absolute !important;
   inset: 0 !important;
   z-index: 1 !important;
+  background: linear-gradient(180deg, rgba(30, 16, 30, 0.16), rgba(0, 0, 0, 0.20)) !important;
   pointer-events: none !important;
-}
-
-#dailyRecommendPlayer .daily-player-card.has-cover-bg::after {
-  background:
-    linear-gradient(145deg, rgba(107, 49, 95, 0.82), rgba(189, 63, 119, 0.74) 54%, rgba(238, 122, 47, 0.82)),
-    rgba(28, 15, 29, 0.16) !important;
-}
-
-#userPlaylistPlayer .daily-player-card.has-cover-bg::after {
-  background:
-    linear-gradient(145deg, rgba(35, 48, 79, 0.82), rgba(62, 88, 127, 0.74) 54%, rgba(139, 107, 69, 0.84)),
-    rgba(12, 18, 31, 0.18) !important;
 }
 
 #dailyRecommendPlayer .daily-player-card > *,
@@ -5001,6 +4990,42 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
 
 #dailyRecommendPlayer .daily-player-cover,
 #userPlaylistPlayer .daily-player-cover {
-  background: rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 10px 22px rgba(0,0,0,0.24) !important;
+  background: rgba(255,255,255,0.16) !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.16) !important;
+}
+
+/* JS가 카드 높이를 읽어 자동으로 더 정확히 내리지만, JS 전에도 겹치지 않도록 기본값 보정 */
+#userPlaylistPlayer.daily-player {
+  top: 585px !important;
+}
+
+@media (max-width: 1500px) {
+  #userPlaylistPlayer.daily-player {
+    top: 555px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  #userPlaylistPlayer.daily-player {
+    top: 525px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  #dailyRecommendPlayer.daily-player,
+  #userPlaylistPlayer.daily-player {
+    right: 10px !important;
+    width: min(86vw, 260px) !important;
+    max-width: min(86vw, 260px) !important;
+  }
+
+  #dailyRecommendPlayer.daily-player {
+    top: 84px !important;
+    bottom: auto !important;
+  }
+
+  #userPlaylistPlayer.daily-player {
+    top: 430px !important;
+    bottom: auto !important;
+  }
 }

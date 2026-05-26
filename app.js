@@ -1405,21 +1405,17 @@ function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
     imgEl.src = coverUrl;
     imgEl.alt = `${item?.title || "곡"} 커버`;
     imgEl.classList.remove("empty");
-
-    // v164: 미니 플레이어 카드 전체에 현재 곡 커버를 연하게 깔아 준다.
-    // img 태그만 바꾸면 작은 커버만 바뀌므로, 카드 배경용 CSS 변수도 함께 갱신해야 한다.
     if (card) {
-      card.style.setProperty("--player-cover-bg", `url("${coverUrl.replace(/"/g, "\\"")}")`);
-      card.classList.add("has-cover-bg");
+      card.style.setProperty("--player-cover-bg", `url("${coverUrl.replace(/"/g, "%22")}")`);
+      card.classList.add("has-soft-cover-bg");
     }
   } else {
     imgEl.removeAttribute("src");
     imgEl.alt = fallbackText;
     imgEl.classList.add("empty");
-
     if (card) {
       card.style.removeProperty("--player-cover-bg");
-      card.classList.remove("has-cover-bg");
+      card.classList.remove("has-soft-cover-bg");
     }
   }
 }
@@ -1606,6 +1602,35 @@ function closeDailyRecommendPlayer() {
   if (player) {
     player.classList.add("closed");
   }
+
+  positionFloatingAudioPlayers();
+}
+
+function positionFloatingAudioPlayers() {
+  const daily = document.getElementById("dailyRecommendPlayer");
+  const playlist = document.getElementById("userPlaylistPlayer");
+
+  if (!playlist) return;
+
+  requestAnimationFrame(() => {
+    const dailyVisible = daily && !daily.classList.contains("closed") && !daily.classList.contains("hidden") && getComputedStyle(daily).display !== "none";
+
+    // 모바일에서는 CSS의 하단 고정 배치를 우선합니다.
+    if (window.matchMedia && window.matchMedia("(max-width: 760px)").matches) {
+      playlist.style.removeProperty("top");
+      return;
+    }
+
+    if (!dailyVisible) {
+      playlist.style.top = "155px";
+      return;
+    }
+
+    const rect = daily.getBoundingClientRect();
+    const gap = 22;
+    const nextTop = Math.max(155, Math.ceil(rect.bottom + gap));
+    playlist.style.top = `${nextTop}px`;
+  });
 }
 
 function hideDailyRecommendPlayerForHours(hours) {
@@ -1641,10 +1666,12 @@ function setupDailyRecommendPlayer(options = {}) {
   if (isDailyRecommendPlayerHiddenByTime()) {
     player.classList.add("closed");
     audio.pause();
+    positionFloatingAudioPlayers();
     return;
   }
 
   player.classList.remove("closed");
+  positionFloatingAudioPlayers();
 
 
   
@@ -1721,6 +1748,7 @@ function setupDailyRecommendPlayer(options = {}) {
 
   const songCategoryLabel = getDailySongCategoryLabel(selected);
   setPlayerCoverImage(cover, selected);
+  positionFloatingAudioPlayers();
   title.textContent = selected.title || "제목 없는 추천곡";
   sub.textContent = `앨범/분류: ${songCategoryLabel} · ${getKoreanDateKey()} · 매일 00:00 추천 변경`;
 
@@ -2042,16 +2070,15 @@ function setupUserPlaylistPlayer(options = {}) {
     player.classList.add("closed");
     playlistCurrentItemId = "";
     setPlayerCoverImage(cover, null);
+    positionFloatingAudioPlayers();
     title.textContent = "선택한 곡이 없습니다";
     sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
     resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
     return;
   }
 
-  // v165: 플레이리스트에 곡이 있으면 새로고침 후에도 반드시 다시 보이게 합니다.
-  // 기존에는 HTML의 기본 class="closed"가 그대로 남아 있어, localStorage에 곡이 있어도
-  // 플레이리스트 UI가 닫힌 채로 시작되어 "플리가 사라진 것처럼" 보였습니다.
-  player.classList.remove("closed");
+  if (options.forceOpen) player.classList.remove("closed");
+  if (!player.classList.contains("closed")) player.classList.remove("closed");
 
   const savedState = loadUserPlaylistState();
   if (!playlistRequestedItemId && !playlistCurrentItemId && savedState?.itemId) {
@@ -2072,6 +2099,7 @@ function setupUserPlaylistPlayer(options = {}) {
   progress.disabled = false;
 
   setPlayerCoverImage(cover, selected);
+  positionFloatingAudioPlayers();
   title.textContent = selected.title || "제목 없는 곡";
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
 
@@ -2212,6 +2240,8 @@ function setupUserPlaylistPlayer(options = {}) {
     movePlaylistSelection(1);
   });
 }
+
+window.addEventListener("resize", positionFloatingAudioPlayers);
 
 async function loadContents() {
   try {
