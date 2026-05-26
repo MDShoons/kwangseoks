@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v126-live-data-login-repair";
+const APP_VERSION = "v118-ipad-detail-video-poster";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -379,7 +379,6 @@ window.zoomDetailPhoto = zoomDetailPhoto;
 window.openLatestItem = openLatestItem;
 window.closeContentDetail = closeContentDetail;
 window.quickTemplate = quickTemplate;
-window.__appReady = true;
 
 function normalizeLoginId(v) { return String(v || "").trim().toLowerCase(); }
 function normalizeEmail(v) { return String(v || "").trim().toLowerCase(); }
@@ -614,58 +613,30 @@ document.getElementById("deleteAccountBtn")?.addEventListener("click", deleteMyA
 
 document.getElementById("logoutBtn").addEventListener("click", async () => { await signOut(auth); alert("로그아웃되었습니다."); showPage("home"); });
 
-function updateAuthUi() {
-  const email = normalizeEmail(currentUser?.email || "");
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user; currentUserProfile = null;
+  if (user) {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    currentUserProfile = snap.exists() ? snap.data() : null;
+  }
+  const email = normalizeEmail(user?.email || "");
   const loginId = normalizeLoginId(currentUserProfile?.loginId || "");
-  isAdmin = Boolean(currentUser) && (ADMIN_EMAILS.includes(email) || ADMIN_LOGIN_IDS.includes(loginId) || currentUserProfile?.role === "admin");
-
-  const statusEl = document.getElementById("userStatus");
-  if (statusEl) statusEl.textContent = currentUser ? (isAdmin ? "관리자 로그인" : (loginId || email)) : "로그인 전";
-  document.getElementById("loginBtn")?.classList.toggle("hidden", Boolean(currentUser));
-  document.getElementById("signupBtn")?.classList.toggle("hidden", Boolean(currentUser));
-  document.getElementById("logoutBtn")?.classList.toggle("hidden", !currentUser);
-  document.getElementById("mypageBtn")?.classList.toggle("hidden", !currentUser);
-
+  isAdmin = Boolean(user) && (ADMIN_EMAILS.includes(email) || ADMIN_LOGIN_IDS.includes(loginId) || currentUserProfile?.role === "admin");
+  document.getElementById("userStatus").textContent = user ? (isAdmin ? "관리자" : (loginId || email)) : "로그인 전";
+  document.getElementById("loginBtn").classList.toggle("hidden", Boolean(user));
+  document.getElementById("signupBtn").classList.toggle("hidden", Boolean(user));
+  document.getElementById("logoutBtn").classList.toggle("hidden", !user);
+  document.getElementById("mypageBtn")?.classList.toggle("hidden", !user);
   let adminBtn = document.getElementById("adminNavBtn");
   if (isAdmin && !adminBtn) {
-    adminBtn = document.createElement("button");
-    adminBtn.id = "adminNavBtn";
-    adminBtn.textContent = "관리자";
-    adminBtn.onclick = () => showPage("admin");
-    document.querySelector("nav")?.appendChild(adminBtn);
+    adminBtn = document.createElement("button"); adminBtn.id = "adminNavBtn"; adminBtn.textContent = "관리자"; adminBtn.onclick = () => showPage("admin"); document.querySelector("nav").appendChild(adminBtn);
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
-
-  if (typeof telecomApplyAccountIdentityToForm === "function") telecomApplyAccountIdentityToForm();
-}
-
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
-  currentUserProfile = null;
-  if (user) {
-    try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      currentUserProfile = snap.exists() ? snap.data() : null;
-    } catch (e) {
-      console.warn("사용자 정보 로드 실패", e);
-    }
-  }
-  updateAuthUi();
+  await window.addEventListener("hashchange", handleHashRoute);
+window.addEventListener("DOMContentLoaded", handleHashRoute);
+loadSiteSettings(); await loadPageCategories(); await loadContents();
   handleHashRoute();
 });
-
-window.addEventListener("hashchange", handleHashRoute);
-window.addEventListener("DOMContentLoaded", handleHashRoute);
-
-async function bootArchiveApp() {
-  updateAuthUi();
-  handleHashRoute();
-  await loadSiteSettings();
-  await loadPageCategories();
-  await loadContents();
-  handleHashRoute();
-}
-bootArchiveApp().catch((e) => console.error("앱 초기 로드 실패", e));
 
 async function loadPageCategories() {
   try {
@@ -3309,7 +3280,7 @@ document.addEventListener("click", (event) => {
 }, false);
 
 
-// v123: 광석이네 통신방 - 계정 닉네임/이름 고정, 모드/친밀도 선택 가독성 보정
+// v121: 광석이네 통신방 - 둥근소리 회원 목록 보기 버튼 제거, AI 참여 유지
 const TELECOM_STORAGE = {
   settings: "kwangseokTelecomSettingsV120",
   log: "kwangseokTelecomLogV120",
@@ -3478,37 +3449,9 @@ function telecomLoadJson(key, fallback) {
 }
 function telecomSaveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function telecomCleanText(v, fallback = "") { return String(v || "").replace(/[<>]/g, "").trim() || fallback; }
-
-function telecomAccountIdentity() {
-  const loginId = telecomCleanText(currentUserProfile?.loginId || currentUser?.email?.split("@")[0] || "", "");
-  const realName = telecomCleanText(currentUserProfile?.name || currentUser?.displayName || loginId || "손님", "손님");
-  return { nick: loginId || realName || "손님", name: realName || loginId || "손님" };
-}
-function telecomApplyAccountIdentityToForm() {
-  const id = telecomAccountIdentity();
-  const nickInput = document.getElementById("telecomNickInput");
-  const nameInput = document.getElementById("telecomNameInput");
-  if (nickInput) {
-    nickInput.value = id.nick;
-    nickInput.readOnly = true;
-    nickInput.classList.add("telecom-readonly");
-  }
-  if (nameInput) {
-    nameInput.value = id.name;
-    nameInput.readOnly = true;
-    nameInput.classList.add("telecom-readonly");
-  }
-  return id;
-}
-
 function telecomCurrentSettings() {
-  const saved = telecomLoadJson(TELECOM_STORAGE.settings, null) || {};
-  const id = telecomAccountIdentity();
-  return {
-    nick: id.nick,
-    name: id.name,
-    mode: saved.mode || "chat",
-    close: saved.close || "known"
+  return telecomLoadJson(TELECOM_STORAGE.settings, null) || {
+    nick: "손님", name: "손님", mode: "chat", close: "known"
   };
 }
 function telecomKksActive() { return localStorage.getItem(TELECOM_STORAGE.active) === "1"; }
@@ -3587,7 +3530,8 @@ function telecomScheduleStatusLine() {
   telecomStatusTimer = setTimeout(() => {
     if (!document.getElementById("telecomRoom") || document.getElementById("telecomRoom").classList.contains("hidden")) return;
     if (telecomKksActive()) {
-      telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용 중입니다.");
+      telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용");
+      telecomSystem("중입니다.");
     }
   }, 10000);
 }
@@ -3662,17 +3606,11 @@ function telecomSendUserMessage(text) {
   }
 }
 function telecomEnterRoom() {
-  if (!currentUser) {
-    alert("로그인 후 광석이네 통신방을 이용할 수 있습니다.");
-    showPage("login");
-    return;
-  }
-  const account = telecomApplyAccountIdentityToForm();
-  const nick = account.nick;
-  const name = account.name;
+  const nick = telecomCleanText(document.getElementById("telecomNickInput")?.value, "손님");
+  const name = telecomCleanText(document.getElementById("telecomNameInput")?.value, nick);
   const mode = document.getElementById("telecomModeSelect")?.value || "chat";
   const close = document.getElementById("telecomCloseSelect")?.value || "known";
-  telecomSaveJson(TELECOM_STORAGE.settings, { mode, close });
+  telecomSaveJson(TELECOM_STORAGE.settings, { nick, name, mode, close });
   document.getElementById("telecomSetup")?.classList.add("hidden");
   document.getElementById("telecomRoom")?.classList.remove("hidden");
   localStorage.setItem(TELECOM_STORAGE.sessionStart, String(telecomNow()));
@@ -3713,7 +3651,10 @@ function initTelecomChatRoom() {
   }
   telecomInitialized = true;
   const s = telecomCurrentSettings();
-  telecomApplyAccountIdentityToForm();
+  const nickInput = document.getElementById("telecomNickInput");
+  const nameInput = document.getElementById("telecomNameInput");
+  if (nickInput) nickInput.value = s.nick || "";
+  if (nameInput) nameInput.value = s.name || "";
   const modeSel = document.getElementById("telecomModeSelect");
   const closeSel = document.getElementById("telecomCloseSelect");
   if (modeSel) modeSel.value = s.mode || "chat";
@@ -3727,205 +3668,6 @@ function initTelecomChatRoom() {
     document.getElementById("telecomRoom")?.classList.add("hidden");
     document.getElementById("telecomSetup")?.classList.remove("hidden");
     telecomRenderLog([]);
-  });
-  document.getElementById("telecomForm")?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = document.getElementById("telecomMessageInput");
-    const text = telecomCleanText(input?.value, "");
-    if (!text) return;
-    input.value = "";
-    telecomSendUserMessage(text);
-  });
-  const log = telecomLoadJson(TELECOM_STORAGE.log, []);
-  if (log.length) {
-    document.getElementById("telecomSetup")?.classList.add("hidden");
-    document.getElementById("telecomRoom")?.classList.remove("hidden");
-    telecomRenderLog(log);
-    telecomStartMemberNoise();
-  }
-  telecomSetupCallButton();
-}
-window.initTelecomChatRoom = initTelecomChatRoom;
-
-// v124: 광석이네 통신방 - 실제 공개 대화방 흐름 보정
-function telecomPickMember(excludeNick = "") {
-  const pool = DUNGEUNSORI_MEMBERS.filter((m) => m.nick !== "김광석" && m.nick !== excludeNick);
-  return pool[telecomRand(0, pool.length - 1)] || { nick: "mouse14", name: "장민석" };
-}
-function telecomFindMentionedMember(text) {
-  const msg = String(text || "").toLowerCase();
-  return DUNGEUNSORI_MEMBERS.find((m) => m.nick !== "김광석" && (msg.includes(m.nick.toLowerCase()) || msg.includes(m.name.toLowerCase()))) || null;
-}
-function telecomMemberReplyText(message, mode) {
-  const msg = String(message || "");
-  if (/안녕|하이|반가|왔|접속/.test(msg)) return ["어서오세요~", "어소세요..", "반갑습니다", "하이!!!!"][telecomRand(0,3)];
-  if (/비|우울|허전|외롭|힘들|센치|쓸쓸/.test(msg) || mode === "comfort") return ["그럴때 있죠..", "힘내세요", "저도 좀 그래요", "그래도 씩씩하게요"][telecomRand(0,3)];
-  if (/노래|기타|공연|음악|앨범|라디오/.test(msg) || mode === "music") return ["그 노래 좋아요", "자료실에 있나요?", "저도 듣고 싶네요", "공연 얘기 좋네요"][telecomRand(0,3)];
-  if (/생일|축하|기념/.test(msg)) return ["추카드립니다!!", "축하해요~", "좋은날이네요", "추카아~~~"][telecomRand(0,3)];
-  if (mode === "worry") return ["천천히 말씀하세요", "무슨일이세요?", "에구에구...", "잘 해결되면 좋겠어요"][telecomRand(0,3)];
-  if (mode === "memory") return ["오래간만이네요", "그때 생각나요", "후훗..", "참 좋네요..."][telecomRand(0,3)];
-  return ["네", "글쿠나......", "후후후..", "아하...", "그렇군요", "얘기해보세요"][telecomRand(0,5)];
-}
-function telecomMemberToKksLine() {
-  return ["광석이형 안녕하세요", "아저씨 오랜만이세요", "오늘 사람 많네요", "좋은 밤 되세요~~~", "자료실에 글 올렸어요", "조금 시간 보내세요"][telecomRand(0,5)];
-}
-function telecomKksToMemberLine(member) {
-  const first = (member?.name || "").slice(-2) || "님";
-  return ["네", "오셨네요", `${first}님 오셨네요`, "그래요", "응...", "지금 즐거워요"][telecomRand(0,5)];
-}
-function telecomScheduleInitialMembers() {
-  const used = new Set();
-  const count = telecomRand(2, 4);
-  for (let i = 0; i < count; i++) {
-    setTimeout(() => {
-      let m = telecomPickMember();
-      let guard = 0;
-      while (used.has(m.nick) && guard++ < 8) m = telecomPickMember();
-      used.add(m.nick);
-      telecomSay(m.nick, m.name, ["어서오세요~", "어소세요..", "하이!!!!", "반갑습니다", "후후후.."][telecomRand(0,4)]);
-    }, 1200 + i * telecomRand(1200, 2300));
-  }
-}
-function telecomScheduleStatusLine() {
-  clearTimeout(telecomStatusTimer);
-  telecomStatusTimer = setTimeout(() => {
-    if (!document.getElementById("telecomRoom") || document.getElementById("telecomRoom").classList.contains("hidden")) return;
-    if (telecomKksActive()) {
-      telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용 중입니다.");
-      setTimeout(() => {
-        if (!telecomKksActive()) return;
-        const s = telecomCurrentSettings();
-        const name = s.name || s.nick || "";
-        const first = s.close === "best" || s.close === "veryClose" ? `${name}아 ` : (s.close === "close" ? `${name}님 ` : "");
-        telecomKks(first ? `${first}오셨네요` : "네");
-        if (Math.random() < 0.55) setTimeout(() => telecomKks("지금 즐거워요"), 1200);
-      }, 1600);
-    }
-  }, 10000);
-}
-function telecomStartMemberNoise() {
-  clearTimeout(telecomMemberTimer);
-  const tick = () => {
-    const pageActive = document.getElementById("telecom")?.classList.contains("active");
-    const roomOpen = !document.getElementById("telecomRoom")?.classList.contains("hidden");
-    if (pageActive && roomOpen) {
-      const member = telecomPickMember();
-      let text = TELECOM_MEMBER_LINES[telecomRand(0, TELECOM_MEMBER_LINES.length - 1)];
-      if (telecomKksActive() && Math.random() < 0.28) text = telecomMemberToKksLine();
-      if (Math.random() < 0.78) telecomSay(member.nick, member.name, text);
-      if (telecomKksActive() && Math.random() < 0.22) {
-        setTimeout(() => {
-          if (telecomKksActive()) telecomKks(telecomKksToMemberLine(member));
-        }, telecomRand(3500, 9000));
-      }
-    }
-    telecomMemberTimer = setTimeout(tick, telecomRand(16000, 38000));
-  };
-  telecomMemberTimer = setTimeout(tick, telecomRand(9000, 20000));
-}
-function telecomSendUserMessage(text) {
-  const s = telecomCurrentSettings();
-  telecomSay(s.nick, s.name, text);
-
-  const mentioned = telecomFindMentionedMember(text);
-  const member = mentioned || telecomPickMember(s.nick);
-  setTimeout(() => {
-    const reply = telecomMemberReplyText(text, s.mode);
-    telecomSay(member.nick, member.name, reply);
-    if (telecomKksActive() && Math.random() < 0.18) {
-      setTimeout(() => telecomKks(telecomKksToMemberLine(member)), telecomRand(4000, 9000));
-    }
-  }, telecomRand(4500, 10500));
-
-  if (telecomKksActive()) {
-    const replies = telecomGenerateKksReply(text);
-    const baseDelay = telecomRand(28000, 34000);
-    replies.forEach((r, i) => {
-      setTimeout(() => {
-        if (telecomKksActive()) telecomKks(r);
-      }, baseDelay + i * telecomRand(900, 1600));
-    });
-    const start = Number(localStorage.getItem(TELECOM_STORAGE.sessionStart) || telecomNow());
-    if (telecomNow() - start > 5 * 60 * 1000 && Math.random() < 0.10) {
-      clearTimeout(telecomExitTimer);
-      telecomExitTimer = setTimeout(() => telecomKksLeave(), telecomRand(35000, 120000));
-    }
-  } else {
-    const away = telecomAwayUntil();
-    if (telecomNow() < away) telecomSystem(`김광석님은 지금 바빠서 접속하지 못합니다. 약 ${telecomFormatLeft(away - telecomNow())} 후 다시 호출할 수 있습니다.`);
-  }
-}
-function telecomEnterRoom() {
-  if (!currentUser) {
-    alert("로그인 후 광석이네 통신방을 이용할 수 있습니다.");
-    showPage("login");
-    return;
-  }
-  const account = telecomApplyAccountIdentityToForm();
-  const nick = account.nick;
-  const name = account.name;
-  const mode = document.getElementById("telecomModeSelect")?.value || "chat";
-  const close = document.getElementById("telecomCloseSelect")?.value || "known";
-  telecomSaveJson(TELECOM_STORAGE.settings, { mode, close });
-  document.getElementById("telecomSetup")?.classList.add("hidden");
-  document.getElementById("telecomRoom")?.classList.remove("hidden");
-  localStorage.setItem(TELECOM_STORAGE.sessionStart, String(telecomNow()));
-  telecomSaveJson(TELECOM_STORAGE.log, []);
-  telecomSystem(`${nick}(${name})님이 접속하셨습니다.`);
-  telecomScheduleInitialMembers();
-  if (telecomIsKksAvailable()) {
-    telecomSetKksActive(true);
-    telecomScheduleStatusLine();
-    telecomScheduleKksExit();
-  } else {
-    telecomSetKksActive(false);
-    const left = telecomFormatLeft(telecomAwayUntil() - telecomNow());
-    telecomSystem(`김광석님은 지금 바빠서 접속하지 못합니다. 약 ${left} 후 다시 호출할 수 있습니다.`);
-  }
-  telecomSetupCallButton();
-  telecomStartMemberNoise();
-}
-function telecomCallKks() {
-  if (!telecomIsKksAvailable()) return telecomSetupCallButton();
-  telecomSetKksActive(true);
-  localStorage.setItem(TELECOM_STORAGE.sessionStart, String(telecomNow()));
-  telecomSystem("'김광석'님을 호출했습니다.");
-  setTimeout(() => {
-    if (!telecomKksActive()) return;
-    telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용 중입니다.");
-    setTimeout(() => {
-      if (!telecomKksActive()) return;
-      telecomKks("네");
-      setTimeout(() => telecomKks("오셨네요"), 1200);
-    }, 1600);
-    telecomSetupCallButton();
-    telecomScheduleKksExit();
-  }, 10000);
-}
-function initTelecomChatRoom() {
-  if (telecomInitialized) {
-    telecomRenderLog();
-    telecomSetupCallButton();
-    telecomApplyAccountIdentityToForm();
-    return;
-  }
-  telecomInitialized = true;
-  const s = telecomCurrentSettings();
-  telecomApplyAccountIdentityToForm();
-  const modeSel = document.getElementById("telecomModeSelect");
-  const closeSel = document.getElementById("telecomCloseSelect");
-  if (modeSel) modeSel.value = s.mode || "chat";
-  if (closeSel) closeSel.value = s.close || "known";
-  document.getElementById("telecomEnterBtn")?.addEventListener("click", telecomEnterRoom);
-  document.getElementById("telecomCallBtn")?.addEventListener("click", telecomCallKks);
-  document.getElementById("telecomResetBtn")?.addEventListener("click", () => {
-    if (!confirm("통신방 대화 기록을 초기화할까요?")) return;
-    telecomSaveJson(TELECOM_STORAGE.log, []);
-    telecomSetKksActive(false);
-    document.getElementById("telecomRoom")?.classList.add("hidden");
-    document.getElementById("telecomSetup")?.classList.remove("hidden");
-    telecomRenderLog([]);
-    telecomSetupCallButton();
   });
   document.getElementById("telecomForm")?.addEventListener("submit", (event) => {
     event.preventDefault();
