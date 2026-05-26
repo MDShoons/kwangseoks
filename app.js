@@ -146,6 +146,54 @@ function isVideoContentItem(item = {}) {
 }
 
 
+
+function getArchiveOrgEmbedUrl(url = "") {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    if (!host.includes("archive.org")) return "";
+
+    const parts = parsed.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+    let identifier = "";
+
+    const embedIndex = parts.indexOf("embed");
+    if (embedIndex >= 0 && parts[embedIndex + 1]) identifier = parts[embedIndex + 1];
+
+    const detailsIndex = parts.indexOf("details");
+    if (!identifier && detailsIndex >= 0 && parts[detailsIndex + 1]) identifier = parts[detailsIndex + 1];
+
+    const downloadIndex = parts.indexOf("download");
+    if (!identifier && downloadIndex >= 0 && parts[downloadIndex + 1]) identifier = parts[downloadIndex + 1];
+
+    const itemsIndex = parts.indexOf("items");
+    if (!identifier && itemsIndex >= 0 && parts[itemsIndex + 1]) identifier = parts[itemsIndex + 1];
+
+    if (!identifier) return "";
+    return `https://archive.org/embed/${encodeURIComponent(identifier)}`;
+  } catch {
+    return "";
+  }
+}
+
+function buildArchiveOrgInPagePlayerHtml(url = "", title = "") {
+  const embedUrl = getArchiveOrgEmbedUrl(url);
+  if (!embedUrl) return "";
+  const safeEmbedUrl = escapeHtml(embedUrl);
+  const safeDirectUrl = escapeHtml(normalizeMediaUrlForPlayback(url, "video"));
+  const safeTitle = escapeHtml(title || "영상");
+  return `
+    <div class="archive-video-player-wrap">
+      <iframe class="archive-video-iframe" src="${safeEmbedUrl}" title="${safeTitle}" allow="fullscreen; autoplay" allowfullscreen loading="lazy"></iframe>
+      <div class="archive-video-help">
+        <span>iPad/Safari 호환을 위해 이 화면 안에서 Archive 플레이어로 재생합니다.</span>
+        <a href="${safeDirectUrl}" target="_blank" rel="noopener">직접 파일 열기</a>
+      </div>
+    </div>`;
+}
+
 function getVideoMimeType(url = "") {
   const clean = String(url || "").split("?")[0].split("#")[0].toLowerCase();
   if (clean.endsWith(".webm")) return "video/webm";
@@ -172,7 +220,7 @@ function buildVideoPlayerHtml(url = "", poster = "", title = "", extraClass = ""
       </video>
       <div class="video-fallback-notice" aria-hidden="true">
         <p>영상이 검은 화면으로 보이면 iPad/Safari의 영상 로딩 문제일 수 있습니다.</p>
-        <a href="${safeUrl}" target="_blank" rel="noopener">새 창에서 영상 열기</a>
+        <a href="${safeUrl}" target="_blank" rel="noopener">직접 파일 열기</a>
       </div>
     </div>`;
 }
@@ -2754,7 +2802,16 @@ function createCard(item) {
   const videoMediaUrl = getVideoMediaUrl(item);
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
   if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
-  else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) media = buildVideoPlayerHtml(videoMediaUrl, item.thumbnailUrl || "", item.title || "", "card-video-player");
+  else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) {
+    const cardImg = item.thumbnailUrl || item.imageUrl || "";
+    if (getArchiveOrgEmbedUrl(videoMediaUrl)) {
+      media = cardImg
+        ? `<img src="${escapeHtml(normalizeMediaUrlForPlayback(cardImg, "image"))}" alt="${escapeHtml(item.title)}" draggable="false" oncontextmenu="return false">`
+        : `<div class="card-placeholder video-card-placeholder">영상 자료</div>`;
+    } else {
+      media = buildVideoPlayerHtml(videoMediaUrl, cardImg || "", item.title || "", "card-video-player");
+    }
+  }
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
@@ -2916,6 +2973,8 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
+      const archiveEmbed = buildArchiveOrgInPagePlayerHtml(mediaUrl, item.title || "");
+      if (archiveEmbed) return `<div class="detail-media-box">${archiveEmbed}</div>`;
       return `<div class="detail-media-box">${buildVideoPlayerHtml(mediaUrl, imageUrl, item.title || "", "detail-video-player")}</div>`;
     }
 
@@ -3302,7 +3361,7 @@ document.addEventListener("click", (event) => {
 }, false);
 
 
-/* v118: iPad/Safari 영상 검은 화면 보정 */
+/* v119: iPad/Safari Archive 영상 인페이지 재생 보정 */
 function isIpadOrSafariLike() {
   const ua = navigator.userAgent || "";
   const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
