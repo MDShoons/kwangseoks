@@ -1,31 +1,10 @@
-v154-emotion-personas 수정본입니다. GitHub Pages에는 이 폴더 안의 파일 전체를 저장소 루트에 덮어쓰기 하세요. 특히 index.html, app.js를 같이 올려야 캐시가 갱신됩니다.
+kwangseoks-main-v159-groupchat-flow
 
-이 ZIP은 GitHub Pages 루트 업로드 전용입니다.
+GitHub Pages 저장소 루트에 이 폴더 안의 파일 전체를 덮어쓰기 하세요.
+특히 index.html, app.js, style.css를 같이 올려야 캐시와 통신방 동작이 함께 갱신됩니다.
 
-압축을 풀면 바로 index.html, app.js, style.css가 보여야 정상입니다.
-
-GitHub 저장소에서 올바른 위치:
-kwangseoks/
-  index.html
-  app.js
-  style.css
-  firebase-config.js
-  cloudflare-worker-github-uploader.js
-
-잘못된 위치:
-kwangseoks/
-  kwangseoks-v74-ROOT-ONLY-upload-this/
-    index.html
-
-적용 후 확인:
-1. GitHub 저장소 최상단의 index.html을 열기
-2. 맨 아래 script가 아래인지 확인
-   <script type="module" src="app.js?v=74-worker-origin-bypass"></script>
-
-3. 사이트 접속 후 Ctrl + F5
-4. 사이트 하단 버전이 아래인지 확인
-   v74-worker-origin-bypass
-
-Cloudflare Worker도 별도 확인:
-https://kwangseoks-uploader.kos20050627.workers.dev/health
-version이 v74-origin-bypass-upload이면 Worker도 최신입니다.
+변경 핵심:
+- 카톡 단체방처럼 한 사람의 말에 다음 사람이 이어서 반응
+- 회원끼리 서로 이름을 부르며 묻고 답하는 흐름 추가
+- 사용자의 오타는 내부적으로 보정해 문맥으로 이해
+- 김광석은 방을 읽다가 늦게 한 줄 보내는 느린 타자 설정 유지
