@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v118-ipad-detail-video-poster";
+const APP_VERSION = "v125-site-route-version-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -3559,8 +3559,7 @@ function telecomScheduleStatusLine() {
   telecomStatusTimer = setTimeout(() => {
     if (!document.getElementById("telecomRoom") || document.getElementById("telecomRoom").classList.contains("hidden")) return;
     if (telecomKksActive()) {
-      telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용");
-      telecomSystem("중입니다.");
+      telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용 중입니다.");
     }
   }, 10000);
 }

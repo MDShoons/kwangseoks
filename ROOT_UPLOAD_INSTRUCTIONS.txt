@@ -1,29 +1,15 @@
-이 ZIP은 GitHub Pages 루트 업로드 전용입니다.
+업로드 방법
 
-압축을 풀면 바로 index.html, app.js, style.css가 보여야 정상입니다.
+1. 이 zip의 압축을 풉니다.
+2. 압축을 풀어서 나온 파일/폴더 전체를 GitHub 저장소 kwangseoks 루트에 그대로 덮어씁니다.
+3. 반드시 index.html, app.js, style.css가 저장소 루트에 있어야 합니다.
+4. GitHub에 Commit changes를 누릅니다.
+5. 1~3분 뒤 아래 주소로 확인합니다.
 
-GitHub 저장소에서 올바른 위치:
-kwangseoks/
-  index.html
-  app.js
-  style.css
-  firebase-config.js
-  cloudflare-worker-github-uploader.js
+https://mdshoons.github.io/kwangseoks/?v=125#home
 
-잘못된 위치:
-kwangseoks/
-  kwangseoks-v74-ROOT-ONLY-upload-this/
-    index.html
-
-적용 후 확인:
-1. GitHub 저장소 최상단의 index.html을 열기
-2. 맨 아래 script가 아래인지 확인
-   <script type="module" src="app.js?v=74-worker-origin-bypass"></script>
-
-3. 사이트 접속 후 Ctrl + F5
-4. 사이트 하단 버전이 아래인지 확인
-   v74-worker-origin-bypass
-
-Cloudflare Worker도 별도 확인:
-https://kwangseoks-uploader.kos20050627.workers.dev/health
-version이 v74-origin-bypass-upload이면 Worker도 최신입니다.
+이번 버전: v125-site-route-version-fix
+- v118로 보이던 버전 표시를 v125로 정정
+- CSS/JS 캐시 버전을 v125로 갱신
+- CSS가 늦게 로드되어도 여러 페이지가 한꺼번에 펼쳐지지 않도록 기본 page 숨김 스타일을 index.html에 추가
+- 김광석 수신상태 문구를 한 줄로 표시
