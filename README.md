@@ -907,3 +907,8 @@ v78-songs-match-radios-ui
 ## v144-human-dialogue-flow
 - 통신방 대화를 랜덤 발화가 아니라 주제별 턴 흐름으로 보정했습니다.
 - 질문/답변/회원 간 이어받기/김광석 끼어들기 흐름을 추가했습니다.
+
+
+## v146 pages build safe
+- Added .nojekyll to bypass GitHub Pages Jekyll processing.
+- app.js syntax checked with node -c.
