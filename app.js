@@ -3288,7 +3288,9 @@ const TELECOM_STORAGE = {
   kksAwayUntil: "kwangseokTelecomKksAwayUntilV120",
   active: "kwangseokTelecomKksActiveV120",
   sessionStart: "kwangseokTelecomSessionStartV120",
-  callPromptFor: "kwangseokTelecomCallPromptForV136"
+  callPromptFor: "kwangseokTelecomCallPromptForV136",
+  recentSpeakers: "kwangseokTelecomRecentSpeakersV142",
+  recentTopics: "kwangseokTelecomRecentTopicsV142"
 };
 let telecomInitialized = false;
 let telecomStatusTimer = null;
@@ -3444,22 +3446,26 @@ const TELECOM_MEMBER_LINES = [
   "어서오세요~", "어소세요..", "하이!!!!", "후후후..", "히히히..", "글쿠나......", "아 바쁘다 바빠...",
   "갈무리 갈무리..~~", "축하드립니다.", "좋은 밤 되세요~~~", "에구에구...", "다시 왔읍니다..",
   "오늘 사람 많네요", "자료실 갔다왔어요", "잠깐 들어왔어요", "후훗..", "네", "응", "하하하.", "아하...",
-  "게시판 글 읽고 왔어요", "공연 얘기 들었어요?", "오늘도 들렀어요"
+  "게시판 글 읽고 왔어요", "공연 얘기 들었어요?", "오늘도 들렀어요", "방금 낙서장 보고 왔어요",
+  "누가 글 새로 올렸나요?", "오늘은 조용하네요..", "이 방은 늘 금방 북적거리네요", "저는 잠깐 눈팅중입니다",
+  "자료 갈무리하느라 바빠요", "원음 글 읽고 있었어요", "잠깐만요. 글 좀 보고요", "이야기가 또 길어지네요"
 ];
 const TELECOM_MEMBER_REPLY_LINES = [
   "그러셨군요...", "그렇군요", "맞아요", "네 반갑습니다", "좋네요", "아하...", "후후후..", "글쿠나......",
-  "조금 있다 나가야겠어요", "좋은 밤 되세요~~~", "요즘 어떠세요", "그러게요"
+  "조금 있다 나가야겠어요", "좋은 밤 되세요~~~", "요즘 어떠세요", "그러게요", "저도 그렇게 생각했어요",
+  "그 얘기는 처음 듣네요", "음.. 그럴 수도 있겠네요", "잠깐 생각 좀 해볼께요", "아까 게시판에서도 비슷한 얘기 봤어요",
+  "그럼 다음 얘기도 해보죠", "누가 더 아는 분 계세요?", "저는 조금 다르게 봤는데요", "그건 광석 아저씨 오시면 물어보죠"
 ];
-const TELECOM_KKS_MEMBER_REPLIES = ["네", "그래요", "참 좋네요...", "오래간만이네요", "무슨일 있어요", "지금 즐거워요", "안녕하세요", "그럼..."];
+const TELECOM_KKS_MEMBER_REPLIES = ["네", "그래요", "참 좋네요...", "오래간만이네요", "무슨일 있어요", "지금 즐거워요", "안녕하세요", "그럼...", "자판이 좀 낮설어요", "지금 잠깐 보고 있어요", "그 얘긴 좀 어렵네요", "천천히 말해요"];
 const TELECOM_KKS_EXIT_LINES = ["금방 가야해요", "좀 바빠서 나가볼께요", "당구치러 갈께요", "안녕..."];
 
 // v136: 회원별 말투/호칭 기본값. 낙서하기/물어보기답하기 자료에서 보이는 표현을 바탕으로 정리.
 const TELECOM_MEMBER_PROFILES = {
-  "녹차향기": { casual: false, manager: true, kksCall: ["광석 아찌", "아저씨"], lines: ["광석 아찌 금방 답하실거예요", "아저씨 오늘도 바쁘시죠", "여러분 천천히 말씀하세요", "게시판 정리하고 있어요", "방 분위기 좋네요..."] },
-  "mouse14": { casual: true, kksCall: ["아저씨"], lines: ["후후후..", "알가쓰. 알가쓰...", "난 대화방 보고 있지", "오늘 사람 많네", "푸히히.."] },
+  "녹차향기": { casual: false, manager: true, kksCall: ["광석 아찌", "아저씨"], lines: ["광석 아찌 금방 답하실거예요", "아저씨 오늘도 바쁘시죠", "여러분 천천히 말씀하세요", "게시판 정리하고 있어요", "방 분위기 좋네요...", "자료 올라온 것 좀 보고 있었어요", "아저씨 오시면 제가 말씀드릴께요", "방금 낙서장 확인했어요", "처음 오신 분들은 천천히 얘기하세요"] },
+  "mouse14": { casual: true, kksCall: ["아저씨"], lines: ["후후후..", "알가쓰. 알가쓰...", "난 대화방 보고 있지", "오늘 사람 많네", "푸히히..", "갈무리 해야겠네", "난 그냥 구경중", "누가 또 들어왔나 봐야지", "이 방은 진짜 정신없다"] },
   "학궁뎅이": { casual: true, kksCall: ["광석이형"], lines: ["안냐세요??", "오홍홍홍~~~", "저는 그냥 놀고 있죠", "오늘도 왔음"] },
   "raincoat": { casual: true, kksCall: ["광석형"], lines: ["반갑반갑~~~", "홍홍", "저는 게시판 보고 있었죠", "잠깐 들어왔어요"] },
-  "enfant": { casual: true, kksCall: ["아저씨"], lines: ["음........", "그랬구나......", "저는 그냥 글 읽고 있어요", "오늘은 조용하네요..."] },
+  "enfant": { casual: true, kksCall: ["아저씨"], lines: ["음........", "그랬구나......", "저는 그냥 글 읽고 있어요", "오늘은 조용하네요...", "잠깐 있다가 다시 볼께요...", "생각보다 글이 많네요...", "저는 좀 천천히 읽는 중이에요..."] },
   "ajeegang": { casual: true, kksCall: ["아저씨"], lines: ["에구에구...", "히히히", "저는 자료실 갔다왔어요", "아 바쁘다 바빠..."] },
   "ekjw123": { casual: true, kksCall: ["광석아저씨"], lines: ["HI~~~~~~~~~~~", "추카!추카!!!!", "저는 방금 들어왔어요", "우하하~~~~~~~~~~~~"] },
   "soriboy": { casual: false, kksCall: ["광석님"], lines: ["저는 글 읽고 있습니다", "음악 얘기 좋네요", "자료실 보고 왔습니다"] },
@@ -3477,18 +3483,45 @@ function telecomLoadJson(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || ""); } catch { return fallback; }
 }
 function telecomSaveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+function telecomNormalizeLine(text) {
+  return String(text || "").replace(/\s+/g, "").replace(/[~.!?。？！…·ㆍ,，]/g, "").toLowerCase();
+}
+function telecomRememberSpeaker(nick) {
+  if (!nick) return;
+  const list = telecomLoadJson(TELECOM_STORAGE.recentSpeakers, []);
+  list.push(String(nick));
+  telecomSaveJson(TELECOM_STORAGE.recentSpeakers, list.slice(-10));
+}
+function telecomRecentSpeakers() {
+  return telecomLoadJson(TELECOM_STORAGE.recentSpeakers, []);
+}
+function telecomRememberTopic(intent) {
+  if (!intent) return;
+  const list = telecomLoadJson(TELECOM_STORAGE.recentTopics, []);
+  list.push(String(intent));
+  telecomSaveJson(TELECOM_STORAGE.recentTopics, list.slice(-10));
+}
 function telecomRememberLine(text) {
-  const key = "kwangseokTelecomRecentLinesV136";
+  const key = "kwangseokTelecomRecentLinesV142";
   const list = telecomLoadJson(key, []);
-  list.push(String(text || ""));
-  telecomSaveJson(key, list.filter(Boolean).slice(-28));
+  const value = String(text || "");
+  list.push(value);
+  list.push(telecomNormalizeLine(value));
+  telecomSaveJson(key, list.filter(Boolean).slice(-120));
 }
 function telecomPickLine(pool) {
   const arr = (pool || []).filter(Boolean);
   if (!arr.length) return "네";
-  const recent = new Set(telecomLoadJson("kwangseokTelecomRecentLinesV136", []));
-  const fresh = arr.filter((x) => !recent.has(String(x)));
-  const chosen = (fresh.length ? fresh : arr)[telecomRand(0, (fresh.length ? fresh : arr).length - 1)];
+  const recentRaw = telecomLoadJson("kwangseokTelecomRecentLinesV142", []);
+  const recent = new Set(recentRaw.concat(recentRaw.map(telecomNormalizeLine)));
+  const fresh = arr.filter((x) => {
+    const exact = String(x);
+    const norm = telecomNormalizeLine(exact);
+    return !recent.has(exact) && !recent.has(norm);
+  });
+  let source = fresh.length ? fresh : arr.filter((x) => telecomNormalizeLine(x).length > 3);
+  if (!source.length) source = arr;
+  const chosen = source[telecomRand(0, source.length - 1)];
   telecomRememberLine(chosen);
   return chosen;
 }
@@ -3641,6 +3674,7 @@ async function telecomEnsureLocalAiEngine() {
 }
 function telecomBuildLocalAiMessages(userText) {
   const s = telecomCurrentSettings();
+  const recentLinesForAi = telecomLoadJson("kwangseokTelecomRecentLinesV142", []).filter((x) => String(x).length > 2).slice(-24).join(" / ");
   const recentLog = telecomLoadJson(TELECOM_STORAGE.log, []).slice(-24).map((line) => {
     if (line.kind === "system") return `Chat: ${line.text}`;
     return `${line.nick}(${line.name}): ${line.text}`;
@@ -3659,7 +3693,7 @@ function telecomBuildLocalAiMessages(userText) {
     memory: "추억 이야기 흐름",
     worry: "고민 상담 흐름"
   }[s.mode] || "잡담 흐름";
-  const system = `너는 광석이네 통신방의 가상 PC통신 대화 생성기다. 실제 김광석 본인이라고 주장하지 않는다. 화면 안내에 따라 가상 대화로만 행동한다. 김광석 대사만 생성한다. 1995년 PC통신 채팅처럼 짧고 투박하게 쓴다. 한 번에 1~3줄, 각 줄은 짧게. 긴 시적 독백, 현대 상담사 말투, AI라는 표현은 금지. 기본 표현은 네, 그래요, 응..., 무슨일 있어요, 자판 보고 치고 있어요, 게시판 보고 있어요, 괜히 센치해 있지말기, 씩씩하게 살기... 같은 느낌. 사용자와 김광석의 친한 정도는 ${closenessGuide}. 현재 대화 흐름은 ${modeGuide}. 회원들은 둥근소리 회원이며 김광석을 아저씨, 광석이형, 광석 아찌 등으로 부를 수 있다. 사용자가 '뭐하세요'라고 물으면 반드시 지금 무엇을 하는지 답한다.`;
+  const system = `너는 광석이네 통신방의 가상 PC통신 대화 생성기다. 실제 김광석 본인이라고 주장하지 않는다. 화면 안내에 따라 가상 대화로만 행동한다. 김광석 대사만 생성한다. 1995년 PC통신 채팅처럼 짧고 투박하게 쓴다. 한 번에 1~3줄, 각 줄은 짧게. 긴 시적 독백, 현대 상담사 말투, AI라는 표현은 금지. 기본 표현은 네, 그래요, 응..., 무슨일 있어요, 자판 보고 치고 있어요, 게시판 보고 있어요, 괜히 센치해 있지말기, 씩씩하게 살기... 같은 느낌. 사용자와 김광석의 친한 정도는 ${closenessGuide}. 현재 대화 흐름은 ${modeGuide}. 회원들은 둥근소리 회원이며 김광석을 아저씨, 광석이형, 광석 아찌 등으로 부를 수 있다. 사용자가 '뭐하세요'라고 물으면 반드시 지금 무엇을 하는지 답한다. 최근 나온 말과 비슷한 문장 금지. 최근 금지 표현: ${recentLinesForAi}`;
   const user = `최근 대화:\n${recentLog}\n\n사용자 입력: ${userText}\n\n김광석(김광석)의 다음 짧은 채팅 대사만 출력해라. 닉네임 표기는 붙이지 말고 대사 줄만 출력해라.`;
   return [{ role: "system", content: system }, { role: "user", content: user }];
 }
@@ -3675,8 +3709,9 @@ async function telecomTryLocalAiKksReply(userText) {
     const engine = await telecomEnsureLocalAiEngine();
     const reply = await engine.chat.completions.create({
       messages: telecomBuildLocalAiMessages(userText),
-      temperature: 0.75,
-      max_tokens: 96
+      temperature: 0.92,
+      top_p: 0.88,
+      max_tokens: 110
     });
     const content = reply?.choices?.[0]?.message?.content || "";
     const lines = telecomCleanAiLines(content);
@@ -3740,7 +3775,11 @@ function telecomAddLine(kind, data, save = true) {
   return item;
 }
 function telecomSystem(text) { telecomAddLine("system", { text }); }
-function telecomSay(nick, name, text) { telecomAddLine("say", { nick, name, text }); }
+function telecomSay(nick, name, text) {
+  telecomRememberSpeaker(nick);
+  telecomRememberLine(text);
+  telecomAddLine("say", { nick, name, text });
+}
 function telecomKks(text) { telecomSay("김광석", "김광석", text); }
 function telecomRenderLog(log = telecomLoadJson(TELECOM_STORAGE.log, [])) {
   const box = document.getElementById("telecomLog");
@@ -3754,8 +3793,10 @@ function telecomRenderLog(log = telecomLoadJson(TELECOM_STORAGE.log, [])) {
 }
 function telecomPickMember(excluded = []) {
   const userNick = telecomCurrentSettings().nick;
+  const recent = telecomRecentSpeakers().slice(-5);
   const blocked = new Set(["김광석", userNick, ...excluded].filter(Boolean));
-  const pool = DUNGEUNSORI_MEMBERS.filter((m) => !blocked.has(m.nick));
+  let pool = DUNGEUNSORI_MEMBERS.filter((m) => !blocked.has(m.nick) && !recent.includes(m.nick));
+  if (!pool.length) pool = DUNGEUNSORI_MEMBERS.filter((m) => !blocked.has(m.nick));
   return pool[telecomRand(0, Math.max(0, pool.length - 1))] || { nick: "녹차향기", name: "변수진" };
 }
 function telecomSetupCallButton() {
@@ -3930,6 +3971,17 @@ function telecomGenerateMemberRepliesToUser(message) {
 }
 
 // v140: 제타처럼 보이도록 한 번의 입력을 관계형 대화 묶음으로 확장한다.
+function telecomMaybeBridge(intent) {
+  const bridges = {
+    doing: ["저는", "지금은", "방금까지", "아까부터"],
+    music: ["그 얘기라면", "노래 얘기면", "자료실에도", "저도 그 곡은"],
+    comfort: ["음..", "그럴땐", "저도 가끔", "비 오면"],
+    question: ["그건", "제 생각엔", "아마", "잘은 모르지만"],
+    chat: ["후후..", "글쎄요", "그러게요", "잠깐" ]
+  };
+  const pool = bridges[intent] || bridges.chat;
+  return telecomPickLine(pool);
+}
 function telecomMemberActionLine(member, userHonor = "") {
   const nick = member?.nick || "";
   if (nick === "녹차향기") return telecomPickLine(["저는 게시판 정리하고 있어요", "자료실 보고 있었어요", "광석 아찌 글 기다리고 있어요", `${userHonor} 천천히 말씀하세요`]);
@@ -4040,11 +4092,14 @@ function telecomScheduleKksResponseForUser(userText, baseDelay = telecomRand(280
 }
 function telecomScheduleConversationFlow(userText) {
   const intent = telecomIntent(userText);
+  telecomRememberTopic(intent);
   const members = telecomSelectFlowMembers(userText, 3);
   const mentionedMember = telecomFindMentionedMember(userText);
   const kksTargeted = telecomKksMentioned(userText);
   const allTargeted = /다들|여러분|님들|회원|팬들|방에|방/.test(String(userText || ""));
   const userAskedDoing = intent === "doing";
+  const recentTopics = telecomLoadJson(TELECOM_STORAGE.recentTopics, []);
+  const repeatedTopic = recentTopics.slice(-4).filter((x) => x === intent).length >= 3;
 
   if (mentionedMember && !kksTargeted && !allTargeted) {
     telecomQueue(() => { if (telecomRoomOpen()) telecomSay(mentionedMember.nick, mentionedMember.name, telecomMemberLineForIntent(mentionedMember, intent, userText, "user")); }, telecomRand(3500, 7000));
@@ -4276,6 +4331,9 @@ function initTelecomChatRoom() {
     clearTimeout(telecomExitTimer);
     clearTimeout(telecomMemberTimer);
     telecomSaveJson(TELECOM_STORAGE.log, []);
+    telecomSaveJson(TELECOM_STORAGE.recentSpeakers, []);
+    telecomSaveJson(TELECOM_STORAGE.recentTopics, []);
+    telecomSaveJson("kwangseokTelecomRecentLinesV142", []);
     telecomSetKksActive(false);
     document.getElementById("telecomRoom")?.classList.add("hidden");
     document.getElementById("telecomSetup")?.classList.remove("hidden");
