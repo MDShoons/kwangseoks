@@ -3557,7 +3557,7 @@ function telecomCurrentSettings() {
     name: id.name,
     mode: saved.mode || "chat",
     close: saved.close || "known",
-    engine: saved.engine || "classic"
+    engine: saved.engine || "webllm"
   };
 }
 function telecomKksActive() { return localStorage.getItem(TELECOM_STORAGE.active) === "1"; }
@@ -3592,26 +3592,49 @@ function telecomSetAiStatus(text) {
   const box = document.getElementById("telecomAiStatus");
   if (box) box.textContent = text;
 }
-const TELECOM_WEBLLM_MODEL = "SmolLM2-360M-Instruct-q4f32_1-MLC";
+const TELECOM_WEBLLM_MODELS = [
+  "SmolLM2-360M-Instruct-q4f32_1-MLC",
+  "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+  "Llama-3.2-1B-Instruct-q4f16_1-MLC"
+];
 let telecomAiEngine = null;
 let telecomAiLoading = false;
+let telecomAiReady = false;
+let telecomAiLastError = "";
 async function telecomEnsureLocalAiEngine() {
   if (telecomAiEngine) return telecomAiEngine;
   if (telecomAiLoading) throw new Error("모델을 불러오는 중입니다. 잠시 뒤 다시 입력해주세요.");
-  if (!("gpu" in navigator)) throw new Error("이 PC 브라우저는 WebGPU를 지원하지 않습니다.");
+  if (!("gpu" in navigator)) throw new Error("이 PC 브라우저는 WebGPU를 지원하지 않습니다. PC용 Chrome 또는 Edge 최신 버전에서 접속해주세요.");
   telecomAiLoading = true;
-  telecomSetAiStatus("생성형 모델을 불러오는 중입니다. 첫 실행은 오래 걸릴 수 있습니다...");
+  telecomAiReady = false;
+  telecomAiLastError = "";
+  telecomSetAiStatus("PC WebGPU 생성형 모델을 불러오는 중입니다. 첫 실행은 오래 걸릴 수 있습니다...");
   try {
     const webllm = await import("https://esm.run/@mlc-ai/web-llm");
-    telecomAiEngine = await webllm.CreateMLCEngine(TELECOM_WEBLLM_MODEL, {
-      initProgressCallback: (p) => {
-        const progress = Math.round((p?.progress || 0) * 100);
-        const text = p?.text || "모델 준비 중";
-        telecomSetAiStatus(`생성형 모델 준비 중... ${progress}% ${text}`);
+    let lastErr = null;
+    for (const model of TELECOM_WEBLLM_MODELS) {
+      try {
+        telecomSetAiStatus(`모델 준비 중: ${model}`);
+        telecomAiEngine = await webllm.CreateMLCEngine(model, {
+          initProgressCallback: (p) => {
+            const progress = Math.round((p?.progress || 0) * 100);
+            const text = p?.text || "모델 준비 중";
+            telecomSetAiStatus(`PC WebGPU 모델 준비 중... ${progress}% ${text}`);
+          }
+        });
+        telecomAiReady = true;
+        telecomSetAiStatus(`생성형 대화 준비 완료: ${model}`);
+        return telecomAiEngine;
+      } catch (err) {
+        lastErr = err;
+        console.warn("WebLLM model failed", model, err);
       }
-    });
-    telecomSetAiStatus("생성형 실험 모드 준비 완료. PC 안에서 무료로 생성합니다.");
-    return telecomAiEngine;
+    }
+    throw lastErr || new Error("사용 가능한 WebLLM 모델을 불러오지 못했습니다.");
+  } catch (err) {
+    telecomAiLastError = String(err?.message || err || "알 수 없는 오류");
+    telecomSetAiStatus(`생성형 모델 준비 실패: ${telecomAiLastError}`);
+    throw err;
   } finally {
     telecomAiLoading = false;
   }
@@ -3662,7 +3685,9 @@ async function telecomTryLocalAiKksReply(userText) {
     return true;
   } catch (err) {
     console.warn("WebLLM failed", err);
-    telecomSetAiStatus(`생성형 실험 모드 실패: ${err?.message || err}. 기본 대화로 자동 전환합니다.`);
+    telecomAiLastError = String(err?.message || err || "알 수 없는 오류");
+    telecomSetAiStatus(`생성형 대화 실패: ${telecomAiLastError}`);
+    telecomSystem(`생성형 모델 오류: ${telecomAiLastError}`);
     return false;
   }
 }
@@ -4005,8 +4030,7 @@ function telecomScheduleKksResponseForUser(userText, baseDelay = telecomRand(280
       if (!telecomRoomOpen() || !telecomKksActive()) return;
       const ok = await telecomTryLocalAiKksReply(userText);
       if (!ok) {
-        const replies = telecomGenerateKksReply(userText, "user");
-        replies.forEach((r, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(r); }, i * telecomRand(1300, 2200)));
+        telecomSystem("생성형 답변을 만들지 못했습니다. PC Chrome/Edge WebGPU 상태를 확인해주세요.");
       }
     }, baseDelay);
   } else {
@@ -4152,8 +4176,14 @@ function telecomEnterRoom() {
   const name = account.name;
   const mode = document.getElementById("telecomModeSelect")?.value || "chat";
   const close = document.getElementById("telecomCloseSelect")?.value || "known";
-  const engine = document.getElementById("telecomEngineSelect")?.value || "classic";
+  const engine = document.getElementById("telecomEngineSelect")?.value || "webllm";
   telecomSaveJson(TELECOM_STORAGE.settings, { mode, close, engine });
+  if (engine === "webllm") {
+    telecomSetAiStatus("입장과 동시에 PC WebGPU 모델 준비를 시작합니다...");
+    telecomEnsureLocalAiEngine().catch((err) => {
+      console.warn("WebGPU preload failed", err);
+    });
+  }
   document.getElementById("telecomSetup")?.classList.add("hidden");
   document.getElementById("telecomRoom")?.classList.remove("hidden");
   telecomUpdateRoomDate();
@@ -4211,11 +4241,16 @@ function initTelecomChatRoom() {
   const engineSel = document.getElementById("telecomEngineSelect");
   if (modeSel) modeSel.value = s.mode || "chat";
   if (closeSel) closeSel.value = s.close || "known";
-  if (engineSel) engineSel.value = s.engine || "classic";
+  if (engineSel) engineSel.value = s.engine || "webllm";
   engineSel?.addEventListener("change", () => {
     const saved = telecomLoadJson(TELECOM_STORAGE.settings, {}) || {};
     telecomSaveJson(TELECOM_STORAGE.settings, { ...saved, engine: engineSel.value });
-    telecomSetAiStatus(engineSel.value === "webllm" ? "생성형 실험 모드 선택됨. 첫 김광석 답변 때 PC 안에서 모델을 불러옵니다." : "기본 PC통신 대화 모드입니다.");
+    if (engineSel.value === "webllm") {
+      telecomSetAiStatus("PC WebGPU 생성형 모드 선택됨. 모델 준비를 시작합니다.");
+      telecomEnsureLocalAiEngine().catch((err) => console.warn("WebGPU preload failed", err));
+    } else {
+      telecomSetAiStatus("기본 PC통신 대화 모드입니다.");
+    }
   });
   document.getElementById("telecomEnterBtn")?.addEventListener("click", telecomEnterRoom);
   document.getElementById("telecomCallBtn")?.addEventListener("click", telecomCallKks);
