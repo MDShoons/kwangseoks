@@ -179,7 +179,7 @@ function getArchiveOrgEmbedUrl(url = "") {
 }
 
 function buildArchiveOrgInPagePlayerHtml(url = "", title = "") {
-  // v120: archive.org도 임베드/새창 없이 사이트 안의 기본 <video>로 직접 재생한다.
+  // v121: archive.org도 임베드/새창/placeholder 없이 사이트 안의 기본 <video>로 직접 재생한다.
   // 함수명은 기존 호출부 호환을 위해 남겨두되, 더 이상 iframe을 만들지 않는다.
   return buildVideoPlayerHtml(url, "", title || "영상", "detail-video-player archive-direct-video-player");
 }
@@ -2793,13 +2793,9 @@ function createCard(item) {
   if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
   else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) {
     const cardImg = item.thumbnailUrl || item.imageUrl || "";
-    if (getArchiveOrgEmbedUrl(videoMediaUrl)) {
-      media = cardImg
-        ? `<img src="${escapeHtml(normalizeMediaUrlForPlayback(cardImg, "image"))}" alt="${escapeHtml(item.title)}" draggable="false" oncontextmenu="return false">`
-        : `<div class="card-placeholder video-card-placeholder">영상 자료</div>`;
-    } else {
-      media = buildVideoPlayerHtml(videoMediaUrl, cardImg || "", item.title || "", "card-video-player");
-    }
+    // v121: archive.org 직접 파일도 목록 카드에서 검은 placeholder가 아니라 실제 <video>로 바로 렌더링한다.
+    // 단, URL이 archive.org details/embed 페이지가 아니라 실제 mp4 등 직접 파일 URL이어야 브라우저가 재생할 수 있다.
+    media = buildVideoPlayerHtml(videoMediaUrl, cardImg || "", item.title || "", "card-video-player");
   }
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
@@ -3348,7 +3344,7 @@ document.addEventListener("click", (event) => {
 }, false);
 
 
-/* v120: 영상 직접 재생 안정화 - archive.org도 iframe/새창 없이 video 태그로 처리 */
+/* v121: 영상 직접 재생 안정화 - archive.org도 iframe/새창/placeholder 없이 video 태그로 처리 */
 function isIpadOrSafariLike() {
   const ua = navigator.userAgent || "";
   const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);

@@ -4613,6 +4613,7 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
 }
 
 
+/* v121: archive.org 목록 카드도 실제 video 태그로 표시 */
 /* v118: iPad/Safari 영상 검은 화면 보정 */
 .video-player-wrap {
   position: relative;
