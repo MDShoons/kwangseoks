@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v123-telecom-account-fixed-select-visible" />
+  <link rel="stylesheet" href="style.css?v=v131-member-style-interaction" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -423,10 +423,15 @@
 
         <div id="telecomRoom" class="telecom-room hidden">
           <div class="telecom-status-row">
-            <span id="telecomRoomName">공개 광석이네 통신방</span>
+            <span id="telecomRoomName">공개 광석이네 통신방</span><span id="telecomRoomDate" class="telecom-room-date">95/--/--</span>
             <button type="button" id="telecomCallBtn" class="telecom-small-btn hidden">김광석 호출</button>
           </div>
           <div id="telecomLog" class="telecom-log" aria-live="polite"></div>
+          <div id="telecomAfterKksExit" class="telecom-after-exit hidden">
+            <span>김광석님이 나가셨습니다. 팬들과 계속 대화하시겠어요?</span>
+            <button type="button" id="telecomContinueFansBtn" class="telecom-small-btn">팬들과 계속 대화</button>
+            <button type="button" id="telecomEndRoomBtn" class="telecom-small-btn">대화 종료</button>
+          </div>
           <form id="telecomForm" class="telecom-input-row">
             <span>Chat :</span>
             <input id="telecomMessageInput" type="text" autocomplete="off" placeholder="대화를 입력하세요" />
@@ -701,6 +706,6 @@
   </div>
 <div class="version-marker">v118-ipad-detail-video-poster</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v123-telecom-account-fixed-select-visible"></script>
+  <script type="module" src="app.js?v=v131-member-style-interaction"></script>
 </body>
 </html>

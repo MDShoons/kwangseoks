@@ -4660,8 +4660,12 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
 .telecom-room { padding:12px 14px 16px; }
 .telecom-status-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px dashed #8aa7ff; color:#fff; }
 #telecomRoomName { flex:1; min-width:210px; font-weight:700; }
+.telecom-room-date { display:inline-block; color:#ffffff; border:1px solid #8aa7ff; padding:3px 8px; font-size:13px; font-weight:700; background:#001b79; }
 .telecom-log { height:440px; overflow:auto; padding:14px 4px; background:#0027ad; color:#ffffff; font-size:16px; line-height:1.7; }
-.telecom-line { white-space:pre-wrap; word-break:keep-all; }
+.telecom-line { white-space:pre-wrap; word-break:keep-all; margin-bottom:6px; }
+.telecom-time { display:inline-block; margin-left:8px; color:#d5e3ff; font-size:11px; line-height:1; opacity:.82; vertical-align:baseline; }
+.telecom-after-exit { margin:10px 0 0; padding:10px; border:1px dashed #9fb5ff; color:#fff; display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:rgba(0,0,0,.14); }
+.telecom-after-exit span { flex:1 1 240px; }
 .telecom-system { color:#ffffff; }
 .telecom-nick { display:inline-block; min-width:86px; color:#fff; font-weight:700; }
 .telecom-real { color:#ffffff; }
@@ -4681,6 +4685,7 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   .telecom-nick { min-width:70px; }
   .telecom-input-row { grid-template-columns:1fr; }
   .telecom-input-row span { display:none; }
+  .telecom-time { margin-left:6px; font-size:10px; }
   .telecom-status-row { align-items:stretch; }
   .telecom-status-row .telecom-small-btn { flex:1 1 auto; }
 }
