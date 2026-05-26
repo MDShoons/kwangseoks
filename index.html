@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
   <script>
-    // v121: archive.org 카드 직접 영상 재생
+    // v117: 관리자 전용 라디오·영상·사진 다운로드 추가
     (function () {
       function blockEvent(event) {
         if (!event) return false;
@@ -39,12 +39,12 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v121-archive-card-direct-video" />
+  <link rel="stylesheet" href="style.css?v=v121-telecom-members-list-removed" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
     (function () {
-      var VALID = ["home","siteinfo","videos","songs","radios","photos","stories","about","oneum","loginRequired","login","signup","mypage","admin"];
+      var VALID = ["home","siteinfo","videos","songs","radios","photos","stories","about","oneum","telecom","loginRequired","login","signup","mypage","admin"];
       function qsa(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
 
       function show(page) {
@@ -203,6 +203,7 @@
       <button data-page-fallback="stories" onclick="goPage('stories')">Stories</button>
       <button data-page-fallback="about" onclick="goPage('about')">About Seok</button>
       <button data-page-fallback="oneum" onclick="goPage('oneum')">Oneum</button>
+      <button data-page-fallback="telecom" onclick="goPage('telecom')">광석이네 통신방</button>
     </nav>
 
     <div class="auth-area">
@@ -379,6 +380,60 @@
           </select><select id="oneumCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
       <div id="oneumList" class="card-grid text-archive-grid"></div>
         <div id="oneumPagination" class="pagination"></div>
+    </section>
+
+
+    <section id="telecom" class="page content-page telecom-page">
+      <div class="telecom-shell">
+        <div class="telecom-titlebar">
+          <div>
+            <h1>광석이네 통신방</h1>
+            <p>1995년 PC통신 둥근소리 대화방 느낌으로 꾸민 가상 대화 공간입니다.</p>
+          </div>
+          <button type="button" id="telecomResetBtn" class="telecom-small-btn">대화 초기화</button>
+        </div>
+
+        <div id="telecomSetup" class="telecom-setup">
+          <div class="telecom-connect-box">
+            <h2>접속 설정</h2>
+            <label>닉네임</label>
+            <input id="telecomNickInput" type="text" placeholder="예: 녹차향기" maxlength="14" />
+            <label>이름</label>
+            <input id="telecomNameInput" type="text" placeholder="예: 변수진" maxlength="14" />
+            <label>대화 모드</label>
+            <select id="telecomModeSelect">
+              <option value="chat">잡담하기</option>
+              <option value="comfort">위로받기</option>
+              <option value="music">음악 이야기</option>
+              <option value="memory">추억 이야기</option>
+              <option value="worry">고민 상담</option>
+            </select>
+            <label>친한 정도</label>
+            <select id="telecomCloseSelect">
+              <option value="first">처음 만남</option>
+              <option value="known" selected>아는 사이</option>
+              <option value="close">조금 친함</option>
+              <option value="veryClose">많이 친함</option>
+              <option value="best">아주 가까움</option>
+            </select>
+            <button type="button" id="telecomEnterBtn" class="telecom-enter-btn">통신방 입장</button>
+          </div>
+        </div>
+
+        <div id="telecomRoom" class="telecom-room hidden">
+          <div class="telecom-status-row">
+            <span id="telecomRoomName">[133] 공개 광석이네 통신방</span>
+            <button type="button" id="telecomCallBtn" class="telecom-small-btn hidden">김광석 호출</button>
+          </div>
+          <div id="telecomLog" class="telecom-log" aria-live="polite"></div>
+          <form id="telecomForm" class="telecom-input-row">
+            <span>Chat :</span>
+            <input id="telecomMessageInput" type="text" autocomplete="off" placeholder="대화를 입력하세요" />
+            <button type="submit">전송</button>
+          </form>
+          <p class="telecom-notice">※ 실제 김광석 본인의 응답이 아니라, 남겨진 채팅·게시판 말투를 참고해 만든 가상 PC통신 화면입니다.</p>
+        </div>
+      </div>
     </section>
 
 
@@ -643,8 +698,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v121-archive-card-direct-video</div>
+<div class="version-marker">v118-ipad-detail-video-poster</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v121-archive-card-direct-video"></script>
+  <script type="module" src="app.js?v=v118-ipad-detail-video-poster"></script>
 </body>
 </html>

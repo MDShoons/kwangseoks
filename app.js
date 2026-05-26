@@ -146,75 +146,6 @@ function isVideoContentItem(item = {}) {
 }
 
 
-
-function getArchiveOrgEmbedUrl(url = "") {
-  const value = String(url || "").trim();
-  if (!value) return "";
-
-  try {
-    const parsed = new URL(value);
-    const host = parsed.hostname.toLowerCase();
-    if (!host.includes("archive.org")) return "";
-
-    const parts = parsed.pathname.split("/").filter(Boolean).map(decodeURIComponent);
-    let identifier = "";
-
-    const embedIndex = parts.indexOf("embed");
-    if (embedIndex >= 0 && parts[embedIndex + 1]) identifier = parts[embedIndex + 1];
-
-    const detailsIndex = parts.indexOf("details");
-    if (!identifier && detailsIndex >= 0 && parts[detailsIndex + 1]) identifier = parts[detailsIndex + 1];
-
-    const downloadIndex = parts.indexOf("download");
-    if (!identifier && downloadIndex >= 0 && parts[downloadIndex + 1]) identifier = parts[downloadIndex + 1];
-
-    const itemsIndex = parts.indexOf("items");
-    if (!identifier && itemsIndex >= 0 && parts[itemsIndex + 1]) identifier = parts[itemsIndex + 1];
-
-    if (!identifier) return "";
-    return `https://archive.org/embed/${encodeURIComponent(identifier)}`;
-  } catch {
-    return "";
-  }
-}
-
-function buildArchiveOrgInPagePlayerHtml(url = "", title = "") {
-  // v121: archive.org도 임베드/새창/placeholder 없이 사이트 안의 기본 <video>로 직접 재생한다.
-  // 함수명은 기존 호출부 호환을 위해 남겨두되, 더 이상 iframe을 만들지 않는다.
-  return buildVideoPlayerHtml(url, "", title || "영상", "detail-video-player archive-direct-video-player");
-}
-
-function getVideoMimeType(url = "") {
-  const clean = String(url || "").split("?")[0].split("#")[0].toLowerCase();
-  if (clean.endsWith(".webm")) return "video/webm";
-  if (clean.endsWith(".mov")) return "video/quicktime";
-  if (clean.endsWith(".m4v")) return "video/x-m4v";
-  if (clean.endsWith(".ogg") || clean.endsWith(".ogv")) return "video/ogg";
-  return "video/mp4";
-}
-
-function buildVideoPlayerHtml(url = "", poster = "", title = "", extraClass = "") {
-  const playbackUrl = normalizeMediaUrlForPlayback(url, "video");
-  if (!playbackUrl) return "";
-  const safeUrl = escapeHtml(playbackUrl);
-  const safePoster = poster ? ` poster="${escapeHtml(normalizeMediaUrlForPlayback(poster, "image"))}"` : "";
-  const safeTitle = escapeHtml(title || "영상");
-  const mimeType = escapeHtml(getVideoMimeType(playbackUrl));
-  const className = ["site-video-player", extraClass].filter(Boolean).join(" ");
-  return `
-    <div class="video-player-wrap">
-      <video class="${className}" title="${safeTitle}" controls playsinline webkit-playsinline x-webkit-airplay="allow" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"${safePoster}>
-        <source src="${safeUrl}" type="${mimeType}">
-        <source src="${safeUrl}">
-        이 브라우저에서 영상을 바로 재생할 수 없습니다.
-      </video>
-      <div class="video-fallback-notice" aria-hidden="true">
-        <p>영상 로딩이 늦으면 잠시 기다린 뒤 재생 버튼을 다시 눌러주세요.</p>
-      </div>
-    </div>`;
-}
-
-
 function sanitizeDownloadFileName(name = "자료") {
   const base = String(name || "자료")
     .replace(/[\\/:*?"<>|]+/g, "_")
@@ -367,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v115-oneum-page-size-8";
+const APP_VERSION = "v118-ipad-detail-video-poster";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -410,7 +341,7 @@ const DEFAULT_SETTINGS = {
 let currentSettings = { ...DEFAULT_SETTINGS };
 
 
-const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "telecom", "login", "signup", "mypage", "loginRequired", "admin"];
 const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
 
 function getPageFromHash() {
@@ -497,6 +428,8 @@ function showPage(pageId, fromHash = false) {
   if (pageId === "about") renderAboutDocument(allContents.filter(i => i.category === "about"));
 
   if (pageId === "home") tryPlayHomeVoiceOnce();
+
+  if (pageId === "telecom" && typeof initTelecomChatRoom === "function") initTelecomChatRoom();
 
   if (["videos", "songs", "radios", "photos", "stories", "oneum"].includes(pageId)) {
     loadContents();
@@ -2792,10 +2725,10 @@ function createCard(item) {
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
   if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
   else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) {
-    const cardImg = item.thumbnailUrl || item.imageUrl || "";
-    // v121: archive.org 직접 파일도 목록 카드에서 검은 placeholder가 아니라 실제 <video>로 바로 렌더링한다.
-    // 단, URL이 archive.org details/embed 페이지가 아니라 실제 mp4 등 직접 파일 URL이어야 브라우저가 재생할 수 있다.
-    media = buildVideoPlayerHtml(videoMediaUrl, cardImg || "", item.title || "", "card-video-player");
+    const videoPlaybackUrl = normalizeMediaUrlForPlayback(videoMediaUrl, "video");
+    const videoPosterUrl = item.thumbnailUrl || item.imageUrl || item.photoUrl || "";
+    const fileType = /\.mov(\?|#|$)/i.test(videoMediaUrl) ? "video/quicktime" : "video/mp4";
+    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="auto" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"><source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}"></video>`;
   }
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
@@ -2958,7 +2891,10 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
-      return `<div class="detail-media-box">${buildVideoPlayerHtml(mediaUrl, imageUrl, item.title || "", "detail-video-player")}</div>`;
+      const posterUrl = playbackImageUrl || "";
+      const posterAttr = posterUrl ? ` poster="${escapeHtml(posterUrl)}"` : "";
+      const fileType = /\.mov(\?|#|$)/i.test(mediaUrl) ? "video/quicktime" : "video/mp4";
+      return `<div class="detail-media-box detail-video-box"><video class="detail-inline-video" controls playsinline webkit-playsinline preload="auto"${posterAttr} controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false"><source src="${escapeHtml(playbackMediaUrl)}" type="${fileType}"></video></div>`;
     }
 
     if (imageUrl) {
@@ -3344,49 +3280,410 @@ document.addEventListener("click", (event) => {
 }, false);
 
 
-/* v121: 영상 직접 재생 안정화 - archive.org도 iframe/새창/placeholder 없이 video 태그로 처리 */
-function isIpadOrSafariLike() {
-  const ua = navigator.userAgent || "";
-  const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-  return isIOS || isSafari;
+// v121: 광석이네 통신방 - 둥근소리 회원 목록 보기 버튼 제거, AI 참여 유지
+const TELECOM_STORAGE = {
+  settings: "kwangseokTelecomSettingsV120",
+  log: "kwangseokTelecomLogV120",
+  kksAwayUntil: "kwangseokTelecomKksAwayUntilV120",
+  active: "kwangseokTelecomKksActiveV120",
+  sessionStart: "kwangseokTelecomSessionStartV120"
+};
+let telecomInitialized = false;
+let telecomStatusTimer = null;
+let telecomExitTimer = null;
+let telecomMemberTimer = null;
+let telecomCountdownTimer = null;
+
+const DUNGEUNSORI_MEMBERS_TEXT = `김광석|김광석
+녹차향기|변수진
+mouse14|장민석
+soriboy|김영호
+학궁뎅이|오승준
+외기러기|이연수
+열린고백|김은주
+enfant|이희정
+강서대묘|김동준
+sixs|육영수
+아인타인|박영근
+gonswing|신성철
+뜨라기|고지은
+mcgyver|박성재
+raincoat|이효연
+영원의꿈|박재완
+avril|조해성
+아주사|엄준호
+jeejone|지정엽
+btsmania|박재완
+keis|김응일
+byungari|이석권
+점등인|최훈철
+mjs1|목진설
+gksdml|윤유석
+작은기억|채원중
+hakjeon|최만석
+넋두리|최종희
+낙원|이명훈
+shim31|심수일
+cupite|김홍준
+경화|송경화
+소금밭|김도현
+hj8454|전상섭
+ekjw123|강은경
+하늘마음|김종구
+w6012923|김관수
+almanix|임현진
+김치찌개|진성일
+자아성찰|홍준수
+nkotb2|김연수
+swk3|신세호
+그불|박순영
+jhm10|장현민
+rnchunji|장춘지
+chika|오현주
+michelle|최지영
+lionsj|이수진
+네생각|모우진
+맑고푸른|이향표
+proam|김삼연
+아킬레스|노언진
+레몬tea|조지연
+huge|김정준
+lseokgoo|이석구
+daffodil|한희정
+한글날|신소희
+sawa92|설재훈
+mecander|이성일
+화랑소년|최대우
+주환이|김주환
+lovetony|이지영
+알레카스|노경현
+이끄는이|김경하
+mountie|이동산
+sensi|박수진
+ych2|여행스케
+mahakama|김용배
+몬스키|김문숙
+zet3|배진환
+ok0606|이봉옥
+iam75|박성화
+야구도사|홍준선
+아모로스|송현욱
+rpg3|고현주
+tajang|장병희
+elohim77|김선기
+바보나라|김용경
+kroi|강한나
+dr스쿠르|김종은
+a245|서홍석
+박영기|박영기
+kfardor|김태호
+이율배반|김동욱
+sky1130|송기용
+ose53|오세은
+chirisan|강수천
+비바9|서상혁
+사과쥬스|송기훈
+환경사랑|문양수
+w6024140|한태규
+soulman|서보균
+popboy|김정수
+colusvi|노남석
+moguly|조은성
+built|박종찬
+butfor|안정철
+조은인상|이준화
+사랑예감|김성남
+솔기|유석창
+park71|박명식
+steven|최재혁
+lebleu|홍승일
+76jeho|정제호
+canni|조인식
+pendia|김장환
+metalbar|김동수
+epigram|송수연
+blubosco|이은산
+giraffe7|한승훈
+opt7|이광철
+kyhpia|김용효
+ncnd|이은석
+w9011769|물방울
+satware|구인회
+ajeegang|김승민
+슈퍼토끼|송영인
+홍정훈|홍정훈
+channel1|정재훈
+skywatch|박성호
+킹카95|장효선
+깨비혜승|양혜승
+사르막스|이승영
+시종일관|김제효
+jimcarry|장성석
+besti|최현아
+고뿔이|박지훈
+상원잭슨|박상원
+이빨교정|송한식
+comhero|강희국
+포세이돈|최영돈
+극단두레|노진희
+망중한|최선옥
+ecology|이득만
+1656|박지수
+몽실95|이세영`;
+
+const DUNGEUNSORI_MEMBERS = DUNGEUNSORI_MEMBERS_TEXT.split("\n").map((row) => {
+  const [nick, name] = row.split("|");
+  return { nick: (nick || "").trim(), name: (name || "").trim() };
+}).filter((m) => m.nick && m.name);
+
+const TELECOM_MEMBER_LINES = [
+  "어서오세요~", "어소세요..", "하이!!!!", "후후후..", "히히히..", "글쿠나......", "아 바쁘다 바빠...",
+  "갈무리 갈무리..~~", "축하드립니다.", "좋은 밤 되세요~~~", "에구에구...", "다시 왔읍니다..",
+  "오늘 사람 많네요", "자료실 갔다왔어요", "잠깐 들어왔어요", "후훗..", "네", "응", "하하하.", "아하..."
+];
+
+function telecomNow() { return Date.now(); }
+function telecomRand(min, max) { return Math.floor(min + Math.random() * (max - min + 1)); }
+function telecomLoadJson(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || ""); } catch { return fallback; }
 }
-
-function prepareVideoFallback(video) {
-  if (!video || video.dataset.fallbackReady === "1") return;
-  video.dataset.fallbackReady = "1";
-  video.setAttribute("playsinline", "");
-  video.setAttribute("webkit-playsinline", "");
-  video.setAttribute("x-webkit-airplay", "allow");
-  video.removeAttribute("disablePictureInPicture");
-
-  const wrap = video.closest(".video-player-wrap");
-  const reveal = () => {
-    if (!wrap) return;
-    if (isIpadOrSafariLike() && video.readyState < 2) wrap.classList.add("show-video-fallback");
+function telecomSaveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+function telecomCleanText(v, fallback = "") { return String(v || "").replace(/[<>]/g, "").trim() || fallback; }
+function telecomCurrentSettings() {
+  return telecomLoadJson(TELECOM_STORAGE.settings, null) || {
+    nick: "손님", name: "손님", mode: "chat", close: "known"
   };
-  const hide = () => wrap && wrap.classList.remove("show-video-fallback");
-
-  video.addEventListener("loadedmetadata", hide);
-  video.addEventListener("loadeddata", hide);
-  video.addEventListener("canplay", hide);
-  video.addEventListener("error", () => wrap && wrap.classList.add("show-video-fallback"));
-  video.addEventListener("stalled", reveal);
-  video.addEventListener("emptied", reveal);
-
-  if (isIpadOrSafariLike()) {
-    setTimeout(reveal, 2500);
+}
+function telecomKksActive() { return localStorage.getItem(TELECOM_STORAGE.active) === "1"; }
+function telecomSetKksActive(v) { localStorage.setItem(TELECOM_STORAGE.active, v ? "1" : "0"); }
+function telecomAwayUntil() { return Number(localStorage.getItem(TELECOM_STORAGE.kksAwayUntil) || "0") || 0; }
+function telecomSetAwayForRandomHours() {
+  const ms = telecomRand(120, 180) * 60 * 1000;
+  localStorage.setItem(TELECOM_STORAGE.kksAwayUntil, String(telecomNow() + ms));
+}
+function telecomIsKksAvailable() { return telecomNow() >= telecomAwayUntil(); }
+function telecomFormatLeft(ms) {
+  const totalMin = Math.max(0, Math.ceil(ms / 60000));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
+}
+function telecomAddLine(kind, data, save = true) {
+  const item = { kind, time: telecomNow(), ...data };
+  const log = telecomLoadJson(TELECOM_STORAGE.log, []);
+  log.push(item);
+  const clipped = log.slice(-220);
+  if (save) telecomSaveJson(TELECOM_STORAGE.log, clipped);
+  telecomRenderLog(clipped);
+  return item;
+}
+function telecomSystem(text) { telecomAddLine("system", { text }); }
+function telecomSay(nick, name, text) { telecomAddLine("say", { nick, name, text }); }
+function telecomKks(text) { telecomSay("김광석", "김광석", text); }
+function telecomRenderLog(log = telecomLoadJson(TELECOM_STORAGE.log, [])) {
+  const box = document.getElementById("telecomLog");
+  if (!box) return;
+  box.innerHTML = log.map((line) => {
+    if (line.kind === "system") return `<div class="telecom-line telecom-system">Chat : ${escapeHtml(line.text)}</div>`;
+    return `<div class="telecom-line"><span class="telecom-nick">${escapeHtml(line.nick)}</span> <span class="telecom-real">(${escapeHtml(line.name)})</span> <span class="telecom-text">${escapeHtml(line.text)}</span></div>`;
+  }).join("");
+  box.scrollTop = box.scrollHeight;
+}
+function telecomRenderMembers() {
+  const panel = document.getElementById("telecomMemberPanel");
+  if (!panel) return;
+  const rows = DUNGEUNSORI_MEMBERS.map((m, i) => {
+    const last = `${telecomRand(6,8)}/${telecomRand(1,22)}`.padStart(5, " ");
+    const first = `${telecomRand(6,8)}/${telecomRand(1,28)}`.padStart(5, " ");
+    const score = String(Math.max(28, 6970 - i * telecomRand(25, 85))).padStart(4, " ");
+    return `┃${m.nick.padEnd(8," ").slice(0,8)}│${m.name.padEnd(6," ").slice(0,6)}┃ ${last}│ ${first}│${String(telecomRand(1,81)).padStart(6," ")}┃${String(telecomRand(1,156)).padStart(4," ")}│${String((telecomRand(1000,3200)/100).toFixed(2)).padStart(6," ")}│ ${String((telecomRand(10,32)/10).toFixed(1)).padStart(3," ")}│${score}┃`;
+  }).join("\n");
+  panel.textContent = "┼────╂───┼───┼───╂──┼───┼──┼──┨\n" + rows;
+}
+function telecomSetupCallButton() {
+  const btn = document.getElementById("telecomCallBtn");
+  if (!btn) return;
+  clearInterval(telecomCountdownTimer);
+  const apply = () => {
+    const away = telecomAwayUntil();
+    const active = telecomKksActive();
+    if (active) {
+      btn.classList.add("hidden");
+      btn.disabled = false;
+      btn.textContent = "김광석 호출";
+      return;
+    }
+    btn.classList.remove("hidden");
+    if (telecomNow() < away) {
+      btn.disabled = true;
+      btn.textContent = `김광석 대기중 ${telecomFormatLeft(away - telecomNow())}`;
+    } else {
+      btn.disabled = false;
+      btn.textContent = "김광석 호출";
+    }
+  };
+  apply();
+  telecomCountdownTimer = setInterval(apply, 30000);
+}
+function telecomScheduleStatusLine() {
+  clearTimeout(telecomStatusTimer);
+  telecomStatusTimer = setTimeout(() => {
+    if (!document.getElementById("telecomRoom") || document.getElementById("telecomRoom").classList.contains("hidden")) return;
+    if (telecomKksActive()) {
+      telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용");
+      telecomSystem("중입니다.");
+    }
+  }, 10000);
+}
+function telecomScheduleKksExit() {
+  clearTimeout(telecomExitTimer);
+  if (!telecomKksActive()) return;
+  const delay = telecomRand(5 * 60 * 1000, 14 * 60 * 1000);
+  telecomExitTimer = setTimeout(() => telecomKksLeave(), delay);
+}
+function telecomKksLeave() {
+  if (!telecomKksActive()) return;
+  const lines = ["금방 가야해요", "좀 바빠서 나가볼께요", "당구치러 갈께요", "안녕..."];
+  lines.slice(0, telecomRand(2, 4)).forEach((t, i) => setTimeout(() => telecomKks(t), i * 650));
+  setTimeout(() => {
+    telecomSetKksActive(false);
+    telecomSetAwayForRandomHours();
+    telecomSystem("김광석(김광석)님이 나가셨습니다.");
+    telecomSetupCallButton();
+  }, 2800);
+}
+function telecomStartMemberNoise() {
+  clearTimeout(telecomMemberTimer);
+  const tick = () => {
+    if (document.getElementById("telecom")?.classList.contains("active") && !document.getElementById("telecomRoom")?.classList.contains("hidden")) {
+      const member = DUNGEUNSORI_MEMBERS[telecomRand(1, DUNGEUNSORI_MEMBERS.length - 1)];
+      const text = TELECOM_MEMBER_LINES[telecomRand(0, TELECOM_MEMBER_LINES.length - 1)];
+      if (Math.random() < 0.72) telecomSay(member.nick, member.name, text);
+    }
+    telecomMemberTimer = setTimeout(tick, telecomRand(18000, 42000));
+  };
+  telecomMemberTimer = setTimeout(tick, telecomRand(12000, 28000));
+}
+function telecomGenerateKksReply(message) {
+  const s = telecomCurrentSettings();
+  const name = s.name || s.nick || "";
+  const msg = String(message || "");
+  const useName = ["close", "veryClose", "best"].includes(s.close) && name;
+  const prefix = useName ? `${name}${s.close === "best" || s.close === "veryClose" ? "아" : "님"} ` : "";
+  let pool = [];
+  if (/비|우울|허전|외롭|힘들|슬프|센치|쓸쓸/.test(msg) || s.mode === "comfort") {
+    pool = [`${prefix}그래요`, "그런날 있죠", "괜히 센치해 있지말기", "씩씩하게 살기...", "좀 쉬어요"];
+  } else if (/노래|기타|공연|음악|앨범|라디오/.test(msg) || s.mode === "music") {
+    pool = [`${prefix}무슨 노래요`, "그 노래 좋아요", "기타로 하면 괜찮아요", "요즈음 콜트도 좋더군요", "잘 흥정해보시고요"];
+  } else if (/생일|축하|기념|좋은날/.test(msg)) {
+    pool = ["축하합니다", "좋은날이네요", "사랑과 행복이 가득한 나날을", "빌어드릴께요"];
+  } else if (/안녕|하이|왔|접속|어서/.test(msg)) {
+    pool = [`${prefix}오셨네요`, "반갑습니다", "지금 즐거워요"];
+  } else if (s.mode === "worry") {
+    pool = [`${prefix}무슨일 있어요`, "천천히 말해요", "그건 좀 어렵네요", "그래도 얘기해봐요"];
+  } else if (s.mode === "memory") {
+    pool = [`${prefix}오래됐네요`, "그때 생각나요", "참 좋네요...", "그럼..."];
+  } else {
+    pool = [`${prefix}네`, "그래요", "응...", "뭐해요", "얘기해봐요"];
+  }
+  if (s.close === "best") pool = pool.map((t) => t.replace(/요$/,"").replace(/습니다$/,"어").replace(/하세요$/,"해"));
+  return pool.slice(0, telecomRand(2, Math.min(4, pool.length)));
+}
+function telecomSendUserMessage(text) {
+  const s = telecomCurrentSettings();
+  telecomSay(s.nick, s.name, text);
+  if (telecomKksActive()) {
+    const replies = telecomGenerateKksReply(text);
+    replies.forEach((r, i) => setTimeout(() => telecomKks(r), 600 + i * 850));
+    const start = Number(localStorage.getItem(TELECOM_STORAGE.sessionStart) || telecomNow());
+    if (telecomNow() - start > 5 * 60 * 1000 && Math.random() < 0.12) {
+      clearTimeout(telecomExitTimer);
+      telecomExitTimer = setTimeout(() => telecomKksLeave(), telecomRand(5000, 20000));
+    }
+  } else {
+    const away = telecomAwayUntil();
+    if (telecomNow() < away) telecomSystem(`김광석님은 지금 바빠서 접속하지 못합니다. 약 ${telecomFormatLeft(away - telecomNow())} 후 다시 호출할 수 있습니다.`);
   }
 }
-
-function prepareAllVideoFallbacks() {
-  document.querySelectorAll("video.site-video-player").forEach(prepareVideoFallback);
+function telecomEnterRoom() {
+  const nick = telecomCleanText(document.getElementById("telecomNickInput")?.value, "손님");
+  const name = telecomCleanText(document.getElementById("telecomNameInput")?.value, nick);
+  const mode = document.getElementById("telecomModeSelect")?.value || "chat";
+  const close = document.getElementById("telecomCloseSelect")?.value || "known";
+  telecomSaveJson(TELECOM_STORAGE.settings, { nick, name, mode, close });
+  document.getElementById("telecomSetup")?.classList.add("hidden");
+  document.getElementById("telecomRoom")?.classList.remove("hidden");
+  localStorage.setItem(TELECOM_STORAGE.sessionStart, String(telecomNow()));
+  telecomSaveJson(TELECOM_STORAGE.log, []);
+  telecomSystem(`${nick}(${name})님이 접속하셨습니다.`);
+  if (telecomIsKksAvailable()) {
+    telecomSetKksActive(true);
+    telecomScheduleStatusLine();
+    telecomScheduleKksExit();
+    setTimeout(() => telecomKks("네"), 1400);
+  } else {
+    telecomSetKksActive(false);
+    const left = telecomFormatLeft(telecomAwayUntil() - telecomNow());
+    telecomSystem(`김광석님은 지금 바빠서 접속하지 못합니다. 약 ${left} 후 다시 호출할 수 있습니다.`);
+  }
+  telecomSetupCallButton();
+  telecomStartMemberNoise();
 }
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", prepareAllVideoFallbacks);
-} else {
-  prepareAllVideoFallbacks();
+function telecomCallKks() {
+  if (!telecomIsKksAvailable()) return telecomSetupCallButton();
+  telecomSetKksActive(true);
+  localStorage.setItem(TELECOM_STORAGE.sessionStart, String(telecomNow()));
+  telecomSystem("'김광석'님을 호출했습니다.");
+  setTimeout(() => {
+    telecomSystem("'김광석'님은 수신[가능]상태로 (둥근소리 (김광석)) 서비스를 이용");
+    telecomSystem("중입니다.");
+    telecomKks("네");
+    telecomKks("오셨네요");
+    telecomSetupCallButton();
+    telecomScheduleKksExit();
+  }, 2000);
 }
-const videoFallbackObserver = new MutationObserver(prepareAllVideoFallbacks);
-videoFallbackObserver.observe(document.documentElement, { childList: true, subtree: true });
+function initTelecomChatRoom() {
+  if (telecomInitialized) {
+    telecomRenderLog();
+    telecomSetupCallButton();
+    return;
+  }
+  telecomInitialized = true;
+  const s = telecomCurrentSettings();
+  const nickInput = document.getElementById("telecomNickInput");
+  const nameInput = document.getElementById("telecomNameInput");
+  if (nickInput) nickInput.value = s.nick || "";
+  if (nameInput) nameInput.value = s.name || "";
+  const modeSel = document.getElementById("telecomModeSelect");
+  const closeSel = document.getElementById("telecomCloseSelect");
+  if (modeSel) modeSel.value = s.mode || "chat";
+  if (closeSel) closeSel.value = s.close || "known";
+  document.getElementById("telecomEnterBtn")?.addEventListener("click", telecomEnterRoom);
+  document.getElementById("telecomCallBtn")?.addEventListener("click", telecomCallKks);
+  document.getElementById("telecomResetBtn")?.addEventListener("click", () => {
+    if (!confirm("통신방 대화 기록을 초기화할까요?")) return;
+    telecomSaveJson(TELECOM_STORAGE.log, []);
+    telecomSetKksActive(false);
+    document.getElementById("telecomRoom")?.classList.add("hidden");
+    document.getElementById("telecomSetup")?.classList.remove("hidden");
+    telecomRenderLog([]);
+  });
+  document.getElementById("telecomForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = document.getElementById("telecomMessageInput");
+    const text = telecomCleanText(input?.value, "");
+    if (!text) return;
+    input.value = "";
+    telecomSendUserMessage(text);
+  });
+  const log = telecomLoadJson(TELECOM_STORAGE.log, []);
+  if (log.length) {
+    document.getElementById("telecomSetup")?.classList.add("hidden");
+    document.getElementById("telecomRoom")?.classList.remove("hidden");
+    telecomRenderLog(log);
+    telecomStartMemberNoise();
+  }
+  telecomSetupCallButton();
+}
+window.initTelecomChatRoom = initTelecomChatRoom;
