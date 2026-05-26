@@ -145,6 +145,121 @@ function isVideoContentItem(item = {}) {
   return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube";
 }
 
+
+function sanitizeDownloadFileName(name = "자료") {
+  const base = String(name || "자료")
+    .replace(/[\\/:*?"<>|]+/g, "_")
+    .replace(/\s+/g, " ")
+    .trim();
+  return base || "자료";
+}
+
+function getFileExtensionFromUrl(url = "") {
+  const value = String(url || "");
+  try {
+    const parsed = new URL(value);
+    const cleanPath = decodeURIComponent(parsed.pathname || "");
+    const match = cleanPath.match(/\.([a-zA-Z0-9]{2,5})$/);
+    return match ? match[1].toLowerCase() : "";
+  } catch (_) {
+    const clean = value.split("?")[0].split("#")[0];
+    const match = clean.match(/\.([a-zA-Z0-9]{2,5})$/);
+    return match ? match[1].toLowerCase() : "";
+  }
+}
+
+function getAdminDownloadInfo(item = {}) {
+  if (!isAdmin || !item || !item.category) return null;
+
+  const category = item.category;
+  let url = "";
+  let type = "media";
+  let fallbackExt = "";
+
+  if (category === "songs") return null;
+
+  if (category === "radios") {
+    url = getPlayableAudioUrl(item);
+    type = "audio";
+    fallbackExt = "mp3";
+  } else if (category === "photos") {
+    url = item.mediaUrl || item.imageUrl || item.photoUrl || item.thumbnailUrl || "";
+    type = "image";
+    fallbackExt = "jpg";
+  } else if (category === "videos") {
+    const youtubeCandidate = item.youtubeUrl || item.url || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
+    if (item.mediaType === "youtube" || isYoutubeUrl(youtubeCandidate)) return null;
+    url = getVideoMediaUrl(item);
+    if (isYoutubeUrl(url)) return null;
+    type = "video";
+    fallbackExt = "mp4";
+  } else {
+    return null;
+  }
+
+  url = normalizeMediaUrlForPlayback(url, type);
+  if (!url) return null;
+
+  const ext = getFileExtensionFromUrl(url) || fallbackExt;
+  const fileName = `${sanitizeDownloadFileName(item.title || category)}.${ext}`;
+  return { url, fileName, category, type };
+}
+
+function renderAdminDownloadButton(item = {}, place = "card") {
+  const info = getAdminDownloadInfo(item);
+  if (!info) return "";
+
+  const labelMap = {
+    radios: "라디오 다운로드",
+    videos: "영상 다운로드",
+    photos: "사진 다운로드"
+  };
+  const label = labelMap[info.category] || "자료 다운로드";
+  const id = escapeHtml(item.id || "");
+  return `<button type="button" class="admin-download-btn admin-download-btn-${place}" onclick="event.stopPropagation(); adminDownloadMedia('${id}')">${label}</button>`;
+}
+
+async function adminDownloadMedia(id) {
+  if (!isAdmin) {
+    alert("관리자 계정으로 로그인해야 다운로드할 수 있습니다.");
+    return;
+  }
+
+  const item = allContents.find((content) => content.id === id);
+  const info = getAdminDownloadInfo(item);
+  if (!info) {
+    alert("다운로드 가능한 자료가 아닙니다. 노래 자료와 유튜브 링크 영상은 제외됩니다.");
+    return;
+  }
+
+  const directOpen = () => {
+    const a = document.createElement("a");
+    a.href = info.url;
+    a.download = info.fileName;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  try {
+    const response = await fetch(info.url, { mode: "cors" });
+    if (!response.ok) throw new Error("download response not ok");
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = info.fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (_) {
+    directOpen();
+  }
+}
+
 function normalizeYoutubeEmbedUrl(url) {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -183,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v121-playlist-next-autoplay-fix";
+const APP_VERSION = "v115-oneum-page-size-8";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1268,8 +1383,6 @@ let dailyPlayerBound = false;
 let playlistPlayerBound = false;
 let playlistCurrentItemId = "";
 let playlistRequestedItemId = "";
-let playlistResumeSaveTimer = null;
-let playlistBeforeUnloadBound = false;
 
 function getKoreanDateKey() {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -1280,75 +1393,6 @@ function getKoreanDateKey() {
   });
 
   return formatter.format(new Date());
-}
-
-
-function getKoreanDateTimeParts(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false
-  }).formatToParts(date).reduce((acc, part) => {
-    if (part.type !== "literal") acc[part.type] = part.value;
-    return acc;
-  }, {});
-
-  return {
-    year: Number(parts.year),
-    month: Number(parts.month),
-    day: Number(parts.day),
-    hour: Number(parts.hour),
-    minute: Number(parts.minute),
-    second: Number(parts.second)
-  };
-}
-
-function getMsUntilNextKoreanMidnight() {
-  const now = new Date();
-  const kst = getKoreanDateTimeParts(now);
-  const elapsedToday = ((kst.hour * 60 + kst.minute) * 60 + kst.second) * 1000 + now.getMilliseconds();
-  const dayMs = 24 * 60 * 60 * 1000;
-  return Math.max(1000, dayMs - elapsedToday + 300);
-}
-
-function getItemVisualImageUrl(item) {
-  const candidates = [
-    item?.thumbnailUrl,
-    item?.imageUrl,
-    item?.coverUrl,
-    item?.albumCoverUrl,
-    item?.albumCover,
-    item?.photoUrl,
-    item?.posterUrl
-  ];
-  const found = candidates.map((value) => String(value || "").trim()).find(Boolean);
-  return found ? normalizeMediaUrlForPlayback(found, "image") : "";
-}
-
-function pauseOtherMediaElements(activeMedia) {
-  document.querySelectorAll("audio, video").forEach((media) => {
-    if (media === activeMedia) return;
-    if (!media.paused && !media.ended) {
-      try { media.pause(); } catch (_) {}
-    }
-  });
-}
-
-let globalSingleMediaPlaybackInstalled = false;
-function installSingleMediaPlaybackGuard() {
-  if (globalSingleMediaPlaybackInstalled) return;
-  globalSingleMediaPlaybackInstalled = true;
-  document.addEventListener("play", (event) => {
-    const target = event.target;
-    if (target && (target.tagName === "AUDIO" || target.tagName === "VIDEO")) {
-      pauseOtherMediaElements(target);
-    }
-  }, true);
 }
 
 function seededNumberFromString(text) {
@@ -1493,7 +1537,6 @@ function setupDailyRecommendPlayer() {
   const closeBtn = document.getElementById("dailyPlayerCloseBtn");
   const hide1hBtn = document.getElementById("dailyPlayerHide1hBtn");
   const hide24hBtn = document.getElementById("dailyPlayerHide24hBtn");
-  const card = player?.querySelector(".daily-player-card");
 
   if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider || !closeBtn) return;
 
@@ -1545,10 +1588,6 @@ function setupDailyRecommendPlayer() {
 
   if (!selected) {
     dailyRecommendedItemId = "";
-    if (card) {
-      card.classList.remove("has-daily-cover");
-      card.style.removeProperty("--daily-cover-image");
-    }
     audio.pause();
     audio.removeAttribute("src");
     title.textContent = "재생할 곡이 없습니다";
@@ -1566,10 +1605,6 @@ function setupDailyRecommendPlayer() {
   const sourceUrl = normalizeMediaUrlForPlayback(selected.mediaUrl || selected.fileUrl || selected.audioUrl || "", "audio");
   if (!sourceUrl) {
     dailyRecommendedItemId = "";
-    if (card) {
-      card.classList.remove("has-daily-cover");
-      card.style.removeProperty("--daily-cover-image");
-    }
     audio.pause();
     audio.removeAttribute("src");
     title.textContent = "재생할 곡이 없습니다";
@@ -1589,16 +1624,6 @@ function setupDailyRecommendPlayer() {
   progress.disabled = false;
 
   const songCategoryLabel = getDailySongCategoryLabel(selected);
-  const coverUrl = getItemVisualImageUrl(selected);
-  if (card) {
-    if (coverUrl) {
-      card.classList.add("has-daily-cover");
-      card.style.setProperty("--daily-cover-image", `url("${coverUrl.replace(/"/g, "%22")}")`);
-    } else {
-      card.classList.remove("has-daily-cover");
-      card.style.removeProperty("--daily-cover-image");
-    }
-  }
   title.textContent = selected.title || "제목 없는 추천곡";
   sub.textContent = `앨범/분류: ${songCategoryLabel} · ${getKoreanDateKey()} · 매일 00:00 추천 변경`;
 
@@ -1674,7 +1699,6 @@ function setupDailyRecommendPlayer() {
 
     try {
       if (audio.paused) {
-        pauseOtherMediaElements(audio);
         await audio.play();
       } else {
         audio.pause();
@@ -1720,97 +1744,7 @@ function getUserPlaylistStorageKey() {
   return "kwangseoks_user_playlist_song_ids_v1";
 }
 
-function getUserPlaylistDateKeyStorageKey() {
-  return "kwangseoks_user_playlist_date_key_v1";
-}
-
-function getUserPlaylistPlaybackStateStorageKey() {
-  return "kwangseoks_user_playlist_playback_state_v1";
-}
-
-function clearUserPlaylistPlaybackState() {
-  localStorage.removeItem(getUserPlaylistPlaybackStateStorageKey());
-}
-
-function loadUserPlaylistPlaybackState() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(getUserPlaylistPlaybackStateStorageKey()) || "null");
-    if (!parsed || parsed.dateKey !== getKoreanDateKey()) return null;
-    const itemId = String(parsed.itemId || "").trim();
-    const currentTime = Math.max(0, Number(parsed.currentTime || 0));
-    if (!itemId || !Number.isFinite(currentTime)) return null;
-    return {
-      dateKey: parsed.dateKey,
-      itemId,
-      currentTime,
-      wasPlaying: parsed.wasPlaying === true
-    };
-  } catch (_) {
-    return null;
-  }
-}
-
-function saveUserPlaylistPlaybackState(currentTimeOverride) {
-  const audio = document.getElementById("playlistPlayerAudio");
-  const itemId = String(playlistCurrentItemId || "").trim();
-  if (!audio || !itemId) return;
-  const rawTime = currentTimeOverride !== undefined ? Number(currentTimeOverride) : Number(audio.currentTime || 0);
-  const currentTime = Number.isFinite(rawTime) ? Math.max(0, rawTime) : 0;
-  localStorage.setItem(getUserPlaylistPlaybackStateStorageKey(), JSON.stringify({
-    dateKey: getKoreanDateKey(),
-    itemId,
-    currentTime,
-    wasPlaying: !audio.paused && !audio.ended
-  }));
-}
-
-function scheduleUserPlaylistPlaybackStateSave() {
-  if (playlistResumeSaveTimer) return;
-  playlistResumeSaveTimer = setTimeout(() => {
-    playlistResumeSaveTimer = null;
-    saveUserPlaylistPlaybackState();
-  }, 700);
-}
-
-async function attemptPlaylistAutoplay(audio) {
-  if (!audio || !audio.src) return;
-  try {
-    pauseOtherMediaElements(audio);
-    await audio.play();
-    delete audio.dataset.playlistAutoplayAfterLoad;
-    saveUserPlaylistPlaybackState(0);
-  } catch (error) {
-    // 모바일 브라우저가 자동 재생을 막는 경우에는 버튼만 재생 가능 상태로 남깁니다.
-    console.log("플레이리스트 다음곡 자동 재생 대기:", error?.message || error);
-  }
-}
-
-function bindPlaylistResumeBeforeUnload() {
-  if (playlistBeforeUnloadBound) return;
-  playlistBeforeUnloadBound = true;
-  window.addEventListener("beforeunload", () => saveUserPlaylistPlaybackState());
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") saveUserPlaylistPlaybackState();
-  });
-}
-
-function ensureUserPlaylistForToday() {
-  const todayKey = getKoreanDateKey();
-  const savedDateKey = localStorage.getItem(getUserPlaylistDateKeyStorageKey());
-  if (savedDateKey && savedDateKey !== todayKey) {
-    localStorage.removeItem(getUserPlaylistStorageKey());
-    localStorage.setItem(getUserPlaylistDateKeyStorageKey(), todayKey);
-    playlistCurrentItemId = "";
-    playlistRequestedItemId = "";
-    clearUserPlaylistPlaybackState();
-    return false;
-  }
-  if (!savedDateKey) localStorage.setItem(getUserPlaylistDateKeyStorageKey(), todayKey);
-  return true;
-}
-
 function loadUserPlaylistIds() {
-  ensureUserPlaylistForToday();
   try {
     const parsed = JSON.parse(localStorage.getItem(getUserPlaylistStorageKey()) || "[]");
     return Array.isArray(parsed) ? parsed.map((id) => String(id || "")).filter(Boolean) : [];
@@ -1825,9 +1759,7 @@ function saveUserPlaylistIds(ids) {
     const value = String(id || "").trim();
     if (value && !unique.includes(value)) unique.push(value);
   });
-  localStorage.setItem(getUserPlaylistDateKeyStorageKey(), getKoreanDateKey());
   localStorage.setItem(getUserPlaylistStorageKey(), JSON.stringify(unique));
-  if (!unique.length) clearUserPlaylistPlaybackState();
 }
 
 function getUserPlaylistSongs() {
@@ -1871,7 +1803,6 @@ function closeUserPlaylistPlayerTemporarily() {
 
 function clearUserPlaylist() {
   saveUserPlaylistIds([]);
-  clearUserPlaylistPlaybackState();
   playlistCurrentItemId = "";
   playlistRequestedItemId = "";
   setupUserPlaylistPlayer({ forceOpen: false });
@@ -1882,7 +1813,6 @@ function removeCurrentSongFromPlaylist() {
   if (!playlistCurrentItemId) return;
   const ids = loadUserPlaylistIds().filter((id) => String(id) !== String(playlistCurrentItemId));
   saveUserPlaylistIds(ids);
-  clearUserPlaylistPlaybackState();
   playlistCurrentItemId = "";
   playlistRequestedItemId = ids[0] || "";
   setupUserPlaylistPlayer({ forceOpen: ids.length > 0 });
@@ -1918,17 +1848,13 @@ function updatePlaylistAddButtons() {
   });
 }
 
-function movePlaylistSelection(direction, options = {}) {
-  const audio = document.getElementById("playlistPlayerAudio");
-  const shouldAutoPlay = options.autoPlay === true || Boolean(audio && !audio.paused && !audio.ended);
-  saveUserPlaylistPlaybackState();
+function movePlaylistSelection(direction) {
   const songs = getUserPlaylistSongs();
   if (!songs.length) return;
-  const foundIndex = songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId));
-  const currentIndex = foundIndex >= 0 ? foundIndex : 0;
+  const currentIndex = Math.max(0, songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)));
   const nextIndex = (currentIndex + direction + songs.length) % songs.length;
   playlistRequestedItemId = songs[nextIndex].id;
-  setupUserPlaylistPlayer({ forceOpen: true, autoPlay: shouldAutoPlay });
+  setupUserPlaylistPlayer({ forceOpen: true });
 }
 
 function setupUserPlaylistPlayer(options = {}) {
@@ -1947,7 +1873,6 @@ function setupUserPlaylistPlayer(options = {}) {
   const nextBtn = document.getElementById("playlistPlayerNextBtn");
   const clearBtn = document.getElementById("playlistPlayerClearBtn");
   const removeBtn = document.getElementById("playlistPlayerRemoveBtn");
-  const card = player?.querySelector(".playlist-player-card");
 
   if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider) return;
 
@@ -1957,38 +1882,18 @@ function setupUserPlaylistPlayer(options = {}) {
     playlistCurrentItemId = "";
     title.textContent = "선택한 곡이 없습니다";
     sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
-    if (card) {
-      card.classList.remove("has-playlist-cover");
-      card.style.removeProperty("--playlist-cover-image");
-    }
     resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
     return;
   }
 
-  // 플레이리스트에 곡이 있으면 새로고침 후에도 다시 표시합니다.
-  player.classList.remove("closed");
-
-  const playbackState = loadUserPlaylistPlaybackState();
-  if (!playlistRequestedItemId && !playlistCurrentItemId && playbackState && songs.some((item) => String(item.id) === String(playbackState.itemId))) {
-    playlistCurrentItemId = playbackState.itemId;
-  }
+  if (options.forceOpen) player.classList.remove("closed");
+  if (!player.classList.contains("closed")) player.classList.remove("closed");
 
   const requestedIndex = playlistRequestedItemId ? songs.findIndex((item) => String(item.id) === String(playlistRequestedItemId)) : -1;
   const currentIndex = playlistCurrentItemId ? songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)) : -1;
   const selectedIndex = requestedIndex >= 0 ? requestedIndex : (currentIndex >= 0 ? currentIndex : 0);
   const selected = songs[selectedIndex] || songs[0];
   const sourceUrl = normalizeMediaUrlForPlayback(getPlayableAudioUrl(selected), "audio");
-  const shouldAutoPlaySelected = options.autoPlay === true;
-  const coverUrl = getItemVisualImageUrl(selected);
-  if (card) {
-    if (coverUrl) {
-      card.classList.add("has-playlist-cover");
-      card.style.setProperty("--playlist-cover-image", `url("${coverUrl.replace(/"/g, "%22")}")`);
-    } else {
-      card.classList.remove("has-playlist-cover");
-      card.style.removeProperty("--playlist-cover-image");
-    }
-  }
 
   playBtn.disabled = false;
   playBtn.classList.remove("disabled");
@@ -1997,41 +1902,18 @@ function setupUserPlaylistPlayer(options = {}) {
   title.textContent = selected.title || "제목 없는 곡";
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
 
-  const shouldRestoreSavedTime = playbackState && String(playbackState.itemId) === String(selected.id) && requestedIndex < 0;
-  const restoreTime = shouldRestoreSavedTime ? Math.max(0, Number(playbackState.currentTime || 0)) : 0;
-
   if (playlistCurrentItemId !== selected.id || audio.dataset.playlistSrc !== sourceUrl) {
     playlistCurrentItemId = selected.id;
     audio.pause();
     audio.src = sourceUrl;
     audio.dataset.playlistSrc = sourceUrl;
-    audio.dataset.pendingPlaylistResumeTime = String(restoreTime);
     audio.currentTime = 0;
     progress.value = "0";
-    playBtn.textContent = shouldAutoPlaySelected ? "Ⅱ" : "▶";
-    current.textContent = formatPlayerTime(restoreTime);
+    playBtn.textContent = "▶";
+    current.textContent = "0:00";
     duration.textContent = "0:00";
-    saveUserPlaylistPlaybackState(restoreTime);
-    if (shouldAutoPlaySelected) {
-      audio.dataset.playlistAutoplayAfterLoad = "yes";
-      setTimeout(() => attemptPlaylistAutoplay(audio), 0);
-    }
-  } else if (restoreTime > 0 && Math.abs(Number(audio.currentTime || 0) - restoreTime) > 1.5) {
-    audio.dataset.pendingPlaylistResumeTime = String(restoreTime);
-    try { audio.currentTime = restoreTime; } catch (_) {}
-    current.textContent = formatPlayerTime(restoreTime);
-    if (Number.isFinite(audio.duration) && audio.duration > 0) {
-      progress.value = String(Math.round((restoreTime / audio.duration) * 1000));
-    }
   }
-  if (shouldAutoPlaySelected && audio.paused) {
-    audio.dataset.playlistAutoplayAfterLoad = "yes";
-    setTimeout(() => attemptPlaylistAutoplay(audio), 0);
-  }
-
   playlistRequestedItemId = "";
-
-  bindPlaylistResumeBeforeUnload();
 
   if (playlistPlayerBound) return;
   playlistPlayerBound = true;
@@ -2099,12 +1981,8 @@ function setupUserPlaylistPlayer(options = {}) {
   playBtn.addEventListener("click", async () => {
     if (playBtn.disabled || !audio.src) return;
     try {
-      if (audio.paused) {
-        pauseOtherMediaElements(audio);
-        await audio.play();
-      } else {
-        audio.pause();
-      }
+      if (audio.paused) await audio.play();
+      else audio.pause();
     } catch (error) {
       console.log("플레이리스트 재생 오류:", error?.message || error);
     }
@@ -2112,34 +1990,14 @@ function setupUserPlaylistPlayer(options = {}) {
 
   audio.addEventListener("play", () => {
     playBtn.textContent = "Ⅱ";
-    saveUserPlaylistPlaybackState();
   });
 
   audio.addEventListener("pause", () => {
     playBtn.textContent = "▶";
-    saveUserPlaylistPlaybackState();
   });
 
   audio.addEventListener("loadedmetadata", () => {
     duration.textContent = formatPlayerTime(audio.duration);
-    const pendingTime = Number(audio.dataset.pendingPlaylistResumeTime || 0);
-    if (pendingTime > 0 && Number.isFinite(audio.duration) && audio.duration > 0) {
-      const safeTime = Math.min(pendingTime, Math.max(0, audio.duration - 0.5));
-      try { audio.currentTime = safeTime; } catch (_) {}
-      current.textContent = formatPlayerTime(safeTime);
-      progress.value = String(Math.round((safeTime / audio.duration) * 1000));
-      saveUserPlaylistPlaybackState(safeTime);
-    }
-    delete audio.dataset.pendingPlaylistResumeTime;
-    if (audio.dataset.playlistAutoplayAfterLoad === "yes") {
-      setTimeout(() => attemptPlaylistAutoplay(audio), 0);
-    }
-  });
-
-  audio.addEventListener("canplay", () => {
-    if (audio.dataset.playlistAutoplayAfterLoad === "yes") {
-      attemptPlaylistAutoplay(audio);
-    }
   });
 
   audio.addEventListener("timeupdate", () => {
@@ -2147,45 +2005,19 @@ function setupUserPlaylistPlayer(options = {}) {
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
       progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
     }
-    scheduleUserPlaylistPlaybackStateSave();
   });
 
   progress.addEventListener("input", () => {
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
       audio.currentTime = (Number(progress.value) / 1000) * audio.duration;
-      saveUserPlaylistPlaybackState(audio.currentTime);
     }
   });
 
   audio.addEventListener("ended", () => {
     playBtn.textContent = "▶";
     progress.value = "0";
-    clearUserPlaylistPlaybackState();
-    movePlaylistSelection(1, { autoPlay: true });
-    saveUserPlaylistPlaybackState(0);
+    movePlaylistSelection(1);
   });
-}
-
-
-let koreanMidnightTimer = null;
-function refreshPlayersAtKoreanMidnight() {
-  clearUserPlaylist();
-  dailyRecommendedItemId = "";
-  const dailyAudio = document.getElementById("dailyPlayerAudio");
-  if (dailyAudio) {
-    dailyAudio.pause();
-    dailyAudio.removeAttribute("src");
-    dailyAudio.load?.();
-  }
-  setupDailyRecommendPlayer();
-  setupUserPlaylistPlayer({ forceOpen: false });
-  updatePlaylistAddButtons();
-  scheduleNextKoreanMidnightRefresh();
-}
-
-function scheduleNextKoreanMidnightRefresh() {
-  if (koreanMidnightTimer) clearTimeout(koreanMidnightTimer);
-  koreanMidnightTimer = setTimeout(refreshPlayersAtKoreanMidnight, getMsUntilNextKoreanMidnight());
 }
 
 async function loadContents() {
@@ -2195,10 +2027,6 @@ async function loadContents() {
     snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
     renderAllContentSections();
     setupDailyRecommendPlayer();
-    setupUserPlaylistPlayer({ forceOpen: false });
-    updatePlaylistAddButtons();
-    scheduleNextKoreanMidnightRefresh();
-    installSingleMediaPlaybackGuard();
     await applySavedTemplates();
   applyHomeVoiceSettings(currentSettings);
   } catch(e) { console.error(e); }
@@ -2802,6 +2630,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
         ${player}
       </div>
       ${id === "songList" ? `<div class="playlist-add-row"><button type="button" class="playlist-add-btn" onclick='event.stopPropagation(); addSongToUserPlaylist(${JSON.stringify(item.id || "")})'>＋ 플레이리스트 담기</button></div>` : ""}
+      ${id === "radioList" ? `<div class="admin-download-row">${renderAdminDownloadButton(item, "card")}</div>` : ""}
       <div class="audio-archive-info-row">
         <p><strong>연도:</strong> ${safeYear}</p>
         <p><strong>출처:</strong> ${safeSource}</p>
@@ -2897,7 +2726,7 @@ function createCard(item) {
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}</div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
 }
 
@@ -3134,7 +2963,7 @@ function openContentDetail(id) {
   const mediaHtml = renderDetailMedia(item);
   const bodyText = item.body || item.description || "";
 
-  mediaArea.innerHTML = mediaHtml || "";
+  mediaArea.innerHTML = mediaHtml ? `${mediaHtml}${renderAdminDownloadButton(item, "detail")}` : renderAdminDownloadButton(item, "detail");
   mediaArea.classList.toggle("hidden", !mediaHtml);
 
   titleEl.textContent = item.title || "제목 없음";
@@ -3365,6 +3194,7 @@ window.openCoverZoom = openCoverZoom;
 window.openCoverZoomFromElement = openCoverZoomFromElement;
 window.closeCoverZoom = closeCoverZoom;
 window.hideDailyRecommendPlayerForHours = hideDailyRecommendPlayerForHours;
+window.adminDownloadMedia = adminDownloadMedia;
 
 loadSiteSettings();
 loadPageCategories();

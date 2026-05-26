@@ -4574,92 +4574,40 @@ body.content-protected iframe {
   }
 }
 
-
-/* v117: 오늘의 추천곡과 내 플레이리스트 겹침 방지 */
-@media (min-width: 821px) {
-  #userPlaylistPlayer.daily-player {
-    top: 545px !important;
-  }
+/* v117: 관리자 전용 다운로드 버튼 */
+.admin-download-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 8px 0 4px;
 }
-
-@media (min-width: 821px) and (max-width: 1500px) {
-  #userPlaylistPlayer.daily-player {
-    top: 525px !important;
-  }
+.admin-download-btn {
+  appearance: none;
+  border: 1px solid rgba(120, 91, 54, 0.35);
+  background: rgba(255, 248, 235, 0.95);
+  color: #5a3b1e;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(80, 48, 20, 0.08);
 }
-
-@media (min-width: 821px) and (max-width: 1180px) {
-  #userPlaylistPlayer.daily-player {
-    top: 500px !important;
-  }
+.admin-download-btn:hover {
+  background: #fff2d7;
+  border-color: rgba(120, 91, 54, 0.55);
 }
-
-
-/* v118: 플레이리스트 앨범 자켓 배경 + 자정 초기화/고정 표시 보정 */
-#userPlaylistPlayer .playlist-player-card {
-  position: relative !important;
-  overflow: hidden !important;
-  isolation: isolate !important;
+.admin-download-btn-card {
+  margin-top: 8px;
 }
-
-#userPlaylistPlayer .playlist-player-card.has-playlist-cover::before {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: -2 !important;
-  background-image: var(--playlist-cover-image) !important;
-  background-size: cover !important;
-  background-position: center !important;
-  filter: blur(8px) saturate(1.05) brightness(0.78) !important;
-  transform: scale(1.12) !important;
-  opacity: 0.9 !important;
+.admin-download-btn-detail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px auto 0;
 }
-
-#userPlaylistPlayer .playlist-player-card.has-playlist-cover::after {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: -1 !important;
-  background: linear-gradient(145deg, rgba(24, 31, 47, 0.84), rgba(45, 64, 93, 0.76) 52%, rgba(91, 61, 35, 0.76)) !important;
-}
-
-#userPlaylistPlayer .playlist-player-card.has-playlist-cover .daily-player-title,
-#userPlaylistPlayer .playlist-player-card.has-playlist-cover .daily-player-sub,
-#userPlaylistPlayer .playlist-player-card.has-playlist-cover .daily-player-label {
-  text-shadow: 0 2px 8px rgba(0,0,0,0.36) !important;
-}
-
-
-/* v119: 오늘의 추천곡에도 현재 추천곡 앨범 자켓 배경 적용 */
-#dailyRecommendPlayer .daily-player-card {
-  position: relative !important;
-  overflow: hidden !important;
-  isolation: isolate !important;
-}
-
-#dailyRecommendPlayer .daily-player-card.has-daily-cover::before {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: -2 !important;
-  background-image: var(--daily-cover-image) !important;
-  background-size: cover !important;
-  background-position: center !important;
-  filter: blur(8px) saturate(1.08) brightness(0.72) !important;
-  transform: scale(1.12) !important;
-  opacity: 0.92 !important;
-}
-
-#dailyRecommendPlayer .daily-player-card.has-daily-cover::after {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: -1 !important;
-  background: linear-gradient(145deg, rgba(64, 23, 68, 0.84), rgba(158, 45, 101, 0.76) 54%, rgba(217, 91, 42, 0.78)) !important;
-}
-
-#dailyRecommendPlayer .daily-player-card.has-daily-cover .daily-player-title,
-#dailyRecommendPlayer .daily-player-card.has-daily-cover .daily-player-sub,
-#dailyRecommendPlayer .daily-player-card.has-daily-cover .daily-player-label {
-  text-shadow: 0 2px 8px rgba(0,0,0,0.42) !important;
+body.is-mobile-site .admin-download-row { justify-content: stretch; }
+@media (max-width: 820px) {
+  .admin-download-row { justify-content: stretch; }
+  .admin-download-btn { width: 100%; padding: 10px 12px; }
+  .admin-download-btn-detail { width: 100%; }
 }
