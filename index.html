@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v138-v137-stabilized-relations" />
+  <link rel="stylesheet" href="style.css?v=v139-pc-webllm-experiment" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -384,6 +384,10 @@
 
 
     <section id="telecom" class="page content-page telecom-page">
+      <div id="telecomPcOnlyNotice" class="telecom-pc-only hidden">
+        <h2>광석이네 통신방은 PC 전용입니다.</h2>
+        <p>1995년 PC통신 화면과 브라우저 생성형 실험 모드는 데스크톱 Chrome/Edge 환경에서 이용해주세요.</p>
+      </div>
       <div class="telecom-shell">
         <div class="telecom-titlebar">
           <div>
@@ -401,6 +405,12 @@
             <label>이름 <span class="telecom-fixed-label">계정 고정</span></label>
             <input id="telecomNameInput" type="text" placeholder="로그인 계정 이름" maxlength="14" readonly />
             <p class="telecom-account-note">닉네임과 이름은 로그인한 계정 정보로 자동 표시됩니다.</p>
+            <label>대화 방식</label>
+            <select id="telecomEngineSelect">
+              <option value="classic" selected>기본 PC통신 대화</option>
+              <option value="webllm">실험: PC 브라우저 생성형</option>
+            </select>
+            <p id="telecomAiStatus" class="telecom-ai-status">생성형 실험 모드는 PC에서만 작동합니다. 처음 실행 시 모델 다운로드가 오래 걸릴 수 있으며, 실패하면 기본 대화로 자동 전환됩니다.</p>
             <label>대화 모드</label>
             <select id="telecomModeSelect">
               <option value="chat">잡담하기</option>
@@ -706,6 +716,6 @@
   </div>
 <div class="version-marker">v118-ipad-detail-video-poster</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v138-v137-stabilized-relations"></script>
+  <script type="module" src="app.js?v=v139-pc-webllm-experiment"></script>
 </body>
 </html>

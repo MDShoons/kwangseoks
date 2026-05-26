@@ -4805,3 +4805,31 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   .site-header nav::-webkit-scrollbar,
   #siteNav::-webkit-scrollbar { display: none !important; }
 }
+
+
+/* v139: PC-only telecom + browser local AI experiment */
+.telecom-pc-only {
+  max-width: 760px;
+  margin: 40px auto;
+  padding: 26px;
+  border: 2px solid #8aa7ff;
+  background: #0027ad;
+  color: #fff;
+  font-family: "D2Coding", "Courier New", monospace;
+  text-align: center;
+}
+.telecom-pc-only h2 { margin: 0 0 12px; color: #fff; }
+.telecom-pc-only p { margin: 0; color: #d8e4ff; line-height: 1.65; }
+.telecom-ai-status {
+  margin: 8px 0 12px;
+  padding: 8px 10px;
+  border: 1px dashed #8aa7ff;
+  color: #ffffff;
+  background: rgba(0,0,0,.16);
+  font-size: 12px;
+  line-height: 1.55;
+}
+@media (max-width: 899px) {
+  #telecom .telecom-shell { display: none !important; }
+  #telecomPcOnlyNotice.hidden { display: block !important; }
+}

@@ -3283,12 +3283,12 @@ document.addEventListener("click", (event) => {
 
 // v123: 광석이네 통신방 - 계정 닉네임/이름 고정, 모드/친밀도 선택 가독성 보정
 const TELECOM_STORAGE = {
-  settings: "kwangseokTelecomSettingsV138",
-  log: "kwangseokTelecomLogV138",
-  kksAwayUntil: "kwangseokTelecomKksAwayUntilV138",
-  active: "kwangseokTelecomKksActiveV138",
-  sessionStart: "kwangseokTelecomSessionStartV138",
-  callPromptFor: "kwangseokTelecomCallPromptForV138"
+  settings: "kwangseokTelecomSettingsV120",
+  log: "kwangseokTelecomLogV120",
+  kksAwayUntil: "kwangseokTelecomKksAwayUntilV120",
+  active: "kwangseokTelecomKksActiveV120",
+  sessionStart: "kwangseokTelecomSessionStartV120",
+  callPromptFor: "kwangseokTelecomCallPromptForV136"
 };
 let telecomInitialized = false;
 let telecomStatusTimer = null;
@@ -3453,7 +3453,7 @@ const TELECOM_MEMBER_REPLY_LINES = [
 const TELECOM_KKS_MEMBER_REPLIES = ["네", "그래요", "참 좋네요...", "오래간만이네요", "무슨일 있어요", "지금 즐거워요", "안녕하세요", "그럼..."];
 const TELECOM_KKS_EXIT_LINES = ["금방 가야해요", "좀 바빠서 나가볼께요", "당구치러 갈께요", "안녕..."];
 
-// v138: 회원별 말투/호칭 기본값. 낙서하기/물어보기답하기 자료에서 보이는 표현을 바탕으로 정리.
+// v136: 회원별 말투/호칭 기본값. 낙서하기/물어보기답하기 자료에서 보이는 표현을 바탕으로 정리.
 const TELECOM_MEMBER_PROFILES = {
   "녹차향기": { casual: false, manager: true, kksCall: ["광석 아찌", "아저씨"], lines: ["광석 아찌 금방 답하실거예요", "아저씨 오늘도 바쁘시죠", "여러분 천천히 말씀하세요", "게시판 정리하고 있어요", "방 분위기 좋네요..."] },
   "mouse14": { casual: true, kksCall: ["아저씨"], lines: ["후후후..", "알가쓰. 알가쓰...", "난 대화방 보고 있지", "오늘 사람 많네", "푸히히.."] },
@@ -3478,7 +3478,7 @@ function telecomLoadJson(key, fallback) {
 }
 function telecomSaveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function telecomRememberLine(text) {
-  const key = "kwangseokTelecomRecentLinesV138";
+  const key = "kwangseokTelecomRecentLinesV136";
   const list = telecomLoadJson(key, []);
   list.push(String(text || ""));
   telecomSaveJson(key, list.filter(Boolean).slice(-28));
@@ -3486,7 +3486,7 @@ function telecomRememberLine(text) {
 function telecomPickLine(pool) {
   const arr = (pool || []).filter(Boolean);
   if (!arr.length) return "네";
-  const recent = new Set(telecomLoadJson("kwangseokTelecomRecentLinesV138", []));
+  const recent = new Set(telecomLoadJson("kwangseokTelecomRecentLinesV136", []));
   const fresh = arr.filter((x) => !recent.has(String(x)));
   const chosen = (fresh.length ? fresh : arr)[telecomRand(0, (fresh.length ? fresh : arr).length - 1)];
   telecomRememberLine(chosen);
@@ -3508,8 +3508,7 @@ function telecomFindMentionedMember(message) {
   const msg = String(message || "");
   return DUNGEUNSORI_MEMBERS.find((m) => m.nick !== "김광석" && (msg.includes(m.nick) || msg.includes(m.name) || msg.includes(telecomGivenName(m.name))));
 }
-function telecomKksMentioned(message) { return /김광석|광석|아저씨|아찌|광석형|광석이형|광석이 형|광석 형|광석님/.test(String(message || "")); }
-function telecomGroupMentioned(message) { return /다들|여러분|모두|회원|팬들|방에|누구|사람들/.test(String(message || "")); }
+function telecomKksMentioned(message) { return /김광석|광석|아저씨|아찌|광석형|광석이형/.test(String(message || "")); }
 function telecomCleanText(v, fallback = "") { return String(v || "").replace(/[<>]/g, "").trim() || fallback; }
 function telecomRoomOpen() {
   const room = document.getElementById("telecomRoom");
@@ -3557,7 +3556,8 @@ function telecomCurrentSettings() {
     nick: id.nick,
     name: id.name,
     mode: saved.mode || "chat",
-    close: saved.close || "known"
+    close: saved.close || "known",
+    engine: saved.engine || "classic"
   };
 }
 function telecomKksActive() { return localStorage.getItem(TELECOM_STORAGE.active) === "1"; }
@@ -3573,6 +3573,98 @@ function telecomFormatLeft(ms) {
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
   return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
+}
+
+function telecomIsPcAllowed() {
+  const widthOk = window.matchMedia ? window.matchMedia("(min-width: 900px)").matches : window.innerWidth >= 900;
+  const mobileUA = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent || "");
+  return widthOk && !mobileUA;
+}
+function telecomApplyPcOnlyGate() {
+  const ok = telecomIsPcAllowed();
+  const notice = document.getElementById("telecomPcOnlyNotice");
+  const shell = document.querySelector("#telecom .telecom-shell");
+  if (notice) notice.classList.toggle("hidden", ok);
+  if (shell) shell.style.display = ok ? "" : "none";
+  return ok;
+}
+function telecomSetAiStatus(text) {
+  const box = document.getElementById("telecomAiStatus");
+  if (box) box.textContent = text;
+}
+const TELECOM_WEBLLM_MODEL = "SmolLM2-360M-Instruct-q4f32_1-MLC";
+let telecomAiEngine = null;
+let telecomAiLoading = false;
+async function telecomEnsureLocalAiEngine() {
+  if (telecomAiEngine) return telecomAiEngine;
+  if (telecomAiLoading) throw new Error("모델을 불러오는 중입니다. 잠시 뒤 다시 입력해주세요.");
+  if (!("gpu" in navigator)) throw new Error("이 PC 브라우저는 WebGPU를 지원하지 않습니다.");
+  telecomAiLoading = true;
+  telecomSetAiStatus("생성형 모델을 불러오는 중입니다. 첫 실행은 오래 걸릴 수 있습니다...");
+  try {
+    const webllm = await import("https://esm.run/@mlc-ai/web-llm");
+    telecomAiEngine = await webllm.CreateMLCEngine(TELECOM_WEBLLM_MODEL, {
+      initProgressCallback: (p) => {
+        const progress = Math.round((p?.progress || 0) * 100);
+        const text = p?.text || "모델 준비 중";
+        telecomSetAiStatus(`생성형 모델 준비 중... ${progress}% ${text}`);
+      }
+    });
+    telecomSetAiStatus("생성형 실험 모드 준비 완료. PC 안에서 무료로 생성합니다.");
+    return telecomAiEngine;
+  } finally {
+    telecomAiLoading = false;
+  }
+}
+function telecomBuildLocalAiMessages(userText) {
+  const s = telecomCurrentSettings();
+  const recentLog = telecomLoadJson(TELECOM_STORAGE.log, []).slice(-24).map((line) => {
+    if (line.kind === "system") return `Chat: ${line.text}`;
+    return `${line.nick}(${line.name}): ${line.text}`;
+  }).join("\n");
+  const closenessGuide = {
+    first: "처음 만남: 정중한 존댓말",
+    known: "아는 사이: 짧은 존댓말",
+    close: "조금 친함: 이름님 정도의 친근한 존댓말",
+    veryClose: "많이 친함: 이름을 부르되 반존대",
+    best: "아주 가까움: 이름을 부르는 짧은 반말"
+  }[s.close] || "짧은 존댓말";
+  const modeGuide = {
+    chat: "잡담 흐름",
+    comfort: "위로받기 흐름",
+    music: "음악 이야기 흐름",
+    memory: "추억 이야기 흐름",
+    worry: "고민 상담 흐름"
+  }[s.mode] || "잡담 흐름";
+  const system = `너는 광석이네 통신방의 가상 PC통신 대화 생성기다. 실제 김광석 본인이라고 주장하지 않는다. 화면 안내에 따라 가상 대화로만 행동한다. 김광석 대사만 생성한다. 1995년 PC통신 채팅처럼 짧고 투박하게 쓴다. 한 번에 1~3줄, 각 줄은 짧게. 긴 시적 독백, 현대 상담사 말투, AI라는 표현은 금지. 기본 표현은 네, 그래요, 응..., 무슨일 있어요, 자판 보고 치고 있어요, 게시판 보고 있어요, 괜히 센치해 있지말기, 씩씩하게 살기... 같은 느낌. 사용자와 김광석의 친한 정도는 ${closenessGuide}. 현재 대화 흐름은 ${modeGuide}. 회원들은 둥근소리 회원이며 김광석을 아저씨, 광석이형, 광석 아찌 등으로 부를 수 있다. 사용자가 '뭐하세요'라고 물으면 반드시 지금 무엇을 하는지 답한다.`;
+  const user = `최근 대화:\n${recentLog}\n\n사용자 입력: ${userText}\n\n김광석(김광석)의 다음 짧은 채팅 대사만 출력해라. 닉네임 표기는 붙이지 말고 대사 줄만 출력해라.`;
+  return [{ role: "system", content: system }, { role: "user", content: user }];
+}
+function telecomCleanAiLines(text) {
+  const raw = String(text || "").replace(/김광석\s*\([^)]*\)\s*[:：]?/g, "").replace(/^김광석\s*[:：]/gm, "");
+  const lines = raw.split(/\n+/).map((v) => v.replace(/^[-*•\s]+/, "").trim()).filter(Boolean);
+  return lines.slice(0, 3).map((v) => v.slice(0, 80));
+}
+async function telecomTryLocalAiKksReply(userText) {
+  const s = telecomCurrentSettings();
+  if (s.engine !== "webllm") return false;
+  try {
+    const engine = await telecomEnsureLocalAiEngine();
+    const reply = await engine.chat.completions.create({
+      messages: telecomBuildLocalAiMessages(userText),
+      temperature: 0.75,
+      max_tokens: 96
+    });
+    const content = reply?.choices?.[0]?.message?.content || "";
+    const lines = telecomCleanAiLines(content);
+    if (!lines.length) return false;
+    lines.forEach((line, i) => telecomQueue(() => { if (telecomRoomOpen() && telecomKksActive()) telecomKks(line); }, i * 900));
+    return true;
+  } catch (err) {
+    console.warn("WebLLM failed", err);
+    telecomSetAiStatus(`생성형 실험 모드 실패: ${err?.message || err}. 기본 대화로 자동 전환합니다.`);
+    return false;
+  }
 }
 function telecomFormatClock(ts = telecomNow()) {
   const d = new Date(ts);
@@ -3821,78 +3913,34 @@ function telecomMemberCallKks(member) {
   const calls = TELECOM_MEMBER_PROFILES[member.nick]?.kksCall || ["광석님"];
   return calls[telecomRand(0, calls.length - 1)];
 }
-// v138: 안정형 관계 반응 엔진. v137처럼 통신방 전체를 크게 갈아엎지 않고 v138 안정 구조 위에 관계만 분리한다.
-function telecomMemberToMemberInteraction(intent = "chat", seedMember = null) {
-  if (!telecomRoomOpen()) return;
-  const speaker = seedMember || (Math.random() < 0.18 ? telecomMemberPresenceEvent() : null) || telecomPickMember();
-  const listener = telecomPickMember([speaker.nick]);
-  const speakerProfile = TELECOM_MEMBER_PROFILES[speaker.nick] || {};
-  const listenerProfile = TELECOM_MEMBER_PROFILES[listener.nick] || {};
-  const firstPool = intent === "doing"
-    ? (speaker.nick === "녹차향기" ? ["저는 게시판 정리하고 있어요", "자료실 보고 있었어요", "광석 아찌 글 기다리고 있어요"] : TELECOM_MEMBER_PROFILES[speaker.nick]?.lines || TELECOM_MEMBER_LINES)
-    : (speakerProfile.lines || TELECOM_MEMBER_LINES);
-  const secondPool = intent === "doing"
-    ? (listener.nick === "녹차향기" ? ["저는 자료실 보고 있었어요", "게시판 정리중이에요"] : TELECOM_MEMBER_PROFILES[listener.nick]?.lines || TELECOM_MEMBER_REPLY_LINES)
-    : (listenerProfile.lines || TELECOM_MEMBER_REPLY_LINES);
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(speaker.nick, speaker.name, telecomPickLine(firstPool)); }, telecomRand(1200, 3600));
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(listener.nick, listener.name, telecomPickLine(secondPool)); }, telecomRand(5200, 9000));
-}
-
-function telecomKksToMemberInteraction(member = null, intent = "chat") {
-  if (!telecomRoomOpen() || !telecomKksActive()) return;
-  const m = member || telecomPickMember();
-  const call = telecomMemberCallKks(m);
-  const askPool = intent === "doing"
-    ? [`${call} 뭐하세요?`, `${call} 지금 뭐하세요?`, `${call} 게시판 보고 계세요?`]
-    : (TELECOM_MEMBER_PROFILES[m.nick]?.lines || [`${call} 계세요?`, `${call} 답해주세요`]);
-  const q = telecomPickLine(askPool);
-  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(m.nick, m.name, q); }, telecomRand(1000, 3500));
-  telecomQueue(() => {
-    if (!telecomRoomOpen() || !telecomKksActive()) return;
-    const replies = telecomGenerateKksReply(q, "member");
-    telecomKks(replies[0] || "네");
-  }, telecomRand(6500, 11000));
-}
-
-function telecomUserToMemberInteraction(text, member = null) {
-  const replies = telecomGenerateMemberRepliesToUser(text);
-  if (member) {
-    const s = telecomCurrentSettings();
-    const userGiven = telecomGivenName(s.name || s.nick || "손님") || "손님";
-    const honor = telecomMemberAddressUser(member, userGiven);
-    const intent = telecomIntent(text);
-    const pool = intent === "doing"
-      ? (telecomMemberUsesCasual(member) ? ["난 대화방 보고 있지", "그냥 글 읽고 있어", "자료실 갔다왔어"] : ["저는 게시판 보고 있어요", "자료실 글 보고 있습니다", "잠깐 들어와 있었습니다"])
-      : (TELECOM_MEMBER_PROFILES[member.nick]?.lines || [`${honor} 그러셨군요`, `${honor} 얘기 더 해주세요`]);
-    replies[0] = { member, text: telecomPickLine(pool), delay: telecomRand(3500, 8500) };
-  }
-  replies.forEach(({ member, text: replyText, delay }) => {
-    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(member.nick, member.name, replyText); }, delay);
-  });
-}
-
-function telecomUserToKksInteraction(text) {
-  if (!telecomKksActive()) return;
-  const replies = telecomGenerateKksReply(text, "user");
-  const baseDelay = telecomRand(28000, 34000);
-  replies.forEach((r, i) => telecomQueue(() => {
-    if (telecomRoomOpen() && telecomKksActive()) telecomKks(r);
-  }, baseDelay + i * telecomRand(1400, 2200)));
-}
-
-function telecomUserToKksAndMembersInteraction(text) {
-  telecomUserToMemberInteraction(text);
-  telecomUserToKksInteraction(text);
-  if (telecomKksActive() && Math.random() < 0.28) {
-    telecomQueue(() => telecomKksToMemberInteraction(telecomPickMember(), telecomIntent(text)), telecomRand(15000, 24000));
-  }
-}
-
 function telecomPostAmbientConversation() {
   if (!telecomRoomOpen()) return;
-  const intent = Math.random() < 0.28 ? "doing" : "chat";
-  if (telecomKksActive() && Math.random() < 0.30) telecomKksToMemberInteraction(null, intent);
-  else telecomMemberToMemberInteraction(intent);
+  let speaker = null;
+  if (Math.random() < 0.22) speaker = telecomMemberPresenceEvent();
+  const manager = DUNGEUNSORI_MEMBERS.find((m) => m.nick === "녹차향기");
+  if (!speaker) speaker = Math.random() < 0.20 && manager ? manager : telecomPickMember();
+  const profile = TELECOM_MEMBER_PROFILES[speaker.nick] || {};
+  const linePool = profile.lines || TELECOM_MEMBER_LINES;
+  const line = telecomPickLine(linePool);
+  telecomQueue(() => { if (telecomRoomOpen()) telecomSay(speaker.nick, speaker.name, line); }, telecomRand(1200, 3500));
+  telecomQueue(() => {
+    if (!telecomRoomOpen()) return;
+    const replier = telecomPickMember([speaker.nick]);
+    if (telecomKksActive() && Math.random() < 0.35) {
+      const kksPool = line.includes("광석") || line.includes("아저씨") || line.includes("아찌")
+        ? ["네", "오셨네요", "지금 잠깐 보고 있어요", "금방 가야해요"]
+        : TELECOM_KKS_MEMBER_REPLIES;
+      telecomKks(telecomPickLine(kksPool));
+      return;
+    }
+    const replyPool = TELECOM_MEMBER_PROFILES[replier.nick]?.lines || TELECOM_MEMBER_REPLY_LINES;
+    telecomSay(replier.nick, replier.name, telecomPickLine(replyPool));
+    if (telecomKksActive() && Math.random() < 0.18) {
+      telecomQueue(() => {
+        if (telecomRoomOpen() && telecomKksActive()) telecomKks(telecomPickLine(TELECOM_KKS_MEMBER_REPLIES));
+      }, telecomRand(2000, 5200));
+    }
+  }, telecomRand(4800, 9200));
 }
 function telecomStartMemberNoise(initialDelay = telecomRand(14000, 22000)) {
   clearTimeout(telecomMemberTimer);
@@ -3916,41 +3964,41 @@ function telecomSendUserMessage(text) {
       telecomCallKks();
     } else {
       telecomSystem("김광석 호출을 취소했습니다. 팬들과 대화를 이어갑니다.");
+      // 같은 대기 종료건에 대해서는 다시 묻지 않는다.
       localStorage.setItem(TELECOM_STORAGE.callPromptFor, String(away));
     }
     return;
   }
   telecomUserMessageCount += 1;
-  telecomSay(s.nick, s.name, raw);
-
-  const mentionedMember = telecomFindMentionedMember(raw);
-  const mentionsKks = telecomKksMentioned(raw);
-  const group = telecomGroupMentioned(raw);
-
-  // 5가지 상호작용 분기
-  // 1) 본인 ↔ 김광석 + 회원
-  if ((mentionsKks && (group || mentionedMember)) || (!mentionsKks && group && telecomKksActive())) {
-    telecomUserToKksAndMembersInteraction(raw);
-  }
-  // 2) 본인 ↔ 김광석
-  else if (mentionsKks) {
-    const manager = DUNGEUNSORI_MEMBERS.find((m) => m.nick === "녹차향기");
-    if (manager && Math.random() < 0.35) telecomUserToMemberInteraction(raw, manager);
-    telecomUserToKksInteraction(raw);
-  }
-  // 3) 본인 ↔ 회원
-  else if (mentionedMember) {
-    telecomUserToMemberInteraction(raw, mentionedMember);
-  }
-  // 4) 본인 ↔ 회원들
-  else {
-    telecomUserToMemberInteraction(raw);
-  }
-
-  const start = Number(localStorage.getItem(TELECOM_STORAGE.sessionStart) || telecomNow());
-  if (telecomKksActive() && telecomNow() - start > 15 * 60 * 1000 && telecomUserMessageCount >= 3 && Math.random() < 0.16) {
-    clearTimeout(telecomExitTimer);
-    telecomExitTimer = telecomQueue(() => telecomKksLeave(), telecomRand(35000, 70000));
+  telecomSay(s.nick, s.name, text);
+  const memberReplies = telecomGenerateMemberRepliesToUser(text);
+  memberReplies.forEach(({ member, text: replyText, delay }) => {
+    telecomQueue(() => { if (telecomRoomOpen()) telecomSay(member.nick, member.name, replyText); }, delay);
+  });
+  if (telecomKksActive()) {
+    const baseDelay = telecomRand(28000, 34000);
+    if (s.engine === "webllm") {
+      telecomQueue(async () => {
+        if (!telecomRoomOpen() || !telecomKksActive()) return;
+        const ok = await telecomTryLocalAiKksReply(text);
+        if (!ok) {
+          const replies = telecomGenerateKksReply(text, "user");
+          replies.forEach((r, i) => telecomQueue(() => {
+            if (telecomRoomOpen() && telecomKksActive()) telecomKks(r);
+          }, i * telecomRand(1400, 2200)));
+        }
+      }, baseDelay);
+    } else {
+      const replies = telecomGenerateKksReply(text, "user");
+      replies.forEach((r, i) => telecomQueue(() => {
+        if (telecomRoomOpen() && telecomKksActive()) telecomKks(r);
+      }, baseDelay + i * telecomRand(1400, 2200)));
+    }
+    const start = Number(localStorage.getItem(TELECOM_STORAGE.sessionStart) || telecomNow());
+    if (telecomNow() - start > 15 * 60 * 1000 && telecomUserMessageCount >= 3 && Math.random() < 0.16) {
+      clearTimeout(telecomExitTimer);
+      telecomExitTimer = telecomQueue(() => telecomKksLeave(), telecomRand(35000, 70000));
+    }
   }
   // 김광석이 나간 뒤 팬들과 계속 대화 중일 때는 바쁨 안내를 반복하지 않는다.
 }
@@ -3969,7 +4017,8 @@ function telecomEnterRoom() {
   const name = account.name;
   const mode = document.getElementById("telecomModeSelect")?.value || "chat";
   const close = document.getElementById("telecomCloseSelect")?.value || "known";
-  telecomSaveJson(TELECOM_STORAGE.settings, { mode, close });
+  const engine = document.getElementById("telecomEngineSelect")?.value || "classic";
+  telecomSaveJson(TELECOM_STORAGE.settings, { mode, close, engine });
   document.getElementById("telecomSetup")?.classList.add("hidden");
   document.getElementById("telecomRoom")?.classList.remove("hidden");
   telecomUpdateRoomDate();
@@ -4011,6 +4060,7 @@ function telecomCallKks() {
   }, 2000);
 }
 function initTelecomChatRoom() {
+  if (!telecomApplyPcOnlyGate()) return;
   if (telecomInitialized) {
     telecomRenderLog();
     telecomSetupCallButton();
@@ -4023,8 +4073,15 @@ function initTelecomChatRoom() {
   telecomUpdateRoomDate();
   const modeSel = document.getElementById("telecomModeSelect");
   const closeSel = document.getElementById("telecomCloseSelect");
+  const engineSel = document.getElementById("telecomEngineSelect");
   if (modeSel) modeSel.value = s.mode || "chat";
   if (closeSel) closeSel.value = s.close || "known";
+  if (engineSel) engineSel.value = s.engine || "classic";
+  engineSel?.addEventListener("change", () => {
+    const saved = telecomLoadJson(TELECOM_STORAGE.settings, {}) || {};
+    telecomSaveJson(TELECOM_STORAGE.settings, { ...saved, engine: engineSel.value });
+    telecomSetAiStatus(engineSel.value === "webllm" ? "생성형 실험 모드 선택됨. 첫 김광석 답변 때 PC 안에서 모델을 불러옵니다." : "기본 PC통신 대화 모드입니다.");
+  });
   document.getElementById("telecomEnterBtn")?.addEventListener("click", telecomEnterRoom);
   document.getElementById("telecomCallBtn")?.addEventListener("click", telecomCallKks);
   document.getElementById("telecomContinueFansBtn")?.addEventListener("click", () => {
@@ -4076,5 +4133,8 @@ function initTelecomChatRoom() {
   }
   telecomSetupCallButton();
 }
+window.addEventListener("resize", () => {
+  if (document.getElementById("telecom")?.classList.contains("active")) telecomApplyPcOnlyGate();
+});
 window.initTelecomChatRoom = initTelecomChatRoom;
 
