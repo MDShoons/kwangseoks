@@ -4078,7 +4078,12 @@ function telecomInputGate(text) {
   const businessLike = /\b(CRM|funnel|lead|pipeline|cliente|clientes|ventas|comercial|negociaci[oó]n|propuesta|empresa|gesti[oó]n|criterios|automatiz|workflow|marketing|KPI|ROI)\b/i.test(raw);
   const documentLike = hasLineBreak || veryLong || /^\s*\d+[\).]/.test(raw) || /[:：]\s*[^\n]{20,}/.test(raw);
 
-  if (repeatedNoise || mostlySymbols || keyboardMash || koreanMash) return { kind: "noise", reason: "typo_or_keyboard_mash" };
+  // v173: 짧은 영문/한글 자판 실수는 대화 자체를 끊는 "오타 사건"으로 처리하지 않는다.
+  // 이전 버전은 ㄴㄴㄴ???, ydy?, dksy 같은 입력마다 회원들이 오타만 지적해서
+  // 사용자가 혼자 말하는 느낌이 났다. 이제 심한 반복/기호 깨짐만 noise로 보내고,
+  // 짧은 자판 실수는 생성형/일반 대화 흐름 안에서 가볍게 한 번만 받아친다.
+  if (repeatedNoise || mostlySymbols) return { kind: "noise", reason: "broken_or_repeated_input" };
+  if (keyboardMash || koreanMash) return { kind: "chat", reason: "short_typo_but_conversational" };
   // 짧은 영문 한두 마디는 외국어 자료로 단정하지 않는다. PC통신 방에서는 오타/장난으로 먼저 본다.
   if ((latinRatio > 0.72 && hangul < 5 && (longText || hasLineBreak || spanishLike || businessLike)) || spanishLike) {
     if (businessLike || documentLike || longText) return { kind: "foreign_document", reason: "foreign_or_spanish_document" };
@@ -4125,8 +4130,10 @@ function telecomHandleNonConversationalInput(gate, userText = "") {
   if (first) telecomQueueConversation(() => {
     if (telecomRoomOpen()) telecomSayMemberOwned(first, telecomNonConversationalLine(first, gate, userText), { intent: "clarify", selfQuestion: true });
   }, telecomRand(900, 2200));
-  if (second && Math.random() < 0.35) telecomQueueConversation(() => {
-    if (telecomRoomOpen()) telecomSayMemberOwned(second, telecomNonConversationalLine(second, gate, userText), { intent: "clarify" });
+  if (second && Math.random() < 0.25) telecomQueueConversation(() => {
+    if (!telecomRoomOpen()) return;
+    const line = gate?.kind === "noise" ? telecomContinuingReplyFor(second, userText) : telecomNonConversationalLine(second, gate, userText);
+    telecomSayMemberOwned(second, line, { intent: "clarify" });
   }, telecomRand(3600, 6600));
   return true;
 }
@@ -5700,7 +5707,10 @@ function telecomBuildGenerativeGroupMessages(userText) {
 
   const system = `너는 1995년 PC통신 단체방의 다음 채팅 몇 줄을 만드는 엔진이다. 검색, 요약, 번역, 상담, 분석을 하지 말고 그냥 대화방 사람처럼 받아쳐라.
 가장 중요: GPT처럼 말하지 마라. '자료처럼 보입니다', '뜻을 먼저 확인', '정해야 합니다', '요약할까요', '구조를 먼저' 같은 도우미/분석가 말투 금지.
-목표는 단체방 잡담이다. 짧고 조금 허술하고 사람 냄새 나게. 오타나 아무말이 들어오면 진지하게 분석하지 말고 '오타났냐', '뭐라고 친거야 ㅋㅋ', '다시 쳐봐'처럼 받는다.
+목표는 단체방 잡담이다. 짧고 조금 허술하고 사람 냄새 나게.
+사용자 입력에 오타가 섞여도 오타 지적만 하지 마라. 오타 언급은 최대 1줄만 가능하고, 나머지는 방금 말의 분위기에 반응하거나 자연스럽게 이어 물어라.
+사용자가 혼자 말하는 느낌이 들면 실패다. 최소 1명은 방금 말에 대답하고, 가능하면 다른 1명은 그 대답에 짧게 반응한다.
+무의미한 입력도 '오타났냐'만 반복하지 말고 '그래서 뭐 하자는 거야 ㅋㅋ', '일단 말해봐', '나 듣고 있음'처럼 대화가 이어지게 받아라.
 각 줄은 3~28자 정도. 한 번에 1~3개만. 길게 설명하지 말 것. 문장 끝은 너무 공손하게 통일하지 말 것.
 회원끼리도 서로 반응할 수 있지만, 남의 행동을 대신 말하지 마라. 누가 들어온 일은 본인만 말한다. 욕/짜증은 방금 말한 사람에게만 반응한다.
 김광석은 접속 중일 때만 말한다. 김광석은 PC통신과 타자가 서툴러 느리고 짧다. 말수 적고, 가끔 한 박자 늦게 '응', '그래', '천천히 해' 정도.
@@ -5709,7 +5719,7 @@ function telecomBuildGenerativeGroupMessages(userText) {
 금지어: 자료처럼 보, 뜻을 먼저, 확인해야, 번역할까요, 요약할까요, 구조를 먼저, 대화라기보다, 감정 반응보다, 모델, AI.
 반드시 JSON만 출력하라. 형식: {"lines":[{"speaker":"닉네임","text":"대사"}]}
 사용 가능한 speaker는 위 회원 목록의 닉네임 또는 김광석뿐이다. 사용자 닉네임으로 말하지 마라.`;
-  const user = `최근 대화:\n${recentLog}\n\n방금 사용자 입력: ${userText}\n\n다음에 자연스럽게 이어질 PC통신 단체방 채팅 1~3줄만 JSON으로 만들어라. 오타/무의미한 입력이면 분석하지 말고 장난스럽게 받아쳐라.`;
+  const user = `최근 대화:\n${recentLog}\n\n방금 사용자 입력: ${userText}\n\n다음에 자연스럽게 이어질 PC통신 단체방 채팅 1~3줄만 JSON으로 만들어라.\n반드시 방금 사용자 입력에 먼저 반응하라. 오타가 있어도 오타 지적만 하지 말고, 대화가 이어지는 답을 만들어라.\n오타 지적 문장은 전체 중 최대 1줄만 허용한다.`;
   return [{ role: "system", content: system }, { role: "user", content: user }];
 }
 function telecomExtractJsonObject(text) {
@@ -5735,6 +5745,35 @@ function telecomDeGptizeGeneratedLine(text) {
   if (t.length > 34) t = t.slice(0, 34).trim();
   return t;
 }
+function telecomLooksLikeTypoOnlyReply(text) {
+  const t = String(text || "");
+  return /(오타|글자|못 읽|뭐라고 친|다시 쳐|다시 적|손 미끄|이상하게 들어|깨진|무슨 말)/.test(t);
+}
+function telecomContinuingReplyFor(member, userText = "") {
+  const nick = member?.nick || "";
+  const raw = telecomCanonicalInput(userText || "");
+  if (/ㅋㅋ|ㅎㅎ|웃|재밌|웃기/.test(raw)) {
+    if (nick === "mouse14") return telecomPickLine(["아 웃기네 ㅋㅋ", "그건 좀 터졌다", "나도 웃었음"]);
+    if (nick === "raincoat") return telecomPickLine(["ㅋㅋㅋ 계속해봐요", "분위기 풀리네요", "저도 웃었어요"]);
+    return telecomPickLine(["ㅋㅋㅋ", "그건 웃겼어요", "나도 웃김"]);
+  }
+  if (/욕|짜증|빡|씨발|시발|화나|열받/.test(raw)) {
+    if (nick === "녹차향기") return "일훈님, 말은 조금만 낮춰요";
+    if (nick === "mouse14") return "에이 진정해 ㅋㅋ";
+    return "잠깐 숨 좀 고르세요";
+  }
+  if (/광석|김광석|형|아저씨|노래|음악|라이브/.test(raw)) {
+    if (nick === "soriboy") return "그 얘긴 좀 궁금하네요";
+    if (nick === "낙원") return "그 노래 생각나네요";
+    return "나도 그 얘기 듣고 싶어요";
+  }
+  if (nick === "mouse14") return telecomPickLine(["그래서 뭐였는데 ㅋㅋ", "일단 말해봐", "나 듣고 있음"]);
+  if (nick === "enfant") return telecomPickLine(["어... 계속 말해봐요...", "저도 듣고 있어요...", "무슨 말인지 더 듣고 싶어요..."]);
+  if (nick === "녹차향기") return telecomPickLine(["네, 계속 이야기해보세요", "듣고 있습니다", "천천히 말해보세요"]);
+  if (nick === "raincoat") return telecomPickLine(["계속 얘기해요", "저도 듣고 있어요", "뭔데요?"]);
+  return telecomPickLine(["계속 말해봐요", "듣고 있어요", "그래서요?"]);
+}
+
 function telecomParseGenerativeGroupLines(content) {
   let data;
   try { data = telecomExtractJsonObject(content); } catch (err) { return []; }
@@ -5752,6 +5791,14 @@ function telecomParseGenerativeGroupLines(content) {
     text = text.replace(/[<>]/g, "").replace(/\s+/g, " ").trim();
     text = telecomDeGptizeGeneratedLine(text);
     if (!text) continue;
+    // v173: 한 턴 전체가 오타 지적으로만 끝나지 않게 한다.
+    if (telecomLooksLikeTypoOnlyReply(text)) {
+      const typoCount = lines.filter(x => telecomLooksLikeTypoOnlyReply(x.text)).length;
+      if (typoCount >= 1) {
+        const m = speaker === "김광석" ? null : telecomFindMemberByNick(speaker);
+        text = telecomContinuingReplyFor(m, window.__telecomLastUserTextForGeneration || "");
+      }
+    }
     if (!activeNicks.has(speaker)) continue;
     if (speaker === telecomCurrentSettings().nick) continue;
     if (speaker !== "김광석" && !telecomFindMemberByNick(speaker)) continue;
@@ -5816,6 +5863,7 @@ function telecomScheduleGenerativeGroupFlow(userText) {
   telecomSetThread(analysis.intent, analysis.fixed);
   telecomRememberTopic(analysis.intent);
   telecomSetAiStatus("생성형 AI가 방금 말을 읽고 단체대화 흐름을 만드는 중입니다...");
+  window.__telecomLastUserTextForGeneration = userText;
   const turnId = telecomConversationTurnId;
   telecomQueueConversation(() => {
     telecomGenerateGroupLinesWithLocalAi(userText).then((lines) => {
