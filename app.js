@@ -1607,29 +1607,17 @@ function closeDailyRecommendPlayer() {
 }
 
 function positionFloatingAudioPlayers() {
-  const daily = document.getElementById("dailyRecommendPlayer");
   const playlist = document.getElementById("userPlaylistPlayer");
-
   if (!playlist) return;
 
+  // v174: 내 플레이리스트는 Bugs 스타일 하단 고정 바를 CSS가 담당합니다.
+  // 이전 버전의 오른쪽 플로팅 위치 계산(top 주입)이 남아 있으면
+  // 하단 플레이어와 충돌하므로 inline 위치값을 제거합니다.
   requestAnimationFrame(() => {
-    const dailyVisible = daily && !daily.classList.contains("closed") && !daily.classList.contains("hidden") && getComputedStyle(daily).display !== "none";
-
-    // 모바일에서는 CSS의 하단 고정 배치를 우선합니다.
-    if (window.matchMedia && window.matchMedia("(max-width: 760px)").matches) {
-      playlist.style.removeProperty("top");
-      return;
-    }
-
-    if (!dailyVisible) {
-      playlist.style.top = "155px";
-      return;
-    }
-
-    const rect = daily.getBoundingClientRect();
-    const gap = 22;
-    const nextTop = Math.max(155, Math.ceil(rect.bottom + gap));
-    playlist.style.top = `${nextTop}px`;
+    playlist.style.removeProperty("top");
+    playlist.style.removeProperty("right");
+    playlist.style.removeProperty("width");
+    playlist.style.removeProperty("max-width");
   });
 }
 
