@@ -2527,7 +2527,7 @@ function hasOneumKksReply(item) {
 function renderOneumKksReplyMarkup(item) {
   if (!hasOneumKksReply(item)) return "";
   const reply = getOneumKksReply(item);
-  const source = reply.source ? `<p><strong>출처:</strong> ${escapeHtml(reply.source)}</p>` : "";
+  const source = reply.source ? `<p><strong>비고:</strong> ${escapeHtml(reply.source)}</p>` : "";
   return `<section class="oneum-kks-reply-box">
     <div class="oneum-kks-reply-label">김광석의 답글</div>
     <h3>${escapeHtml(reply.title || "답글")}</h3>
@@ -3258,7 +3258,7 @@ function openContentDetail(id) {
     const author = getOneumAuthor(item) || "미기재";
     const authorName = getOneumAuthorName(item);
     const dateTime = getOneumDateTime(item) || "미기재";
-    const source = item.source ? `<br><strong>출처:</strong> ${escapeHtml(item.source)}` : "";
+    const source = item.source ? `<br><strong>비고:</strong> ${escapeHtml(item.source)}` : "";
     metaEl.innerHTML = `<strong>올린이:</strong> ${formatOneumAuthorLine(author, authorName)}<br><strong>업로드일:</strong> ${escapeHtml(dateTime)}${source}`;
   } else {
     metaEl.innerHTML = `<strong>연도:</strong> ${escapeHtml(item.year || "미상")} / <strong>출처:</strong> ${escapeHtml(item.source || "미기재")}<br><strong>업로드일:</strong> ${escapeHtml(getItemCreatedDateText(item))}`;
