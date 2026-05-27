@@ -5040,3 +5040,13 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   font-weight: 700;
   font-size: 1.05rem;
 }
+
+
+/* Site info closing sentence emphasis */
+.site-purpose-closing {
+  font-weight: 800;
+}
+
+.site-purpose-closing strong {
+  font-weight: 800;
+}
