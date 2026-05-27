@@ -5029,3 +5029,14 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
     bottom: auto !important;
   }
 }
+
+/* v166 siteinfo purpose readability */
+.site-guide-purpose-card p {
+  line-height: 1.9;
+  margin-bottom: 16px;
+  word-break: keep-all;
+}
+.site-guide-purpose-card p:first-of-type {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
