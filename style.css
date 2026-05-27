@@ -5050,3 +5050,53 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
 .site-purpose-closing strong {
   font-weight: 800;
 }
+
+
+/* v168 siteinfo list hanging alignment */
+.site-storage-list-card .site-storage-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.site-storage-list-card .site-storage-list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  margin: 8px 0;
+  padding-left: 24px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.site-storage-list-card .site-storage-list li::before {
+  content: "•";
+  position: absolute;
+  left: 2px;
+  top: 0;
+  font-weight: 800;
+}
+
+.site-storage-name {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.site-storage-desc {
+  display: block;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .site-storage-list-card .site-storage-list li {
+    grid-template-columns: 1fr;
+    row-gap: 2px;
+    padding-left: 22px;
+  }
+
+  .site-storage-desc {
+    padding-left: 0;
+  }
+}

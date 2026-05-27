@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v118-ipad-detail-video-poster";
+const APP_VERSION = "v170-generative-groupchat-ai";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -5642,8 +5642,163 @@ function telecomScheduleHumanConversationFlow(userText) {
   // v158: 여기부터는 단순 답변이 아니라 단체방형 짧은 대화 묶음으로 처리한다.
   telecomScheduleRealGroupChatFlow(fixedText, intent, { allTargeted, mentionedMember, kksTargeted });
 }
+
+
+// v170: 생성형 AI 단체대화 엔진.
+// 기존 규칙형 문장 풀은 어색한 맞장구와 대리발화를 만들 수 있으므로,
+// WebGPU 생성형 모드에서는 방 전체의 다음 2~4개 발화를 모델이 한 번에 설계한다.
+function telecomGenerativeRoster() {
+  const active = telecomActiveMemberNicks().map(telecomFindMemberByNick).filter(Boolean).slice(0, 10);
+  const roster = active.map((m) => {
+    const persona = TELECOM_MEMBER_PERSONAS[m.nick]?.role || TELECOM_MEMBER_PROFILES[m.nick]?.lines?.[0] || "회원";
+    const casual = telecomMemberUsesCasual(m) ? "반말/친근" : "존댓말/차분";
+    return `${m.nick}(${m.name})=${persona}, ${casual}`;
+  });
+  if (telecomKksActive()) roster.push("김광석(김광석)=PC통신과 타자가 서툴러 답이 늦고 짧음. 말수 적음. 음악/위로/중재에는 짧게 반응");
+  return { active, roster };
+}
+function telecomBuildGenerativeGroupMessages(userText) {
+  const s = telecomCurrentSettings();
+  const { roster } = telecomGenerativeRoster();
+  const recentLog = telecomLoadJson(TELECOM_STORAGE.log, []).slice(-28).map((line) => {
+    if (line.kind === "system") return `Chat: ${line.text}`;
+    return `${line.nick}(${line.name}): ${line.text}`;
+  }).join("\n");
+  const modeGuide = {
+    chat: "일상 잡담",
+    comfort: "위로와 공감",
+    music: "김광석 음악과 자료 이야기",
+    memory: "추억 이야기",
+    worry: "고민 상담"
+  }[s.mode] || "일상 잡담";
+  const closeGuide = {
+    first: "처음 만난 사이처럼 조심스럽게",
+    known: "아는 사이처럼 편하게",
+    close: "조금 친한 사이처럼",
+    veryClose: "많이 친한 사이처럼",
+    best: "아주 가까운 사이처럼"
+  }[s.close] || "아는 사이처럼 편하게";
+
+  const system = `너는 웹사이트 안의 1995년 PC통신 단체대화방 생성형 대화 엔진이다. 검색하지 말고, 사용자의 방금 말과 최근 대화만 보고 자연스럽게 대화하라.
+목표는 카카오톡 단체방처럼 서로 반응하고 받아치는 느낌이다. 사용자에게만 일렬로 답하지 말고, 회원끼리도 방금 나온 말에 짧게 반응할 수 있다.
+단, 다른 사람이 한 행동을 대신 말하지 마라. 예: A가 들어왔는데 B가 '나 들어왔어'라고 말하면 안 된다. 욕/화남 반응은 반드시 방금 욕한 사람 또는 방금 말한 내용에 대한 반응으로 처리한다.
+말투와 어투는 회원 성격만 참고하고, 문장은 고정 템플릿이 아니라 새로 생성한다. '그렇군요', '그건 인정', '나도 봤어'만 반복하지 마라.
+너무 설명하지 말고 PC통신 채팅처럼 짧고 투박하게. 각 대사는 8~45자 정도. 한 번에 2~4개 발화만 만든다.
+김광석은 접속 중일 때만 말할 수 있다. 김광석은 타자가 서툴러 늦게 반응하는 사람이므로, 꼭 필요한 경우에만 짧게 말한다.
+회원 목록: ${roster.join(" / ")}
+현재 모드: ${modeGuide}. 친한 정도: ${closeGuide}.
+반드시 JSON만 출력하라. 형식: {"lines":[{"speaker":"닉네임","text":"대사"}]}
+사용 가능한 speaker는 위 회원 목록의 닉네임 또는 김광석뿐이다. 사용자 닉네임으로 말하지 마라.`;
+  const user = `최근 대화:\n${recentLog}\n\n방금 사용자 입력: ${userText}\n\n이 다음에 자연스럽게 이어질 단체대화 발화 2~4개를 JSON으로 생성해라.`;
+  return [{ role: "system", content: system }, { role: "user", content: user }];
+}
+function telecomExtractJsonObject(text) {
+  let raw = String(text || "").trim();
+  raw = raw.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+  const first = raw.indexOf("{");
+  const last = raw.lastIndexOf("}");
+  if (first >= 0 && last > first) raw = raw.slice(first, last + 1);
+  return JSON.parse(raw);
+}
+function telecomParseGenerativeGroupLines(content) {
+  let data;
+  try { data = telecomExtractJsonObject(content); } catch (err) { return []; }
+  const arr = Array.isArray(data?.lines) ? data.lines : [];
+  const activeNicks = new Set(telecomActiveMemberNicks());
+  if (telecomKksActive()) activeNicks.add("김광석");
+  const used = new Set();
+  const lines = [];
+  for (const item of arr) {
+    let speaker = String(item?.speaker || "").trim();
+    let text = String(item?.text || "").trim();
+    if (!speaker || !text) continue;
+    speaker = speaker.replace(/[()\[\]{}]/g, "").trim();
+    text = text.replace(/^[-*•\s]+/, "").replace(/^(?:[^:：]{1,14})[:：]\s*/, "").trim();
+    text = text.replace(/[<>]/g, "").replace(/\s+/g, " ").trim();
+    if (!activeNicks.has(speaker)) continue;
+    if (speaker === telecomCurrentSettings().nick) continue;
+    if (speaker !== "김광석" && !telecomFindMemberByNick(speaker)) continue;
+    if (speaker === "김광석" && !telecomKksActive()) continue;
+    if (text.length < 1) continue;
+    if (text.length > 70) text = text.slice(0, 70).trim();
+    const norm = telecomNormalizeLine(`${speaker}:${text}`);
+    if (used.has(norm)) continue;
+    used.add(norm);
+    lines.push({ speaker, text });
+    if (lines.length >= 4) break;
+  }
+  return lines;
+}
+async function telecomGenerateGroupLinesWithLocalAi(userText) {
+  const engine = await telecomEnsureLocalAiEngine();
+  const reply = await engine.chat.completions.create({
+    messages: telecomBuildGenerativeGroupMessages(userText),
+    temperature: 0.84,
+    top_p: 0.9,
+    max_tokens: 260
+  });
+  const content = reply?.choices?.[0]?.message?.content || "";
+  return telecomParseGenerativeGroupLines(content);
+}
+function telecomPostGenerativeGroupLines(lines, userText) {
+  const turnId = telecomConversationTurnId;
+  let delay = telecomRand(1200, 2600);
+  lines.forEach((line, idx) => {
+    const speaker = line.speaker;
+    const text = line.text;
+    if (speaker === "김광석") {
+      telecomQueueConversation(() => {
+        if (turnId !== telecomConversationTurnId || !telecomRoomOpen() || !telecomKksActive()) return;
+        telecomSetKksTypingStatus();
+      }, Math.max(200, delay - 1500), turnId);
+      delay += telecomRand(12000, 26000);
+      telecomQueueConversation(() => {
+        if (turnId !== telecomConversationTurnId || !telecomRoomOpen() || !telecomKksActive()) return;
+        telecomKks(text);
+        telecomSetAiStatus("생성형 AI 단체대화 모드입니다. 김광석은 타자가 느려 늦게 반응합니다.");
+      }, delay, turnId);
+      delay += telecomRand(2200, 5200);
+    } else {
+      const member = telecomFindMemberByNick(speaker);
+      telecomQueueConversation(() => {
+        if (turnId !== telecomConversationTurnId || !telecomRoomOpen() || !member || !telecomIsMemberActive(member.nick)) return;
+        telecomSayMemberOwned(member, text, { intent: telecomIntent(userText || "") });
+      }, delay, turnId);
+      delay += telecomRand(2400, 6200);
+    }
+  });
+}
+function telecomScheduleGenerativeGroupFlow(userText) {
+  const gate = telecomInputGate(userText);
+  if (gate.kind !== "chat") {
+    telecomHandleNonConversationalInput(gate, userText);
+    return;
+  }
+  const analysis = telecomEmotionModel(userText);
+  telecomUpdateRoomMood(analysis);
+  telecomSetThread(analysis.intent, analysis.fixed);
+  telecomRememberTopic(analysis.intent);
+  telecomSetAiStatus("생성형 AI가 방금 말을 읽고 단체대화 흐름을 만드는 중입니다...");
+  const turnId = telecomConversationTurnId;
+  telecomQueueConversation(() => {
+    telecomGenerateGroupLinesWithLocalAi(userText).then((lines) => {
+      if (turnId !== telecomConversationTurnId || !telecomRoomOpen()) return;
+      if (!lines.length) throw new Error("생성형 응답을 읽지 못했습니다.");
+      telecomSetAiStatus("생성형 AI 단체대화 모드입니다. 말투만 1990년대 PC통신 분위기로 입힙니다.");
+      telecomPostGenerativeGroupLines(lines, userText);
+    }).catch((err) => {
+      console.warn("Generative group chat failed; fallback to classic flow", err);
+      if (turnId !== telecomConversationTurnId || !telecomRoomOpen()) return;
+      telecomSetAiStatus("생성형 모델 응답이 불안정하여 이번 턴만 기본 대화로 이어갑니다.");
+      telecomScheduleHumanConversationFlow(userText);
+    });
+  }, telecomRand(250, 700), turnId);
+}
+
 function telecomScheduleConversationFlow(userText) {
-  telecomScheduleHumanConversationFlow(userText);
+  const s = telecomCurrentSettings();
+  if (s.engine === "webllm") return telecomScheduleGenerativeGroupFlow(userText);
+  return telecomScheduleHumanConversationFlow(userText);
 }
 function telecomMemberPresenceEvent() {
   const active = telecomActiveMemberNicks();
