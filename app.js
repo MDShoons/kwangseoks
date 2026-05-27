@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v170-generative-groupchat-ai";
+const APP_VERSION = "v171-pc-chat-natural-ai";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -4069,14 +4069,18 @@ function telecomInputGate(text) {
   const hasLineBreak = /\n|\r/.test(raw);
   const longText = raw.length >= 120;
   const veryLong = raw.length >= 260;
-  const repeatedNoise = /(.)\1{7,}/.test(raw.replace(/\s/g, ""));
+  const compact = raw.replace(/\s/g, "");
+  const repeatedNoise = /(.)\1{7,}/.test(compact);
   const mostlySymbols = raw.length >= 6 && ((raw.match(/[^A-Za-zÀ-ÿ가-힣0-9\s]/g) || []).length / raw.length) > 0.55;
+  const keyboardMash = raw.length >= 3 && raw.length <= 36 && /[A-Za-z]/.test(raw) && !/[가-힣]/.test(raw) && !/\s/.test(raw) && !/[aeiouAEIOU]{2,}/.test(raw);
+  const koreanMash = raw.length >= 2 && raw.length <= 20 && /[가-힣]/.test(raw) && !/[?!.]/.test(raw) && /(아뇨아뇨|ㅋㅋ|ㅎㅎ|ㅠㅠ|ㅜㅜ|[A-Za-z]{2,})/.test(raw);
   const spanishLike = /\b(el|la|los|las|un|una|que|para|con|como|cliente|clientes|interesado|interesados|negociaci[oó]n|propuesta|propuestas|comercial|gesti[oó]n|empresa|ventas|criterios|autom[aá]tica|ingresado|funnel)\b/i.test(raw);
   const businessLike = /\b(CRM|funnel|lead|pipeline|cliente|clientes|ventas|comercial|negociaci[oó]n|propuesta|empresa|gesti[oó]n|criterios|automatiz|workflow|marketing|KPI|ROI)\b/i.test(raw);
   const documentLike = hasLineBreak || veryLong || /^\s*\d+[\).]/.test(raw) || /[:：]\s*[^\n]{20,}/.test(raw);
 
-  if (repeatedNoise || mostlySymbols) return { kind: "noise", reason: "repeated_or_symbols" };
-  if ((latinRatio > 0.72 && hangul < 5) || spanishLike) {
+  if (repeatedNoise || mostlySymbols || keyboardMash || koreanMash) return { kind: "noise", reason: "typo_or_keyboard_mash" };
+  // 짧은 영문 한두 마디는 외국어 자료로 단정하지 않는다. PC통신 방에서는 오타/장난으로 먼저 본다.
+  if ((latinRatio > 0.72 && hangul < 5 && (longText || hasLineBreak || spanishLike || businessLike)) || spanishLike) {
     if (businessLike || documentLike || longText) return { kind: "foreign_document", reason: "foreign_or_spanish_document" };
     return { kind: "foreign", reason: "foreign_language" };
   }
@@ -4089,27 +4093,31 @@ function telecomNonConversationalLine(member, gate, userText = "") {
   const nick = member?.nick || "";
   const kind = gate?.kind || "chat";
   if (kind === "noise") {
+    if (nick === "mouse14") return telecomPickLine(["오타났냐 ㅋㅋ", "뭐라고 친거야 ㅋㅋ", "손 미끄러졌지? ㅋㅋ"]);
+    if (nick === "녹차향기") return telecomPickLine(["일훈님, 글자가 좀 이상하게 들어왔어요", "천천히 다시 쳐보세요", "오타 같아요. 다시 한 번만요"]);
+    if (nick === "enfant") return telecomPickLine(["어... 잘 안 읽혀요...", "무슨 말인지 놓쳤어요...", "다시 적어줘요..."]);
     return casual
-      ? telecomPickLine(["글자가 좀 깨진 것 같은데?", "어... 이건 뭐라고 친 거야?", "잠깐만, 입력이 이상하게 보여"])
-      : telecomPickLine(["글자가 조금 깨진 것 같아요", "입력이 잘 안 보입니다", "다시 한 번만 적어주실래요?"]);
+      ? telecomPickLine(["뭐라고 친거야", "오타난 듯", "다시 쳐봐"])
+      : telecomPickLine(["잘 안 읽혀요", "오타 같습니다", "다시 적어주세요"]);
   }
   if (kind === "foreign" || kind === "foreign_document") {
-    if (nick === "soulman") return "외국어 자료처럼 보입니다. 먼저 번역할지, 요약할지 정해야 할 것 같아요";
-    if (nick === "soriboy") return "이건 노래 얘기라기보다 자료 문장 같네요. 뜻을 먼저 봐야겠습니다";
+    if (nick === "mouse14") return "영어야? 나 패스 ㅋㅋ";
+    if (nick === "soriboy") return "가사 아니면 저는 일단 패스요";
+    if (nick === "soulman") return "외국말이면 누가 해석 좀 해줘요";
     return casual
-      ? telecomPickLine(["이거 외국어 같은데, 번역해볼까?", "스페인어 비슷한데? 그냥 공감할 말은 아닌 듯", "잠깐, 이건 내용부터 읽어야겠다"])
-      : telecomPickLine(["외국어 자료처럼 보여요. 번역할까요?", "이건 먼저 뜻을 확인해야 할 것 같아요", "대화라기보다 붙여넣은 자료 같아요"]);
+      ? telecomPickLine(["외국말 같은데?", "이건 누가 해석 좀", "난 못 읽겠다 ㅋㅋ"])
+      : telecomPickLine(["외국말 같아요", "누가 뜻 아세요?", "저는 잘 모르겠네요"]);
   }
   if (kind === "business_document") {
-    if (nick === "soulman") return "업무 자료 같네요. 이건 감정 반응보다 구조를 먼저 봐야 합니다";
-    if (nick === "녹차향기") return "자료를 붙여넣으신 것 같아요. 요약할지, 번역할지 먼저 말씀해주세요";
+    if (nick === "soulman") return "이건 회사 문서 같은데요";
+    if (nick === "녹차향기") return "이건 대화라기보다 붙여넣은 글 같아요";
     return casual
-      ? telecomPickLine(["이건 무슨 업무 자료야?", "CRM 얘기 같은데, 설명부터 해야겠네", "그냥 맞장구칠 내용은 아닌데"])
-      : telecomPickLine(["업무 자료처럼 보입니다", "이건 먼저 내용을 확인해야겠어요", "요약이 필요하신 건가요?"]);
+      ? telecomPickLine(["뭔가 회사 문서 같은데", "길다...", "이건 읽어봐야겠네"])
+      : telecomPickLine(["문서 같아요", "조금 길어서요", "먼저 읽어봐야겠어요"]);
   }
   return casual
-    ? telecomPickLine(["글을 붙여넣은 것 같은데, 뭘 봐주면 돼?", "내용이 좀 긴데, 요약할까?", "이건 먼저 읽어봐야겠다"])
-    : telecomPickLine(["글을 붙여넣으신 것 같아요. 어떤 부분을 봐드릴까요?", "내용이 길어서 먼저 요약이 필요해 보여요", "이건 바로 공감하기보다 내용을 확인해야겠어요"]);
+    ? telecomPickLine(["글이 길다", "잠깐 읽어볼게", "뭘 봐주면 돼?"])
+    : telecomPickLine(["글이 좀 기네요", "잠깐 읽어볼게요", "어느 부분을 보면 될까요?"]);
 }
 function telecomHandleNonConversationalInput(gate, userText = "") {
   const first = telecomFindMemberByNick(gate?.kind === "business_document" ? "soulman" : "녹차향기") || telecomPickMember();
@@ -4424,6 +4432,17 @@ let telecomAiEngine = null;
 let telecomAiLoading = false;
 let telecomAiReady = false;
 let telecomAiLastError = "";
+let telecomAiFallbackNoticeTurn = -1;
+let telecomAiFallbackNoticeAt = 0;
+function telecomNotifyAiFallback(reason = "") {
+  const now = telecomNow();
+  const turn = typeof telecomConversationTurnId === "number" ? telecomConversationTurnId : 0;
+  if (telecomAiFallbackNoticeTurn === turn && now - telecomAiFallbackNoticeAt < 45000) return;
+  telecomAiFallbackNoticeTurn = turn;
+  telecomAiFallbackNoticeAt = now;
+  const detail = reason ? ` (${String(reason).slice(0, 42)})` : "";
+  telecomSystem(`생성형 대화가 잠시 불안정해서 이번에는 기본 대화로 이어갑니다.${detail}`);
+}
 async function telecomEnsureLocalAiEngine() {
   if (telecomAiEngine) return telecomAiEngine;
   if (telecomAiLoading) throw new Error("모델을 불러오는 중입니다. 잠시 뒤 다시 입력해주세요.");
@@ -4511,8 +4530,8 @@ async function telecomTryLocalAiKksReply(userText) {
   } catch (err) {
     console.warn("WebLLM failed; fallback to local KKS reply", err);
     telecomAiLastError = String(err?.message || err || "알 수 없는 오류");
-    // v147: 모델 오류를 채팅창에 뿌리지 않는다. 사용자는 자연스러운 답만 본다.
-    telecomSetAiStatus("PC WebGPU 생성형 모델 연결이 불안정하여 기본 응답으로 이어갑니다.");
+    telecomSetAiStatus("PC WebGPU 생성형 대화가 불안정해서 기본 대화로 이어갑니다.");
+    telecomNotifyAiFallback("김광석 응답");
     const lines = telecomGenerateKksReply(userText, "user");
     telecomQueueKksLines(lines, telecomRand(6200, 12000));
     return true;
@@ -5660,36 +5679,37 @@ function telecomGenerativeRoster() {
 function telecomBuildGenerativeGroupMessages(userText) {
   const s = telecomCurrentSettings();
   const { roster } = telecomGenerativeRoster();
-  const recentLog = telecomLoadJson(TELECOM_STORAGE.log, []).slice(-28).map((line) => {
+  const recentLog = telecomLoadJson(TELECOM_STORAGE.log, []).slice(-22).map((line) => {
     if (line.kind === "system") return `Chat: ${line.text}`;
     return `${line.nick}(${line.name}): ${line.text}`;
   }).join("\n");
   const modeGuide = {
-    chat: "일상 잡담",
-    comfort: "위로와 공감",
-    music: "김광석 음악과 자료 이야기",
-    memory: "추억 이야기",
-    worry: "고민 상담"
-  }[s.mode] || "일상 잡담";
+    chat: "그냥 방 잡담",
+    comfort: "좀 가라앉은 이야기",
+    music: "노래/공연/라디오 이야기",
+    memory: "옛날 기억 이야기",
+    worry: "고민을 듣는 흐름"
+  }[s.mode] || "그냥 방 잡담";
   const closeGuide = {
-    first: "처음 만난 사이처럼 조심스럽게",
-    known: "아는 사이처럼 편하게",
-    close: "조금 친한 사이처럼",
-    veryClose: "많이 친한 사이처럼",
-    best: "아주 가까운 사이처럼"
-  }[s.close] || "아는 사이처럼 편하게";
+    first: "처음 본 사람처럼 거리 둠",
+    known: "아는 사람처럼 짧게",
+    close: "조금 친한 사이",
+    veryClose: "많이 친한 사이",
+    best: "방 단골처럼 편함"
+  }[s.close] || "아는 사람처럼 짧게";
 
-  const system = `너는 웹사이트 안의 1995년 PC통신 단체대화방 생성형 대화 엔진이다. 검색하지 말고, 사용자의 방금 말과 최근 대화만 보고 자연스럽게 대화하라.
-목표는 카카오톡 단체방처럼 서로 반응하고 받아치는 느낌이다. 사용자에게만 일렬로 답하지 말고, 회원끼리도 방금 나온 말에 짧게 반응할 수 있다.
-단, 다른 사람이 한 행동을 대신 말하지 마라. 예: A가 들어왔는데 B가 '나 들어왔어'라고 말하면 안 된다. 욕/화남 반응은 반드시 방금 욕한 사람 또는 방금 말한 내용에 대한 반응으로 처리한다.
-말투와 어투는 회원 성격만 참고하고, 문장은 고정 템플릿이 아니라 새로 생성한다. '그렇군요', '그건 인정', '나도 봤어'만 반복하지 마라.
-너무 설명하지 말고 PC통신 채팅처럼 짧고 투박하게. 각 대사는 8~45자 정도. 한 번에 2~4개 발화만 만든다.
-김광석은 접속 중일 때만 말할 수 있다. 김광석은 타자가 서툴러 늦게 반응하는 사람이므로, 꼭 필요한 경우에만 짧게 말한다.
+  const system = `너는 1995년 PC통신 단체방의 다음 채팅 몇 줄을 만드는 엔진이다. 검색, 요약, 번역, 상담, 분석을 하지 말고 그냥 대화방 사람처럼 받아쳐라.
+가장 중요: GPT처럼 말하지 마라. '자료처럼 보입니다', '뜻을 먼저 확인', '정해야 합니다', '요약할까요', '구조를 먼저' 같은 도우미/분석가 말투 금지.
+목표는 단체방 잡담이다. 짧고 조금 허술하고 사람 냄새 나게. 오타나 아무말이 들어오면 진지하게 분석하지 말고 '오타났냐', '뭐라고 친거야 ㅋㅋ', '다시 쳐봐'처럼 받는다.
+각 줄은 3~28자 정도. 한 번에 1~3개만. 길게 설명하지 말 것. 문장 끝은 너무 공손하게 통일하지 말 것.
+회원끼리도 서로 반응할 수 있지만, 남의 행동을 대신 말하지 마라. 누가 들어온 일은 본인만 말한다. 욕/짜증은 방금 말한 사람에게만 반응한다.
+김광석은 접속 중일 때만 말한다. 김광석은 PC통신과 타자가 서툴러 느리고 짧다. 말수 적고, 가끔 한 박자 늦게 '응', '그래', '천천히 해' 정도.
 회원 목록: ${roster.join(" / ")}
-현재 모드: ${modeGuide}. 친한 정도: ${closeGuide}.
+현재 흐름: ${modeGuide}. 친한 정도: ${closeGuide}.
+금지어: 자료처럼 보, 뜻을 먼저, 확인해야, 번역할까요, 요약할까요, 구조를 먼저, 대화라기보다, 감정 반응보다, 모델, AI.
 반드시 JSON만 출력하라. 형식: {"lines":[{"speaker":"닉네임","text":"대사"}]}
 사용 가능한 speaker는 위 회원 목록의 닉네임 또는 김광석뿐이다. 사용자 닉네임으로 말하지 마라.`;
-  const user = `최근 대화:\n${recentLog}\n\n방금 사용자 입력: ${userText}\n\n이 다음에 자연스럽게 이어질 단체대화 발화 2~4개를 JSON으로 생성해라.`;
+  const user = `최근 대화:\n${recentLog}\n\n방금 사용자 입력: ${userText}\n\n다음에 자연스럽게 이어질 PC통신 단체방 채팅 1~3줄만 JSON으로 만들어라. 오타/무의미한 입력이면 분석하지 말고 장난스럽게 받아쳐라.`;
   return [{ role: "system", content: system }, { role: "user", content: user }];
 }
 function telecomExtractJsonObject(text) {
@@ -5699,6 +5719,21 @@ function telecomExtractJsonObject(text) {
   const last = raw.lastIndexOf("}");
   if (first >= 0 && last > first) raw = raw.slice(first, last + 1);
   return JSON.parse(raw);
+}
+
+function telecomDeGptizeGeneratedLine(text) {
+  let t = String(text || "").trim();
+  if (!t) return "";
+  const banned = /(자료처럼 보|뜻을 먼저|확인해야|번역할까요|요약할까요|구조를 먼저|대화라기보다|감정 반응보다|모델|AI|검색|분석)/;
+  if (banned.test(t)) {
+    return telecomPickLine(["뭐라고 친거야 ㅋㅋ", "오타난 거 아냐?", "다시 쳐봐", "잠깐, 나 못 읽었어", "그게 무슨 말이야 ㅋㅋ"]);
+  }
+  t = t.replace(/말씀하신|입력하신|사용자님의|사용자분의/g, "그");
+  t = t.replace(/입니다만/g, "인데").replace(/입니다/g, "이에요");
+  t = t.replace(/할 것 같습니다/g, "할 듯").replace(/같습니다/g, "같아요");
+  t = t.replace(/해주세요/g, "해줘요");
+  if (t.length > 34) t = t.slice(0, 34).trim();
+  return t;
 }
 function telecomParseGenerativeGroupLines(content) {
   let data;
@@ -5715,6 +5750,8 @@ function telecomParseGenerativeGroupLines(content) {
     speaker = speaker.replace(/[()\[\]{}]/g, "").trim();
     text = text.replace(/^[-*•\s]+/, "").replace(/^(?:[^:：]{1,14})[:：]\s*/, "").trim();
     text = text.replace(/[<>]/g, "").replace(/\s+/g, " ").trim();
+    text = telecomDeGptizeGeneratedLine(text);
+    if (!text) continue;
     if (!activeNicks.has(speaker)) continue;
     if (speaker === telecomCurrentSettings().nick) continue;
     if (speaker !== "김광석" && !telecomFindMemberByNick(speaker)) continue;
@@ -5789,7 +5826,8 @@ function telecomScheduleGenerativeGroupFlow(userText) {
     }).catch((err) => {
       console.warn("Generative group chat failed; fallback to classic flow", err);
       if (turnId !== telecomConversationTurnId || !telecomRoomOpen()) return;
-      telecomSetAiStatus("생성형 모델 응답이 불안정하여 이번 턴만 기본 대화로 이어갑니다.");
+      telecomSetAiStatus("생성형 대화가 불안정해서 이번 턴은 기본 대화로 이어갑니다.");
+      telecomNotifyAiFallback("단체대화 응답");
       telecomScheduleHumanConversationFlow(userText);
     });
   }, telecomRand(250, 700), turnId);
@@ -6067,6 +6105,7 @@ function telecomEnterRoom() {
     telecomSetAiStatus("입장과 동시에 PC WebGPU 모델 준비를 시작합니다...");
     telecomEnsureLocalAiEngine().catch((err) => {
       console.warn("WebGPU preload failed", err);
+      telecomSetAiStatus("생성형 대화 준비가 불안정해서 기본 대화로 시작합니다.");
     });
   }
   document.getElementById("telecomSetup")?.classList.add("hidden");
@@ -6142,7 +6181,10 @@ function initTelecomChatRoom() {
     telecomSaveJson(TELECOM_STORAGE.settings, { ...saved, engine: engineSel.value });
     if (engineSel.value === "webllm") {
       telecomSetAiStatus("PC WebGPU 생성형 모드 선택됨. 모델 준비를 시작합니다.");
-      telecomEnsureLocalAiEngine().catch((err) => console.warn("WebGPU preload failed", err));
+      telecomEnsureLocalAiEngine().catch((err) => {
+        console.warn("WebGPU preload failed", err);
+        telecomSetAiStatus("생성형 대화 준비가 불안정해서 기본 대화로 대기합니다.");
+      });
     } else {
       telecomSetAiStatus("기본 PC통신 대화 모드입니다.");
     }
