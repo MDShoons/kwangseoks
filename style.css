@@ -5628,3 +5628,46 @@ body {
     bottom: 112px !important;
   }
 }
+
+
+/* v176: 재생목록 버튼 클릭 시 실제 곡 목록 패널이 하단 플레이어 위에 확실히 보이도록 보정 */
+#userPlaylistPlayer .playlist-queue-panel {
+  position: fixed !important;
+  right: 22px !important;
+  bottom: 92px !important;
+  width: min(380px, calc(100vw - 44px)) !important;
+  max-height: min(420px, calc(100vh - 128px)) !important;
+  overflow: hidden !important;
+  display: none !important;
+  z-index: 13050 !important;
+  pointer-events: auto !important;
+  border-radius: 16px !important;
+  background: rgba(46, 34, 30, 0.98) !important;
+  border: 1px solid rgba(255,255,255,0.24) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,0.42) !important;
+  color: #fff !important;
+}
+
+#userPlaylistPlayer .playlist-queue-panel.open {
+  display: block !important;
+}
+
+#userPlaylistPlayer .playlist-queue-list {
+  max-height: min(350px, calc(100vh - 190px)) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+#playlistPlayerListBtn.playlist-list-toggle[aria-expanded="true"] {
+  background: rgba(255,255,255,0.32) !important;
+  border-color: rgba(255,255,255,0.48) !important;
+}
+
+@media (max-width: 920px) {
+  #userPlaylistPlayer .playlist-queue-panel {
+    right: 10px !important;
+    bottom: 118px !important;
+    width: calc(100vw - 20px) !important;
+    max-height: min(420px, calc(100vh - 150px)) !important;
+  }
+}

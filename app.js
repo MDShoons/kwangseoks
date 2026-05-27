@@ -2099,6 +2099,11 @@ function setupUserPlaylistPlayer(options = {}) {
   if (!songs.length) {
     player.classList.add("closed");
     playlistCurrentItemId = "";
+    if (queuePanel) {
+      queuePanel.classList.remove("open");
+      queuePanel.setAttribute("aria-hidden", "true");
+    }
+    if (listBtn) listBtn.setAttribute("aria-expanded", "false");
     setPlayerCoverImage(cover, null);
     positionFloatingAudioPlayers();
     title.textContent = "선택한 곡이 없습니다";
@@ -2134,6 +2139,9 @@ function setupUserPlaylistPlayer(options = {}) {
   title.textContent = selected.title || "제목 없는 곡";
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
   renderPlaylistQueuePanel();
+  if (listBtn && queuePanel) {
+    listBtn.setAttribute("aria-expanded", queuePanel.classList.contains("open") ? "true" : "false");
+  }
 
   if (playlistCurrentItemId !== selected.id || audio.dataset.playlistSrc !== sourceUrl) {
     playlistCurrentItemId = selected.id;
@@ -2205,8 +2213,10 @@ function setupUserPlaylistPlayer(options = {}) {
     event.preventDefault();
     event.stopPropagation();
     if (!queuePanel) return;
-    const open = queuePanel.classList.toggle("open");
+    const open = !queuePanel.classList.contains("open");
+    queuePanel.classList.toggle("open", open);
     queuePanel.setAttribute("aria-hidden", open ? "false" : "true");
+    listBtn.setAttribute("aria-expanded", open ? "true" : "false");
     renderPlaylistQueuePanel();
   });
 
