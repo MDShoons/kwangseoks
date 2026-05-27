@@ -2033,6 +2033,46 @@ function movePlaylistSelection(direction) {
   setupUserPlaylistPlayer({ forceOpen: true });
 }
 
+
+function renderPlaylistQueuePanel() {
+  const panel = document.getElementById("playlistQueuePanel");
+  const list = document.getElementById("playlistQueueList");
+  if (!panel || !list) return;
+
+  const songs = getUserPlaylistSongs();
+  if (!songs.length) {
+    list.innerHTML = '<div class="playlist-queue-empty">담긴 곡이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = songs.map((item, index) => {
+    const title = escapeHtml(item.title || "제목 없는 곡");
+    const sub = escapeHtml(getDailySongCategoryLabel(item));
+    const id = escapeHtml(String(item.id));
+    const active = String(item.id) === String(playlistCurrentItemId);
+    return `
+      <button type="button" class="playlist-queue-item${active ? " active" : ""}" data-playlist-item-id="${id}">
+        <span class="playlist-queue-num">${index + 1}</span>
+        <span class="playlist-queue-meta">
+          <span class="playlist-queue-title">${title}</span>
+          <span class="playlist-queue-sub">${sub}</span>
+        </span>
+      </button>`;
+  }).join("");
+
+  list.querySelectorAll(".playlist-queue-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-playlist-item-id");
+      if (!id) return;
+      playlistRequestedItemId = id;
+      playlistPendingResumeTime = 0;
+      playlistResumeAppliedForId = "";
+      playlistAutoPlayAfterMove = true;
+      setupUserPlaylistPlayer({ forceOpen: true });
+    });
+  });
+}
+
 function setupUserPlaylistPlayer(options = {}) {
   const player = document.getElementById("userPlaylistPlayer");
   const audio = document.getElementById("playlistPlayerAudio");
@@ -2050,6 +2090,8 @@ function setupUserPlaylistPlayer(options = {}) {
   const nextBtn = document.getElementById("playlistPlayerNextBtn");
   const clearBtn = document.getElementById("playlistPlayerClearBtn");
   const removeBtn = document.getElementById("playlistPlayerRemoveBtn");
+  const listBtn = document.getElementById("playlistPlayerListBtn");
+  const queuePanel = document.getElementById("playlistQueuePanel");
 
   if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider) return;
 
@@ -2062,6 +2104,7 @@ function setupUserPlaylistPlayer(options = {}) {
     title.textContent = "선택한 곡이 없습니다";
     sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
     resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
+    renderPlaylistQueuePanel();
     return;
   }
 
@@ -2090,6 +2133,7 @@ function setupUserPlaylistPlayer(options = {}) {
   positionFloatingAudioPlayers();
   title.textContent = selected.title || "제목 없는 곡";
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
+  renderPlaylistQueuePanel();
 
   if (playlistCurrentItemId !== selected.id || audio.dataset.playlistSrc !== sourceUrl) {
     playlistCurrentItemId = selected.id;
@@ -2142,6 +2186,7 @@ function setupUserPlaylistPlayer(options = {}) {
     event.preventDefault();
     event.stopPropagation();
     movePlaylistSelection(1);
+    renderPlaylistQueuePanel();
   });
 
   clearBtn?.addEventListener("click", (event) => {
@@ -2154,6 +2199,15 @@ function setupUserPlaylistPlayer(options = {}) {
     event.preventDefault();
     event.stopPropagation();
     removeCurrentSongFromPlaylist();
+  });
+
+  listBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!queuePanel) return;
+    const open = queuePanel.classList.toggle("open");
+    queuePanel.setAttribute("aria-hidden", open ? "false" : "true");
+    renderPlaylistQueuePanel();
   });
 
   volumeSlider.addEventListener("input", () => {

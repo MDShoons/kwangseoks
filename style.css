@@ -5390,3 +5390,241 @@ body {
     max-width: none !important;
   }
 }
+
+/* v175: 설명 이미지 기준 - 하단 바를 재생곡 / 재생컨트롤 / 재생목록 3영역으로 재정렬 */
+#userPlaylistPlayer .daily-player-card.playlist-player-card,
+#userPlaylistPlayer .daily-player-card {
+  min-height: 72px !important;
+  max-height: 78px !important;
+  padding: 8px 22px !important;
+  grid-template-columns: 58px minmax(260px, 1fr) minmax(360px, 560px) minmax(160px, 210px) !important;
+  grid-template-rows: 22px 20px 16px !important;
+  grid-template-areas:
+    "cover title controls actions"
+    "cover sub controls actions"
+    "cover sub progress actions" !important;
+  column-gap: 16px !important;
+  row-gap: 0 !important;
+}
+
+#userPlaylistPlayer .daily-player-label.playlist-player-label,
+#userPlaylistPlayer .daily-player-label {
+  display: none !important;
+}
+
+#userPlaylistPlayer .daily-player-cover.playlist-player-cover,
+#userPlaylistPlayer .daily-player-cover {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 4px !important;
+}
+
+#userPlaylistPlayer .daily-player-title {
+  align-self: end !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+}
+
+#userPlaylistPlayer .daily-player-sub {
+  align-self: start !important;
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+  max-width: 100% !important;
+}
+
+#userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+#userPlaylistPlayer .daily-player-controls {
+  align-self: center !important;
+  justify-self: center !important;
+  width: 100% !important;
+  gap: 12px !important;
+}
+
+#userPlaylistPlayer .daily-player-time.playlist-player-time,
+#userPlaylistPlayer .daily-player-time {
+  width: 88px !important;
+  min-width: 88px !important;
+  font-size: 10.5px !important;
+}
+
+#userPlaylistPlayer .daily-player-progress {
+  justify-self: center !important;
+  width: min(100%, 520px) !important;
+  max-width: 520px !important;
+}
+
+#userPlaylistPlayer .playlist-player-actions {
+  grid-area: actions !important;
+  align-self: center !important;
+  justify-self: end !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 28px 28px !important;
+  gap: 5px !important;
+  width: 150px !important;
+  max-width: 150px !important;
+}
+
+#userPlaylistPlayer .playlist-action-btn {
+  width: 100% !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+
+#playlistPlayerListBtn.playlist-list-toggle {
+  background: rgba(255,255,255,0.20) !important;
+}
+
+#userPlaylistPlayer .playlist-volume-row {
+  display: none !important;
+}
+
+#userPlaylistPlayer .daily-player-close {
+  display: none !important;
+}
+
+#userPlaylistPlayer .playlist-queue-panel {
+  position: absolute !important;
+  right: 18px !important;
+  bottom: 84px !important;
+  width: min(360px, calc(100vw - 36px)) !important;
+  max-height: 48vh !important;
+  overflow: hidden !important;
+  display: none !important;
+  border-radius: 16px !important;
+  background: rgba(46, 34, 30, 0.96) !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.32) !important;
+  color: #fff !important;
+  z-index: 2 !important;
+}
+
+#userPlaylistPlayer .playlist-queue-panel.open {
+  display: block !important;
+}
+
+#userPlaylistPlayer .playlist-queue-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 12px 12px 9px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.16) !important;
+}
+
+#userPlaylistPlayer .playlist-queue-clear {
+  border: 1px solid rgba(255,255,255,0.24) !important;
+  border-radius: 999px !important;
+  padding: 4px 10px !important;
+  background: rgba(255,255,255,0.12) !important;
+  color: #fff !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+}
+
+#userPlaylistPlayer .playlist-queue-list {
+  max-height: calc(48vh - 48px) !important;
+  overflow: auto !important;
+  padding: 6px !important;
+}
+
+#userPlaylistPlayer .playlist-queue-item {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 28px 1fr !important;
+  gap: 8px !important;
+  align-items: center !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #fff !important;
+  text-align: left !important;
+  padding: 8px !important;
+  cursor: pointer !important;
+}
+
+#userPlaylistPlayer .playlist-queue-item:hover,
+#userPlaylistPlayer .playlist-queue-item.active {
+  background: rgba(255,255,255,0.13) !important;
+}
+
+#userPlaylistPlayer .playlist-queue-num {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(255,255,255,0.14) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+}
+
+#userPlaylistPlayer .playlist-queue-meta {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 2px !important;
+}
+
+#userPlaylistPlayer .playlist-queue-title,
+#userPlaylistPlayer .playlist-queue-sub {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#userPlaylistPlayer .playlist-queue-title {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+#userPlaylistPlayer .playlist-queue-sub,
+#userPlaylistPlayer .playlist-queue-empty {
+  color: rgba(255,255,255,0.72) !important;
+  font-size: 10.5px !important;
+}
+
+#userPlaylistPlayer .playlist-queue-empty {
+  padding: 16px 12px !important;
+}
+
+@media (max-width: 920px) {
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    min-height: 104px !important;
+    grid-template-columns: 48px 1fr 96px !important;
+    grid-template-rows: 23px 23px 34px 12px !important;
+    grid-template-areas:
+      "cover title actions"
+      "cover sub actions"
+      "controls controls controls"
+      "progress progress progress" !important;
+  }
+
+  #userPlaylistPlayer .daily-player-sub {
+    display: block !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions {
+    width: 92px !important;
+    max-width: 92px !important;
+    grid-template-rows: 25px 25px !important;
+  }
+
+  #userPlaylistPlayer .playlist-action-btn {
+    height: 25px !important;
+    min-height: 25px !important;
+    font-size: 10px !important;
+    padding: 3px 6px !important;
+  }
+
+  #userPlaylistPlayer .playlist-queue-panel {
+    right: 10px !important;
+    bottom: 112px !important;
+  }
+}
