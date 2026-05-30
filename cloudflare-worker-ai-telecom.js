@@ -1,10 +1,12 @@
 // 광석이네 통신방 - Cloudflare Workers AI 전용 Worker
+// 이번 버전은 "사용자의 마지막 말에 직접 답하는 것"을 최우선으로 한다.
 // 고정 멘트/무료 자동반응 없음. Workers AI가 만든 문장만 반환한다.
 // 필요 바인딩: Workers AI binding 이름 = AI
 
 const MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
-const MAX_INPUT = 900;
-const MAX_RECENT = 10;
+const MAX_INPUT = 700;
+const MAX_RECENT = 8;
+const REPLY_COUNT = 2;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -151,6 +153,14 @@ const DEFAULT_MEMBER_PROFILES = [
   { nickname: "몽실95", realName: "이세영" }
 ];
 
+
+
+const PREFERRED_ACTIVE_NICKS = [
+  "녹차향기", "mouse14", "soriboy", "raincoat", "소금밭", "enfant",
+  "ajeegang", "hakjeon", "낙원", "gonswing", "keis", "mountie",
+  "점등인", "아주사", "하늘마음", "경화", "btsmania", "jeejone"
+];
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: corsHeaders });
 }
@@ -160,22 +170,11 @@ function extractText(value) {
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) return value.map(extractText).filter(Boolean).join("\n");
   if (typeof value === "object") {
-    const candidates = [
-      value.response,
-      value.text,
-      value.message,
-      value.content,
-      value.reply,
-      value.result,
-      value.output,
-      value.output_text,
-      value.value
-    ];
+    const candidates = [value.response, value.text, value.message, value.content, value.reply, value.result, value.output, value.output_text, value.value];
     for (const item of candidates) {
       const out = extractText(item).trim();
       if (out) return out;
     }
-    return "";
   }
   return "";
 }
@@ -194,47 +193,27 @@ function cleanLine(value, max = 80) {
   return cleanText(value, max)
     .replace(/^['"“”‘’`]+|['"“”‘’`]+$/g, "")
     .replace(/^(대사|답변|text|message)\s*[:：]\s*/i, "")
-    .trim()
-    .slice(0, max);
+    .trim();
 }
 
-function hangulCount(s) {
-  return (String(s || "").match(/[가-힣]/g) || []).length;
-}
-
-function latinCount(s) {
-  return (String(s || "").match(/[A-Za-z]/g) || []).length;
-}
-
-function compact(value) {
-  return cleanText(value, 300)
-    .replace(/[\s~!?.。！？….,，'"“”‘’()\[\]{}:：;；\-_/\\]/g, "")
-    .toLowerCase();
-}
+function hangulCount(s) { return (String(s || "").match(/[가-힣]/g) || []).length; }
+function latinCount(s) { return (String(s || "").match(/[A-Za-z]/g) || []).length; }
 
 function looksBrokenText(text) {
   const t = cleanText(text, 260);
   if (!t) return true;
   if (/\[object Object\]/i.test(t)) return true;
-  if (/(GENRE|GENDER|CAPEC|CUREMENT|Programme|Radiation|Cakeour|ttkiz|alto|Waart|Smart call|Auto Resolver|Import Regular|possesses roles|subset R false|Local ICC|Resolver spawns|JSON|function|const|return|undefined|null)/i.test(t)) return true;
+  if (/(GENRE|GENDER|CAPEC|CUREMENT|Programme|Radiation|Cakeour|ttkiz|alto|Waart|Smart call|Auto Resolver|Import Regular|possesses roles|subset R false|Local ICC|Resolver spawns|JSON|function|const|return|undefined|null|네이버|구글|1월|게시판 글 하나|예전 게시판)/i.test(t)) return true;
   if (/[A-Z]{7,}|_[A-Z]{3,}|[A-Za-z]{18,}/.test(t)) return true;
   const h = hangulCount(t);
   const l = latinCount(t);
-  if (h < 1) return true;
-  if (l > h * 0.9 && l > 10) return true;
+  if (h < 2) return true;
+  if (l > h * 0.8 && l > 8) return true;
   return false;
 }
 
-function similarity(a, b) {
-  const aa = compact(a), bb = compact(b);
-  if (!aa || !bb) return 0;
-  if (aa === bb) return 1;
-  if (aa.includes(bb) || bb.includes(aa)) return Math.min(0.95, Math.min(aa.length, bb.length) / Math.max(aa.length, bb.length));
-  const ag = new Set(aa.match(/.{1,2}/g) || []);
-  const bg = new Set(bb.match(/.{1,2}/g) || []);
-  let inter = 0;
-  for (const x of ag) if (bg.has(x)) inter++;
-  return inter / Math.max(1, Math.min(ag.size, bg.size));
+function compact(value) {
+  return cleanText(value, 300).replace(/[\s~!?.。！？….,，'"“”‘’()\[\]{}:：;；\-_/\\]/g, "").toLowerCase();
 }
 
 function shuffle(arr) {
@@ -246,19 +225,7 @@ function shuffle(arr) {
   return a;
 }
 
-function uniqueStrings(arr, max = 30) {
-  const seen = new Set();
-  const out = [];
-  for (const item of arr || []) {
-    const v = cleanText(item, 160);
-    const key = compact(v);
-    if (!key || seen.has(key) || looksBrokenText(v)) continue;
-    seen.add(key);
-    out.push(v);
-    if (out.length >= max) break;
-  }
-  return out;
-}
+function profileMap(profiles) { return new Map((profiles || []).map(m => [m.nickname, m.realName || ""])); }
 
 function memberProfilesFromBody(body) {
   const rawProfiles = Array.isArray(body.memberProfiles) ? body.memberProfiles : DEFAULT_MEMBER_PROFILES;
@@ -274,17 +241,39 @@ function memberProfilesFromBody(body) {
   return profiles.length ? profiles : DEFAULT_MEMBER_PROFILES;
 }
 
+function selectActiveProfiles(allProfiles, kksActive) {
+  const map = new Map(allProfiles.map(m => [m.nickname, m]));
+  const preferred = PREFERRED_ACTIVE_NICKS.map(n => map.get(n)).filter(Boolean);
+  const rest = allProfiles.filter(m => m.nickname !== "김광석" && !PREFERRED_ACTIVE_NICKS.includes(m.nickname));
+  const selected = [...shuffle(preferred).slice(0, 8), ...shuffle(rest).slice(0, 4)];
+  if (kksActive) selected.unshift({ nickname: "김광석", realName: "김광석" });
+  return selected;
+}
+
 function recentLogFromBody(body) {
   const recent = Array.isArray(body.recentMessages) ? body.recentMessages.slice(-MAX_RECENT) : [];
   return recent
     .map((m) => {
       const speaker = `${cleanText(m.nickname || m.role || "Chat", 20)}${m.realName ? `(${cleanText(m.realName, 16)})` : ""}`;
-      const text = cleanText(m.text || "", 160);
+      const text = cleanText(m.text || "", 120);
       return { speaker, text };
     })
     .filter((m) => m.text && !looksBrokenText(m.text))
     .map((m) => `${m.speaker}: ${m.text}`)
     .join("\n");
+}
+
+function inferIntent(userText, kksActive) {
+  const u = cleanText(userText, 300);
+  const hasKks = /김광석|광석이|광석형|광석이형|광석님/.test(u);
+  const greeting = /^(안녕|안녕하세요|하이|반가|처음|첨 뵙|ㅎㅇ|hi)/i.test(u);
+  const whatDoing = /뭐해|뭐하세요|뭐 하|다들|계세요|있어요|안 와|안오|오나요|오세요/.test(u);
+  const sad = /슬퍼|힘들|우울|헤어졌|속상|외로|눈물|울/.test(u);
+  if (hasKks) return kksActive ? "김광석이 접속 중이다. 첫 회원은 김광석에게 넘기지 말고, 사용자의 김광석 관련 말에 짧게 직접 답한다." : "김광석은 아직 접속 중이 아니다. 첫 회원은 '아직 안 오신 것 같다'는 취지로 직접 답한다.";
+  if (greeting) return "사용자가 인사했다. 첫 회원은 반드시 인사를 받아주고, 새로 들어온 사람을 맞이한다.";
+  if (whatDoing) return "사용자가 방 사람들에게 현재 무엇을 하는지 물었다. 첫 회원은 자신이 지금 방을 보고 있거나 접속해 있었다고 직접 답한다.";
+  if (sad) return "사용자가 감정을 털어놓았다. 첫 회원은 짧게 받아주되 상담문처럼 길게 위로하지 않는다.";
+  return "첫 회원은 반드시 사용자의 마지막 말에 직접 답한다. 다른 주제로 넘어가지 않는다.";
 }
 
 function buildPrompt(body, retryLevel = 0) {
@@ -293,267 +282,122 @@ function buildPrompt(body, retryLevel = 0) {
   const userName = cleanText(body.userName || "", 20);
   const mode = cleanText(body.mode || "chat", 40);
   const close = cleanText(body.close || "known", 40);
-  const recentLog = recentLogFromBody(body) || "아직 정상 대화가 거의 없음";
   const kksActive = body.kksActive === true;
-  const triggerType = cleanText(body.triggerType || "userMessage", 40);
-  let profiles = memberProfilesFromBody(body);
-  if (!kksActive) profiles = profiles.filter((m) => m.nickname !== "김광석");
-  if (!profiles.length) profiles = DEFAULT_MEMBER_PROFILES;
+  const allProfiles = memberProfilesFromBody(body).filter(m => m.nickname !== userNick);
+  const activeProfiles = selectActiveProfiles(allProfiles, kksActive);
+  const allowedNames = activeProfiles.map(m => m.nickname);
+  const profilesText = activeProfiles.map(m => `${m.nickname}|${m.realName || "이름미상"}`).join("\n");
+  const recentLog = recentLogFromBody(body) || "정상 대화가 아직 거의 없음";
+  const intent = inferIntent(userText, kksActive);
 
-  const normalProfiles = profiles.filter((m) => m.nickname !== "김광석");
-  const shuffledNormal = shuffle(normalProfiles).slice(0, 7);
-  const kksProfile = profiles.find((m) => m.nickname === "김광석");
-  const availableProfiles = kksProfile ? [kksProfile, ...shuffledNormal] : shuffledNormal;
-  const allowedNames = availableProfiles.map((m) => m.nickname);
-  const profileLines = availableProfiles.map((m) => `${m.nickname}|${m.realName || "이름미상"}`).join("\n");
-  const avoidTexts = uniqueStrings([
-    ...(Array.isArray(body.avoidTexts) ? body.avoidTexts : []),
-    ...(Array.isArray(body.recentMessages) ? body.recentMessages.map(m => m.text || "") : [])
-  ], 22);
-  const avoid = avoidTexts.length ? avoidTexts.map(t => `- ${cleanText(t, 90)}`).join("\n") : "없음";
-  const replyCount = triggerType === "kksFirstMessage" ? 3 : 3;
+  const bannedTopicRule = /게시판|공연|자료|녹음|소식|구글|네이버|1월/.test(userText)
+    ? "사용자가 꺼낸 소재는 이어갈 수 있다."
+    : "사용자가 먼저 말하지 않은 게시판, 공연, 자료, 녹음본, 구글, 네이버, 1월 이야기를 절대 꺼내지 않는다.";
 
-  const kksStatusText = kksActive ? "connected" : "absent";
-  const system = `너는 1995년 PC통신 동호회 "둥근소리"의 실시간 대화방을 재현하는 대화 생성 엔진이다.
+  const system = `너는 1995년 PC통신 동호회 "둥근소리" 대화방의 회원 대사를 생성한다.
 
-너의 역할은 사용자의 말에 대해, 실제 둥근소리 회원들이 대화방에서 자연스럽게 반응하는 것처럼 새 대사를 생성하는 것이다.
-저장된 고정 멘트나 반복 문장을 쓰지 말고, 매번 현재 대화 흐름에 맞는 새 문장을 만들어야 한다.
+가장 중요한 규칙:
+- 첫 번째 줄은 반드시 사용자의 마지막 말에 직접 답한다.
+- 최근 대화보다 사용자의 마지막 입력을 우선한다.
+- AI가 자기들끼리 새 주제를 만들지 않는다.
+- 출력은 정확히 ${REPLY_COUNT}줄만 쓴다.
+- 한 줄 형식은 닉네임|대사 이다. 이름은 쓰지 마라.
+- 닉네임은 사용 가능한 목록에서만 고른다.
+- 같은 닉네임을 반복하지 않는다.
+- 김광석은 접속 중일 때만 쓸 수 있고, 없어도 된다.
+- 다른 회원들은 기본적으로 존댓말을 쓴다.
+- 1995년 PC통신 느낌으로 짧고 자연스럽게 말한다.
+- 설명문, 번호, 따옴표, JSON, 마크다운 금지.
+- 영어, 코드, 변수명, 깨진 텍스트 금지.
+- 노래 가사나 실제 사적 발언을 지어내지 않는다.
+- "천천히 얘기해도 돼요", "편하게 말해요", "더 이야기해 주세요", "오늘도 좋은 하루" 같은 상담형 상투문장 금지.
+- ${bannedTopicRule}
 
-[중요 원칙]
-1. 사용자는 둥근소리 대화방에 접속한 한 명의 회원이다.
-2. 대화는 사용자와 김광석의 1:1 대화가 아니다.
-3. 여러 둥근소리 회원들이 함께 있는 공개 대화방이다.
-4. 회원들은 사용자에게만 말하지 않고, 서로에게도 반응할 수 있다.
-5. 김광석이 접속 중이면 김광석도 가끔 대화에 참여할 수 있다.
-6. 김광석이 접속 중이 아니면 김광석의 대사를 절대 생성하지 않는다.
-7. 다른 회원들은 기본적으로 존댓말을 쓴다.
-8. 다만 1995년 PC통신 분위기처럼 짧고 자연스럽게 말한다.
-9. 과하게 현대적인 말투, 이모지, 인터넷 신조어, SNS 말투는 쓰지 않는다.
-10. 설명문, 요약문, 해설문처럼 쓰지 말고 실제 채팅 대사처럼 쓴다.
-11. 같은 문장, 같은 위로, 같은 반응을 반복하지 않는다.
-12. "천천히 얘기해도 돼요", "편하게 말해요", "괜찮아요", "더 이야기해 주세요" 같은 상투적 문장은 피한다.
-13. 사용자의 마지막 말에 들어 있는 구체적인 단어, 감정, 질문, 상황을 반영한다.
-14. 대화가 짧아도 반드시 다른 회원 2명 이상이 반응하게 한다.
-15. 김광석이 접속 중이어도 일반 회원 반응이 먼저 나오고, 김광석은 늦게 짧게 참여할 수 있다.
-16. 김광석은 답변 기계처럼 바로 대답하지 않는다. 말수가 많지 않고, 가끔 생각하다가 짧게 말한다.
-17. 김광석의 실제 발언이라고 단정하지 않는다.
-18. 김광석을 신격화하거나 과장하지 않는다.
-19. 노래 가사를 길게 쓰지 않는다.
-20. 정치, 혐오, 선정적 대화, 위험한 요청은 자연스럽게 피한다.
+사용 가능한 회원:
+${profilesText}
 
-[대화 분위기]
-- 1995년 PC통신 동호회 대화방
-- 둥근소리 회원들이 밤에 접속해 잡담, 공연, 음악, 녹음본, 일상 이야기를 나누는 느낌
-- 말투는 짧고 사람 같아야 한다
-- 회원마다 조금씩 성격 차이가 있어야 한다
-- 모두가 동시에 길게 말하지 않는다
-- 한 줄 대화 중심
-- 반응은 구체적이어야 한다
-- 질문만 반복하지 않는다
-- 너무 감성적이거나 시적인 문장만 쓰지 않는다
+사용자 입력 해석:
+${intent}
 
-[김광석 대화 규칙]
-김광석이 접속 중일 때만 김광석 대사를 만들 수 있다.
-김광석은 닉네임/이름을 다음처럼 사용한다.
-김광석|김광석|대사
+대화 모드: ${mode}
+김광석과 사용자 친한 정도: ${close}
+이 친한 정도는 김광석과 사용자 사이에만 적용한다. 다른 회원에게 적용하지 마라.
+${retryLevel ? "\n재시도다. 형식을 어기지 말고 정상 한국어 2줄만 출력한다." : ""}`;
 
-김광석의 말투:
-- 소박하고 짧다
-- 장황하게 설명하지 않는다
-- 팬들의 말에 즉답하기보다 약간 늦게 끼어드는 느낌
-- 농담을 할 수 있지만 과장하지 않는다
-- 자기 노래를 분석가처럼 설명하지 않는다
-- "나는 김광석입니다" 같은 자기소개를 반복하지 않는다
-- 살아 돌아온 사람처럼 연기하지 않는다
-- 실제 김광석의 확인되지 않은 사적 발언처럼 말하지 않는다
+  const user = `사용자: ${userNick}${userName ? `(${userName})` : ""}
+김광석 접속 상태: ${kksActive ? "connected" : "absent"}
 
-[일반 회원 말투]
-일반 회원들은 서로 존댓말을 기본으로 한다.
-다만 PC통신 대화방 특유의 짧은 반응, 농담, 오타 느낌은 약간 허용한다.
-너무 현대적인 말투는 금지한다.
-
-[나쁜 출력]
-녹차향기|변수진|천천히 이야기해도 괜찮아요.
-mouse14|장민석|편하게 말씀해 주세요.
-soriboy|김영호|더 이야기해 주세요.
-raincoat|이효연|오늘도 좋은 하루 보내세요.
-
-[출력 제한]
-- 출력은 반드시 ${replyCount}줄이다.
-- 형식은 반드시 닉네임|이름|대사 이다.
-- 설명, 번호, 따옴표, JSON, 마크다운을 쓰지 않는다.
-- 각 줄은 하나의 대사만 쓴다.
-- 같은 닉네임을 한 번의 응답 안에서 반복하지 않는다.
-- 대사는 8자 이상 70자 이하로 한다.
-- 의미 없는 감탄사만 쓰지 않는다.
-- 영어, 코드, 변수명, JSON, function, const, return 같은 텍스트를 쓰지 않는다.
-${retryLevel ? "- 재시도다. 이번에는 형식을 반드시 지키고 정상 한국어 대사만 출력한다." : ""}`;
-
-  const user = `[현재 대화 모드]
-${mode || "일상 잡담"}
-
-[김광석 접속 상태]
-${kksStatusText}
-- connected: 김광석 접속 중
-- absent: 김광석 없음
-- cooldown: 김광석 바빠서 재호출 대기 중
-
-[김광석과 사용자 친한 정도]
-${close || "보통"}
-※ 이 친한 정도는 김광석과 사용자 사이에만 적용한다.
-※ 다른 회원들과 사용자의 친한 정도로 해석하지 마라.
-
-[사용자 정보]
-닉네임: ${userNick}
-이름: ${userName || ""}
-
-[사용 가능한 둥근소리 회원 목록]
-아래 목록에 있는 닉네임과 이름만 사용한다.
-김광석은 접속 상태가 connected일 때만 사용한다.
-
-${profileLines}
-
-[최근 대화]
+최근 정상 대화:
 ${recentLog}
 
-[반복 금지 문장]
-${avoid}
-
-[사용자의 마지막 입력]
+사용자의 마지막 입력:
 ${userText}
 
-[생성 지시]
-위 대화 흐름을 보고, 둥근소리 회원들이 자연스럽게 이어 말하는 대사를 생성하라.
+출력 형식:
+닉네임|대사
+닉네임|대사
 
-반드시 지킬 것:
-1. 일반 회원 대사 2~4개를 생성한다.
-2. 김광석 접속 상태가 connected이면, 필요할 때만 김광석 대사 0~1개를 추가한다.
-3. 김광석이 absent 또는 cooldown이면 김광석 대사를 절대 만들지 않는다.
-4. 사용자의 말에만 줄줄이 답하지 말고, 회원끼리도 서로 반응하게 한다.
-5. 출력은 반드시 아래 형식만 사용한다.
-6. 설명, 번호, 따옴표, JSON, 마크다운을 쓰지 않는다.
-7. 각 줄은 하나의 대사만 쓴다.
-8. 같은 닉네임을 한 번의 응답 안에서 반복하지 않는다.
-9. 대사는 8자 이상 70자 이하로 한다.
-10. 의미 없는 감탄사만 쓰지 않는다.
+이제 실제 대사 2줄만 출력하라.`;
 
-[출력 형식]
-닉네임|이름|대사
-닉네임|이름|대사
-닉네임|이름|대사
-
-[출력 예시]
-녹차향기|변수진|그 얘기 들으니까 예전 게시판 글 하나 생각나네요.
-mouse14|장민석|잠깐만요, 지금 그 자료 어디서 보신 거예요?
-raincoat|이효연|저도 듣고 있었는데, 그 부분은 좀 확인해봐야겠네요.
-
-이제 실제 대사만 출력하라.`;
-
-  return { system, user, allowedNames, profiles: availableProfiles, replyCount, avoidTexts, kksActive };
+  return { system, user, allowedNames, profiles: activeProfiles, kksActive };
 }
 
-async function runAi(env, prompt, temperature = 0.82, maxTokens = 220) {
+async function runAi(env, prompt, temperature = 0.58, maxTokens = 110) {
   const result = await env.AI.run(MODEL, {
     messages: [
       { role: "system", content: prompt.system },
       { role: "user", content: prompt.user }
     ],
     temperature,
-    top_p: 0.82,
+    top_p: 0.7,
     max_tokens: maxTokens
   });
   return extractText(result);
 }
 
-function parseJsonReplies(rawText) {
-  const raw = extractText(rawText);
-  try {
-    const start = raw.indexOf("{");
-    const end = raw.lastIndexOf("}");
-    if (start < 0 || end <= start) return [];
-    const parsed = JSON.parse(raw.slice(start, end + 1));
-    return Array.isArray(parsed.replies) ? parsed.replies : [];
-  } catch (_) {
-    return [];
-  }
-}
-
 function parseLineReplies(rawText) {
   const raw = extractText(rawText);
-  const lines = raw
-    .split(/\n+/)
-    .map((line) => line.replace(/^[-*•\d.\s]+/, "").trim())
-    .filter(Boolean);
-
+  const lines = raw.split(/\n+/).map(line => line.replace(/^[-*•\d.\s]+/, "").trim()).filter(Boolean);
   const out = [];
   for (const line of lines) {
-    const pipeParts = line.split("|").map((x) => cleanText(x, 180));
-    if (pipeParts.length >= 3) {
-      out.push({ nickname: pipeParts[0], realName: pipeParts[1], text: pipeParts.slice(2).join(" ") });
+    const parts = line.split("|").map(x => cleanText(x, 160));
+    if (parts.length >= 2) {
+      out.push({ nickname: parts[0], text: parts.slice(1).join(" ") });
       continue;
     }
-
-    const colon = line.match(/^([가-힣A-Za-z0-9_]+)\s*(?:\(([^)]{1,12})\))?\s*[:：]\s*(.+)$/);
-    if (colon) out.push({ nickname: colon[1], realName: colon[2] || "", text: colon[3] });
+    const m = line.match(/^([가-힣A-Za-z0-9_]+)\s*(?:\([^)]{1,12}\))?\s*[:：]\s*(.+)$/);
+    if (m) out.push({ nickname: m[1], text: m[2] });
   }
   return out;
 }
 
 function normalizeReplies(items, ctx) {
-  const allowed = new Set(ctx.allowedNames || DEFAULT_MEMBER_PROFILES.map(m => m.nickname));
-  const profileMap = new Map((ctx.profiles || DEFAULT_MEMBER_PROFILES).map((m) => [m.nickname, m.realName || ""]));
-  const normalNames = [...allowed].filter(n => n !== "김광석");
-  const fallbackNames = shuffle(normalNames.length ? normalNames : [...allowed]);
-  const avoid = uniqueStrings(ctx.avoidTexts || [], 35);
-  const cleaned = [];
-  const seen = new Set();
-  let kksLineUsed = false;
-
+  const allowed = new Set(ctx.allowedNames || []);
+  const pMap = profileMap(ctx.profiles);
+  const fallbackNames = ctx.allowedNames.filter(n => n !== "김광석");
+  const out = [];
+  const seenNick = new Set();
+  const seenText = new Set();
   for (const item of items) {
     let nickname = cleanText(item?.nickname || "", 16);
+    let text = cleanLine(item?.text || item?.message || item?.content || "", 90);
+    if (!nickname || !allowed.has(nickname)) nickname = fallbackNames[out.length % Math.max(1, fallbackNames.length)] || "soriboy";
     if (nickname === "김광석" && ctx.kksActive !== true) continue;
-    if (nickname === "김광석" && kksLineUsed) continue;
-    if (!allowed.has(nickname)) nickname = fallbackNames[cleaned.length % fallbackNames.length] || "soriboy";
-    if (nickname === "김광석") kksLineUsed = true;
-
-    const realName = cleanText(item?.realName || profileMap.get(nickname) || "", 16);
-    let text = cleanLine(item?.text ?? item?.message ?? item?.content ?? item, 120);
-    text = text.replace(/^\s*[^:：|]{1,20}\s*[:：|]\s*/, "").trim();
-
+    if (seenNick.has(nickname)) continue;
+    text = text.replace(/^.*?\|/, "").trim();
     if (looksBrokenText(text)) continue;
     const key = compact(text);
-    if (!key || seen.has(key)) continue;
-    // 너무 엄격하면 짧은 대화가 모두 사라져서 사용자가 혼자 말하는 문제가 생긴다.
-    if (avoid.some(old => similarity(text, old) > 0.86)) continue;
-
-    seen.add(key);
-    cleaned.push({ nickname, realName, text: text.slice(0, 120) });
-    if (cleaned.length >= (ctx.replyCount || 3)) break;
+    if (!key || seenText.has(key)) continue;
+    seenNick.add(nickname);
+    seenText.add(key);
+    out.push({ nickname, realName: pMap.get(nickname) || "", text });
+    if (out.length >= REPLY_COUNT) break;
   }
-  return cleaned;
-}
-
-function rawKoreanFallbackReplies(rawText, ctx) {
-  // 고정 멘트가 아니라 AI 원문에서 한국어 문장을 건져서 회원 발화로 저장한다.
-  const raw = extractText(rawText);
-  const profileMap = new Map((ctx.profiles || DEFAULT_MEMBER_PROFILES).map((m) => [m.nickname, m.realName || ""]));
-  const allowed = (ctx.allowedNames || []).filter(n => n !== "김광석");
-  const names = shuffle(allowed.length ? allowed : DEFAULT_MEMBER_PROFILES.map(m => m.nickname));
-  const candidates = raw
-    .split(/[\n.!?。！？]+/)
-    .map(x => cleanLine(x, 70))
-    .filter(x => x && !looksBrokenText(x) && hangulCount(x) >= 2)
-    .slice(0, 3);
-  return candidates.map((text, i) => {
-    const nickname = names[i % names.length] || "soriboy";
-    return { nickname, realName: profileMap.get(nickname) || "", text };
-  });
+  return out;
 }
 
 function parseReplies(rawText, ctx) {
-  let replies = normalizeReplies([...parseJsonReplies(rawText), ...parseLineReplies(rawText)], ctx);
-  if (replies.length < 1) replies = rawKoreanFallbackReplies(rawText, ctx);
-  return replies.slice(0, ctx.replyCount || 3);
+  return normalizeReplies(parseLineReplies(rawText), ctx);
 }
 
 export default {
@@ -572,18 +416,17 @@ export default {
     try {
       let replies = [];
       let raw = "";
-      for (let retry = 0; retry < 5 && replies.length < 1; retry++) {
+      for (let retry = 0; retry < 4 && replies.length < 1; retry++) {
         const prompt = buildPrompt(body, retry);
-        raw = await runAi(env, prompt, retry === 0 ? 0.84 : 0.62, retry >= 2 ? 180 : 240);
+        raw = await runAi(env, prompt, retry === 0 ? 0.58 : 0.35, retry >= 2 ? 90 : 120);
         replies = parseReplies(raw, prompt);
       }
-
       return json({
         ok: true,
         replies,
         model: MODEL,
         generatedOnly: true,
-        emptyReason: replies.length ? "" : "AI 출력이 비었거나 깨져서 저장하지 않았습니다.",
+        emptyReason: replies.length ? "" : "AI 출력이 형식에 맞지 않아 저장하지 않았습니다.",
         rawPreview: replies.length ? "" : cleanText(raw, 500)
       });
     } catch (err) {

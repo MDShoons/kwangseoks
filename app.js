@@ -3562,7 +3562,7 @@ document.addEventListener("click", (event) => {
    - 사용자가 메시지를 보낼 때만 Cloudflare Worker가 AI 대사를 새로 생성
    - 브라우저는 대화 저장, 화면 표시, Worker 호출만 담당
 -------------------------------------------------------------------------- */
-const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v13-focused-reply";
+const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v14-last-user-direct";
 const FB_TELECOM_MAX_INPUT = 500;
 const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 
@@ -4190,9 +4190,9 @@ async function fbTelecomSaveAiReplies(replies, userUid, sourceLabel = "cloudflar
   let saved = 0;
   const seen = new Set(fbTelecomRecentTextsForAi(40).map((x) => x.replace(/\s+/g, "").slice(0, 60)));
 
-  for (const [idx, item] of replies.slice(0, 4).entries()) {
+  for (const [idx, item] of replies.slice(0, 2).entries()) {
     const nickname = fbTelecomCleanText(item?.nickname || "통신방", "통신방").slice(0, 16);
-    const realName = fbTelecomCleanText(item?.realName || fbTelecomMemberRealName(nickname), "").slice(0, 16);
+    const realName = fbTelecomCleanText(fbTelecomMemberRealName(nickname) || item?.realName || "", "").slice(0, 16);
     const replyText = fbTelecomCleanText(item?.text || "", "").slice(0, 500);
     const compact = replyText.replace(/\s+/g, "").slice(0, 60);
     if (!replyText || seen.has(compact)) continue;
