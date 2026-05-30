@@ -27,7 +27,7 @@ Cloudflare Worker가 Workers AI로 대사를 생성한 뒤,
 
 5) app.js에 Worker 주소 넣기
 - app.js에서 아래 줄을 찾기
-  const FB_TELECOM_AI_WORKER_URL = "https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev";
+  const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 - 복사한 Worker 주소로 바꾸기
   const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.내서브도메인.workers.dev";
 
@@ -45,3 +45,10 @@ Cloudflare Worker가 Workers AI로 대사를 생성한 뒤,
 - Cloudflare Workers AI에도 무료/유료 한도와 사용량 제한이 있음.
 - Worker URL은 공개될 수 있으므로, 사용량이 늘면 Cloudflare 대시보드에서 제한/모니터링을 확인해야 함.
 - 이 구조는 간단화를 위해 Worker가 Firestore에 직접 쓰지 않고, 브라우저가 로그인 사용자 권한으로 저장함.
+
+[2026-05-30 추가 수정]
+- 무료 자동 멤버 반응은 사용하지 않습니다.
+- Cloudflare Workers AI가 최근 대화와 반복 금지 문장을 함께 받아 새 대사를 생성합니다.
+- 방이 조용하면 70~140초 간격으로 AI가 먼저 짧은 잡담을 생성합니다.
+- 비용/무료 할당량 보호를 위해 한 접속 세션당 자동 선발화은 최대 12회로 제한했습니다.
+- Worker 코드를 다시 Cloudflare의 Edit code/Quick edit에 붙여넣고 Save and deploy 해야 반영됩니다.

@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v174-cloudflare-workers-ai-telecom";
+const APP_VERSION = "v177-cloudflare-workers-ai-no-autotalk";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -6366,6 +6366,10 @@ let fbTelecomInitialized = false;
 let fbTelecomUnsubscribe = null;
 let fbTelecomBotBusy = false;
 let fbTelecomRecentMessages = [];
+let fbTelecomAutoTalkTimer = null;
+let fbTelecomAutoTalkCount = 0;
+let fbTelecomLastUserAt = 0;
+let fbTelecomLastAiAt = 0;
 
 const FB_TELECOM_MEMBERS = [
   { nick: "녹차향기", role: "방장", tone: "차분" },
@@ -6456,60 +6460,8 @@ function fbTelecomListen() {
   });
 }
 
-function fbTelecomDetectIntent(text) {
-  const t = String(text || "").toLowerCase();
-  if (/노래|음악|앨범|가사|라디오|공연|라이브|기타/.test(t)) return "music";
-  if (/힘들|우울|슬프|외롭|속상|위로|눈물|지쳤/.test(t)) return "comfort";
-  if (/안녕|하이|ㅎㅇ|반가|들어왔/.test(t)) return "greeting";
-  if (/뭐해|뭐하세요|있어|계세요|누구/.test(t)) return "presence";
-  if (/ㅋㅋ|ㅎㅎ|웃|재밌|장난/.test(t)) return "joke";
-  return "chat";
-}
-
-function fbTelecomPick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function fbTelecomBuildReplies(userText) {
-  const nick = fbTelecomUserNick();
-  const intent = fbTelecomDetectIntent(userText);
-  const replies = {
-    greeting: [
-      ["녹차향기", `${nick}님 접속 확인했습니다. 오늘도 조용히 얘기 나눠요.`],
-      ["raincoat", `${nick}님 왔다~ 방이 좀 살아나네요 ㅎㅎ`]
-    ],
-    music: [
-      ["soriboy", "노래 얘기면 좋죠. 곡 제목이나 방송 날짜를 같이 적어주면 자료방식으로 더 잘 이어갈 수 있어요."],
-      ["낙원", "그 노래는 들을 때마다 마음이 좀 가라앉는 쪽이죠... 어느 대목이 생각났어요?"],
-      ["녹차향기", "가사는 길게 옮기기보다, 분위기랑 맥락 중심으로 이야기하는 게 안전합니다."]
-    ],
-    comfort: [
-      ["낙원", "그런 날 있죠. 억지로 밝은 척 안 해도 됩니다. 여기서는 천천히 말해도 돼요."],
-      ["enfant", "음... 그냥 잠깐 앉아 있어도 괜찮을 것 같아요."],
-      ["녹차향기", "무슨 일이 있었는지 짧게만 적어도 됩니다. 방 사람들이 너무 캐묻지는 않을게요."]
-    ],
-    presence: [
-      ["mouse14", "다들 접속해는 있는데 타자가 느립니다 후후"],
-      ["soriboy", "자료방 정리하다가 대화방도 같이 보고 있습니다."],
-      ["녹차향기", "현재 공개 통신방입니다. 실제 인물 응답이 아니라 팬 대화형 공간으로 운영 중입니다."]
-    ],
-    joke: [
-      ["mouse14", "ㅋㅋ 그 말투 완전 통신방 감성인데요"],
-      ["raincoat", "방금 살짝 웃겼습니다. 인정 ㅎㅎ"],
-      ["enfant", "피식... 했어요." ]
-    ],
-    chat: [
-      ["녹차향기", "네, 그 얘기 이어가도 좋습니다. 너무 길게 안 써도 알아듣습니다."],
-      ["soriboy", "그 부분은 자료로 확인할 수 있는 것과 추억으로 말하는 것을 나눠보면 좋겠네요."],
-      ["낙원", "말이 좀 짧아도 괜찮아요. 통신방은 원래 그렇게 이어지는 맛이 있으니까요."],
-      ["raincoat", "음... 그럼 다음 얘기는 어디로 가볼까요?" ]
-    ]
-  };
-  const pool = replies[intent] || replies.chat;
-  const first = fbTelecomPick(pool);
-  const second = Math.random() < 0.38 ? fbTelecomPick(pool.filter((x) => x[0] !== first[0]) || pool) : null;
-  return second ? [first, second] : [first];
-}
+// 무료 자동 멤버 반응은 제거했습니다.
+// AI 대사는 Cloudflare Workers AI 호출 성공 시에만 생성됩니다.
 
 async function fbTelecomAddMessage(data) {
   await addDoc(fbTelecomMessagesRef(), {
@@ -6545,10 +6497,33 @@ async function fbTelecomEnterRoom() {
     uid: currentUser.uid,
     ownerUid: currentUser.uid
   });
-  fbTelecomSetStatus("Firebase 실시간 통신방에 접속했습니다. 이제 Cloudflare Workers AI로 대사를 생성합니다.");
+  fbTelecomSetStatus("Firebase 실시간 통신방에 접속했습니다. 사용자가 메시지를 보낼 때만 Cloudflare Workers AI가 대사를 생성합니다.");
+  fbTelecomLastUserAt = Date.now();
+  if (fbTelecomAutoTalkTimer) clearTimeout(fbTelecomAutoTalkTimer);
 }
 
-async function fbTelecomCallAiReply(clean) {
+function fbTelecomMakeStyleSeed(autoTalk = false) {
+  const now = new Date();
+  const themes = ["늦은 밤 접속", "자료실 정리", "라디오 녹음 이야기", "비 오는 날", "조용한 농담", "노래 한 곡 듣는 분위기", "게시판 눈팅", "낡은 모뎀 소리"];
+  const textures = ["짧게 툭", "두 문장 이하", "약간 장난", "담담하게", "질문 하나만", "말줄임표 조금", "PC통신체 살짝", "요즘 말투 금지"];
+  return {
+    autoTalk,
+    minute: now.getMinutes(),
+    theme: themes[Math.floor(Math.random() * themes.length)],
+    texture: textures[Math.floor(Math.random() * textures.length)],
+    nonce: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  };
+}
+
+function fbTelecomRecentTextsForAi(limitCount = 18) {
+  return fbTelecomRecentMessages
+    .slice(-limitCount)
+    .map((m) => String(m.text || "").trim())
+    .filter(Boolean)
+    .slice(-limitCount);
+}
+
+async function fbTelecomCallAiReply(clean, options = {}) {
   const workerUrl = (window.KKS_TELECOM_AI_WORKER_URL || FB_TELECOM_AI_WORKER_URL || "").trim();
   if (!workerUrl || workerUrl.includes("YOUR-WORKER-NAME") || workerUrl.includes("YOUR-SUBDOMAIN")) {
     throw new Error("Cloudflare Workers AI 주소가 아직 설정되지 않았습니다. app.js의 FB_TELECOM_AI_WORKER_URL을 실제 Worker URL로 바꿔 주세요.");
@@ -6556,10 +6531,10 @@ async function fbTelecomCallAiReply(clean) {
 
   const mode = document.getElementById("telecomModeSelect")?.value || "chat";
   const close = document.getElementById("telecomCloseSelect")?.value || "known";
-  const recentMessages = fbTelecomRecentMessages.slice(-24).map((m) => ({
+  const recentMessages = fbTelecomRecentMessages.slice(-32).map((m) => ({
     role: m.role || "system",
     nickname: m.nickname || "통신방",
-    text: String(m.text || "").slice(0, 300)
+    text: String(m.text || "").slice(0, 360)
   }));
 
   const res = await fetch(workerUrl, {
@@ -6574,7 +6549,11 @@ async function fbTelecomCallAiReply(clean) {
       userName: fbTelecomUserName(),
       mode,
       close,
-      recentMessages
+      recentMessages,
+      avoidTexts: fbTelecomRecentTextsForAi(24),
+      members: FB_TELECOM_MEMBERS,
+      autoTalk: false,
+      styleSeed: fbTelecomMakeStyleSeed(false)
     })
   });
 
@@ -6585,11 +6564,37 @@ async function fbTelecomCallAiReply(clean) {
   return data;
 }
 
+async function fbTelecomSaveAiReplies(replies, userUid, sourceLabel = "cloudflare-workers-ai") {
+  let saved = 0;
+  const seen = new Set(fbTelecomRecentTextsForAi(30).map((x) => x.replace(/\s+/g, "").slice(0, 50)));
+  for (const [idx, item] of replies.slice(0, 4).entries()) {
+    const nickname = telecomCleanText(item?.nickname || "통신방", "통신방").slice(0, 16);
+    const replyText = telecomCleanText(item?.text || "", "").slice(0, 500);
+    const compact = replyText.replace(/\s+/g, "").slice(0, 50);
+    if (!replyText || seen.has(compact)) continue;
+    seen.add(compact);
+    await new Promise((resolve) => setTimeout(resolve, 450 + idx * 720));
+    await fbTelecomAddMessage({
+      role: "member",
+      nickname,
+      text: replyText,
+      uid: userUid,
+      ownerUid: userUid,
+      generated: true,
+      source: sourceLabel
+    });
+    saved += 1;
+    fbTelecomLastAiAt = Date.now();
+  }
+  return saved;
+}
+
 async function fbTelecomSendUserMessage(text) {
   if (!currentUser || fbTelecomBotBusy) return;
   const clean = telecomCleanText(text, "").slice(0, FB_TELECOM_MAX_INPUT);
   if (!clean) return;
   const nick = fbTelecomUserNick();
+  fbTelecomLastUserAt = Date.now();
   await fbTelecomAddMessage({
     role: "user",
     nickname: nick,
@@ -6599,49 +6604,39 @@ async function fbTelecomSendUserMessage(text) {
   });
 
   fbTelecomBotBusy = true;
-  fbTelecomSetStatus("AI 통신방 멤버들이 대사를 생성 중입니다...");
+  fbTelecomSetStatus("AI 통신방 멤버들이 새 대사를 생성 중입니다...");
   try {
-    const data = await fbTelecomCallAiReply(clean);
+    const data = await fbTelecomCallAiReply(clean, { autoTalk: false });
     const replies = Array.isArray(data?.replies) ? data.replies : [];
-    let saved = 0;
-    for (const [idx, item] of replies.slice(0, 4).entries()) {
-      const nickname = telecomCleanText(item?.nickname || "통신방", "통신방").slice(0, 16);
-      const replyText = telecomCleanText(item?.text || "", "").slice(0, 500);
-      if (!replyText) continue;
-      await new Promise((resolve) => setTimeout(resolve, 500 + idx * 650));
-      await fbTelecomAddMessage({
-        role: "member",
-        nickname,
-        text: replyText,
-        uid: currentUser.uid,
-        ownerUid: currentUser.uid,
-        generated: true,
-        source: "cloudflare-workers-ai"
-      });
-      saved += 1;
-    }
+    const saved = await fbTelecomSaveAiReplies(replies, currentUser.uid, "cloudflare-workers-ai");
     fbTelecomSetStatus(saved > 0
       ? `Cloudflare Workers AI 응답 완료: ${saved}개 대사가 생성되었습니다.`
-      : "Cloudflare Worker 호출은 완료됐지만 생성된 대사가 없습니다.");
+      : "Cloudflare Worker 호출은 완료됐지만 생성된 대사가 없습니다. Worker 프롬프트/AI binding을 확인하세요.");
   } catch (err) {
     console.error("telecomAiReply failed", err);
-    fbTelecomSetStatus("AI 호출 실패: 기본 자동 멤버 반응으로 이어갑니다. Cloudflare Worker URL과 Workers AI 설정을 확인하세요.");
-    const replies = fbTelecomBuildReplies(clean);
-    for (const [idx, [member, reply]] of replies.entries()) {
-      await new Promise((resolve) => setTimeout(resolve, 650 + idx * 700));
-      await fbTelecomAddMessage({
-        role: "member",
-        nickname: member,
-        text: reply,
-        uid: currentUser.uid,
-        ownerUid: currentUser.uid,
-        generated: true,
-        fallback: true
-      });
-    }
+    fbTelecomSetStatus("AI 호출 실패: 자동 반응 없이 중단되었습니다. Cloudflare Worker URL, Workers AI binding, CORS 설정을 확인하세요.");
+    await fbTelecomAddMessage({
+      role: "system",
+      nickname: "통신방",
+      text: "AI 대사 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+      uid: currentUser.uid,
+      ownerUid: currentUser.uid,
+      generated: false,
+      error: true
+    });
   } finally {
     fbTelecomBotBusy = false;
   }
+}
+
+function fbTelecomScheduleAutoTalk() {
+  if (fbTelecomAutoTalkTimer) clearTimeout(fbTelecomAutoTalkTimer);
+  fbTelecomAutoTalkTimer = null;
+}
+
+async function fbTelecomAutoTalkOnce() {
+  // 자동 선발화 기능은 사용하지 않습니다.
+  return;
 }
 
 function initTelecomChatRoomCloudflare() {
@@ -6660,10 +6655,10 @@ function initTelecomChatRoomCloudflare() {
 
   const engineSel = document.getElementById("telecomEngineSelect");
   if (engineSel) {
-    engineSel.innerHTML = `<option value="firebase-ai" selected>Firebase + Cloudflare Workers AI 생성</option><option value="local">AI 실패 시 무료 자동 반응</option>`;
+    engineSel.innerHTML = `<option value="firebase-ai" selected>Cloudflare Workers AI 생성만 사용</option>`;
     engineSel.value = "firebase-ai";
   }
-  fbTelecomSetStatus("Firebase + Cloudflare Workers AI 구조입니다. 로그인 후 입장하면 대화가 Firestore에 저장되고 Cloudflare Workers AI가 대사를 생성합니다.");
+  fbTelecomSetStatus("Cloudflare Workers AI 전용 구조입니다. 사용자가 메시지를 보낼 때만 AI가 새 대사를 생성합니다.");
 
   if (fbTelecomInitialized) {
     if (currentUser) fbTelecomListen();

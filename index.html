@@ -496,7 +496,6 @@
             <label>대화 방식</label>
             <select id="telecomEngineSelect">
               <option value="firebase-ai" selected>Cloudflare Workers AI 생성</option>
-              <option value="local">무료 자동 멤버 반응</option>
             </select>
             <p id="telecomAiStatus" class="telecom-ai-status">Firebase 기반 실시간 통신방입니다. Cloudflare Worker가 Workers AI를 호출해 통신방 멤버 대사를 생성합니다.</p>
             <label>대화 모드</label>
@@ -526,8 +525,8 @@
           </div>
           <div id="telecomLog" class="telecom-log" aria-live="polite"></div>
           <div id="telecomAfterKksExit" class="telecom-after-exit hidden">
-            <span>자동 멤버 반응이 잠시 멈췄습니다. 계속 대화하시겠어요?</span>
-            <button type="button" id="telecomContinueFansBtn" class="telecom-small-btn">팬들과 계속 대화</button>
+            <span>AI 대사 생성이 잠시 멈췄습니다. Worker 설정을 확인해 주세요.</span>
+            <button type="button" id="telecomContinueFansBtn" class="telecom-small-btn">다시 시도</button>
             <button type="button" id="telecomEndRoomBtn" class="telecom-small-btn">대화 종료</button>
           </div>
           <form id="telecomForm" class="telecom-input-row">
