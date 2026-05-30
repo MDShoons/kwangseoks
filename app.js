@@ -295,10 +295,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
-  doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc
+  doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v171-pc-chat-natural-ai";
+const APP_VERSION = "v172-firebase-telecom-room";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -6349,3 +6349,267 @@ window.addEventListener("resize", () => {
 });
 window.initTelecomChatRoom = initTelecomChatRoom;
 
+
+
+/* --------------------------------------------------------------------------
+   v172: 광석이네 통신방 Firebase 리메이크
+   - 기존 WebLLM/복잡한 로컬 상태 방식 대신 Firestore 실시간 대화방으로 재구성
+   - AI API 키 없이도 먼저 작동하도록 PC통신풍 자동 멤버 반응을 클라이언트에서 생성
+   - 추후 Cloud Functions AI 응답으로 교체하기 쉽도록 메시지 구조를 단순화
+-------------------------------------------------------------------------- */
+const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main";
+const FB_TELECOM_MAX_INPUT = 500;
+let fbTelecomInitialized = false;
+let fbTelecomUnsubscribe = null;
+let fbTelecomBotBusy = false;
+
+const FB_TELECOM_MEMBERS = [
+  { nick: "녹차향기", role: "방장", tone: "차분" },
+  { nick: "soriboy", role: "자료방", tone: "음악" },
+  { nick: "낙원", role: "감성", tone: "위로" },
+  { nick: "mouse14", role: "장난", tone: "농담" },
+  { nick: "raincoat", role: "분위기", tone: "밝음" },
+  { nick: "enfant", role: "조용함", tone: "공감" }
+];
+
+function fbTelecomUserNick() {
+  return telecomCleanText(
+    currentUserProfile?.loginId || currentUser?.displayName || currentUser?.email?.split("@")[0] || "손님",
+    "손님"
+  ).slice(0, 14);
+}
+
+function fbTelecomUserName() {
+  return telecomCleanText(
+    currentUserProfile?.name || currentUser?.displayName || fbTelecomUserNick(),
+    fbTelecomUserNick()
+  ).slice(0, 14);
+}
+
+function fbTelecomRoomRef() {
+  return doc(db, "chatRooms", FB_TELECOM_ROOM_ID);
+}
+
+function fbTelecomMessagesRef() {
+  return collection(db, "chatRooms", FB_TELECOM_ROOM_ID, "messages");
+}
+
+function fbTelecomEscape(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function fbTelecomTime(value) {
+  const d = value?.toDate ? value.toDate() : value ? new Date(value) : new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function fbTelecomSetStatus(text) {
+  const el = document.getElementById("telecomAiStatus");
+  if (el) el.textContent = text;
+}
+
+function fbTelecomRenderLine(msg) {
+  const log = document.getElementById("telecomLog");
+  if (!log) return;
+  const line = document.createElement("div");
+  const role = msg.role || "system";
+  line.className = `telecom-line telecom-line-${role}`;
+  const time = fbTelecomTime(msg.createdAt || msg.clientCreatedAt);
+  const nick = fbTelecomEscape(msg.nickname || (role === "user" ? "나" : "통신방"));
+  const text = fbTelecomEscape(msg.text || "");
+  if (role === "system") {
+    line.innerHTML = `<span class="telecom-time">[${time}]</span> <span class="telecom-system-text">*** ${text}</span>`;
+  } else {
+    line.innerHTML = `<span class="telecom-time">[${time}]</span> <span class="telecom-nick">${nick}</span> : <span class="telecom-text">${text}</span>`;
+  }
+  log.appendChild(line);
+}
+
+function fbTelecomListen() {
+  if (fbTelecomUnsubscribe) fbTelecomUnsubscribe();
+  const q = query(fbTelecomMessagesRef(), orderBy("createdAt", "asc"), limit(250));
+  fbTelecomUnsubscribe = onSnapshot(q, (snapshot) => {
+    const log = document.getElementById("telecomLog");
+    if (!log) return;
+    log.innerHTML = "";
+    snapshot.forEach((docSnap) => fbTelecomRenderLine(docSnap.data()));
+    log.scrollTop = log.scrollHeight;
+  }, (err) => {
+    console.error("telecom listen failed", err);
+    fbTelecomSetStatus("Firestore 대화방 연결에 실패했습니다. 보안 규칙 또는 로그인 상태를 확인하세요.");
+  });
+}
+
+function fbTelecomDetectIntent(text) {
+  const t = String(text || "").toLowerCase();
+  if (/노래|음악|앨범|가사|라디오|공연|라이브|기타/.test(t)) return "music";
+  if (/힘들|우울|슬프|외롭|속상|위로|눈물|지쳤/.test(t)) return "comfort";
+  if (/안녕|하이|ㅎㅇ|반가|들어왔/.test(t)) return "greeting";
+  if (/뭐해|뭐하세요|있어|계세요|누구/.test(t)) return "presence";
+  if (/ㅋㅋ|ㅎㅎ|웃|재밌|장난/.test(t)) return "joke";
+  return "chat";
+}
+
+function fbTelecomPick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function fbTelecomBuildReplies(userText) {
+  const nick = fbTelecomUserNick();
+  const intent = fbTelecomDetectIntent(userText);
+  const replies = {
+    greeting: [
+      ["녹차향기", `${nick}님 접속 확인했습니다. 오늘도 조용히 얘기 나눠요.`],
+      ["raincoat", `${nick}님 왔다~ 방이 좀 살아나네요 ㅎㅎ`]
+    ],
+    music: [
+      ["soriboy", "노래 얘기면 좋죠. 곡 제목이나 방송 날짜를 같이 적어주면 자료방식으로 더 잘 이어갈 수 있어요."],
+      ["낙원", "그 노래는 들을 때마다 마음이 좀 가라앉는 쪽이죠... 어느 대목이 생각났어요?"],
+      ["녹차향기", "가사는 길게 옮기기보다, 분위기랑 맥락 중심으로 이야기하는 게 안전합니다."]
+    ],
+    comfort: [
+      ["낙원", "그런 날 있죠. 억지로 밝은 척 안 해도 됩니다. 여기서는 천천히 말해도 돼요."],
+      ["enfant", "음... 그냥 잠깐 앉아 있어도 괜찮을 것 같아요."],
+      ["녹차향기", "무슨 일이 있었는지 짧게만 적어도 됩니다. 방 사람들이 너무 캐묻지는 않을게요."]
+    ],
+    presence: [
+      ["mouse14", "다들 접속해는 있는데 타자가 느립니다 후후"],
+      ["soriboy", "자료방 정리하다가 대화방도 같이 보고 있습니다."],
+      ["녹차향기", "현재 공개 통신방입니다. 실제 인물 응답이 아니라 팬 대화형 공간으로 운영 중입니다."]
+    ],
+    joke: [
+      ["mouse14", "ㅋㅋ 그 말투 완전 통신방 감성인데요"],
+      ["raincoat", "방금 살짝 웃겼습니다. 인정 ㅎㅎ"],
+      ["enfant", "피식... 했어요." ]
+    ],
+    chat: [
+      ["녹차향기", "네, 그 얘기 이어가도 좋습니다. 너무 길게 안 써도 알아듣습니다."],
+      ["soriboy", "그 부분은 자료로 확인할 수 있는 것과 추억으로 말하는 것을 나눠보면 좋겠네요."],
+      ["낙원", "말이 좀 짧아도 괜찮아요. 통신방은 원래 그렇게 이어지는 맛이 있으니까요."],
+      ["raincoat", "음... 그럼 다음 얘기는 어디로 가볼까요?" ]
+    ]
+  };
+  const pool = replies[intent] || replies.chat;
+  const first = fbTelecomPick(pool);
+  const second = Math.random() < 0.38 ? fbTelecomPick(pool.filter((x) => x[0] !== first[0]) || pool) : null;
+  return second ? [first, second] : [first];
+}
+
+async function fbTelecomAddMessage(data) {
+  await addDoc(fbTelecomMessagesRef(), {
+    ...data,
+    roomId: FB_TELECOM_ROOM_ID,
+    createdAt: serverTimestamp(),
+    clientCreatedAt: Date.now()
+  });
+}
+
+async function fbTelecomEnterRoom() {
+  if (!currentUser) {
+    alert("로그인 후 통신방에 입장할 수 있습니다.");
+    goPage("loginRequired");
+    return;
+  }
+  const nick = fbTelecomUserNick();
+  const name = fbTelecomUserName();
+  await setDoc(fbTelecomRoomRef(), {
+    title: "광석이네 통신방",
+    mode: "firebase-realtime",
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+  document.getElementById("telecomSetup")?.classList.add("hidden");
+  document.getElementById("telecomRoom")?.classList.remove("hidden");
+  const dateEl = document.getElementById("telecomRoomDate");
+  if (dateEl) dateEl.textContent = telecomFormatDate95 ? telecomFormatDate95() : "95/--/--";
+  fbTelecomListen();
+  await fbTelecomAddMessage({
+    role: "system",
+    nickname: "통신방",
+    text: `${nick}(${name})님이 접속하셨습니다.`,
+    uid: currentUser.uid,
+    ownerUid: currentUser.uid
+  });
+  fbTelecomSetStatus("Firebase 실시간 통신방에 접속했습니다. 현재는 무료형 자동 멤버 반응으로 동작합니다.");
+}
+
+async function fbTelecomSendUserMessage(text) {
+  if (!currentUser || fbTelecomBotBusy) return;
+  const clean = telecomCleanText(text, "").slice(0, FB_TELECOM_MAX_INPUT);
+  if (!clean) return;
+  const nick = fbTelecomUserNick();
+  await fbTelecomAddMessage({
+    role: "user",
+    nickname: nick,
+    text: clean,
+    uid: currentUser.uid,
+    ownerUid: currentUser.uid
+  });
+  fbTelecomBotBusy = true;
+  fbTelecomSetStatus("통신방 멤버들이 입력 중입니다...");
+  const replies = fbTelecomBuildReplies(clean);
+  for (const [idx, [member, reply]] of replies.entries()) {
+    await new Promise((resolve) => setTimeout(resolve, 650 + idx * 700));
+    await fbTelecomAddMessage({
+      role: "member",
+      nickname: member,
+      text: reply,
+      uid: "telecom-generated-member",
+      ownerUid: currentUser.uid,
+      generated: true
+    });
+  }
+  fbTelecomSetStatus("Firebase 실시간 통신방 연결됨. AI API는 아직 붙이지 않은 무료형 1차 버전입니다.");
+  fbTelecomBotBusy = false;
+}
+
+function initTelecomChatRoom() {
+  // v172 Firebase remake: 모바일도 접속은 가능하게 열어둠.
+  const pcOnly = document.getElementById("telecomPcOnlyNotice");
+  if (pcOnly) pcOnly.classList.add("hidden");
+  const shell = document.querySelector(".telecom-shell");
+  if (shell) shell.classList.remove("hidden");
+
+  document.getElementById("telecomCallBtn")?.classList.add("hidden");
+  document.getElementById("telecomAfterKksExit")?.classList.add("hidden");
+  const nickInput = document.getElementById("telecomNickInput");
+  const nameInput = document.getElementById("telecomNameInput");
+  if (nickInput) nickInput.value = currentUser ? fbTelecomUserNick() : "로그인 필요";
+  if (nameInput) nameInput.value = currentUser ? fbTelecomUserName() : "로그인 필요";
+
+  const engineSel = document.getElementById("telecomEngineSelect");
+  if (engineSel) {
+    engineSel.innerHTML = `<option value="firebase" selected>Firebase 실시간 통신방</option><option value="local">무료 자동 멤버 반응</option>`;
+    engineSel.value = "firebase";
+  }
+  fbTelecomSetStatus("Firebase 기반으로 새로 만든 통신방입니다. 로그인 후 입장하면 대화가 Firestore에 저장됩니다.");
+
+  if (fbTelecomInitialized) {
+    if (currentUser) fbTelecomListen();
+    return;
+  }
+  fbTelecomInitialized = true;
+
+  document.getElementById("telecomEnterBtn")?.addEventListener("click", fbTelecomEnterRoom);
+  document.getElementById("telecomResetBtn")?.addEventListener("click", async () => {
+    if (!currentUser) return alert("로그인 후 이용할 수 있습니다.");
+    const ok = confirm("Firestore 메시지를 삭제하지 않고, 화면만 새로 불러옵니다. 계속할까요?");
+    if (!ok) return;
+    document.getElementById("telecomLog") && (document.getElementById("telecomLog").innerHTML = "");
+    fbTelecomListen();
+  });
+  document.getElementById("telecomForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("telecomMessageInput");
+    const text = input?.value || "";
+    if (input) input.value = "";
+    await fbTelecomSendUserMessage(text);
+  });
+}
+window.initTelecomChatRoom = initTelecomChatRoom;

@@ -49,5 +49,21 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
+
+    match /chatRooms/{roomId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+
+      match /messages/{messageId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.role in ["user", "member", "system"]
+          && request.resource.data.ownerUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
   }
 }

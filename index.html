@@ -474,13 +474,13 @@
     <section id="telecom" class="page content-page telecom-page">
       <div id="telecomPcOnlyNotice" class="telecom-pc-only hidden">
         <h2>광석이네 통신방은 PC 전용입니다.</h2>
-        <p>1995년 PC통신 화면과 브라우저 생성형 실험 모드는 데스크톱 Chrome/Edge 환경에서 이용해주세요.</p>
+        <p>Firebase 실시간 통신방으로 다시 구성했습니다. 로그인 후 이용해주세요.</p>
       </div>
       <div class="telecom-shell">
         <div class="telecom-titlebar">
           <div>
             <h1>광석이네 통신방</h1>
-            <p>1995년 PC통신 둥근소리 대화방 느낌으로 꾸민 가상 대화 공간입니다.</p>
+            <p>Firebase 실시간 저장을 붙인 1990년대 PC통신풍 가상 대화 공간입니다.</p>
           </div>
           <button type="button" id="telecomResetBtn" class="telecom-small-btn">대화 초기화</button>
         </div>
@@ -495,10 +495,10 @@
             <p class="telecom-account-note">닉네임과 이름은 로그인한 계정 정보로 자동 표시됩니다.</p>
             <label>대화 방식</label>
             <select id="telecomEngineSelect">
-              <option value="webllm" selected>생성형 AI 단체대화</option>
-              <option value="classic">기본 PC통신 대화</option>
+              <option value="firebase" selected>Firebase 실시간 통신방</option>
+              <option value="local">무료 자동 멤버 반응</option>
             </select>
-            <p id="telecomAiStatus" class="telecom-ai-status">생성형 AI 단체대화 모드입니다. 검색하지 않고 브라우저 WebGPU 모델이 대화 흐름을 만듭니다. 첫 실행은 오래 걸릴 수 있습니다.</p>
+            <p id="telecomAiStatus" class="telecom-ai-status">Firebase 기반 실시간 통신방입니다. 1차 버전은 무료 자동 멤버 반응으로 동작하고, 추후 Cloud Functions AI 응답으로 교체할 수 있습니다.</p>
             <label>대화 모드</label>
             <select id="telecomModeSelect">
               <option value="chat">잡담하기</option>
@@ -522,11 +522,11 @@
         <div id="telecomRoom" class="telecom-room hidden">
           <div class="telecom-status-row">
             <span id="telecomRoomName">공개 광석이네 통신방</span><span id="telecomRoomDate" class="telecom-room-date">95/--/--</span>
-            <button type="button" id="telecomCallBtn" class="telecom-small-btn hidden">김광석 호출</button>
+            <button type="button" id="telecomCallBtn" class="telecom-small-btn hidden">멤버 호출</button>
           </div>
           <div id="telecomLog" class="telecom-log" aria-live="polite"></div>
           <div id="telecomAfterKksExit" class="telecom-after-exit hidden">
-            <span>김광석님이 나가셨습니다. 팬들과 계속 대화하시겠어요?</span>
+            <span>자동 멤버 반응이 잠시 멈췄습니다. 계속 대화하시겠어요?</span>
             <button type="button" id="telecomContinueFansBtn" class="telecom-small-btn">팬들과 계속 대화</button>
             <button type="button" id="telecomEndRoomBtn" class="telecom-small-btn">대화 종료</button>
           </div>
@@ -535,7 +535,7 @@
             <input id="telecomMessageInput" type="text" autocomplete="off" placeholder="대화를 입력하세요" />
             <button type="submit">전송</button>
           </form>
-          <p class="telecom-notice">※ 실제 김광석 본인의 응답이 아니라, 남겨진 채팅·게시판 말투를 참고해 만든 가상 PC통신 화면입니다.</p>
+          <p class="telecom-notice">※ 실제 김광석 본인의 응답이 아닙니다. 팬 대화방 분위기를 참고한 가상 PC통신형 공간입니다.</p>
         </div>
       </div>
     </section>
