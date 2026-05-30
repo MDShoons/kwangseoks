@@ -965,3 +965,16 @@ firestore.rules
 5. Firestore 규칙은 기존 규칙과 충돌하지 않게 `chatRooms` 부분을 합쳐 적용합니다.
 
 자세한 순서는 `CLOUDFLARE_WORKERS_AI_TELECOM_SETUP.txt`를 확인하세요.
+
+
+## 변경 안내
+
+- 광석이네 통신방 메뉴와 페이지를 제거했습니다.
+- Cloudflare Workers AI 통신방 관련 파일은 삭제했습니다.
+- 기존 자료실, Songs, Radios, Photos, Stories, About, Oneum, 관리자 기능은 유지했습니다.
+
+
+## v186 통신방 안내 제거
+
+- 사이트 안내 페이지에서 광석이네 통신방 설명 카드를 제거했습니다.
+- 통신방 메뉴/페이지 제거 상태를 유지합니다.

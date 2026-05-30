@@ -39,12 +39,12 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=v184-pcchat-compact-default-kks" />
+  <link rel="stylesheet" href="style.css?v=no-telecom-v2" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
     (function () {
-      var VALID = ["home","siteinfo","videos","songs","radios","photos","stories","about","oneum","telecom","loginRequired","login","signup","mypage","admin"];
+      var VALID = ["home","siteinfo","videos","songs","radios","photos","stories","about","oneum","loginRequired","login","signup","mypage","admin"];
       function qsa(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
 
       function show(page) {
@@ -212,7 +212,6 @@
       <button data-page-fallback="stories" onclick="goPage('stories')">Stories</button>
       <button data-page-fallback="about" onclick="goPage('about')">About Seok</button>
       <button data-page-fallback="oneum" onclick="goPage('oneum')">Oneum</button>
-      <button data-page-fallback="telecom" onclick="goPage('telecom')">광석이네 통신방</button>
     </nav>
 
     <div class="auth-area">
@@ -317,7 +316,6 @@
             <li><span class="site-storage-name">Stories</span><span class="site-storage-desc">— 일기, 글, 이야기 자료</span></li>
             <li><span class="site-storage-name">About Seok</span><span class="site-storage-desc">— 김광석에 대한 설명과 정리 글</span></li>
             <li><span class="site-storage-name">Oneum</span><span class="site-storage-desc">— 둥근소리글과 관련 기록 모음</span></li>
-            <li><span class="site-storage-name">광석이네 통신방</span><span class="site-storage-desc">— 1990년대 PC통신 분위기를 재현한 가상 대화 공간</span></li>
           </ul>
         </article>
 
@@ -352,16 +350,6 @@
           </p>
         </article>
 
-        <article class="site-guide-card">
-          <h2>광석이네 통신방</h2>
-          <p>
-            광석이네 통신방은 1995년 PC통신 둥근소리 대화방 느낌을 참고해 만든 가상 대화 공간입니다.
-            실제 김광석 본인의 응답이 아니라, 남겨진 자료와 당시 PC통신 말투를 참고해 만든 상상형 공간입니다.
-          </p>
-          <p>
-            이 공간은 기록을 딱딱하게만 보지 않고, 그 시절 사람들이 노래를 듣고 서로 말을 건네던 분위기를 느껴보기 위한 장치입니다.
-          </p>
-        </article>
 
         <article class="site-guide-card">
           <h2>로그인 안내</h2>
@@ -469,83 +457,6 @@
       <div id="oneumList" class="card-grid text-archive-grid"></div>
         <div id="oneumPagination" class="pagination"></div>
     </section>
-
-
-    <section id="telecom" class="page content-page telecom-page">
-      <div id="telecomPcOnlyNotice" class="telecom-pc-only hidden">
-        <h2>광석이네 통신방은 PC 화면에 맞춰져 있습니다.</h2>
-        <p>1990년대 PC통신 대화방 분위기로 만든 가상 공간입니다. 로그인 후 이용해주세요.</p>
-      </div>
-      <div class="telecom-shell">
-        <div class="telecom-titlebar">
-          <div>
-            <h1>광석이네 통신방</h1>
-            <p>둥근소리 시절의 오래된 PC통신 대화방 분위기를 떠올리며 만든 공간입니다.</p>
-          </div>
-          <button type="button" id="telecomResetBtn" class="telecom-small-btn">대화 초기화</button>
-        </div>
-
-        <div id="telecomSetup" class="telecom-setup hidden">
-          <div class="telecom-connect-box">
-            <h2>접속 설정</h2>
-            <label>닉네임 <span class="telecom-fixed-label">계정 고정</span></label>
-            <input id="telecomNickInput" type="text" placeholder="로그인 계정 아이디" maxlength="14" readonly />
-            <label>이름 <span class="telecom-fixed-label">계정 고정</span></label>
-            <input id="telecomNameInput" type="text" placeholder="로그인 계정 이름" maxlength="14" readonly />
-            <p class="telecom-account-note">닉네임과 이름은 로그인한 계정 정보로 자동 표시됩니다.</p>
-            <label>대화 방식</label>
-            <select id="telecomEngineSelect">
-              <option value="pcchat" selected>PC통신 대화방</option>
-            </select>
-            <p id="telecomAiStatus" class="telecom-ai-status"></p>
-            <label>대화 모드 <span class="telecom-fixed-label">전체 대화 흐름</span></label>
-            <select id="telecomModeSelect">
-              <option value="chat">잡담하기</option>
-              <option value="comfort">위로받기</option>
-              <option value="music">음악 이야기</option>
-              <option value="memory">추억 이야기</option>
-              <option value="worry">고민 상담</option>
-            </select>
-            <label>친한 정도 <span class="telecom-fixed-label">나와 김광석 사이</span></label>
-            <select id="telecomCloseSelect">
-              <option value="first">처음 만남</option>
-              <option value="known" selected>아는 사이</option>
-              <option value="close">조금 친함</option>
-              <option value="veryClose">많이 친함</option>
-              <option value="best">아주 가까움</option>
-            </select>
-            <label>김광석 부르기</label>
-            <select id="telecomKksSelect">
-              <option value="no">부르지 않기</option>
-              <option value="yes" selected>입장할 때 부르기</option>
-            </select>
-            <p class="telecom-account-note">김광석은 최소 15분 이상 머문 뒤, 정해진 시간이 아니라 상황에 따라 바쁘다며 나갈 수 있습니다. 나간 뒤에는 2~3시간 뒤 다시 호출할 수 있습니다.</p>
-            <button type="button" id="telecomEnterBtn" class="telecom-enter-btn">통신방 입장</button>
-          </div>
-        </div>
-
-        <div id="telecomRoom" class="telecom-room hidden">
-          <div class="telecom-status-row">
-            <span id="telecomRoomName">공개 광석이네 통신방</span><span id="telecomRoomDate" class="telecom-room-date">95/--/--</span>
-            <button type="button" id="telecomCallBtn" class="telecom-small-btn hidden">김광석 부르기</button>
-          </div>
-          <div id="telecomLog" class="telecom-log" aria-live="polite"></div>
-          <div id="telecomAfterKksExit" class="telecom-after-exit hidden">
-            <span>AI 대사 생성이 잠시 멈췄습니다. Worker 설정을 확인해 주세요.</span>
-            <button type="button" id="telecomContinueFansBtn" class="telecom-small-btn">팬들과 계속 대화</button>
-            <button type="button" id="telecomEndRoomBtn" class="telecom-small-btn">대화 종료</button>
-          </div>
-          <form id="telecomForm" class="telecom-input-row">
-            <span>Chat :</span>
-            <input id="telecomMessageInput" type="text" autocomplete="off" placeholder="대화를 입력하세요" />
-            <button type="submit">전송</button>
-          </form>
-          <p class="telecom-notice">※ 실제 인물의 응답이 아니라, 팬 대화방 분위기를 참고한 가상 PC통신형 공간입니다.</p>
-        </div>
-      </div>
-    </section>
-
-
     <section id="loginRequired" class="page auth-page login-required-page">
       <h1>로그인을 하지 않으셨네요!</h1>
       <p>이 자료실은 로그인한 회원만 볼 수 있습니다.</p>
@@ -809,6 +720,6 @@
   </div>
 <div class="version-marker">v167-siteinfo-purpose-bold</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=v184-pcchat-compact-default-kks"></script>
+  <script type="module" src="app.js?v=no-telecom-v2"></script>
 </body>
 </html>

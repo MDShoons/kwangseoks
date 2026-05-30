@@ -6222,3 +6222,41 @@ body {
   #telecom .telecom-system-text { font-size:12px !important; }
   #telecom .telecom-line-time { font-size:8.5px !important; }
 }
+
+
+/* v18 stable dialogue: PC통신 로그를 더 작고 촘촘하게 */
+#telecom .telecom-titlebar h1 { font-size:17px !important; line-height:1.2 !important; }
+#telecom .telecom-titlebar p { font-size:10px !important; }
+#telecom .telecom-room-date { font-size:10px !important; min-width:58px !important; padding:2px 5px !important; }
+#telecom .telecom-log {
+  font-size:11.5px !important;
+  line-height:1.38 !important;
+  letter-spacing:-0.2px !important;
+}
+#telecom .telecom-line {
+  grid-template-columns: 82px 64px 1fr 38px !important;
+  column-gap:4px !important;
+  min-height:17px !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+#telecom .telecom-line-system {
+  grid-template-columns: 46px 1fr 38px !important;
+  column-gap:4px !important;
+}
+#telecom .telecom-nick,
+#telecom .telecom-real,
+#telecom .telecom-text,
+#telecom .telecom-system-prefix,
+#telecom .telecom-system-text {
+  font-size:11.5px !important;
+  line-height:1.38 !important;
+  color:#fff !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-line-time { font-size:8.5px !important; line-height:1.38 !important; }
+#telecom .telecom-input-row span { font-size:11px !important; }
+#telecom .telecom-input-row input { height:26px !important; font-size:11px !important; padding:3px 7px !important; }
+#telecom .telecom-enter-btn,
+#telecom .telecom-small-btn { font-size:10.5px !important; padding:5px 9px !important; }
+#telecom .telecom-ai-status { font-size:9.5px !important; }
