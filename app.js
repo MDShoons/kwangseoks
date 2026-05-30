@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v179-pcchat-reset-deletes-firestore";
+const APP_VERSION = "v180-pcchat-reset-messages-only";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -3562,7 +3562,7 @@ document.addEventListener("click", (event) => {
    - 사용자가 메시지를 보낼 때만 Cloudflare Worker가 AI 대사를 새로 생성
    - 브라우저는 대화 저장, 화면 표시, Worker 호출만 담당
 -------------------------------------------------------------------------- */
-const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v4-flow";
+const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v5-talk";
 const FB_TELECOM_MAX_INPUT = 500;
 const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 
@@ -4107,22 +4107,11 @@ async function fbTelecomResetRoom() {
   fbTelecomSetStatus("대화를 초기화하는 중입니다...");
 
   try {
-    fbTelecomClearKksTimers();
-    if (fbTelecomPresenceTimer) {
-      clearTimeout(fbTelecomPresenceTimer);
-      fbTelecomPresenceTimer = null;
-    }
-
-    fbTelecomKksActive = false;
-    fbTelecomKksReceiving = false;
-    fbTelecomKksCallPending = false;
-    fbTelecomKksAvailabilityPrompted = false;
+    // 대화 초기화는 화면/Firestore 메시지만 비운다.
+    // 김광석 수신 중/수신 가능/자리 비움/2~3시간 대기 상태와 관련 타이머는 유지한다.
+    // 즉, 김광석이 이미 방에 있으면 그대로 있고, 나가서 대기 중이면 대기 시간도 리셋하지 않는다.
     fbTelecomBotBusy = false;
     fbTelecomRecentMessages = [];
-
-    sessionStorage.removeItem(`kks-telecom-entered-${FB_TELECOM_ROOM_ID}-${currentUser.uid}`);
-    localStorage.removeItem(fbTelecomKksCooldownKey());
-    fbTelecomKksCooldownUntil = 0;
 
     const snap = await getDocs(fbTelecomMessagesRef());
     await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
@@ -4130,6 +4119,7 @@ async function fbTelecomResetRoom() {
     await setDoc(fbTelecomRoomRef(), {
       title: "광석이네 통신방",
       resetBy: currentUser.uid,
+      resetMessagesOnly: true,
       updatedAt: serverTimestamp()
     }, { merge: true });
 
@@ -4138,7 +4128,6 @@ async function fbTelecomResetRoom() {
 
     fbTelecomSetCallButton();
     fbTelecomSetStatus("");
-    await fbTelecomEnterRoom({ skipEntryMessage: false });
   } catch (err) {
     console.error("telecom reset failed", err);
     fbTelecomSetStatus("대화 초기화에 실패했습니다. Firestore 규칙의 delete 권한을 확인하세요.");
