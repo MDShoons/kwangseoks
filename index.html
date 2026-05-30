@@ -474,13 +474,13 @@
     <section id="telecom" class="page content-page telecom-page">
       <div id="telecomPcOnlyNotice" class="telecom-pc-only hidden">
         <h2>광석이네 통신방은 PC 전용입니다.</h2>
-        <p>Firebase 실시간 통신방으로 다시 구성했습니다. 로그인 후 이용해주세요.</p>
+        <p>Firebase + Cloudflare Workers AI 통신방으로 다시 구성했습니다. 로그인 후 이용해주세요.</p>
       </div>
       <div class="telecom-shell">
         <div class="telecom-titlebar">
           <div>
             <h1>광석이네 통신방</h1>
-            <p>Firebase 실시간 저장을 붙인 1990년대 PC통신풍 가상 대화 공간입니다.</p>
+            <p>Firebase 실시간 저장과 Cloudflare Workers AI 대사 생성을 붙인 1990년대 PC통신풍 가상 대화 공간입니다.</p>
           </div>
           <button type="button" id="telecomResetBtn" class="telecom-small-btn">대화 초기화</button>
         </div>
@@ -495,10 +495,10 @@
             <p class="telecom-account-note">닉네임과 이름은 로그인한 계정 정보로 자동 표시됩니다.</p>
             <label>대화 방식</label>
             <select id="telecomEngineSelect">
-              <option value="firebase" selected>Firebase 실시간 통신방</option>
+              <option value="firebase-ai" selected>Cloudflare Workers AI 생성</option>
               <option value="local">무료 자동 멤버 반응</option>
             </select>
-            <p id="telecomAiStatus" class="telecom-ai-status">Firebase 기반 실시간 통신방입니다. 1차 버전은 무료 자동 멤버 반응으로 동작하고, 추후 Cloud Functions AI 응답으로 교체할 수 있습니다.</p>
+            <p id="telecomAiStatus" class="telecom-ai-status">Firebase 기반 실시간 통신방입니다. Cloudflare Worker가 Workers AI를 호출해 통신방 멤버 대사를 생성합니다.</p>
             <label>대화 모드</label>
             <select id="telecomModeSelect">
               <option value="chat">잡담하기</option>

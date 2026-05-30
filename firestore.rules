@@ -56,12 +56,31 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         allow read: if signedIn();
+
+        // 브라우저에서 직접 만들 수 있는 것은 사용자 발화, 입장 안내,
+        // 그리고 Cloudflare Workers AI 응답을 받은 뒤 저장하는 generated member 메시지입니다.
+        // 주의: Cloudflare Worker가 Firestore Admin 권한으로 직접 쓰지 않는 간단 구조라서,
+        // generated member 저장은 로그인 사용자 uid 기준으로 허용합니다.
         allow create: if signedIn()
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0
           && request.resource.data.text.size() <= 1000
-          && request.resource.data.role in ["user", "member", "system"]
-          && request.resource.data.ownerUid == request.auth.uid;
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.uid == request.auth.uid
+          && (
+            request.resource.data.role == "user" ||
+            request.resource.data.role == "system" ||
+            (
+              request.resource.data.role == "member" &&
+              request.resource.data.generated == true &&
+              request.resource.data.source == "cloudflare-workers-ai"
+            ) ||
+            (
+              request.resource.data.role == "member" &&
+              request.resource.data.generated == true &&
+              request.resource.data.fallback == true
+            )
+          );
         allow update, delete: if false;
       }
     }

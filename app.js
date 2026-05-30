@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v172-firebase-telecom-room";
+const APP_VERSION = "v174-cloudflare-workers-ai-telecom";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -6359,9 +6359,13 @@ window.initTelecomChatRoom = initTelecomChatRoom;
 -------------------------------------------------------------------------- */
 const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main";
 const FB_TELECOM_MAX_INPUT = 500;
+// Cloudflare Workers AI로 배포한 Worker 주소로 바꿔 주세요.
+// 예: https://kks-telecom-ai.<내_서브도메인>.workers.dev
+const FB_TELECOM_AI_WORKER_URL = "https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev";
 let fbTelecomInitialized = false;
 let fbTelecomUnsubscribe = null;
 let fbTelecomBotBusy = false;
+let fbTelecomRecentMessages = [];
 
 const FB_TELECOM_MEMBERS = [
   { nick: "녹차향기", role: "방장", tone: "차분" },
@@ -6439,7 +6443,12 @@ function fbTelecomListen() {
     const log = document.getElementById("telecomLog");
     if (!log) return;
     log.innerHTML = "";
-    snapshot.forEach((docSnap) => fbTelecomRenderLine(docSnap.data()));
+    fbTelecomRecentMessages = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      fbTelecomRecentMessages.push(data);
+      fbTelecomRenderLine(data);
+    });
     log.scrollTop = log.scrollHeight;
   }, (err) => {
     console.error("telecom listen failed", err);
@@ -6536,7 +6545,44 @@ async function fbTelecomEnterRoom() {
     uid: currentUser.uid,
     ownerUid: currentUser.uid
   });
-  fbTelecomSetStatus("Firebase 실시간 통신방에 접속했습니다. 현재는 무료형 자동 멤버 반응으로 동작합니다.");
+  fbTelecomSetStatus("Firebase 실시간 통신방에 접속했습니다. 이제 Cloudflare Workers AI로 대사를 생성합니다.");
+}
+
+async function fbTelecomCallAiReply(clean) {
+  const workerUrl = (window.KKS_TELECOM_AI_WORKER_URL || FB_TELECOM_AI_WORKER_URL || "").trim();
+  if (!workerUrl || workerUrl.includes("YOUR-WORKER-NAME") || workerUrl.includes("YOUR-SUBDOMAIN")) {
+    throw new Error("Cloudflare Workers AI 주소가 아직 설정되지 않았습니다. app.js의 FB_TELECOM_AI_WORKER_URL을 실제 Worker URL로 바꿔 주세요.");
+  }
+
+  const mode = document.getElementById("telecomModeSelect")?.value || "chat";
+  const close = document.getElementById("telecomCloseSelect")?.value || "known";
+  const recentMessages = fbTelecomRecentMessages.slice(-24).map((m) => ({
+    role: m.role || "system",
+    nickname: m.nickname || "통신방",
+    text: String(m.text || "").slice(0, 300)
+  }));
+
+  const res = await fetch(workerUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      roomId: FB_TELECOM_ROOM_ID,
+      userText: clean,
+      userNick: fbTelecomUserNick(),
+      userName: fbTelecomUserName(),
+      mode,
+      close,
+      recentMessages
+    })
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data?.ok) {
+    throw new Error(data?.error || `Cloudflare Worker 호출 실패: ${res.status}`);
+  }
+  return data;
 }
 
 async function fbTelecomSendUserMessage(text) {
@@ -6551,22 +6597,51 @@ async function fbTelecomSendUserMessage(text) {
     uid: currentUser.uid,
     ownerUid: currentUser.uid
   });
+
   fbTelecomBotBusy = true;
-  fbTelecomSetStatus("통신방 멤버들이 입력 중입니다...");
-  const replies = fbTelecomBuildReplies(clean);
-  for (const [idx, [member, reply]] of replies.entries()) {
-    await new Promise((resolve) => setTimeout(resolve, 650 + idx * 700));
-    await fbTelecomAddMessage({
-      role: "member",
-      nickname: member,
-      text: reply,
-      uid: "telecom-generated-member",
-      ownerUid: currentUser.uid,
-      generated: true
-    });
+  fbTelecomSetStatus("AI 통신방 멤버들이 대사를 생성 중입니다...");
+  try {
+    const data = await fbTelecomCallAiReply(clean);
+    const replies = Array.isArray(data?.replies) ? data.replies : [];
+    let saved = 0;
+    for (const [idx, item] of replies.slice(0, 4).entries()) {
+      const nickname = telecomCleanText(item?.nickname || "통신방", "통신방").slice(0, 16);
+      const replyText = telecomCleanText(item?.text || "", "").slice(0, 500);
+      if (!replyText) continue;
+      await new Promise((resolve) => setTimeout(resolve, 500 + idx * 650));
+      await fbTelecomAddMessage({
+        role: "member",
+        nickname,
+        text: replyText,
+        uid: currentUser.uid,
+        ownerUid: currentUser.uid,
+        generated: true,
+        source: "cloudflare-workers-ai"
+      });
+      saved += 1;
+    }
+    fbTelecomSetStatus(saved > 0
+      ? `Cloudflare Workers AI 응답 완료: ${saved}개 대사가 생성되었습니다.`
+      : "Cloudflare Worker 호출은 완료됐지만 생성된 대사가 없습니다.");
+  } catch (err) {
+    console.error("telecomAiReply failed", err);
+    fbTelecomSetStatus("AI 호출 실패: 기본 자동 멤버 반응으로 이어갑니다. Cloudflare Worker URL과 Workers AI 설정을 확인하세요.");
+    const replies = fbTelecomBuildReplies(clean);
+    for (const [idx, [member, reply]] of replies.entries()) {
+      await new Promise((resolve) => setTimeout(resolve, 650 + idx * 700));
+      await fbTelecomAddMessage({
+        role: "member",
+        nickname: member,
+        text: reply,
+        uid: currentUser.uid,
+        ownerUid: currentUser.uid,
+        generated: true,
+        fallback: true
+      });
+    }
+  } finally {
+    fbTelecomBotBusy = false;
   }
-  fbTelecomSetStatus("Firebase 실시간 통신방 연결됨. AI API는 아직 붙이지 않은 무료형 1차 버전입니다.");
-  fbTelecomBotBusy = false;
 }
 
 function initTelecomChatRoom() {
@@ -6585,10 +6660,10 @@ function initTelecomChatRoom() {
 
   const engineSel = document.getElementById("telecomEngineSelect");
   if (engineSel) {
-    engineSel.innerHTML = `<option value="firebase" selected>Firebase 실시간 통신방</option><option value="local">무료 자동 멤버 반응</option>`;
-    engineSel.value = "firebase";
+    engineSel.innerHTML = `<option value="firebase-ai" selected>Firebase + Cloud Functions AI 생성</option><option value="local">AI 실패 시 무료 자동 반응</option>`;
+    engineSel.value = "firebase-ai";
   }
-  fbTelecomSetStatus("Firebase 기반으로 새로 만든 통신방입니다. 로그인 후 입장하면 대화가 Firestore에 저장됩니다.");
+  fbTelecomSetStatus("Firebase + Cloud Functions + AI API 구조입니다. 로그인 후 입장하면 대화가 Firestore에 저장되고 AI가 대사를 생성합니다.");
 
   if (fbTelecomInitialized) {
     if (currentUser) fbTelecomListen();

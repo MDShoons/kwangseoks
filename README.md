@@ -912,3 +912,56 @@ v78-songs-match-radios-ui
 ## v146 pages build safe
 - Added .nojekyll to bypass GitHub Pages Jekyll processing.
 - app.js syntax checked with node -c.
+
+## v173 광석이네 통신방: Cloud Functions + OpenAI AI 대사 생성
+
+이번 버전은 기존 Firebase 실시간 통신방에 `functions/telecomAiReply` callable function을 추가했습니다.
+브라우저는 사용자 메시지만 Firestore에 저장하고, AI API 키는 Firebase Secret으로 숨긴 Cloud Functions에서만 사용합니다.
+
+배포 요약:
+
+```bash
+firebase login
+firebase use --add
+cd functions
+npm install
+cd ..
+firebase functions:secrets:set OPENAI_API_KEY
+firebase deploy --only firestore:rules,functions
+```
+
+GitHub Pages를 계속 쓰는 경우 정적 파일은 GitHub에 올리고, `functions`와 `firestore.rules`는 Firebase CLI로 별도 배포해야 합니다.
+자세한 순서는 `FIREBASE_AI_TELECOM_SETUP.txt`를 확인하세요.
+
+
+## v174 광석이네 통신방: Cloudflare Workers AI 대사 생성
+
+이 버전은 Firebase Cloud Functions/OpenAI 결제 구조 대신 Cloudflare Workers AI를 호출하도록 변경했습니다.
+
+구조:
+
+```text
+GitHub Pages 화면
+→ Cloudflare Worker 호출
+→ Workers AI가 통신방 멤버 대사 생성
+→ 브라우저가 로그인 사용자 권한으로 Firestore에 generated member 메시지 저장
+```
+
+핵심 파일:
+
+```text
+app.js
+cloudflare-worker-ai-telecom.js
+CLOUDFLARE_WORKERS_AI_TELECOM_SETUP.txt
+firestore.rules
+```
+
+설정 순서:
+
+1. Cloudflare에서 Worker를 만들고 `cloudflare-worker-ai-telecom.js` 내용을 붙여넣습니다.
+2. Worker에 Workers AI binding을 추가하고 binding name을 `AI`로 설정합니다.
+3. 배포 후 나온 Worker URL을 `app.js`의 `FB_TELECOM_AI_WORKER_URL` 값에 넣습니다.
+4. GitHub Pages에는 수정된 정적 파일을 올립니다.
+5. Firestore 규칙은 기존 규칙과 충돌하지 않게 `chatRooms` 부분을 합쳐 적용합니다.
+
+자세한 순서는 `CLOUDFLARE_WORKERS_AI_TELECOM_SETUP.txt`를 확인하세요.
