@@ -6361,7 +6361,7 @@ const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main";
 const FB_TELECOM_MAX_INPUT = 500;
 // Cloudflare Workers AI로 배포한 Worker 주소로 바꿔 주세요.
 // 예: https://kks-telecom-ai.<내_서브도메인>.workers.dev
-const FB_TELECOM_AI_WORKER_URL = "https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev";
+const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 let fbTelecomInitialized = false;
 let fbTelecomUnsubscribe = null;
 let fbTelecomBotBusy = false;
