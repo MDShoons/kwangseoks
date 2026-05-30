@@ -5960,3 +5960,169 @@ body {
     backdrop-filter: blur(8px) !important;
   }
 }
+
+
+/* v-cloudflare-pcui: 실제 PC통신 대화방 화면 복원 */
+#telecom.telecom-page {
+  background:#0633bb !important;
+  color:#eaf3ff !important;
+  padding:18px !important;
+  min-height:calc(100vh - 92px) !important;
+}
+#telecom .telecom-shell {
+  max-width:1180px !important;
+  min-height:650px !important;
+  margin:0 auto !important;
+  border:2px solid #8dafff !important;
+  background:#0633bb !important;
+  box-shadow: inset 0 0 0 4px rgba(0,0,70,.28) !important;
+  font-family:"Courier New","D2Coding","Nanum Gothic Coding",monospace !important;
+}
+#telecom .telecom-titlebar {
+  padding:14px 18px !important;
+  border-bottom:1px solid #88aaff !important;
+  background:#061f80 !important;
+}
+#telecom .telecom-titlebar h1 {
+  font-size:24px !important;
+  letter-spacing:.02em !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-titlebar p {
+  color:#d7e4ff !important;
+  font-size:13px !important;
+}
+#telecom .telecom-room {
+  padding:14px 18px 16px !important;
+}
+#telecom .telecom-status-row {
+  display:flex !important;
+  align-items:center !important;
+  gap:12px !important;
+  border-bottom:1px dashed #89a9ff !important;
+  padding-bottom:8px !important;
+  color:#fff !important;
+  font-size:18px !important;
+}
+#telecom #telecomRoomName {
+  font-weight:700 !important;
+  letter-spacing:.02em !important;
+}
+#telecom .telecom-room-date {
+  margin-left:auto !important;
+  min-width:72px !important;
+  text-align:center !important;
+  background:transparent !important;
+  border:1px solid #7fa2ff !important;
+  color:#dce8ff !important;
+}
+#telecom .telecom-log {
+  height:520px !important;
+  overflow:auto !important;
+  padding:18px 10px 12px !important;
+  background:#0633bb !important;
+  color:#f5fbff !important;
+  font-size:20px !important;
+  line-height:1.95 !important;
+  letter-spacing:.01em !important;
+}
+#telecom .telecom-line {
+  display:grid !important;
+  grid-template-columns: 170px 120px minmax(280px, 1fr) 64px !important;
+  align-items:baseline !important;
+  column-gap:10px !important;
+  margin:0 !important;
+  min-height:35px !important;
+  white-space:normal !important;
+  word-break:keep-all !important;
+}
+#telecom .telecom-line-system {
+  grid-template-columns: 96px minmax(480px,1fr) 64px !important;
+  color:#f7fbff !important;
+}
+#telecom .telecom-system-prefix {
+  color:#f9fbff !important;
+  font-weight:700 !important;
+}
+#telecom .telecom-system-text {
+  color:#f7fbff !important;
+}
+#telecom .telecom-nick {
+  min-width:0 !important;
+  color:#ffffff !important;
+  font-weight:700 !important;
+  font-size:22px !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-real {
+  color:#f2f7ff !important;
+  font-size:22px !important;
+  font-weight:700 !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-text {
+  color:#f9fdff !important;
+  font-size:22px !important;
+  font-weight:700 !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-line-time {
+  color:#9dbbff !important;
+  font-size:15px !important;
+  font-weight:700 !important;
+  letter-spacing:.06em !important;
+}
+#telecom .telecom-input-row {
+  display:grid !important;
+  grid-template-columns:auto 1fr auto !important;
+  gap:8px !important;
+  align-items:center !important;
+  border-top:1px dashed #8dafff !important;
+  padding-top:10px !important;
+}
+#telecom .telecom-input-row span {
+  display:inline !important;
+  font-size:16px !important;
+  color:#fff !important;
+}
+#telecom .telecom-input-row input {
+  background:#001c73 !important;
+  border:1px solid #9db8ff !important;
+  color:#ffffff !important;
+  height:34px !important;
+  padding:6px 10px !important;
+  font-size:16px !important;
+}
+#telecom .telecom-input-row button,
+#telecom .telecom-small-btn,
+#telecom .telecom-enter-btn {
+  background:#8a542f !important;
+  color:#001b58 !important;
+  border:1px solid #f2d6bb !important;
+  font-weight:700 !important;
+}
+#telecom .telecom-notice,
+#telecom .telecom-ai-status {
+  color:#cbdcff !important;
+  font-size:12px !important;
+}
+#telecom .telecom-setup.hidden { display:none !important; }
+
+@media (max-width: 760px) {
+  #telecom .telecom-log { font-size:14px !important; height:58vh !important; line-height:1.75 !important; }
+  #telecom .telecom-line { grid-template-columns: 88px 70px 1fr 42px !important; column-gap:5px !important; }
+  #telecom .telecom-line-system { grid-template-columns: 48px 1fr 42px !important; }
+  #telecom .telecom-nick,
+  #telecom .telecom-real,
+  #telecom .telecom-text { font-size:14px !important; text-shadow:none !important; }
+  #telecom .telecom-line-time { font-size:10px !important; }
+}
+
+/* v-kks-presence-flow: 요청 반영 - PC통신 글자는 그림자 없는 흰색 */
+#telecom .telecom-line,
+#telecom .telecom-system-prefix,
+#telecom .telecom-system-text,
+#telecom .telecom-nick,
+#telecom .telecom-real,
+#telecom .telecom-text { color:#ffffff !important; text-shadow:none !important; }
+#telecom .telecom-ai-status { color:#ffffff !important; }

@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v178-cloudflare-workers-ai-anti-template";
+const APP_VERSION = "v179-pcchat-reset-deletes-firestore";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -3562,7 +3562,7 @@ document.addEventListener("click", (event) => {
    - 사용자가 메시지를 보낼 때만 Cloudflare Worker가 AI 대사를 새로 생성
    - 브라우저는 대화 저장, 화면 표시, Worker 호출만 담당
 -------------------------------------------------------------------------- */
-const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main";
+const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v4-flow";
 const FB_TELECOM_MAX_INPUT = 500;
 const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 
@@ -3573,10 +3573,41 @@ let fbTelecomRecentMessages = [];
 
 // 고정 대사 목록이 아니라, AI가 사용할 수 있는 닉네임 후보만 둡니다.
 // 실제 말은 전부 Cloudflare Workers AI가 매번 생성합니다.
-const FB_TELECOM_MEMBER_NAMES = [
-  "녹차향기", "soriboy", "낙원", "mouse14", "raincoat", "enfant",
-  "새벽우체국", "먼지낀LP", "모뎀소리", "하늘연필", "푸른카세트"
+const FB_TELECOM_MEMBER_PROFILES = [
+  { nickname: "소금발", realName: "김도현" },
+  { nickname: "mouse14", realName: "장민석" },
+  { nickname: "raincoat", realName: "이효연" },
+  { nickname: "ajeegang", realName: "김승민" },
+  { nickname: "soriboy", realName: "김영호" },
+  { nickname: "enfant", realName: "이희정" },
+  { nickname: "ekjw123", realName: "강은경" },
+  { nickname: "녹차향기", realName: "박은정" },
+  { nickname: "푸른카세트", realName: "정수진" },
+  { nickname: "먼지낀LP", realName: "오세훈" }
 ];
+const FB_TELECOM_MEMBER_NAMES = FB_TELECOM_MEMBER_PROFILES.map((m) => m.nickname);
+const FB_TELECOM_MEMBER_REALNAME_MAP = Object.fromEntries(FB_TELECOM_MEMBER_PROFILES.map((m) => [m.nickname, m.realName]));
+const FB_TELECOM_KKS_PROFILE = { nickname: "김광석", realName: "김광석" };
+
+let fbTelecomKksActive = false;
+let fbTelecomKksExitTimer = null;
+let fbTelecomKksStatusTimer = null;
+let fbTelecomKksFirstTalkTimer = null;
+let fbTelecomKksCooldownTimer = null;
+let fbTelecomPresenceTimer = null;
+let fbTelecomKksCallPending = false;
+let fbTelecomKksReceiving = false;
+let fbTelecomKksCooldownUntil = 0;
+let fbTelecomKksAvailabilityPrompted = false;
+
+// 김광석은 정해진 "5분/10분"에 나가는 방식이 아니라,
+// 최소 15분 이상 머문 뒤 어느 순간 바쁘다며 나가도록 한다.
+const FB_TELECOM_KKS_MIN_STAY_MS = 15 * 60 * 1000;
+const FB_TELECOM_KKS_RANDOM_EXIT_WINDOW_MS = 10 * 60 * 1000;
+const FB_TELECOM_KKS_STATUS_DELAY_MS = 10 * 1000;
+const FB_TELECOM_KKS_REPLY_DELAY_MS = 30 * 1000;
+const FB_TELECOM_KKS_COOLDOWN_MIN_MS = 2 * 60 * 60 * 1000;
+const FB_TELECOM_KKS_COOLDOWN_RANDOM_MS = 60 * 60 * 1000;
 
 function fbTelecomCleanText(value, fallback = "") {
   const cleaned = String(value || "")
@@ -3589,7 +3620,7 @@ function fbTelecomCleanText(value, fallback = "") {
 
 function fbTelecomDate95() {
   const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
+  const yy = "95";
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yy}/${mm}/${dd}`;
@@ -3607,6 +3638,83 @@ function fbTelecomUserName() {
     currentUserProfile?.name || currentUser?.displayName || fbTelecomUserNick(),
     fbTelecomUserNick()
   ).slice(0, 14);
+}
+
+function fbTelecomMemberRealName(nickname) {
+  if (nickname === FB_TELECOM_KKS_PROFILE.nickname) return FB_TELECOM_KKS_PROFILE.realName;
+  return FB_TELECOM_MEMBER_REALNAME_MAP[nickname] || "";
+}
+
+function fbTelecomAvailableProfiles() {
+  return fbTelecomKksActive
+    ? [FB_TELECOM_KKS_PROFILE, ...FB_TELECOM_MEMBER_PROFILES]
+    : [...FB_TELECOM_MEMBER_PROFILES];
+}
+
+function fbTelecomAvailableNames() {
+  return fbTelecomAvailableProfiles().map((m) => m.nickname);
+}
+
+function fbTelecomRandomMemberProfiles(count = 2) {
+  const pool = [...FB_TELECOM_MEMBER_PROFILES].sort(() => Math.random() - 0.5);
+  return pool.slice(0, Math.max(1, Math.min(count, pool.length)));
+}
+
+function fbTelecomKksCooldownKey() {
+  return `kks-telecom-kks-cooldown-${currentUser?.uid || "guest"}`;
+}
+
+function fbTelecomLoadKksCooldown() {
+  const v = Number(localStorage.getItem(fbTelecomKksCooldownKey()) || "0");
+  fbTelecomKksCooldownUntil = Number.isFinite(v) ? v : 0;
+  return fbTelecomKksCooldownUntil;
+}
+
+function fbTelecomSetKksCooldown() {
+  const wait = FB_TELECOM_KKS_COOLDOWN_MIN_MS + Math.floor(Math.random() * FB_TELECOM_KKS_COOLDOWN_RANDOM_MS);
+  fbTelecomKksCooldownUntil = Date.now() + wait;
+  localStorage.setItem(fbTelecomKksCooldownKey(), String(fbTelecomKksCooldownUntil));
+  fbTelecomScheduleKksAvailabilityNotice();
+}
+
+function fbTelecomKksCallable() {
+  return Date.now() >= fbTelecomLoadKksCooldown();
+}
+
+function fbTelecomClearKksTimers() {
+  for (const timer of [fbTelecomKksExitTimer, fbTelecomKksStatusTimer, fbTelecomKksFirstTalkTimer, fbTelecomKksCooldownTimer]) {
+    if (timer) clearTimeout(timer);
+  }
+  fbTelecomKksExitTimer = null;
+  fbTelecomKksStatusTimer = null;
+  fbTelecomKksFirstTalkTimer = null;
+  fbTelecomKksCooldownTimer = null;
+}
+
+function fbTelecomClearKksExitTimer() {
+  if (fbTelecomKksExitTimer) {
+    clearTimeout(fbTelecomKksExitTimer);
+    fbTelecomKksExitTimer = null;
+  }
+}
+
+function fbTelecomSetCallButton() {
+  const btn = document.getElementById("telecomCallBtn");
+  if (!btn) return;
+  btn.classList.remove("hidden");
+  const callable = fbTelecomKksCallable();
+  if (fbTelecomKksActive || fbTelecomKksReceiving) {
+    btn.disabled = true;
+    btn.textContent = fbTelecomKksReceiving ? "김광석 수신 연결 중" : "김광석 수신 가능";
+    return;
+  }
+  if (!callable) {
+    btn.disabled = true;
+    btn.textContent = "김광석 자리 비움";
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = "김광석 부르기";
 }
 
 function fbTelecomRoomRef() {
@@ -3648,12 +3756,13 @@ function fbTelecomRenderLine(msg) {
 
   const time = fbTelecomTime(msg.createdAt || msg.clientCreatedAt);
   const nick = fbTelecomEscape(msg.nickname || (role === "user" ? "나" : "통신방"));
+  const realName = fbTelecomEscape(msg.realName || (role === "member" ? fbTelecomMemberRealName(msg.nickname) : ""));
   const text = fbTelecomEscape(msg.text || "");
 
   if (role === "system") {
-    line.innerHTML = `<span class="telecom-time">[${time}]</span> <span class="telecom-system-text">*** ${text}</span>`;
+    line.innerHTML = `<span class="telecom-system-prefix">Chat :</span> <span class="telecom-system-text">${text}</span> <span class="telecom-line-time">${time}</span>`;
   } else {
-    line.innerHTML = `<span class="telecom-time">[${time}]</span> <span class="telecom-nick">${nick}</span> : <span class="telecom-text">${text}</span>`;
+    line.innerHTML = `<span class="telecom-nick">${nick}</span><span class="telecom-real">${realName ? `(${realName})` : ""}</span><span class="telecom-text">${text}</span><span class="telecom-line-time">${time}</span>`;
   }
   log.appendChild(line);
 }
@@ -3687,7 +3796,158 @@ async function fbTelecomAddMessage(data) {
   });
 }
 
-async function fbTelecomEnterRoom() {
+async function fbTelecomScheduleMemberPresence() {
+  if (fbTelecomPresenceTimer) clearTimeout(fbTelecomPresenceTimer);
+  if (!currentUser) return;
+  const delay = 90000 + Math.floor(Math.random() * 150000);
+  fbTelecomPresenceTimer = setTimeout(async () => {
+    try {
+      const profile = fbTelecomRandomMemberProfiles(1)[0];
+      if (!profile) return;
+      const entering = Math.random() > 0.45;
+      await fbTelecomAddMessage({
+        role: "system",
+        nickname: "Chat",
+        text: entering
+          ? `${profile.nickname}(${profile.realName})님이 접속하셨습니다.`
+          : `${profile.nickname}(${profile.realName})님이 접속을 종료하셨습니다.`,
+        uid: currentUser.uid,
+        ownerUid: currentUser.uid,
+        presence: true
+      });
+    } catch (e) {
+      console.warn("telecom presence event failed", e);
+    } finally {
+      fbTelecomScheduleMemberPresence();
+    }
+  }, delay);
+}
+
+async function fbTelecomAnnounceKksAvailable() {
+  if (!currentUser || fbTelecomKksActive || fbTelecomKksReceiving || fbTelecomKksCallPending) return;
+  if (!fbTelecomKksCallable()) return;
+  fbTelecomKksCallPending = true;
+  fbTelecomKksAvailabilityPrompted = true;
+  fbTelecomSetCallButton();
+  await fbTelecomAddMessage({
+    role: "system",
+    nickname: "Chat",
+    text: "김광석 호출이 가능합니다. 호출 하시겠습니까? Y/N",
+    uid: currentUser.uid,
+    ownerUid: currentUser.uid,
+    presence: true,
+    kksEvent: "call-available"
+  });
+}
+
+function fbTelecomScheduleKksAvailabilityNotice() {
+  if (fbTelecomKksCooldownTimer) clearTimeout(fbTelecomKksCooldownTimer);
+  fbTelecomSetCallButton();
+  const cooldownUntil = fbTelecomLoadKksCooldown();
+  const remain = cooldownUntil - Date.now();
+  if (remain <= 0) {
+    // 처음부터 호출 가능한 상태일 때는 자동으로 묻지 않는다.
+    // 김광석이 한 번 나간 뒤 2~3시간 대기 시간이 끝났을 때만 Y/N 확인 문구를 띄운다.
+    if (cooldownUntil > 0 && !fbTelecomKksAvailabilityPrompted) {
+      localStorage.removeItem(fbTelecomKksCooldownKey());
+      fbTelecomKksCooldownUntil = 0;
+      fbTelecomKksCooldownTimer = setTimeout(() => fbTelecomAnnounceKksAvailable().catch(console.warn), 1200);
+    }
+    return;
+  }
+  fbTelecomKksAvailabilityPrompted = false;
+  fbTelecomKksCooldownTimer = setTimeout(() => fbTelecomAnnounceKksAvailable().catch(console.warn), remain + 1000);
+}
+
+async function fbTelecomMaybeGenerateKksFirstTalk() {
+  if (!currentUser || !fbTelecomKksActive) return;
+  try {
+    const data = await fbTelecomCallAiReply("김광석 님이 수신 가능 상태가 되었습니다. 김광석의 첫 인사와 방 사람들의 짧은 반응을 생성하세요.", "kksFirstMessage");
+    const replies = Array.isArray(data?.replies) ? data.replies : [];
+    await fbTelecomSaveAiReplies(replies, currentUser.uid, "cloudflare-workers-ai");
+  } catch (err) {
+    console.warn("telecom kks first talk failed", err);
+  }
+}
+
+async function fbTelecomKksLeave(reason = "busy") {
+  if (!currentUser || !fbTelecomKksActive) return;
+  fbTelecomKksActive = false;
+  fbTelecomKksReceiving = false;
+  fbTelecomKksCallPending = false;
+  fbTelecomSetCallButton();
+  await fbTelecomAddMessage({
+    role: "member",
+    nickname: "김광석",
+    realName: "김광석",
+    text: "미안해요. 제가 좀 바빠서 이만 나가봐야겠어요.",
+    uid: currentUser.uid,
+    ownerUid: currentUser.uid,
+    generated: true,
+    source: "cloudflare-workers-ai",
+    kksEvent: reason
+  });
+  await fbTelecomAddMessage({
+    role: "system",
+    nickname: "Chat",
+    text: "김광석(김광석)님이 나가셨습니다.",
+    uid: currentUser.uid,
+    ownerUid: currentUser.uid,
+    presence: true,
+    kksEvent: "exit"
+  });
+  fbTelecomSetKksCooldown();
+  document.getElementById("telecomAfterKksExit")?.classList.remove("hidden");
+}
+
+async function fbTelecomCallKks(source = "manual") {
+  if (!currentUser || fbTelecomKksActive || fbTelecomKksReceiving) {
+    fbTelecomSetCallButton();
+    return;
+  }
+  if (!fbTelecomKksCallable()) {
+    fbTelecomSetCallButton();
+    return;
+  }
+
+  fbTelecomKksCallPending = false;
+  fbTelecomKksReceiving = true;
+  fbTelecomSetCallButton();
+  fbTelecomClearKksExitTimer();
+
+  if (fbTelecomKksStatusTimer) clearTimeout(fbTelecomKksStatusTimer);
+  fbTelecomKksStatusTimer = setTimeout(async () => {
+    try {
+      if (!currentUser) return;
+      fbTelecomKksReceiving = false;
+      fbTelecomKksActive = true;
+      fbTelecomSetCallButton();
+      await fbTelecomAddMessage({
+        role: "system",
+        nickname: "Chat",
+        text: "'김광석'님은 수신[가능]상태로(둥근소리 (김광석))] 서비스를 이용 중입니다.",
+        uid: currentUser.uid,
+        ownerUid: currentUser.uid,
+        presence: true,
+        kksEvent: "available",
+        source
+      });
+
+      if (fbTelecomKksFirstTalkTimer) clearTimeout(fbTelecomKksFirstTalkTimer);
+      fbTelecomKksFirstTalkTimer = setTimeout(() => fbTelecomMaybeGenerateKksFirstTalk(), FB_TELECOM_KKS_REPLY_DELAY_MS);
+
+      const exitDelay = FB_TELECOM_KKS_MIN_STAY_MS + Math.floor(Math.random() * FB_TELECOM_KKS_RANDOM_EXIT_WINDOW_MS);
+      fbTelecomKksExitTimer = setTimeout(() => fbTelecomKksLeave("busy").catch(console.warn), exitDelay);
+    } catch (e) {
+      console.warn("telecom kks available event failed", e);
+      fbTelecomKksReceiving = false;
+      fbTelecomKksActive = false;
+      fbTelecomSetCallButton();
+    }
+  }, FB_TELECOM_KKS_STATUS_DELAY_MS);
+}
+
+async function fbTelecomEnterRoom(options = {}) {
   if (!currentUser) {
     alert("로그인 후 통신방에 입장할 수 있습니다.");
     goPage("loginRequired");
@@ -3696,6 +3956,13 @@ async function fbTelecomEnterRoom() {
 
   const nick = fbTelecomUserNick();
   const name = fbTelecomUserName();
+  const shouldCallKks = (document.getElementById("telecomKksSelect")?.value || "no") === "yes";
+
+  fbTelecomKksActive = false;
+  fbTelecomKksReceiving = false;
+  fbTelecomKksCallPending = false;
+  fbTelecomClearKksTimers();
+  fbTelecomLoadKksCooldown();
 
   await setDoc(fbTelecomRoomRef(), {
     title: "광석이네 통신방",
@@ -3710,15 +3977,37 @@ async function fbTelecomEnterRoom() {
   if (dateEl) dateEl.textContent = fbTelecomDate95();
 
   fbTelecomListen();
-  await fbTelecomAddMessage({
-    role: "system",
-    nickname: "통신방",
-    text: `${nick}(${name})님이 접속하셨습니다.`,
-    uid: currentUser.uid,
-    ownerUid: currentUser.uid
-  });
+  const enterKey = `kks-telecom-entered-${FB_TELECOM_ROOM_ID}-${currentUser.uid}`;
+  const alreadyEntered = sessionStorage.getItem(enterKey) === "1";
+  if (!options?.skipEntryMessage && !alreadyEntered) {
+    await fbTelecomAddMessage({
+      role: "system",
+      nickname: "Chat",
+      text: `${nick}(${name})님이 접속하셨습니다.`,
+      uid: currentUser.uid,
+      ownerUid: currentUser.uid,
+      presence: true
+    });
 
-  fbTelecomSetStatus("Cloudflare Workers AI 전용 통신방입니다. 사용자가 말하면 AI가 새 대사를 생성합니다.");
+    for (const profile of fbTelecomRandomMemberProfiles(2 + Math.floor(Math.random() * 2))) {
+      await new Promise((resolve) => setTimeout(resolve, 220));
+      await fbTelecomAddMessage({
+        role: "system",
+        nickname: "Chat",
+        text: `${profile.nickname}(${profile.realName})님이 접속하셨습니다.`,
+        uid: currentUser.uid,
+        ownerUid: currentUser.uid,
+        presence: true
+      });
+    }
+    sessionStorage.setItem(enterKey, "1");
+  }
+
+  fbTelecomSetCallButton();
+  fbTelecomScheduleKksAvailabilityNotice();
+  if (shouldCallKks) await fbTelecomCallKks("enter-option");
+  fbTelecomScheduleMemberPresence();
+  fbTelecomSetStatus("");
 }
 
 function fbTelecomRecentTextsForAi(limitCount = 24) {
@@ -3729,7 +4018,7 @@ function fbTelecomRecentTextsForAi(limitCount = 24) {
     .slice(-limitCount);
 }
 
-async function fbTelecomCallAiReply(clean) {
+async function fbTelecomCallAiReply(clean, triggerType = "userMessage") {
   const workerUrl = (window.KKS_TELECOM_AI_WORKER_URL || FB_TELECOM_AI_WORKER_URL || "").trim();
   if (!workerUrl || workerUrl.includes("YOUR-WORKER-NAME") || workerUrl.includes("YOUR-SUBDOMAIN")) {
     throw new Error("Cloudflare Workers AI 주소가 설정되지 않았습니다.");
@@ -3740,6 +4029,7 @@ async function fbTelecomCallAiReply(clean) {
   const recentMessages = fbTelecomRecentMessages.slice(-36).map((m) => ({
     role: m.role || "system",
     nickname: m.nickname || "통신방",
+    realName: m.realName || "",
     text: String(m.text || "").slice(0, 360)
   }));
 
@@ -3755,7 +4045,11 @@ async function fbTelecomCallAiReply(clean) {
       close,
       recentMessages,
       avoidTexts: fbTelecomRecentTextsForAi(30),
-      memberNames: FB_TELECOM_MEMBER_NAMES,
+      memberNames: fbTelecomAvailableNames(),
+      memberProfiles: fbTelecomAvailableProfiles(),
+      kksActive: fbTelecomKksActive,
+      triggerType,
+      kksReceiving: fbTelecomKksReceiving,
       requestId: `${Date.now()}-${Math.random().toString(36).slice(2)}`
     })
   });
@@ -3773,24 +4067,84 @@ async function fbTelecomSaveAiReplies(replies, userUid, sourceLabel = "cloudflar
 
   for (const [idx, item] of replies.slice(0, 4).entries()) {
     const nickname = fbTelecomCleanText(item?.nickname || "통신방", "통신방").slice(0, 16);
+    const realName = fbTelecomCleanText(item?.realName || fbTelecomMemberRealName(nickname), "").slice(0, 16);
     const replyText = fbTelecomCleanText(item?.text || "", "").slice(0, 500);
     const compact = replyText.replace(/\s+/g, "").slice(0, 60);
     if (!replyText || seen.has(compact)) continue;
     seen.add(compact);
 
-    await new Promise((resolve) => setTimeout(resolve, 380 + idx * 650));
-    await fbTelecomAddMessage({
+    const isKksReply = nickname === FB_TELECOM_KKS_PROFILE.nickname;
+    const delay = isKksReply ? FB_TELECOM_KKS_REPLY_DELAY_MS : (650 + idx * 900);
+    const payload = {
       role: "member",
       nickname,
+      realName,
       text: replyText,
       uid: userUid,
       ownerUid: userUid,
       generated: true,
       source: sourceLabel
-    });
+    };
+    if (isKksReply) {
+      // 김광석 대사는 사용자가 입력하자마자 바로 뜨지 않도록 약 30초 늦춘다.
+      setTimeout(() => {
+        if (currentUser && fbTelecomKksActive) fbTelecomAddMessage(payload).catch(console.warn);
+      }, delay);
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      await fbTelecomAddMessage(payload);
+    }
     saved += 1;
   }
   return saved;
+}
+
+async function fbTelecomResetRoom() {
+  if (!currentUser) return alert("로그인 후 이용할 수 있습니다.");
+
+  const resetBtn = document.getElementById("telecomResetBtn");
+  if (resetBtn) resetBtn.disabled = true;
+  fbTelecomSetStatus("대화를 초기화하는 중입니다...");
+
+  try {
+    fbTelecomClearKksTimers();
+    if (fbTelecomPresenceTimer) {
+      clearTimeout(fbTelecomPresenceTimer);
+      fbTelecomPresenceTimer = null;
+    }
+
+    fbTelecomKksActive = false;
+    fbTelecomKksReceiving = false;
+    fbTelecomKksCallPending = false;
+    fbTelecomKksAvailabilityPrompted = false;
+    fbTelecomBotBusy = false;
+    fbTelecomRecentMessages = [];
+
+    sessionStorage.removeItem(`kks-telecom-entered-${FB_TELECOM_ROOM_ID}-${currentUser.uid}`);
+    localStorage.removeItem(fbTelecomKksCooldownKey());
+    fbTelecomKksCooldownUntil = 0;
+
+    const snap = await getDocs(fbTelecomMessagesRef());
+    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+
+    await setDoc(fbTelecomRoomRef(), {
+      title: "광석이네 통신방",
+      resetBy: currentUser.uid,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    const log = document.getElementById("telecomLog");
+    if (log) log.innerHTML = "";
+
+    fbTelecomSetCallButton();
+    fbTelecomSetStatus("");
+    await fbTelecomEnterRoom({ skipEntryMessage: false });
+  } catch (err) {
+    console.error("telecom reset failed", err);
+    fbTelecomSetStatus("대화 초기화에 실패했습니다. Firestore 규칙의 delete 권한을 확인하세요.");
+  } finally {
+    if (resetBtn) resetBtn.disabled = false;
+  }
 }
 
 async function fbTelecomSendUserMessage(text) {
@@ -3802,20 +4156,34 @@ async function fbTelecomSendUserMessage(text) {
   await fbTelecomAddMessage({
     role: "user",
     nickname: nick,
+    realName: fbTelecomUserName(),
     text: clean,
     uid: currentUser.uid,
     ownerUid: currentUser.uid
   });
 
+  if (fbTelecomKksCallPending) {
+    const answer = clean.trim().toLowerCase();
+    if (answer === "y" || answer === "yes" || answer === "예" || answer === "네") {
+      fbTelecomKksCallPending = false;
+      await fbTelecomCallKks("availability-confirm-y");
+      return;
+    }
+    if (answer === "n" || answer === "no" || answer === "아니오" || answer === "아니요") {
+      fbTelecomKksCallPending = false;
+      fbTelecomKksAvailabilityPrompted = false;
+      fbTelecomSetCallButton();
+      return;
+    }
+  }
+
   fbTelecomBotBusy = true;
-  fbTelecomSetStatus("AI가 방금 말에 맞춰 새 대사를 생성 중입니다...");
+  fbTelecomSetStatus("통신방 회원들이 대화를 이어가는 중입니다...");
   try {
-    const data = await fbTelecomCallAiReply(clean);
+    const data = await fbTelecomCallAiReply(clean, "userMessage");
     const replies = Array.isArray(data?.replies) ? data.replies : [];
     const saved = await fbTelecomSaveAiReplies(replies, currentUser.uid, "cloudflare-workers-ai");
-    fbTelecomSetStatus(saved > 0
-      ? `AI 응답 완료: ${saved}개 대사가 생성되었습니다.`
-      : "AI가 대사를 생성하지 못했습니다. Worker 프롬프트 또는 AI binding을 확인하세요.");
+    fbTelecomSetStatus(saved > 0 ? "" : "AI가 이번 대화에 맞는 응답을 만들지 못했습니다.");
   } catch (err) {
     console.error("telecom AI failed", err);
     fbTelecomSetStatus("AI 호출 실패: Cloudflare Worker 주소, AI binding, CORS 설정을 확인하세요.");
@@ -3849,26 +4217,30 @@ function initTelecomChatRoom() {
 
   const engineSel = document.getElementById("telecomEngineSelect");
   if (engineSel) {
-    engineSel.innerHTML = `<option value="cloudflare-ai" selected>Cloudflare Workers AI 생성</option>`;
+    engineSel.innerHTML = `<option value="cloudflare-ai" selected>PC통신 대화방</option>`;
     engineSel.value = "cloudflare-ai";
   }
 
-  fbTelecomSetStatus("Cloudflare Workers AI 전용 구조입니다. 저장된 회원 멘트 없이 AI가 매번 새 대사를 생성합니다.");
+  fbTelecomSetStatus("");
 
   if (fbTelecomInitialized) {
-    if (currentUser) fbTelecomListen();
+    if (currentUser) {
+      document.getElementById("telecomSetup")?.classList.remove("hidden");
+      document.getElementById("telecomRoom")?.classList.add("hidden");
+    }
     return;
   }
   fbTelecomInitialized = true;
 
-  document.getElementById("telecomEnterBtn")?.addEventListener("click", fbTelecomEnterRoom);
+  document.getElementById("telecomEnterBtn")?.addEventListener("click", () => fbTelecomEnterRoom());
+  document.getElementById("telecomCallBtn")?.addEventListener("click", () => fbTelecomCallKks("button"));
+  document.getElementById("telecomContinueFansBtn")?.addEventListener("click", () => {
+    document.getElementById("telecomAfterKksExit")?.classList.add("hidden");
+    fbTelecomSetStatus("");
+  });
+  document.getElementById("telecomEndRoomBtn")?.addEventListener("click", () => goPage("home"));
   document.getElementById("telecomResetBtn")?.addEventListener("click", async () => {
-    if (!currentUser) return alert("로그인 후 이용할 수 있습니다.");
-    const ok = confirm("Firestore 메시지를 삭제하지 않고, 화면만 새로 불러옵니다. 계속할까요?");
-    if (!ok) return;
-    const log = document.getElementById("telecomLog");
-    if (log) log.innerHTML = "";
-    fbTelecomListen();
+    await fbTelecomResetRoom();
   });
   document.getElementById("telecomForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -3877,6 +4249,9 @@ function initTelecomChatRoom() {
     if (input) input.value = "";
     await fbTelecomSendUserMessage(text);
   });
+
+  document.getElementById("telecomSetup")?.classList.remove("hidden");
+  document.getElementById("telecomRoom")?.classList.add("hidden");
 }
 window.initTelecomChatRoom = initTelecomChatRoom;
 
