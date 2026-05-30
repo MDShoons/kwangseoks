@@ -6,7 +6,7 @@
 const MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 const MAX_INPUT = 700;
 const MAX_RECENT = 8;
-const REPLY_COUNT = 2;
+const REPLY_COUNT = 3;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -297,14 +297,16 @@ function buildPrompt(body, retryLevel = 0) {
   const system = `너는 1995년 PC통신 동호회 "둥근소리" 대화방의 회원 대사를 생성한다.
 
 가장 중요한 규칙:
-- 첫 번째 줄은 반드시 사용자의 마지막 말에 직접 답한다.
 - 최근 대화보다 사용자의 마지막 입력을 우선한다.
-- AI가 자기들끼리 새 주제를 만들지 않는다.
-- 출력은 정확히 ${REPLY_COUNT}줄만 쓴다.
+- 첫 번째 줄은 반드시 사용자의 마지막 말에 직접 답한다. 사용자가 질문하면 그 질문에 답한다.
+- 두 번째 줄은 다른 회원이 첫 번째 회원 또는 사용자에게 이어서 질문하거나 짧게 반응한다.
+- 대화는 사용자에게만 줄줄이 답하는 1:1 구조가 아니다. 회원끼리도 서로 묻고 답한다.
+- 그렇다고 사용자가 꺼내지 않은 새 주제를 만들지 않는다.
+- 김광석 접속 상태가 connected이면 세 번째 줄은 반드시 김광석|대사 로 쓴다. 김광석은 짧고 늦게 끼어드는 느낌이다.
+- 김광석 접속 상태가 absent이면 김광석을 절대 쓰지 말고 일반 회원 2줄만 쓴다.
 - 한 줄 형식은 닉네임|대사 이다. 이름은 쓰지 마라.
 - 닉네임은 사용 가능한 목록에서만 고른다.
 - 같은 닉네임을 반복하지 않는다.
-- 김광석은 접속 중일 때만 쓸 수 있고, 없어도 된다.
 - 다른 회원들은 기본적으로 존댓말을 쓴다.
 - 1995년 PC통신 느낌으로 짧고 자연스럽게 말한다.
 - 설명문, 번호, 따옴표, JSON, 마크다운 금지.
@@ -336,13 +338,16 @@ ${userText}
 출력 형식:
 닉네임|대사
 닉네임|대사
+닉네임|대사
 
-이제 실제 대사 2줄만 출력하라.`;
+김광석 접속 상태가 absent이면 2줄만 출력한다.
+김광석 접속 상태가 connected이면 3줄을 출력하고, 마지막 줄은 반드시 김광석|대사 로 출력한다.
+이제 실제 대사만 출력하라.`;
 
   return { system, user, allowedNames, profiles: activeProfiles, kksActive };
 }
 
-async function runAi(env, prompt, temperature = 0.58, maxTokens = 110) {
+async function runAi(env, prompt, temperature = 0.58, maxTokens = 150) {
   const result = await env.AI.run(MODEL, {
     messages: [
       { role: "system", content: prompt.system },
@@ -418,7 +423,7 @@ export default {
       let raw = "";
       for (let retry = 0; retry < 4 && replies.length < 1; retry++) {
         const prompt = buildPrompt(body, retry);
-        raw = await runAi(env, prompt, retry === 0 ? 0.58 : 0.35, retry >= 2 ? 90 : 120);
+        raw = await runAi(env, prompt, retry === 0 ? 0.58 : 0.35, retry >= 2 ? 120 : 170);
         replies = parseReplies(raw, prompt);
       }
       return json({

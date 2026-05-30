@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v182-pcchat-reset-setup-rules-ai-reply-fix";
+const APP_VERSION = "v183-pcchat-smaller-fonts-cross-talk-kks";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -3562,7 +3562,7 @@ document.addEventListener("click", (event) => {
    - 사용자가 메시지를 보낼 때만 Cloudflare Worker가 AI 대사를 새로 생성
    - 브라우저는 대화 저장, 화면 표시, Worker 호출만 담당
 -------------------------------------------------------------------------- */
-const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v14-last-user-direct";
+const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v15-cross-talk-kks";
 const FB_TELECOM_MAX_INPUT = 500;
 const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 
@@ -4190,7 +4190,7 @@ async function fbTelecomSaveAiReplies(replies, userUid, sourceLabel = "cloudflar
   let saved = 0;
   const seen = new Set(fbTelecomRecentTextsForAi(40).map((x) => x.replace(/\s+/g, "").slice(0, 60)));
 
-  for (const [idx, item] of replies.slice(0, 2).entries()) {
+  for (const [idx, item] of replies.slice(0, 3).entries()) {
     const nickname = fbTelecomCleanText(item?.nickname || "통신방", "통신방").slice(0, 16);
     const realName = fbTelecomCleanText(fbTelecomMemberRealName(nickname) || item?.realName || "", "").slice(0, 16);
     const replyText = fbTelecomCleanText(item?.text || "", "").slice(0, 500);
