@@ -6361,7 +6361,7 @@ const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main";
 const FB_TELECOM_MAX_INPUT = 500;
 // Cloudflare Workers AI로 배포한 Worker 주소로 바꿔 주세요.
 // 예: https://kks-telecom-ai.<내_서브도메인>.workers.dev
-const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
+const FB_TELECOM_AI_WORKER_URL = "https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev";
 let fbTelecomInitialized = false;
 let fbTelecomUnsubscribe = null;
 let fbTelecomBotBusy = false;
@@ -6644,7 +6644,7 @@ async function fbTelecomSendUserMessage(text) {
   }
 }
 
-function initTelecomChatRoom() {
+function initTelecomChatRoomCloudflare() {
   // v172 Firebase remake: 모바일도 접속은 가능하게 열어둠.
   const pcOnly = document.getElementById("telecomPcOnlyNotice");
   if (pcOnly) pcOnly.classList.add("hidden");
@@ -6660,10 +6660,10 @@ function initTelecomChatRoom() {
 
   const engineSel = document.getElementById("telecomEngineSelect");
   if (engineSel) {
-    engineSel.innerHTML = `<option value="firebase-ai" selected>Firebase + Cloud Functions AI 생성</option><option value="local">AI 실패 시 무료 자동 반응</option>`;
+    engineSel.innerHTML = `<option value="firebase-ai" selected>Firebase + Cloudflare Workers AI 생성</option><option value="local">AI 실패 시 무료 자동 반응</option>`;
     engineSel.value = "firebase-ai";
   }
-  fbTelecomSetStatus("Firebase + Cloud Functions + AI API 구조입니다. 로그인 후 입장하면 대화가 Firestore에 저장되고 AI가 대사를 생성합니다.");
+  fbTelecomSetStatus("Firebase + Cloudflare Workers AI 구조입니다. 로그인 후 입장하면 대화가 Firestore에 저장되고 Cloudflare Workers AI가 대사를 생성합니다.");
 
   if (fbTelecomInitialized) {
     if (currentUser) fbTelecomListen();
@@ -6687,4 +6687,4 @@ function initTelecomChatRoom() {
     await fbTelecomSendUserMessage(text);
   });
 }
-window.initTelecomChatRoom = initTelecomChatRoom;
+window.initTelecomChatRoom = initTelecomChatRoomCloudflare;
