@@ -1,0 +1,3 @@
+둥근소리 회원표 기반 AI 대화 후보 135명을 app.js와 cloudflare-worker-ai-telecom.js에 반영했습니다.
+김광석은 별도 수신/퇴장/대기 흐름으로 관리되며, 일반 회원 후보 목록에는 중복 포함하지 않았습니다.
+Cloudflare Worker 코드도 반드시 다시 Save and deploy 해야 회원 목록이 반영됩니다.

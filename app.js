@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v180-pcchat-reset-messages-only";
+const APP_VERSION = "v182-pcchat-reset-setup-rules-ai-reply-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -3562,7 +3562,7 @@ document.addEventListener("click", (event) => {
    - 사용자가 메시지를 보낼 때만 Cloudflare Worker가 AI 대사를 새로 생성
    - 브라우저는 대화 저장, 화면 표시, Worker 호출만 담당
 -------------------------------------------------------------------------- */
-const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v5-talk";
+const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v8-roundsound-members";
 const FB_TELECOM_MAX_INPUT = 500;
 const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 
@@ -3572,18 +3572,143 @@ let fbTelecomBotBusy = false;
 let fbTelecomRecentMessages = [];
 
 // 고정 대사 목록이 아니라, AI가 사용할 수 있는 닉네임 후보만 둡니다.
-// 실제 말은 전부 Cloudflare Workers AI가 매번 생성합니다.
+// 실제 말은 전부 Cloudflare Workers AI가 매번 생성합니다. 둥근소리 회원표의 닉네임/이름을 후보로 사용합니다.
 const FB_TELECOM_MEMBER_PROFILES = [
-  { nickname: "소금발", realName: "김도현" },
+  { nickname: "녹차향기", realName: "변수진" },
   { nickname: "mouse14", realName: "장민석" },
-  { nickname: "raincoat", realName: "이효연" },
-  { nickname: "ajeegang", realName: "김승민" },
   { nickname: "soriboy", realName: "김영호" },
+  { nickname: "학궁뎅이", realName: "오승준" },
+  { nickname: "외기러기", realName: "이연수" },
+  { nickname: "열린고백", realName: "김은주" },
   { nickname: "enfant", realName: "이희정" },
+  { nickname: "강서대묘", realName: "김동준" },
+  { nickname: "sixs", realName: "육영수" },
+  { nickname: "아인타인", realName: "박영근" },
+  { nickname: "gonswing", realName: "신성철" },
+  { nickname: "뜨라기", realName: "고지은" },
+  { nickname: "mcgyver", realName: "박성재" },
+  { nickname: "raincoat", realName: "이효연" },
+  { nickname: "영원의꿈", realName: "박재완" },
+  { nickname: "avril", realName: "조해성" },
+  { nickname: "아주사", realName: "엄준호" },
+  { nickname: "jeejone", realName: "지정엽" },
+  { nickname: "btsmania", realName: "박재완" },
+  { nickname: "keis", realName: "김응일" },
+  { nickname: "byungari", realName: "이석권" },
+  { nickname: "점등인", realName: "최훈철" },
+  { nickname: "mjs1", realName: "목진설" },
+  { nickname: "gksdml", realName: "윤유석" },
+  { nickname: "작은기억", realName: "채원중" },
+  { nickname: "hakjeon", realName: "최만석" },
+  { nickname: "넋두리", realName: "최종희" },
+  { nickname: "낙원", realName: "이명훈" },
+  { nickname: "shim31", realName: "심수일" },
+  { nickname: "cupite", realName: "김홍준" },
+  { nickname: "경화", realName: "송경화" },
+  { nickname: "소금밭", realName: "김도현" },
+  { nickname: "hj8454", realName: "전상섭" },
   { nickname: "ekjw123", realName: "강은경" },
-  { nickname: "녹차향기", realName: "박은정" },
-  { nickname: "푸른카세트", realName: "정수진" },
-  { nickname: "먼지낀LP", realName: "오세훈" }
+  { nickname: "하늘마음", realName: "김종구" },
+  { nickname: "w6012923", realName: "김관수" },
+  { nickname: "almanix", realName: "임현진" },
+  { nickname: "김치찌개", realName: "진성일" },
+  { nickname: "자아성찰", realName: "홍준수" },
+  { nickname: "nkotb2", realName: "김연수" },
+  { nickname: "swk3", realName: "신세호" },
+  { nickname: "그불", realName: "박순영" },
+  { nickname: "jhm10", realName: "장현민" },
+  { nickname: "rnchunji", realName: "장춘지" },
+  { nickname: "chika", realName: "오현주" },
+  { nickname: "michelle", realName: "최지영" },
+  { nickname: "lionsj", realName: "이수진" },
+  { nickname: "네생각", realName: "모우진" },
+  { nickname: "맑고푸른", realName: "이향표" },
+  { nickname: "proam", realName: "김삼연" },
+  { nickname: "아킬레스", realName: "노언진" },
+  { nickname: "레몬tea", realName: "조지연" },
+  { nickname: "huge", realName: "김정준" },
+  { nickname: "lseokgoo", realName: "이석구" },
+  { nickname: "daffodil", realName: "한희정" },
+  { nickname: "한글날", realName: "신소희" },
+  { nickname: "sawa92", realName: "설재훈" },
+  { nickname: "mecander", realName: "이성일" },
+  { nickname: "화랑소년", realName: "최대우" },
+  { nickname: "주환이", realName: "김주환" },
+  { nickname: "lovetony", realName: "이지영" },
+  { nickname: "알레카스", realName: "노경현" },
+  { nickname: "이끄는이", realName: "김경하" },
+  { nickname: "mountie", realName: "이동산" },
+  { nickname: "sensi", realName: "박수진" },
+  { nickname: "ych2", realName: "여행스케" },
+  { nickname: "mahakama", realName: "김용배" },
+  { nickname: "몬스키", realName: "김문숙" },
+  { nickname: "zet3", realName: "배진환" },
+  { nickname: "ok0606", realName: "이봉옥" },
+  { nickname: "iam75", realName: "박성화" },
+  { nickname: "야구도사", realName: "홍준선" },
+  { nickname: "아모로스", realName: "송현욱" },
+  { nickname: "rpg3", realName: "고현주" },
+  { nickname: "tajang", realName: "장병희" },
+  { nickname: "elohim77", realName: "김선기" },
+  { nickname: "바보나라", realName: "김용경" },
+  { nickname: "kroi", realName: "강한나" },
+  { nickname: "dr스쿠르", realName: "김종은" },
+  { nickname: "a245", realName: "서홍석" },
+  { nickname: "박영기", realName: "박영기" },
+  { nickname: "kfardor", realName: "김태호" },
+  { nickname: "이율배반", realName: "김동욱" },
+  { nickname: "sky1130", realName: "송기용" },
+  { nickname: "ose53", realName: "오세은" },
+  { nickname: "chirisan", realName: "강수천" },
+  { nickname: "비바9", realName: "서상혁" },
+  { nickname: "사과쥬스", realName: "송기훈" },
+  { nickname: "환경사랑", realName: "문양수" },
+  { nickname: "w6024140", realName: "한태규" },
+  { nickname: "soulman", realName: "서보균" },
+  { nickname: "popboy", realName: "김정수" },
+  { nickname: "colusvi", realName: "노남석" },
+  { nickname: "moguly", realName: "조은성" },
+  { nickname: "built", realName: "박종찬" },
+  { nickname: "butfor", realName: "안정철" },
+  { nickname: "조은인상", realName: "이준화" },
+  { nickname: "사랑예감", realName: "김성남" },
+  { nickname: "솔기", realName: "유석창" },
+  { nickname: "park71", realName: "박명식" },
+  { nickname: "steven", realName: "최재혁" },
+  { nickname: "lebleu", realName: "홍승일" },
+  { nickname: "76jeho", realName: "정제호" },
+  { nickname: "canni", realName: "조인식" },
+  { nickname: "pendia", realName: "김장환" },
+  { nickname: "metalbar", realName: "김동수" },
+  { nickname: "epigram", realName: "송수연" },
+  { nickname: "blubosco", realName: "이은산" },
+  { nickname: "giraffe7", realName: "한승훈" },
+  { nickname: "opt7", realName: "이광철" },
+  { nickname: "kyhpia", realName: "김용효" },
+  { nickname: "ncnd", realName: "이은석" },
+  { nickname: "w9011769", realName: "물방울" },
+  { nickname: "satware", realName: "구인회" },
+  { nickname: "ajeegang", realName: "김승민" },
+  { nickname: "슈퍼토끼", realName: "송영인" },
+  { nickname: "홍정훈", realName: "홍정훈" },
+  { nickname: "channel1", realName: "정재훈" },
+  { nickname: "skywatch", realName: "박성호" },
+  { nickname: "킹카95", realName: "장효선" },
+  { nickname: "깨비혜승", realName: "양혜승" },
+  { nickname: "사르막스", realName: "이승영" },
+  { nickname: "시종일관", realName: "김제효" },
+  { nickname: "jimcarry", realName: "장성석" },
+  { nickname: "besti", realName: "최현아" },
+  { nickname: "고뿔이", realName: "박지훈" },
+  { nickname: "상원잭슨", realName: "박상원" },
+  { nickname: "이빨교정", realName: "송한식" },
+  { nickname: "comhero", realName: "강희국" },
+  { nickname: "포세이돈", realName: "최영돈" },
+  { nickname: "극단두레", realName: "노진희" },
+  { nickname: "망중한", realName: "최선옥" },
+  { nickname: "ecology", realName: "이득만" },
+  { nickname: "1656", realName: "박지수" },
+  { nickname: "몽실95", realName: "이세영" }
 ];
 const FB_TELECOM_MEMBER_NAMES = FB_TELECOM_MEMBER_PROFILES.map((m) => m.nickname);
 const FB_TELECOM_MEMBER_REALNAME_MAP = Object.fromEntries(FB_TELECOM_MEMBER_PROFILES.map((m) => [m.nickname, m.realName]));
@@ -4107,11 +4232,20 @@ async function fbTelecomResetRoom() {
   fbTelecomSetStatus("대화를 초기화하는 중입니다...");
 
   try {
-    // 대화 초기화는 화면/Firestore 메시지만 비운다.
-    // 김광석 수신 중/수신 가능/자리 비움/2~3시간 대기 상태와 관련 타이머는 유지한다.
-    // 즉, 김광석이 이미 방에 있으면 그대로 있고, 나가서 대기 중이면 대기 시간도 리셋하지 않는다.
+    // 대화 초기화는 Firestore 메시지를 지우고, 통신방 입장 전 설정 화면으로 되돌린다.
+    // 즉, 사용자는 다시 접속 설정을 확인한 뒤 통신방에 입장해야 새 대화를 시작한다.
     fbTelecomBotBusy = false;
     fbTelecomRecentMessages = [];
+    fbTelecomKksActive = false;
+    fbTelecomKksReceiving = false;
+    fbTelecomKksCallPending = false;
+    fbTelecomKksAvailabilityPrompted = false;
+
+    fbTelecomClearKksTimers();
+    if (fbTelecomPresenceTimer) {
+      clearTimeout(fbTelecomPresenceTimer);
+      fbTelecomPresenceTimer = null;
+    }
 
     const snap = await getDocs(fbTelecomMessagesRef());
     await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
@@ -4119,14 +4253,27 @@ async function fbTelecomResetRoom() {
     await setDoc(fbTelecomRoomRef(), {
       title: "광석이네 통신방",
       resetBy: currentUser.uid,
-      resetMessagesOnly: true,
+      resetToSetup: true,
       updatedAt: serverTimestamp()
     }, { merge: true });
 
     const log = document.getElementById("telecomLog");
     if (log) log.innerHTML = "";
 
-    fbTelecomSetCallButton();
+    // 같은 브라우저 세션에서 "이미 입장함"으로 판단하지 않도록 입장 기록도 지운다.
+    const enterKey = `kks-telecom-entered-${FB_TELECOM_ROOM_ID}-${currentUser.uid}`;
+    sessionStorage.removeItem(enterKey);
+
+    document.getElementById("telecomAfterKksExit")?.classList.add("hidden");
+    document.getElementById("telecomCallBtn")?.classList.add("hidden");
+    document.getElementById("telecomRoom")?.classList.add("hidden");
+    document.getElementById("telecomSetup")?.classList.remove("hidden");
+
+    const nickInput = document.getElementById("telecomNickInput");
+    const nameInput = document.getElementById("telecomNameInput");
+    if (nickInput) nickInput.value = fbTelecomUserNick();
+    if (nameInput) nameInput.value = fbTelecomUserName();
+
     fbTelecomSetStatus("");
   } catch (err) {
     console.error("telecom reset failed", err);

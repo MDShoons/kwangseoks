@@ -1,0 +1,20 @@
+Cloudflare Worker 프롬프트 업데이트 포함 버전
+
+이 ZIP의 cloudflare-worker-ai-telecom.js에는 다음 프롬프트가 반영되어 있습니다.
+
+- 1995년 PC통신 동호회 '둥근소리' 대화방 재현
+- 고정 멘트가 아니라 현재 대화 흐름을 보고 AI가 새 대사 생성
+- 둥근소리 회원 닉네임/실명 목록 기반 발화
+- 사용자와 김광석 1:1 대화가 아니라 회원들끼리도 상호작용
+- 김광석은 접속 중일 때만 발화
+- 김광석이 없어도 일반 회원 2명 이상 반응
+- 출력 형식: 닉네임|이름|대사
+- 상투적인 상담형 문구와 반복 멘트 금지
+
+반영 방법:
+1. GitHub에 app.js, index.html, style.css 업로드
+2. Firebase 콘솔 Firestore 규칙에 firestore.rules 게시
+3. Cloudflare Workers & Pages → kks-telecom-ai → Edit code
+4. 기존 Worker 코드 전체 삭제
+5. 이 ZIP의 cloudflare-worker-ai-telecom.js 전체 붙여넣기
+6. Save and deploy
