@@ -1295,12 +1295,13 @@ function uniqueStrings(arr, max = 30) {
 }
 
 function styleHintFor(nickname) {
+  // 업로드된 게시글은 "대사 내용"이 아니라 말투 힌트로만 쓴다.
+  // 실제 문장 예시는 프롬프트에 넣지 않는다. 예시까지 넣으면 AI가 "예전 게시글", "제가 올린 글" 같은 소재를 반복하기 쉽다.
   const item = MEMBER_STYLE_HINTS[nickname];
-  if (!item) return "짧고 담백한 존댓말 반응";
-  const examples = Array.isArray(item.examples) && item.examples.length
-    ? ` 말투 예: ${item.examples.slice(0, 2).join(" / ")}`
-    : "";
-  return `${item.style || "짧고 담백한 존댓말 반응"}${examples}`.slice(0, 280);
+  if (!item) return "짧고 담백한 존댓말. 상대 말을 먼저 받고 한 줄로 반응.";
+  return String(item.style || "짧고 담백한 존댓말. 상대 말을 먼저 받고 한 줄로 반응.")
+    .replace(/게시글|게시판|공연 소식|자료/g, "")
+    .slice(0, 120);
 }
 
 function memberProfilesFromBody(body) {
@@ -1354,13 +1355,22 @@ function buildPrompt(body, retryLevel = 0) {
     ...(Array.isArray(body.recentMessages) ? body.recentMessages.map(m => m.text || "") : [])
   ], 22);
   const avoid = avoidTexts.length ? avoidTexts.map(t => `- ${cleanText(t, 90)}`).join("\n") : "없음";
-  const replyCount = triggerType === "kksFirstMessage" ? 3 : 2;
+  const replyCount = triggerType === "kksFirstMessage" ? 2 : 2;
+  const isGreetingOrIdle = /(안녕|하이|반갑|뭐해|뭐하세요|뭐하세|다들|오오|ㅎㅎ|ㅋㅋ|;;|ㅜㅜ|아아|여기)/.test(userText);
+  const userMentionsTopic = /(게시판|공연|자료|글|소식|녹음|노래|음악|앨범|라디오|테이프|광석)/.test(userText);
+  const sceneGuard = isGreetingOrIdle
+    ? "- 이번 입력은 인사/잡담/상태 확인이다. 접속 인사, 지금 뭐하는지, 반가움, 장난 섞인 짧은 반응만 한다. 게시판·공연·자료·예전 글 이야기를 꺼내지 않는다."
+    : "- 사용자의 마지막 입력에 직접 연결되는 말만 한다.";
+  const topicGuard = userMentionsTopic
+    ? "- 사용자가 꺼낸 소재 안에서만 이어간다."
+    : "- 사용자가 먼저 말하지 않은 게시판, 공연, 자료, 글, 소식, 녹음, 노래 소재를 새로 꺼내지 않는다.";
 
   const kksStatusText = kksActive ? "connected" : "absent";
   const system = `너는 1995년 PC통신 동호회 "둥근소리"의 실시간 대화방을 재현하는 대화 생성 엔진이다.
 
-너의 역할은 사용자의 말에 대해, 실제 둥근소리 회원들이 대화방에서 자연스럽게 반응하는 것처럼 새 대사를 생성하는 것이다.
+너의 역할은 사용자의 마지막 입력에 대해, 실제 둥근소리 회원들이 대화방에서 자연스럽게 반응하는 것처럼 새 대사를 생성하는 것이다.
 저장된 고정 멘트나 반복 문장을 쓰지 말고, 매번 현재 대화 흐름에 맞는 새 문장을 만들어야 한다.
+가장 중요한 규칙: 첫 번째 대사는 반드시 사용자의 마지막 입력에 직접 대답해야 한다. 사용자가 인사하면 인사를 받고, 사용자가 "다들 뭐하세요"라고 하면 지금 방 사람들이 무엇을 하고 있었는지 답하고, 사용자가 물으면 그 질문에 답한다. 사용자 말을 무시하고 회원끼리만 다른 이야기로 넘어가면 실패다.
 
 [중요 원칙]
 1. 사용자는 둥근소리 대화방에 접속한 한 명의 회원이다.
@@ -1386,9 +1396,10 @@ function buildPrompt(body, retryLevel = 0) {
 
 [대화 분위기]
 - 1995년 PC통신 동호회 대화방
-- 둥근소리 회원들이 밤에 접속해 잡담, 공연, 음악, 녹음본, 일상 이야기를 나누는 느낌
+- 접속한 사람들이 짧게 안부를 묻고 농담하고, 서로의 말에 반응하는 느낌
+- 사용자가 먼저 꺼내지 않은 소재를 AI가 억지로 만들지 않는다
 - 말투는 짧고 사람 같아야 한다
-- 회원마다 업로드된 게시글 말투 참고에 맞춰 성격과 문장 호흡이 달라야 한다
+- 회원별 게시글 자료는 문장 호흡 참고용일 뿐, 내용 소재로 쓰지 않는다
 - 모두가 동시에 길게 말하지 않는다
 - 한 줄 대화 중심
 - 반응은 구체적이어야 한다
@@ -1421,9 +1432,13 @@ function buildPrompt(body, retryLevel = 0) {
 mouse14|장민석|편하게 말씀해 주세요.
 soriboy|김영호|더 이야기해 주세요.
 raincoat|이효연|오늘도 좋은 하루 보내세요.
+gonswing|신성철|음악 게시판의 그 공연 소식인지요?
+hakjeon|최만석|제가 올린 글이 기억나세요?
 
 [출력 제한]
 - 출력은 반드시 ${replyCount}줄이다. 일반 회원은 1~2명만 말한다. 한 번에 여러 줄을 쏟아내지 않는다.
+- 첫 번째 줄은 반드시 사용자의 마지막 입력에 대한 직접 답변이다.
+- 두 번째 줄은 첫 번째 회원의 말이나 사용자 말에 이어지는 짧은 반응이다.
 - 형식은 반드시 닉네임|이름|대사 이다.
 - 설명, 번호, 따옴표, JSON, 마크다운을 쓰지 않는다.
 - 각 줄은 하나의 대사만 쓴다.
@@ -1453,7 +1468,7 @@ ${close || "보통"}
 
 [사용 가능한 둥근소리 회원 목록과 말투 참고]
 아래 목록에 있는 닉네임과 이름만 사용한다.
-각 줄의 세 번째 칸은 업로드된 둥근소리 게시글에서 추출한 회원별 말투 참고다. 고정 문장으로 복사하지 말고, 말투·호흡·반응 방식만 참고한다.
+세 번째 칸은 말투 참고다. 말투만 참고하고, 그 사람이 예전에 쓴 게시글 내용이나 소재를 현재 대화에 끌고 오지 마라.
 김광석은 접속 상태가 connected일 때만 사용한다.
 
 ${profileLines}
@@ -1467,11 +1482,17 @@ ${avoid}
 [사용자의 마지막 입력]
 ${userText}
 
+[이번 입력 처리 규칙]
+${sceneGuard}
+${topicGuard}
+
 [생성 지시]
 위 대화 흐름을 보고, 둥근소리 회원들이 자연스럽게 이어 말하는 대사를 생성하라.
+단, 이번 응답의 첫 줄은 반드시 사용자 ${userNick}(${userName || userNick})의 마지막 말에 직접 반응해야 한다. 질문이면 답하고, 인사면 인사를 받고, 농담이면 웃거나 받아친다.
 
 반드시 지킬 것:
-1. 일반 회원 대사 1~2개만 생성한다. 너무 많이 말하지 않는다.
+1. 일반 회원 대사 1~2개만 생성한다. 너무 많이 말하지 않는다. 짧은 인사에는 짧은 인사로만 반응한다.
+1-1. 첫 번째 대사는 반드시 사용자의 마지막 말에 대한 직접 답변이어야 한다. 회원끼리만 대화하거나 새로운 주제로 도망가지 마라.
 2. 김광석 접속 상태가 connected이면, 필요할 때만 김광석 대사 0~1개를 추가한다. 김광석은 드물게만 말한다.
 3. 김광석이 absent 또는 cooldown이면 김광석 대사를 절대 만들지 않는다.
 4. 사용자의 말에만 줄줄이 답하지 말고, 회원끼리도 서로 반응하게 한다.
@@ -1486,13 +1507,26 @@ ${userText}
 닉네임|이름|대사
 닉네임|이름|대사
 
+[입력별 반응 예시]
+사용자: 안녕하세요
+mouse14|장민석|안녕하세요. 지금 막 들어오신 거죠?
+녹차향기|변수진|반갑습니다. 방금까지 조용했어요.
+
+사용자: 다들 뭐하세요?
+raincoat|이효연|저는 그냥 방 보고 있었어요. 다들 조용하시네요.
+soriboy|김영호|저도 접속만 해놓고 있다가 이제 봤습니다.
+
+사용자: ㅋㅋㅋㅋ
+ajeegang|김승민|뭐가 그렇게 웃기셨어요. 저도 좀 압시다.
+mouse14|장민석|방금 분위기 보고 웃으신 거죠?
+
 [출력 예시]
-녹차향기|변수진|그 얘기 들으니까 예전 게시판 글 하나 생각나네요.
-mouse14|장민석|잠깐만요, 지금 그 자료 어디서 보신 거예요?
+mouse14|장민석|오셨네요. 오늘은 좀 조용했어요.
+녹차향기|변수진|안녕하세요. 방금 막 들어오셨나봐요.
 
 이제 실제 대사만 출력하라.`;
 
-  return { system, user, allowedNames, profiles: availableProfiles, replyCount, avoidTexts, kksActive };
+  return { system, user, allowedNames, profiles: availableProfiles, replyCount, avoidTexts, kksActive, userMentionsTopic };
 }
 
 async function runAi(env, prompt, temperature = 0.82, maxTokens = 220) {
@@ -1570,6 +1604,7 @@ function normalizeReplies(items, ctx) {
     text = text.replace(/^\s*[^:：|]{1,20}\s*[:：|]\s*/, "").trim();
 
     if (looksBrokenText(text)) continue;
+    if (!ctx.userMentionsTopic && /(게시판|공연|자료|제가 올린 글|예전 글|소식|녹음본)/.test(text)) continue;
     const key = compact(text);
     if (!key || seen.has(key)) continue;
     // 너무 엄격하면 짧은 대화가 모두 사라져서 사용자가 혼자 말하는 문제가 생긴다.
