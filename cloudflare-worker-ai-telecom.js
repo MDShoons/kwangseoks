@@ -6,7 +6,7 @@
 const MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 const MAX_INPUT = 700;
 const MAX_RECENT = 8;
-const REPLY_COUNT = 3;
+const REPLY_COUNT = 3; // 일반 회원 1~2명 + 김광석 접속 중이면 김광석 1명
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -212,6 +212,36 @@ function looksBrokenText(text) {
   return false;
 }
 
+
+function escapeRegExp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function allIdentityTerms(profiles) {
+  const terms = new Set(["김광석"]);
+  for (const m of profiles || DEFAULT_MEMBER_PROFILES) {
+    if (m?.nickname) terms.add(String(m.nickname));
+    if (m?.realName) terms.add(String(m.realName));
+  }
+  return [...terms].filter(Boolean).sort((a, b) => b.length - a.length);
+}
+
+function claimsIdentityInText(text, speakerNick, speakerRealName, profiles) {
+  const t = cleanText(text, 220);
+  if (!t) return false;
+  const terms = allIdentityTerms(profiles);
+  for (const term of terms) {
+    const safe = escapeRegExp(term);
+    // 금지: "저는 강서대묘입니다", "제가 장민석인데요", "나 김광석이야"처럼
+    // 회원이 자기 또는 남의 닉네임/실명으로 신분을 소개하는 문장.
+    const intro = new RegExp(`(저는|제가|나는|나)\s*(?:바로\s*)?${safe}\s*(입니다|이에요|예요|입니다요|인데요|인데|라고|라고요|이야|야)`, "i");
+    if (intro.test(t)) return true;
+    const callSelf = new RegExp(`${safe}\s*(입니다|이에요|예요|입니다요)\s*$`, "i");
+    if (callSelf.test(t) && /^(저는|제가|나는|나)\s*/.test(t)) return true;
+  }
+  return false;
+}
+
 function compact(value) {
   return cleanText(value, 300).replace(/[\s~!?.。！？….,，'"“”‘’()\[\]{}:：;；\-_/\\]/g, "").toLowerCase();
 }
@@ -307,10 +337,13 @@ function buildPrompt(body, retryLevel = 0) {
 - 한 줄 형식은 닉네임|대사 이다. 이름은 쓰지 마라.
 - 닉네임은 사용 가능한 목록에서만 고른다.
 - 같은 닉네임을 반복하지 않는다.
+- 대사 안에서 자신을 다른 닉네임이나 실명으로 소개하지 않는다. 예: "저는 강서대묘입니다", "제가 장민석인데요", "나 김광석이야" 금지.
+- 회원의 신분은 화면의 닉네임/이름 칸에서 이미 표시되므로, 대사 본문에 "저는 ○○입니다" 같은 자기소개를 쓰지 않는다.
 - 다른 회원들은 기본적으로 존댓말을 쓴다.
 - 1995년 PC통신 느낌으로 짧고 자연스럽게 말한다.
 - 설명문, 번호, 따옴표, JSON, 마크다운 금지.
 - 영어, 코드, 변수명, 깨진 텍스트 금지.
+- "저는 ○○입니다", "제가 ○○인데요" 같은 신분 사칭/자기소개 문장 금지.
 - 노래 가사나 실제 사적 발언을 지어내지 않는다.
 - "천천히 얘기해도 돼요", "편하게 말해요", "더 이야기해 주세요", "오늘도 좋은 하루" 같은 상담형 상투문장 금지.
 - ${bannedTopicRule}
@@ -391,6 +424,7 @@ function normalizeReplies(items, ctx) {
     if (seenNick.has(nickname)) continue;
     text = text.replace(/^.*?\|/, "").trim();
     if (looksBrokenText(text)) continue;
+    if (claimsIdentityInText(text, nickname, pMap.get(nickname) || "", ctx.profiles)) continue;
     const key = compact(text);
     if (!key || seenText.has(key)) continue;
     seenNick.add(nickname);
@@ -421,7 +455,7 @@ export default {
     try {
       let replies = [];
       let raw = "";
-      for (let retry = 0; retry < 4 && replies.length < 1; retry++) {
+      for (let retry = 0; retry < 4 && replies.length < (body.kksActive === true ? 2 : 1); retry++) {
         const prompt = buildPrompt(body, retry);
         raw = await runAi(env, prompt, retry === 0 ? 0.58 : 0.35, retry >= 2 ? 120 : 170);
         replies = parseReplies(raw, prompt);

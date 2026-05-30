@@ -6164,3 +6164,61 @@ body {
 #telecom .telecom-enter-btn { font-size:12px !important; padding:6px 10px !important; }
 #telecom .telecom-notice,
 #telecom .telecom-ai-status { font-size:10.5px !important; }
+
+
+/* v184: PC통신 실제 로그처럼 더 작고 촘촘하게, 캐시 강제 갱신용 최종 오버라이드 */
+#telecom .telecom-titlebar { padding:12px 16px !important; }
+#telecom .telecom-titlebar h1 { font-size:18px !important; line-height:1.25 !important; }
+#telecom .telecom-titlebar p { font-size:10.5px !important; }
+#telecom .telecom-room { padding:10px 12px 14px !important; }
+#telecom .telecom-status-row { font-size:13px !important; padding-bottom:8px !important; }
+#telecom #telecomRoomName { font-size:14px !important; }
+#telecom .telecom-room-date { font-size:10.5px !important; min-width:62px !important; padding:2px 5px !important; }
+#telecom .telecom-log {
+  height:500px !important;
+  padding:10px 8px 8px !important;
+  font-size:12.5px !important;
+  line-height:1.42 !important;
+  letter-spacing:0 !important;
+}
+#telecom .telecom-line {
+  grid-template-columns: 102px 76px minmax(220px, 1fr) 42px !important;
+  column-gap:7px !important;
+  min-height:18px !important;
+  line-height:1.42 !important;
+  margin:0 !important;
+}
+#telecom .telecom-line-system {
+  grid-template-columns: 48px minmax(300px,1fr) 42px !important;
+  min-height:18px !important;
+}
+#telecom .telecom-nick,
+#telecom .telecom-real,
+#telecom .telecom-text {
+  font-size:12.5px !important;
+  line-height:1.42 !important;
+  font-weight:700 !important;
+}
+#telecom .telecom-line-time { font-size:9px !important; line-height:1.42 !important; }
+#telecom .telecom-system-prefix,
+#telecom .telecom-system-text { font-size:12.5px !important; line-height:1.42 !important; }
+#telecom .telecom-input-row { padding-top:8px !important; gap:7px !important; }
+#telecom .telecom-input-row span { font-size:12px !important; }
+#telecom .telecom-input-row input { height:28px !important; font-size:12px !important; padding:3px 7px !important; }
+#telecom .telecom-input-row button,
+#telecom .telecom-small-btn,
+#telecom .telecom-enter-btn { font-size:11px !important; padding:5px 9px !important; }
+#telecom .telecom-notice,
+#telecom .telecom-ai-status { font-size:10px !important; }
+
+@media (max-width: 760px) {
+  #telecom .telecom-log { font-size:12px !important; line-height:1.46 !important; }
+  #telecom .telecom-line { grid-template-columns: 78px 58px 1fr 36px !important; column-gap:4px !important; }
+  #telecom .telecom-line-system { grid-template-columns: 44px 1fr 36px !important; }
+  #telecom .telecom-nick,
+  #telecom .telecom-real,
+  #telecom .telecom-text,
+  #telecom .telecom-system-prefix,
+  #telecom .telecom-system-text { font-size:12px !important; }
+  #telecom .telecom-line-time { font-size:8.5px !important; }
+}

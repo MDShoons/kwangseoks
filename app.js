@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v183-pcchat-smaller-fonts-cross-talk-kks";
+const APP_VERSION = "v184-pcchat-compact-default-kks";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -3562,7 +3562,7 @@ document.addEventListener("click", (event) => {
    - 사용자가 메시지를 보낼 때만 Cloudflare Worker가 AI 대사를 새로 생성
    - 브라우저는 대화 저장, 화면 표시, Worker 호출만 담당
 -------------------------------------------------------------------------- */
-const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v15-cross-talk-kks";
+const FB_TELECOM_ROOM_ID = "gwangseok-telecom-main-ai-v17-identity-guard";
 const FB_TELECOM_MAX_INPUT = 500;
 const FB_TELECOM_AI_WORKER_URL = "https://kks-telecom-ai.kos20050627.workers.dev";
 
@@ -4186,6 +4186,28 @@ async function fbTelecomCallAiReply(clean, triggerType = "userMessage") {
   return data;
 }
 
+
+function fbTelecomEscapeRegExp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function fbTelecomLooksLikeIdentityClaim(text) {
+  const t = String(text || "").replace(/\s+/g, " ").trim();
+  if (!t) return false;
+  const terms = new Set(["김광석"]);
+  for (const m of FB_TELECOM_MEMBER_PROFILES) {
+    if (m.nickname) terms.add(m.nickname);
+    if (m.realName) terms.add(m.realName);
+  }
+  for (const term of terms) {
+    if (!term) continue;
+    const safe = fbTelecomEscapeRegExp(term);
+    const intro = new RegExp(`(저는|제가|나는|나)\s*(?:바로\s*)?${safe}\s*(입니다|이에요|예요|입니다요|인데요|인데|라고|라고요|이야|야)`, "i");
+    if (intro.test(t)) return true;
+  }
+  return false;
+}
+
 async function fbTelecomSaveAiReplies(replies, userUid, sourceLabel = "cloudflare-workers-ai") {
   let saved = 0;
   const seen = new Set(fbTelecomRecentTextsForAi(40).map((x) => x.replace(/\s+/g, "").slice(0, 60)));
@@ -4196,6 +4218,7 @@ async function fbTelecomSaveAiReplies(replies, userUid, sourceLabel = "cloudflar
     const replyText = fbTelecomCleanText(item?.text || "", "").slice(0, 500);
     const compact = replyText.replace(/\s+/g, "").slice(0, 60);
     if (!replyText || seen.has(compact)) continue;
+    if (fbTelecomLooksLikeIdentityClaim(replyText)) continue;
     seen.add(compact);
 
     const isKksReply = nickname === FB_TELECOM_KKS_PROFILE.nickname;
