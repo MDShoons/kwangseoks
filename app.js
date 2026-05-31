@@ -1382,7 +1382,6 @@ function renderAllContentSections() {
 let dailyRecommendedItemId = "";
 let dailyPlayerBound = false;
 let playlistPlayerBound = false;
-let mobilePlaylistFullPlayerBound = false;
 let playlistCurrentItemId = "";
 let playlistRequestedItemId = "";
 let playlistAutoPlayAfterMove = false;
@@ -1830,12 +1829,10 @@ function setupDailyRecommendPlayer(options = {}) {
 
   audio.addEventListener("loadedmetadata", () => {
     duration.textContent = formatPlayerTime(audio.duration);
-    syncMobilePlaylistFullPlayer(audio);
   });
 
   audio.addEventListener("timeupdate", () => {
     current.textContent = formatPlayerTime(audio.currentTime);
-    syncMobilePlaylistFullPlayer(audio);
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
       progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
     }
@@ -2103,98 +2100,6 @@ function renderPlaylistQueuePanel() {
   });
 }
 
-
-function isMobilePlaylistViewport() {
-  return window.matchMedia("(max-width: 768px)").matches;
-}
-
-function getPlaylistArtistText(item = {}) {
-  return String(
-    item.artist ||
-    item.singer ||
-    item.singerName ||
-    item.artistName ||
-    item.vocal ||
-    "김광석"
-  ).trim() || "김광석";
-}
-
-function getPlaylistCurrentSong() {
-  const songs = getUserPlaylistSongs();
-  if (!songs.length) return null;
-  const idx = playlistCurrentItemId ? songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId)) : -1;
-  return idx >= 0 ? songs[idx] : songs[0];
-}
-
-function setMobileFullCoverImage(item) {
-  const full = document.getElementById("mobilePlaylistFullPlayer");
-  const cover = document.getElementById("mobileFullCover");
-  const bg = document.getElementById("mobileFullBg");
-  const url = getAudioItemCoverUrl(item);
-  if (url) {
-    if (cover) {
-      cover.src = url;
-      cover.alt = `${item?.title || "현재 곡"} 앨범 자켓`;
-    }
-    if (bg) bg.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
-    full?.classList.add("has-cover");
-  } else {
-    if (cover) cover.removeAttribute("src");
-    if (bg) bg.style.backgroundImage = "none";
-    full?.classList.remove("has-cover");
-  }
-}
-
-function syncMobilePlaylistFullPlayer(audio) {
-  const item = getPlaylistCurrentSong();
-  const full = document.getElementById("mobilePlaylistFullPlayer");
-  if (!full || !item || !audio) return;
-
-  const title = document.getElementById("mobileFullTitle");
-  const artist = document.getElementById("mobileFullArtist");
-  const current = document.getElementById("mobileFullCurrent");
-  const duration = document.getElementById("mobileFullDuration");
-  const progress = document.getElementById("mobileFullProgress");
-  const playBtn = document.getElementById("mobileFullPlayBtn");
-
-  if (title) title.textContent = item.title || "제목 없는 곡";
-  if (artist) artist.textContent = getPlaylistArtistText(item);
-  setMobileFullCoverImage(item);
-
-  if (current) current.textContent = formatPlayerTime(audio.currentTime || 0);
-  if (duration) duration.textContent = formatPlayerTime(audio.duration || 0);
-  if (progress && Number.isFinite(audio.duration) && audio.duration > 0) {
-    progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
-  } else if (progress) {
-    progress.value = "0";
-  }
-
-  const isPlaying = !audio.paused && !audio.ended;
-  if (playBtn) {
-    playBtn.textContent = isPlaying ? "Ⅱ" : "▶";
-    playBtn.classList.toggle("is-playing", isPlaying);
-    playBtn.setAttribute("aria-label", isPlaying ? "일시정지" : "재생");
-  }
-}
-
-function openMobilePlaylistFullPlayer(audio) {
-  if (!isMobilePlaylistViewport()) return;
-  const full = document.getElementById("mobilePlaylistFullPlayer");
-  if (!full || !getUserPlaylistSongs().length) return;
-  syncMobilePlaylistFullPlayer(audio || document.getElementById("playlistPlayerAudio"));
-  full.classList.add("open");
-  full.setAttribute("aria-hidden", "false");
-  document.body.classList.add("mobile-full-player-open");
-}
-
-function closeMobilePlaylistFullPlayer() {
-  const full = document.getElementById("mobilePlaylistFullPlayer");
-  if (!full) return;
-  full.classList.remove("open");
-  full.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("mobile-full-player-open");
-}
-
 function setupUserPlaylistPlayer(options = {}) {
   const player = document.getElementById("userPlaylistPlayer");
   const audio = document.getElementById("playlistPlayerAudio");
@@ -2222,12 +2127,10 @@ function setupUserPlaylistPlayer(options = {}) {
     playBtn.textContent = isPlaying ? "Ⅱ" : "▶";
     playBtn.classList.toggle("is-playing", isPlaying);
     playBtn.setAttribute("aria-label", isPlaying ? "일시정지" : "재생");
-    syncMobilePlaylistFullPlayer(audio);
   };
 
   const songs = getUserPlaylistSongs();
   if (!songs.length) {
-    closeMobilePlaylistFullPlayer();
     document.body.classList.remove("playlist-active-mobile");
     player.classList.add("closed");
     playlistCurrentItemId = "";
@@ -2273,7 +2176,14 @@ function setupUserPlaylistPlayer(options = {}) {
   setPlayerCoverImage(cover, selected);
   positionFloatingAudioPlayers();
   title.textContent = selected.title || "제목 없는 곡";
-  const mobileArtistText = getPlaylistArtistText(selected);
+  const mobileArtistText = String(
+    selected.artist ||
+    selected.singer ||
+    selected.singerName ||
+    selected.artistName ||
+    selected.vocal ||
+    "김광석"
+  ).trim() || "김광석";
   const desktopSubText = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
   const mobileSubText = mobileArtistText;
   sub.dataset.desktopText = desktopSubText;
@@ -2283,7 +2193,6 @@ function setupUserPlaylistPlayer(options = {}) {
   if (listBtn && queuePanel) {
     listBtn.setAttribute("aria-expanded", queuePanel.classList.contains("open") ? "true" : "false");
   }
-  syncMobilePlaylistFullPlayer(audio);
 
   if (playlistCurrentItemId !== selected.id || audio.dataset.playlistSrc !== sourceUrl) {
     playlistCurrentItemId = selected.id;
@@ -2306,17 +2215,6 @@ function setupUserPlaylistPlayer(options = {}) {
       try { pauseOtherMedia(audio); await audio.play(); } catch (error) { console.log("다음 곡 자동 재생 오류:", error?.message || error); }
     }, 120);
   }
-
-  [cover, title, sub].forEach((el) => {
-    if (!el || el.dataset.mobileFullOpenBound === "yes") return;
-    el.dataset.mobileFullOpenBound = "yes";
-    el.addEventListener("click", (event) => {
-      if (!isMobilePlaylistViewport()) return;
-      event.preventDefault();
-      event.stopPropagation();
-      openMobilePlaylistFullPlayer(audio);
-    });
-  });
 
   if (playlistPlayerBound) return;
   playlistPlayerBound = true;
@@ -2393,58 +2291,6 @@ function setupUserPlaylistPlayer(options = {}) {
     volumeSlider.value = String(Math.round(audio.volume * 100));
     muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
   });
-
-  if (!mobilePlaylistFullPlayerBound) {
-    mobilePlaylistFullPlayerBound = true;
-    const fullCloseBtn = document.getElementById("mobileFullCloseBtn");
-    const fullPlayBtn = document.getElementById("mobileFullPlayBtn");
-    const fullPrevBtn = document.getElementById("mobileFullPrevBtn");
-    const fullNextBtn = document.getElementById("mobileFullNextBtn");
-    const fullProgress = document.getElementById("mobileFullProgress");
-    const fullListBtn = document.getElementById("mobileFullListBtn");
-    const fullRelatedBtn = document.getElementById("mobileFullRelatedBtn");
-
-    fullCloseBtn?.addEventListener("click", (event) => {
-      event.preventDefault();
-      closeMobilePlaylistFullPlayer();
-    });
-    fullPlayBtn?.addEventListener("click", async (event) => {
-      event.preventDefault();
-      try {
-        if (audio.paused) { pauseOtherMedia(audio); await audio.play(); }
-        else audio.pause();
-      } catch (error) { console.log("전체 플레이어 재생 오류:", error?.message || error); }
-    });
-    fullPrevBtn?.addEventListener("click", (event) => {
-      event.preventDefault();
-      movePlaylistSelection(-1);
-      renderPlaylistQueuePanel();
-      setTimeout(() => syncMobilePlaylistFullPlayer(audio), 80);
-    });
-    fullNextBtn?.addEventListener("click", (event) => {
-      event.preventDefault();
-      movePlaylistSelection(1);
-      renderPlaylistQueuePanel();
-      setTimeout(() => syncMobilePlaylistFullPlayer(audio), 80);
-    });
-    fullProgress?.addEventListener("input", () => {
-      if (Number.isFinite(audio.duration) && audio.duration > 0) {
-        audio.currentTime = (Number(fullProgress.value) / 1000) * audio.duration;
-      }
-    });
-    const openQueueFromFull = (event) => {
-      event.preventDefault();
-      closeMobilePlaylistFullPlayer();
-      const open = true;
-      queuePanel?.classList.toggle("open", open);
-      queuePanel?.setAttribute("aria-hidden", "false");
-      listBtn?.setAttribute("aria-expanded", "true");
-      document.body.classList.add("playlist-queue-open");
-      renderPlaylistQueuePanel();
-    };
-    fullListBtn?.addEventListener("click", openQueueFromFull);
-    fullRelatedBtn?.addEventListener("click", openQueueFromFull);
-  }
 
   playBtn.addEventListener("click", async () => {
     if (playBtn.disabled || !audio.src) return;
