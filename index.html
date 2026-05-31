@@ -191,39 +191,41 @@
     </div>
   </aside>
 
-  <aside id="playlistFullPlayer" class="playlist-full-player" aria-label="플레이리스트 전체 플레이어" aria-hidden="true">
-    <div class="playlist-full-cover-wrap">
-      <img id="playlistFullCover" class="playlist-full-cover" src="" alt="현재 곡 앨범 자켓" draggable="false" oncontextmenu="return false" />
+  <div id="mobilePlaylistFullPlayer" class="mobile-playlist-full-player" aria-hidden="true">
+    <div class="mobile-full-bg" id="mobileFullBg"></div>
+    <button type="button" id="mobileFullCloseBtn" class="mobile-full-close" aria-label="전체 플레이어 닫기">⌄</button>
+    <div class="mobile-full-cover-wrap">
+      <img id="mobileFullCover" class="mobile-full-cover" src="" alt="현재 곡 앨범 자켓" draggable="false" oncontextmenu="return false" />
     </div>
-    <div class="playlist-full-panel">
-      <div class="playlist-full-times">
-        <span id="playlistFullCurrent">0:00</span>
-        <span id="playlistFullDuration">0:00</span>
+    <div class="mobile-full-gradient">
+      <input id="mobileFullProgress" class="mobile-full-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="재생 위치" />
+      <div class="mobile-full-time-row">
+        <span id="mobileFullCurrent">0:00</span>
+        <span id="mobileFullDuration">0:00</span>
       </div>
-      <input id="playlistFullProgress" class="playlist-full-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="전체 플레이어 재생 위치" />
-      <div class="playlist-full-top-actions">
-        <button type="button" id="playlistFullCastBtn" class="playlist-full-icon-btn" aria-label="기기 연결">▱</button>
-        <button type="button" id="playlistFullLikeBtn" class="playlist-full-icon-btn" aria-label="좋아요">♡</button>
-        <button type="button" id="playlistFullCloseBtn" class="playlist-full-icon-btn" aria-label="전체 플레이어 닫기">⋮</button>
+      <div class="mobile-full-utility-row">
+        <button type="button" class="mobile-full-icon-btn" aria-label="기기 연결">▱◁</button>
+        <button type="button" class="mobile-full-icon-btn" aria-label="좋아요">♡</button>
+        <button type="button" class="mobile-full-icon-btn" aria-label="더보기">⋮</button>
       </div>
-      <div class="playlist-full-song-meta">
-        <strong id="playlistFullTitle">선택한 곡이 없습니다</strong>
-        <span id="playlistFullArtist">김광석</span>
+      <div class="mobile-full-title-area">
+        <div id="mobileFullTitle" class="mobile-full-title">선택한 곡이 없습니다</div>
+        <div id="mobileFullArtist" class="mobile-full-artist">김광석</div>
       </div>
-      <div class="playlist-full-main-controls">
-        <button type="button" id="playlistFullRepeatBtn" class="playlist-full-icon-btn" aria-label="반복">↻</button>
-        <button type="button" id="playlistFullPrevBtn" class="playlist-full-step-btn" aria-label="이전 곡">‹</button>
-        <button type="button" id="playlistFullPlayBtn" class="playlist-full-play-btn" aria-label="재생">▶</button>
-        <button type="button" id="playlistFullNextBtn" class="playlist-full-step-btn" aria-label="다음 곡">›</button>
-        <button type="button" id="playlistFullShuffleBtn" class="playlist-full-icon-btn" aria-label="셔플">⤨</button>
+      <div class="mobile-full-control-row">
+        <button type="button" class="mobile-full-repeat" aria-label="반복">↻</button>
+        <button type="button" id="mobileFullPrevBtn" class="mobile-full-main-btn" aria-label="이전 곡">|◁</button>
+        <button type="button" id="mobileFullPlayBtn" class="mobile-full-main-btn mobile-full-play" aria-label="재생">▶</button>
+        <button type="button" id="mobileFullNextBtn" class="mobile-full-main-btn" aria-label="다음 곡">▷|</button>
+        <button type="button" class="mobile-full-shuffle" aria-label="셔플">⇄</button>
       </div>
-      <div class="playlist-full-bottom-actions">
-        <button type="button" id="playlistFullRemoveBtn" class="playlist-full-text-btn">현재곡 빼기</button>
-        <button type="button" id="playlistFullQueueBtn" class="playlist-full-queue-btn" aria-label="재생목록 열기">☰▷</button>
+      <div class="mobile-full-bottom-row">
+        <span>EQ&nbsp;&nbsp;AAC 320k▾</span>
+        <button type="button" id="mobileFullRelatedBtn" class="mobile-full-related-btn">연관 곡⌃</button>
+        <button type="button" id="mobileFullListBtn" class="mobile-full-list-btn" aria-label="재생목록">☰▷</button>
       </div>
     </div>
-  </aside>
-
+  </div>
 
 <div id="screenProtectOverlay" class="screen-protect-overlay hidden">
     <div>화면 보호 모드입니다.</div>
