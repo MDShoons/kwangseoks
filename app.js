@@ -2063,23 +2063,26 @@ function ensurePlaylistFullDetailElement() {
   overlay.setAttribute("aria-label", "모바일 플레이리스트 상세 플레이어");
   overlay.innerHTML = `
     <div id="playlistFullDetailBg" class="playlist-full-detail-bg" aria-hidden="true"></div>
-    <button type="button" id="playlistFullDetailClose" class="playlist-full-detail-close" aria-label="상세 플레이어 닫기">×</button>
+    <header class="playlist-full-detail-header" aria-label="상세 플레이어 헤더">
+      <button type="button" id="playlistFullDetailClose" class="playlist-full-detail-close" aria-label="상세 플레이어 닫기">⌄</button>
+      <button type="button" id="playlistFullDetailListTop" class="playlist-full-detail-list-top" aria-label="재생목록 열기">☰</button>
+    </header>
     <div class="playlist-full-detail-cover-wrap">
       <img id="playlistFullDetailCover" class="playlist-full-detail-cover" src="" alt="앨범 커버" draggable="false" oncontextmenu="return false" />
+    </div>
+    <div class="playlist-full-detail-meta">
+      <strong id="playlistFullDetailTitle">선택한 곡이 없습니다</strong>
+      <span id="playlistFullDetailArtist">김광석</span>
     </div>
     <div class="playlist-full-detail-progress-row">
       <span id="playlistFullDetailCurrent">0:00</span>
       <span id="playlistFullDetailDuration">0:00</span>
     </div>
     <input id="playlistFullDetailProgress" class="playlist-full-detail-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="재생 위치" />
-    <div class="playlist-full-detail-meta">
-      <strong id="playlistFullDetailTitle">선택한 곡이 없습니다</strong>
-      <span id="playlistFullDetailArtist">김광석</span>
-    </div>
     <div class="playlist-full-detail-controls" aria-label="재생 조작">
-      <button type="button" id="playlistFullDetailPrev" aria-label="이전 곡">◁</button>
+      <button type="button" id="playlistFullDetailPrev" class="playlist-full-detail-prev" aria-label="이전 곡">⏮</button>
       <button type="button" id="playlistFullDetailPlay" class="playlist-full-detail-play" aria-label="재생 또는 일시정지">▶</button>
-      <button type="button" id="playlistFullDetailNext" aria-label="다음 곡">▷</button>
+      <button type="button" id="playlistFullDetailNext" class="playlist-full-detail-next" aria-label="다음 곡">⏭</button>
       <button type="button" id="playlistFullDetailList" class="playlist-full-detail-list" aria-label="재생목록 열기">☰</button>
     </div>
   `;
@@ -2163,6 +2166,7 @@ function bindPlaylistFullDetailOnce() {
   const shuffle = document.getElementById("playlistFullDetailShuffle");
   const related = document.getElementById("playlistFullDetailRelated");
   const list = document.getElementById("playlistFullDetailList");
+  const listTop = document.getElementById("playlistFullDetailListTop");
 
   close?.addEventListener("click", closePlaylistFullDetail);
   progress?.addEventListener("input", () => {
@@ -2207,6 +2211,7 @@ function bindPlaylistFullDetailOnce() {
   };
   related?.addEventListener("click", openList);
   list?.addEventListener("click", openList);
+  listTop?.addEventListener("click", openList);
 }
 
 function renderPlaylistQueuePanel() {
