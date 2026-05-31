@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=no-telecom-v5-mobilebar-remove" />
+  <link rel="stylesheet" href="style.css?v=no-telecom-v5-playlist-cover-list" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -190,6 +190,40 @@
       <audio id="playlistPlayerAudio" preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
     </div>
   </aside>
+
+  <aside id="playlistFullPlayer" class="playlist-full-player" aria-label="플레이리스트 전체 플레이어" aria-hidden="true">
+    <div class="playlist-full-cover-wrap">
+      <img id="playlistFullCover" class="playlist-full-cover" src="" alt="현재 곡 앨범 자켓" draggable="false" oncontextmenu="return false" />
+    </div>
+    <div class="playlist-full-panel">
+      <div class="playlist-full-times">
+        <span id="playlistFullCurrent">0:00</span>
+        <span id="playlistFullDuration">0:00</span>
+      </div>
+      <input id="playlistFullProgress" class="playlist-full-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="전체 플레이어 재생 위치" />
+      <div class="playlist-full-top-actions">
+        <button type="button" id="playlistFullCastBtn" class="playlist-full-icon-btn" aria-label="기기 연결">▱</button>
+        <button type="button" id="playlistFullLikeBtn" class="playlist-full-icon-btn" aria-label="좋아요">♡</button>
+        <button type="button" id="playlistFullCloseBtn" class="playlist-full-icon-btn" aria-label="전체 플레이어 닫기">⋮</button>
+      </div>
+      <div class="playlist-full-song-meta">
+        <strong id="playlistFullTitle">선택한 곡이 없습니다</strong>
+        <span id="playlistFullArtist">김광석</span>
+      </div>
+      <div class="playlist-full-main-controls">
+        <button type="button" id="playlistFullRepeatBtn" class="playlist-full-icon-btn" aria-label="반복">↻</button>
+        <button type="button" id="playlistFullPrevBtn" class="playlist-full-step-btn" aria-label="이전 곡">‹</button>
+        <button type="button" id="playlistFullPlayBtn" class="playlist-full-play-btn" aria-label="재생">▶</button>
+        <button type="button" id="playlistFullNextBtn" class="playlist-full-step-btn" aria-label="다음 곡">›</button>
+        <button type="button" id="playlistFullShuffleBtn" class="playlist-full-icon-btn" aria-label="셔플">⤨</button>
+      </div>
+      <div class="playlist-full-bottom-actions">
+        <button type="button" id="playlistFullRemoveBtn" class="playlist-full-text-btn">현재곡 빼기</button>
+        <button type="button" id="playlistFullQueueBtn" class="playlist-full-queue-btn" aria-label="재생목록 열기">☰▷</button>
+      </div>
+    </div>
+  </aside>
+
 
 <div id="screenProtectOverlay" class="screen-protect-overlay hidden">
     <div>화면 보호 모드입니다.</div>
@@ -720,6 +754,6 @@
   </div>
 <div class="version-marker">v167-siteinfo-purpose-bold</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=no-telecom-v5-mobilebar-remove"></script>
+  <script type="module" src="app.js?v=no-telecom-v5-playlist-cover-list"></script>
 </body>
 </html>
