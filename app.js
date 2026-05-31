@@ -1383,6 +1383,7 @@ let dailyRecommendedItemId = "";
 let dailyPlayerBound = false;
 let playlistPlayerBound = false;
 let playlistFullDetailBound = false;
+let playlistFullDetailTriggerDelegated = false;
 let playlistCurrentItemId = "";
 let playlistRequestedItemId = "";
 let playlistAutoPlayAfterMove = false;
@@ -2051,7 +2052,52 @@ function getPlaylistArtistText(item) {
   return clean;
 }
 
+function ensurePlaylistFullDetailElement() {
+  let overlay = document.getElementById("playlistFullDetail");
+  if (overlay) return overlay;
+
+  overlay = document.createElement("section");
+  overlay.id = "playlistFullDetail";
+  overlay.className = "playlist-full-detail";
+  overlay.setAttribute("aria-hidden", "true");
+  overlay.setAttribute("aria-label", "모바일 플레이리스트 상세 플레이어");
+  overlay.innerHTML = `
+    <div id="playlistFullDetailBg" class="playlist-full-detail-bg" aria-hidden="true"></div>
+    <button type="button" id="playlistFullDetailClose" class="playlist-full-detail-close" aria-label="상세 플레이어 닫기">×</button>
+    <div class="playlist-full-detail-cover-wrap">
+      <img id="playlistFullDetailCover" class="playlist-full-detail-cover" src="" alt="앨범 커버" draggable="false" oncontextmenu="return false" />
+    </div>
+    <div class="playlist-full-detail-progress-row">
+      <span id="playlistFullDetailCurrent">0:00</span>
+      <span id="playlistFullDetailDuration">0:00</span>
+    </div>
+    <input id="playlistFullDetailProgress" class="playlist-full-detail-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="재생 위치" />
+    <div class="playlist-full-detail-top-actions" aria-hidden="true">
+      <span>▱</span><span>♡</span><span>⋮</span>
+    </div>
+    <div class="playlist-full-detail-meta">
+      <strong id="playlistFullDetailTitle">선택한 곡이 없습니다</strong>
+      <span id="playlistFullDetailArtist">김광석</span>
+    </div>
+    <div class="playlist-full-detail-controls" aria-label="재생 조작">
+      <button type="button" id="playlistFullDetailRepeat" aria-label="반복">↻</button>
+      <button type="button" id="playlistFullDetailPrev" aria-label="이전 곡">◁</button>
+      <button type="button" id="playlistFullDetailPlay" class="playlist-full-detail-play" aria-label="재생 또는 일시정지">▶</button>
+      <button type="button" id="playlistFullDetailNext" aria-label="다음 곡">▷</button>
+      <button type="button" id="playlistFullDetailShuffle" aria-label="셔플">⇄</button>
+    </div>
+    <div class="playlist-full-detail-bottom">
+      <span>EQ&nbsp;&nbsp;AAC 320k</span>
+      <button type="button" id="playlistFullDetailRelated">연관 곡⌃</button>
+      <button type="button" id="playlistFullDetailList" aria-label="재생목록 열기">☰▷</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
 function setPlaylistDetailCover(item) {
+  ensurePlaylistFullDetailElement();
   const cover = document.getElementById("playlistFullDetailCover");
   const bg = document.getElementById("playlistFullDetailBg");
   if (!cover || !bg) return;
@@ -2068,7 +2114,7 @@ function setPlaylistDetailCover(item) {
 }
 
 function updatePlaylistFullDetailUi() {
-  const overlay = document.getElementById("playlistFullDetail");
+  const overlay = ensurePlaylistFullDetailElement();
   if (!overlay) return;
   const item = getCurrentPlaylistSong();
   const audio = document.getElementById("playlistPlayerAudio");
@@ -2097,7 +2143,7 @@ function updatePlaylistFullDetailUi() {
 }
 
 function openPlaylistFullDetail() {
-  const overlay = document.getElementById("playlistFullDetail");
+  const overlay = ensurePlaylistFullDetailElement();
   if (!overlay || !getCurrentPlaylistSong()) return;
   updatePlaylistFullDetailUi();
   overlay.classList.add("open");
@@ -2106,7 +2152,7 @@ function openPlaylistFullDetail() {
 }
 
 function closePlaylistFullDetail() {
-  const overlay = document.getElementById("playlistFullDetail");
+  const overlay = ensurePlaylistFullDetailElement();
   if (!overlay) return;
   overlay.classList.remove("open");
   overlay.setAttribute("aria-hidden", "true");
@@ -2114,6 +2160,7 @@ function closePlaylistFullDetail() {
 }
 
 function bindPlaylistFullDetailOnce() {
+  ensurePlaylistFullDetailElement();
   if (playlistFullDetailBound) return;
   playlistFullDetailBound = true;
   const close = document.getElementById("playlistFullDetailClose");
@@ -2210,6 +2257,24 @@ function renderPlaylistQueuePanel() {
   });
 }
 
+function bindPlaylistDetailTriggerDelegation() {
+  if (playlistFullDetailTriggerDelegated) return;
+  playlistFullDetailTriggerDelegated = true;
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const trigger = target.closest("#playlistPlayerCover, #playlistPlayerTitle, .playlist-detail-trigger");
+    if (!trigger) return;
+    const player = document.getElementById("userPlaylistPlayer");
+    if (!player || player.classList.contains("closed")) return;
+    if (!window.matchMedia || window.matchMedia("(max-width: 920px)").matches) {
+      event.preventDefault();
+      event.stopPropagation();
+      openPlaylistFullDetail();
+    }
+  }, true);
+}
+
 function setupUserPlaylistPlayer(options = {}) {
   const player = document.getElementById("userPlaylistPlayer");
   const audio = document.getElementById("playlistPlayerAudio");
@@ -2276,6 +2341,7 @@ function setupUserPlaylistPlayer(options = {}) {
   title.textContent = selected.title || "제목 없는 곡";
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡`;
   bindPlaylistFullDetailOnce();
+  bindPlaylistDetailTriggerDelegation();
   [cover, title].forEach((el) => {
     if (!el) return;
     el.classList.add("playlist-detail-trigger");
