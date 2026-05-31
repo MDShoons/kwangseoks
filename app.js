@@ -1382,6 +1382,7 @@ function renderAllContentSections() {
 let dailyRecommendedItemId = "";
 let dailyPlayerBound = false;
 let playlistPlayerBound = false;
+let playlistFullDetailBound = false;
 let playlistCurrentItemId = "";
 let playlistRequestedItemId = "";
 let playlistAutoPlayAfterMove = false;
@@ -1823,18 +1824,22 @@ function setupDailyRecommendPlayer(options = {}) {
 
   audio.addEventListener("play", () => {
     playBtn.textContent = "Ⅱ";
+    updatePlaylistFullDetailUi();
   });
 
   audio.addEventListener("pause", () => {
     playBtn.textContent = "▶";
+    updatePlaylistFullDetailUi();
   });
 
   audio.addEventListener("loadedmetadata", () => {
     duration.textContent = formatPlayerTime(audio.duration);
+    updatePlaylistFullDetailUi();
   });
 
   audio.addEventListener("timeupdate", () => {
     current.textContent = formatPlayerTime(audio.currentTime);
+    updatePlaylistFullDetailUi();
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
       progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
     }
@@ -1848,6 +1853,7 @@ function setupDailyRecommendPlayer(options = {}) {
 
   audio.addEventListener("ended", () => {
     playBtn.textContent = "▶";
+    updatePlaylistFullDetailUi();
     progress.value = "0";
   });
 }
@@ -2031,6 +2037,139 @@ function movePlaylistSelection(direction) {
   setupUserPlaylistPlayer({ forceOpen: true });
 }
 
+function getCurrentPlaylistSong() {
+  const songs = getUserPlaylistSongs();
+  if (!songs.length) return null;
+  return songs.find((item) => String(item.id) === String(playlistCurrentItemId)) || songs[0] || null;
+}
+
+function getPlaylistArtistText(item) {
+  const value = item?.artist || item?.singer || item?.performer || item?.authorName || item?.author || item?.source || "";
+  const clean = String(value || "").trim();
+  if (!clean || clean === "미기재" || clean === "미상") return "김광석";
+  if (clean.length > 18) return "김광석";
+  return clean;
+}
+
+function setPlaylistDetailCover(item) {
+  const cover = document.getElementById("playlistFullDetailCover");
+  const bg = document.getElementById("playlistFullDetailBg");
+  if (!cover || !bg) return;
+  const coverUrl = getAudioItemCoverUrl(item);
+  if (coverUrl) {
+    cover.src = coverUrl;
+    cover.classList.remove("empty");
+    bg.style.backgroundImage = `url("${coverUrl.replace(/"/g, "%22")}")`;
+  } else {
+    cover.removeAttribute("src");
+    cover.classList.add("empty");
+    bg.style.removeProperty("background-image");
+  }
+}
+
+function updatePlaylistFullDetailUi() {
+  const overlay = document.getElementById("playlistFullDetail");
+  if (!overlay) return;
+  const item = getCurrentPlaylistSong();
+  const audio = document.getElementById("playlistPlayerAudio");
+  const title = document.getElementById("playlistFullDetailTitle");
+  const artist = document.getElementById("playlistFullDetailArtist");
+  const current = document.getElementById("playlistFullDetailCurrent");
+  const duration = document.getElementById("playlistFullDetailDuration");
+  const progress = document.getElementById("playlistFullDetailProgress");
+  const play = document.getElementById("playlistFullDetailPlay");
+
+  if (title) title.textContent = item?.title || "선택한 곡이 없습니다";
+  if (artist) artist.textContent = getPlaylistArtistText(item);
+  setPlaylistDetailCover(item);
+
+  if (audio) {
+    if (current) current.textContent = formatPlayerTime(audio.currentTime || 0);
+    if (duration) duration.textContent = Number.isFinite(audio.duration) && audio.duration > 0 ? formatPlayerTime(audio.duration) : "0:00";
+    if (progress) {
+      progress.disabled = !(Number.isFinite(audio.duration) && audio.duration > 0);
+      progress.value = Number.isFinite(audio.duration) && audio.duration > 0
+        ? String(Math.round((audio.currentTime / audio.duration) * 1000))
+        : "0";
+    }
+    if (play) play.textContent = audio.paused ? "▶" : "Ⅱ";
+  }
+}
+
+function openPlaylistFullDetail() {
+  const overlay = document.getElementById("playlistFullDetail");
+  if (!overlay || !getCurrentPlaylistSong()) return;
+  updatePlaylistFullDetailUi();
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("playlist-detail-open");
+}
+
+function closePlaylistFullDetail() {
+  const overlay = document.getElementById("playlistFullDetail");
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("playlist-detail-open");
+}
+
+function bindPlaylistFullDetailOnce() {
+  if (playlistFullDetailBound) return;
+  playlistFullDetailBound = true;
+  const close = document.getElementById("playlistFullDetailClose");
+  const progress = document.getElementById("playlistFullDetailProgress");
+  const play = document.getElementById("playlistFullDetailPlay");
+  const prev = document.getElementById("playlistFullDetailPrev");
+  const next = document.getElementById("playlistFullDetailNext");
+  const repeat = document.getElementById("playlistFullDetailRepeat");
+  const shuffle = document.getElementById("playlistFullDetailShuffle");
+  const related = document.getElementById("playlistFullDetailRelated");
+  const list = document.getElementById("playlistFullDetailList");
+
+  close?.addEventListener("click", closePlaylistFullDetail);
+  progress?.addEventListener("input", () => {
+    const audio = document.getElementById("playlistPlayerAudio");
+    if (audio && Number.isFinite(audio.duration) && audio.duration > 0) {
+      audio.currentTime = (Number(progress.value) / 1000) * audio.duration;
+    }
+  });
+  play?.addEventListener("click", async () => {
+    const audio = document.getElementById("playlistPlayerAudio");
+    if (!audio || !audio.src) return;
+    try {
+      if (audio.paused) { pauseOtherMedia(audio); await audio.play(); }
+      else audio.pause();
+    } catch (error) {
+      console.log("상세 플레이어 재생 오류:", error?.message || error);
+    }
+    updatePlaylistFullDetailUi();
+  });
+  prev?.addEventListener("click", () => { playlistAutoPlayAfterMove = true; movePlaylistSelection(-1); setTimeout(updatePlaylistFullDetailUi, 180); });
+  next?.addEventListener("click", () => { playlistAutoPlayAfterMove = true; movePlaylistSelection(1); setTimeout(updatePlaylistFullDetailUi, 180); });
+  repeat?.addEventListener("click", async () => {
+    const audio = document.getElementById("playlistPlayerAudio");
+    if (!audio || !audio.src) return;
+    try { audio.currentTime = 0; pauseOtherMedia(audio); await audio.play(); } catch (_) {}
+  });
+  shuffle?.addEventListener("click", () => {
+    const songs = getUserPlaylistSongs();
+    if (songs.length <= 1) return;
+    const currentIndex = songs.findIndex((item) => String(item.id) === String(playlistCurrentItemId));
+    let nextIndex = Math.floor(Math.random() * songs.length);
+    if (nextIndex === currentIndex) nextIndex = (nextIndex + 1) % songs.length;
+    playlistRequestedItemId = songs[nextIndex].id;
+    playlistAutoPlayAfterMove = true;
+    setupUserPlaylistPlayer({ forceOpen: true });
+    setTimeout(updatePlaylistFullDetailUi, 180);
+  });
+  const openList = () => {
+    closePlaylistFullDetail();
+    const listBtn = document.getElementById("playlistPlayerListBtn");
+    listBtn?.click();
+  };
+  related?.addEventListener("click", openList);
+  list?.addEventListener("click", openList);
+}
 
 function renderPlaylistQueuePanel() {
   const panel = document.getElementById("playlistQueuePanel");
@@ -2136,6 +2275,15 @@ function setupUserPlaylistPlayer(options = {}) {
   positionFloatingAudioPlayers();
   title.textContent = selected.title || "제목 없는 곡";
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡`;
+  bindPlaylistFullDetailOnce();
+  [cover, title].forEach((el) => {
+    if (!el) return;
+    el.classList.add("playlist-detail-trigger");
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-label", "플레이리스트 상세 화면 열기");
+  });
+  updatePlaylistFullDetailUi();
   renderPlaylistQueuePanel();
   if (listBtn && queuePanel) {
     listBtn.setAttribute("aria-expanded", queuePanel.classList.contains("open") ? "true" : "false");
@@ -2180,6 +2328,27 @@ function setupUserPlaylistPlayer(options = {}) {
     event.preventDefault();
     event.stopPropagation();
     closeUserPlaylistPlayerTemporarily();
+  });
+
+  cover?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openPlaylistFullDetail();
+  });
+
+  title?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openPlaylistFullDetail();
+  });
+
+  [cover, title].forEach((el) => {
+    el?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openPlaylistFullDetail();
+      }
+    });
   });
 
   prevBtn?.addEventListener("click", (event) => {
@@ -2250,14 +2419,17 @@ function setupUserPlaylistPlayer(options = {}) {
 
   audio.addEventListener("play", () => {
     playBtn.textContent = "Ⅱ";
+    updatePlaylistFullDetailUi();
   });
 
   audio.addEventListener("pause", () => {
     playBtn.textContent = "▶";
+    updatePlaylistFullDetailUi();
   });
 
   audio.addEventListener("loadedmetadata", () => {
     duration.textContent = formatPlayerTime(audio.duration);
+    updatePlaylistFullDetailUi();
     if (playlistPendingResumeTime > 0 && playlistResumeAppliedForId !== String(playlistCurrentItemId)) {
       const safeTime = Number.isFinite(audio.duration) && audio.duration > 0
         ? Math.min(playlistPendingResumeTime, Math.max(0, audio.duration - 1))
@@ -2269,6 +2441,7 @@ function setupUserPlaylistPlayer(options = {}) {
 
   audio.addEventListener("timeupdate", () => {
     current.textContent = formatPlayerTime(audio.currentTime);
+    updatePlaylistFullDetailUi();
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
       progress.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
     }
@@ -2283,6 +2456,7 @@ function setupUserPlaylistPlayer(options = {}) {
 
   audio.addEventListener("ended", () => {
     playBtn.textContent = "▶";
+    updatePlaylistFullDetailUi();
     progress.value = "0";
     playlistPendingResumeTime = 0;
     playlistResumeAppliedForId = "";
