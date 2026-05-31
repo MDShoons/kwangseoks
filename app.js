@@ -2072,24 +2072,15 @@ function ensurePlaylistFullDetailElement() {
       <span id="playlistFullDetailDuration">0:00</span>
     </div>
     <input id="playlistFullDetailProgress" class="playlist-full-detail-progress" type="range" min="0" max="1000" value="0" step="1" aria-label="재생 위치" />
-    <div class="playlist-full-detail-top-actions" aria-hidden="true">
-      <span>▱</span><span>♡</span><span>⋮</span>
-    </div>
     <div class="playlist-full-detail-meta">
       <strong id="playlistFullDetailTitle">선택한 곡이 없습니다</strong>
       <span id="playlistFullDetailArtist">김광석</span>
     </div>
     <div class="playlist-full-detail-controls" aria-label="재생 조작">
-      <button type="button" id="playlistFullDetailRepeat" aria-label="반복">↻</button>
       <button type="button" id="playlistFullDetailPrev" aria-label="이전 곡">◁</button>
       <button type="button" id="playlistFullDetailPlay" class="playlist-full-detail-play" aria-label="재생 또는 일시정지">▶</button>
       <button type="button" id="playlistFullDetailNext" aria-label="다음 곡">▷</button>
-      <button type="button" id="playlistFullDetailShuffle" aria-label="셔플">⇄</button>
-    </div>
-    <div class="playlist-full-detail-bottom">
-      <span>EQ&nbsp;&nbsp;AAC 320k</span>
-      <button type="button" id="playlistFullDetailRelated">연관 곡⌃</button>
-      <button type="button" id="playlistFullDetailList" aria-label="재생목록 열기">☰▷</button>
+      <button type="button" id="playlistFullDetailList" class="playlist-full-detail-list" aria-label="재생목록 열기">☰</button>
     </div>
   `;
   document.body.appendChild(overlay);
