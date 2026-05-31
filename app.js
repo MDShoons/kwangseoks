@@ -1745,7 +1745,7 @@ function setupDailyRecommendPlayer(options = {}) {
     audio.dataset.dailySrc = sourceUrl;
     audio.currentTime = 0;
     progress.value = "0";
-    playBtn.textContent = "▶";
+    syncPlaylistPlayButtonState();
     current.textContent = "0:00";
     duration.textContent = "0:00";
   }
@@ -1806,6 +1806,8 @@ function setupDailyRecommendPlayer(options = {}) {
     muteBtn.textContent = audio.muted || audio.volume === 0 ? "M" : "V";
   });
 
+  syncPlaylistPlayButtonState();
+
   playBtn.addEventListener("click", async () => {
     if (playBtn.disabled || !audio.src) return;
 
@@ -1821,13 +1823,9 @@ function setupDailyRecommendPlayer(options = {}) {
     }
   });
 
-  audio.addEventListener("play", () => {
-    playBtn.textContent = "Ⅱ";
-  });
+  audio.addEventListener("play", syncPlaylistPlayButtonState);
 
-  audio.addEventListener("pause", () => {
-    playBtn.textContent = "▶";
-  });
+  audio.addEventListener("pause", syncPlaylistPlayButtonState);
 
   audio.addEventListener("loadedmetadata", () => {
     duration.textContent = formatPlayerTime(audio.duration);
@@ -1847,7 +1845,7 @@ function setupDailyRecommendPlayer(options = {}) {
   });
 
   audio.addEventListener("ended", () => {
-    playBtn.textContent = "▶";
+    syncPlaylistPlayButtonState();
     progress.value = "0";
   });
 }
@@ -1977,16 +1975,35 @@ function clearUserPlaylist(options = {}) {
   }
 }
 
-function removeCurrentSongFromPlaylist() {
-  if (!playlistCurrentItemId) return;
-  const ids = loadUserPlaylistIds().filter((id) => String(id) !== String(playlistCurrentItemId));
+function removeSongFromUserPlaylist(songId) {
+  const removeId = String(songId || "").trim();
+  if (!removeId) return;
+
+  const beforeIds = loadUserPlaylistIds();
+  const ids = beforeIds.filter((id) => String(id) !== removeId);
+  if (ids.length === beforeIds.length) return;
+
+  const wasCurrent = String(playlistCurrentItemId) === removeId;
   saveUserPlaylistIds(ids);
   localStorage.removeItem(getUserPlaylistStateKey());
-  playlistCurrentItemId = "";
-  playlistRequestedItemId = ids[0] || "";
+
+  if (wasCurrent) {
+    playlistCurrentItemId = "";
+    playlistRequestedItemId = ids[0] || "";
+    playlistPendingResumeTime = 0;
+    playlistResumeAppliedForId = "";
+  }
+
   setupUserPlaylistPlayer({ forceOpen: ids.length > 0 });
   updatePlaylistAddButtons();
+  renderPlaylistQueuePanel();
 }
+
+function removeCurrentSongFromPlaylist() {
+  if (!playlistCurrentItemId) return;
+  removeSongFromUserPlaylist(playlistCurrentItemId);
+}
+window.removeSongFromUserPlaylist = removeSongFromUserPlaylist;
 
 function addSongToUserPlaylist(songId) {
   const id = String(songId || "").trim();
@@ -2049,16 +2066,19 @@ function renderPlaylistQueuePanel() {
     const id = escapeHtml(String(item.id));
     const active = String(item.id) === String(playlistCurrentItemId);
     return `
-      <button type="button" class="playlist-queue-item${active ? " active" : ""}" data-playlist-item-id="${id}">
-        <span class="playlist-queue-num">${index + 1}</span>
-        <span class="playlist-queue-meta">
-          <span class="playlist-queue-title">${title}</span>
-          <span class="playlist-queue-sub">${sub}</span>
-        </span>
-      </button>`;
+      <div class="playlist-queue-item${active ? " active" : ""}" data-playlist-item-id="${id}">
+        <button type="button" class="playlist-queue-play" data-playlist-item-id="${id}" aria-label="${title} 재생">
+          <span class="playlist-queue-num">${index + 1}</span>
+          <span class="playlist-queue-meta">
+            <span class="playlist-queue-title">${title}</span>
+            <span class="playlist-queue-sub">${sub}</span>
+          </span>
+        </button>
+        <button type="button" class="playlist-queue-remove" data-playlist-remove-id="${id}" aria-label="${title} 빼기">×</button>
+      </div>`;
   }).join("");
 
-  list.querySelectorAll(".playlist-queue-item").forEach((btn) => {
+  list.querySelectorAll(".playlist-queue-play").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-playlist-item-id");
       if (!id) return;
@@ -2067,6 +2087,15 @@ function renderPlaylistQueuePanel() {
       playlistResumeAppliedForId = "";
       playlistAutoPlayAfterMove = true;
       setupUserPlaylistPlayer({ forceOpen: true });
+    });
+  });
+
+  list.querySelectorAll(".playlist-queue-remove").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const id = btn.getAttribute("data-playlist-remove-id");
+      removeSongFromUserPlaylist(id);
     });
   });
 }
@@ -2093,6 +2122,13 @@ function setupUserPlaylistPlayer(options = {}) {
 
   if (!player || !audio || !title || !sub || !playBtn || !progress || !current || !duration || !muteBtn || !volumeSlider) return;
 
+  const syncPlaylistPlayButtonState = () => {
+    const isPlaying = !audio.paused && !audio.ended;
+    playBtn.textContent = isPlaying ? "Ⅱ" : "▶";
+    playBtn.classList.toggle("is-playing", isPlaying);
+    playBtn.setAttribute("aria-label", isPlaying ? "일시정지" : "재생");
+  };
+
   const songs = getUserPlaylistSongs();
   if (!songs.length) {
     player.classList.add("closed");
@@ -2107,6 +2143,8 @@ function setupUserPlaylistPlayer(options = {}) {
     title.textContent = "선택한 곡이 없습니다";
     sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
     resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
+    playBtn.classList.remove("is-playing");
+    playBtn.setAttribute("aria-label", "재생");
     renderPlaylistQueuePanel();
     return;
   }
@@ -2135,7 +2173,19 @@ function setupUserPlaylistPlayer(options = {}) {
   setPlayerCoverImage(cover, selected);
   positionFloatingAudioPlayers();
   title.textContent = selected.title || "제목 없는 곡";
-  sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
+  const mobileArtistText = String(
+    selected.artist ||
+    selected.singer ||
+    selected.singerName ||
+    selected.artistName ||
+    selected.vocal ||
+    "김광석"
+  ).trim() || "김광석";
+  const desktopSubText = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
+  const mobileSubText = mobileArtistText;
+  sub.dataset.desktopText = desktopSubText;
+  sub.dataset.mobileText = mobileSubText;
+  sub.textContent = window.matchMedia("(max-width: 768px)").matches ? mobileSubText : desktopSubText;
   renderPlaylistQueuePanel();
   if (listBtn && queuePanel) {
     listBtn.setAttribute("aria-expanded", queuePanel.classList.contains("open") ? "true" : "false");
@@ -2248,13 +2298,9 @@ function setupUserPlaylistPlayer(options = {}) {
     }
   });
 
-  audio.addEventListener("play", () => {
-    playBtn.textContent = "Ⅱ";
-  });
+  audio.addEventListener("play", syncPlaylistPlayButtonState);
 
-  audio.addEventListener("pause", () => {
-    playBtn.textContent = "▶";
-  });
+  audio.addEventListener("pause", syncPlaylistPlayButtonState);
 
   audio.addEventListener("loadedmetadata", () => {
     duration.textContent = formatPlayerTime(audio.duration);
@@ -2282,7 +2328,7 @@ function setupUserPlaylistPlayer(options = {}) {
   });
 
   audio.addEventListener("ended", () => {
-    playBtn.textContent = "▶";
+    syncPlaylistPlayButtonState();
     progress.value = "0";
     playlistPendingResumeTime = 0;
     playlistResumeAppliedForId = "";
@@ -2291,7 +2337,10 @@ function setupUserPlaylistPlayer(options = {}) {
   });
 }
 
-window.addEventListener("resize", positionFloatingAudioPlayers);
+window.addEventListener("resize", () => {
+  positionFloatingAudioPlayers();
+  try { setupUserPlaylistPlayer({ forceOpen: false }); } catch (_) {}
+});
 
 async function loadContents() {
   try {
