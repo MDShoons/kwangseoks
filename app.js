@@ -2045,7 +2045,7 @@ function renderPlaylistQueuePanel() {
 
   list.innerHTML = songs.map((item, index) => {
     const title = escapeHtml(item.title || "제목 없는 곡");
-    const sub = escapeHtml(getDailySongCategoryLabel(item));
+    const sub = "";
     const id = escapeHtml(String(item.id));
     const active = String(item.id) === String(playlistCurrentItemId);
     return `
@@ -2053,7 +2053,7 @@ function renderPlaylistQueuePanel() {
         <span class="playlist-queue-num">${index + 1}</span>
         <span class="playlist-queue-meta">
           <span class="playlist-queue-title">${title}</span>
-          <span class="playlist-queue-sub">${sub}</span>
+          
         </span>
       </button>`;
   }).join("");
@@ -2135,7 +2135,7 @@ function setupUserPlaylistPlayer(options = {}) {
   setPlayerCoverImage(cover, selected);
   positionFloatingAudioPlayers();
   title.textContent = selected.title || "제목 없는 곡";
-  sub.textContent = `${selectedIndex + 1}/${songs.length}곡 · 앨범/분류: ${getDailySongCategoryLabel(selected)}`;
+  sub.textContent = `${selectedIndex + 1}/${songs.length}곡`;
   renderPlaylistQueuePanel();
   if (listBtn && queuePanel) {
     listBtn.setAttribute("aria-expanded", queuePanel.classList.contains("open") ? "true" : "false");
