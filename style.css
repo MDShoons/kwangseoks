@@ -7160,3 +7160,20 @@ body.playlist-detail-open {
     padding-right: 14px !important;
   }
 }
+
+
+/* multi category selection */
+.admin-form select[multiple] {
+  min-height: 118px;
+  padding: 8px;
+}
+.helper-inline {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.82rem;
+  color: #8a6a4a;
+  font-weight: 400;
+}
+.category-badge + .category-badge {
+  margin-left: 4px;
+}

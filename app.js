@@ -387,6 +387,53 @@ function escapeHtml(text) {
   return String(text || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
 
+
+function getItemSubCategories(item) {
+  const values = [];
+  const addValue = (value) => {
+    const text = String(value || "").trim();
+    if (text && !values.includes(text)) values.push(text);
+  };
+  if (Array.isArray(item?.subCategories)) item.subCategories.forEach(addValue);
+  addValue(item?.subCategory);
+  return values;
+}
+
+function getSelectedSubCategories(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return [];
+  return Array.from(select.selectedOptions || [])
+    .map(option => String(option.value || "").trim())
+    .filter(Boolean);
+}
+
+function makeSubCategoryPayload(selectId) {
+  const subCategories = getSelectedSubCategories(selectId);
+  return {
+    subCategory: subCategories[0] || "",
+    subCategories
+  };
+}
+
+function setSelectedSubCategories(selectId, selected = []) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  const selectedValues = Array.isArray(selected) ? selected : [selected];
+  const normalized = selectedValues.map(v => String(v || "").trim()).filter(Boolean);
+  Array.from(select.options || []).forEach(option => {
+    option.selected = normalized.includes(option.value);
+  });
+}
+
+function renderCategoryBadges(item) {
+  const cats = getItemSubCategories(item);
+  return cats.map(cat => `<span class="category-badge">${escapeHtml(cat)}</span>`).join("");
+}
+
+function renderCategoryText(item) {
+  return getItemSubCategories(item).join(", ");
+}
+
 function showPage(pageId, fromHash = false) {
   if (!VALID_PAGES.includes(pageId)) pageId = "home";
 
@@ -649,6 +696,7 @@ async function loadPageCategories() {
     populateAllCategoryFilters();
     populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos");
     populateSpecificSubCategorySelect("videos","videoSubCategory");
+    populateSpecificSubCategorySelect("photos","photoSubCategory");
     populateSpecificSubCategorySelect("songs","audioSubCategory");
     populateSpecificSubCategorySelect("radios","radioSubCategory");
     populateSpecificSubCategorySelect("oneum","oneumSubCategory");
@@ -668,15 +716,17 @@ function populateAllCategoryFilters() {
 }
 function populateContentSubCategorySelect(page, selected="") {
   const select = document.getElementById("contentSubCategory"); if (!select) return;
-  const cur = selected || select.value; select.innerHTML = '<option value="">카테고리 없음</option>';
+  const cur = Array.isArray(selected) ? selected : (selected ? [selected] : getSelectedSubCategories("contentSubCategory"));
+  select.innerHTML = "";
   (pageCategories[page] || []).forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
-  if (cur) select.value = cur;
+  setSelectedSubCategories("contentSubCategory", cur);
 }
 function populateSpecificSubCategorySelect(page, id, selected="") {
   const select = document.getElementById(id); if (!select) return;
-  const cur = selected || select.value; select.innerHTML = '<option value="">카테고리 없음</option>';
+  const cur = Array.isArray(selected) ? selected : (selected ? [selected] : getSelectedSubCategories(id));
+  select.innerHTML = "";
   (pageCategories[page] || []).forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
-  if (cur) select.value = cur;
+  setSelectedSubCategories(id, cur);
 }
 
 document.getElementById("contentCategory").addEventListener("change", e => populateContentSubCategorySelect(e.target.value));
@@ -722,7 +772,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
   const editingAudioItem = Boolean(originalItem && isAudioContentItem(originalItem));
   const editingVideoItem = Boolean(originalItem && isVideoContentItem(originalItem));
   const category = document.getElementById("contentCategory").value;
-  const subCategory = document.getElementById("contentSubCategory").value;
+  const subCategoryPayload = makeSubCategoryPayload("contentSubCategory");
   const title = document.getElementById("contentTitle").value.trim();
   const body = document.getElementById("contentBody").value.trim();
   if (!title || !body) return alert("제목과 본문을 입력하세요.");
@@ -730,7 +780,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
     const mediaUrl = await getImageDataUrlOrDirectUrl(document.getElementById("contentImageFile").files[0], document.getElementById("contentImageUrl").value, 1400);
     const payload = {
       category,
-      subCategory,
+      ...subCategoryPayload,
       mediaType: editingAudioItem ? "audio" : (editingVideoItem ? (originalItem.mediaType === "youtube" ? "youtube" : "video") : (mediaUrl ? "imageText" : "text")),
       title,
       body,
@@ -785,7 +835,8 @@ document.getElementById("savePhotoBtn").addEventListener("click", async () => {
   try {
     const mediaUrl = await getImageDataUrlOrDirectUrl(document.getElementById("photoFile").files[0], document.getElementById("photoImageUrl").value, 1400);
     if (!mediaUrl) return alert("사진 파일 또는 이미지 URL을 입력하세요.");
-    await addDoc(collection(db, "contents"), { category:"photos", mediaType:"image", title, mediaUrl,
+    const subCategoryPayload = makeSubCategoryPayload("photoSubCategory");
+    await addDoc(collection(db, "contents"), { category:"photos", ...subCategoryPayload, mediaType:"image", title, mediaUrl,
       year:document.getElementById("photoYear").value.trim(), source:document.getElementById("photoSource").value.trim(),
       description:document.getElementById("photoDescription").value.trim(), body:document.getElementById("photoDescription").value.trim(),
       isPublic:true, createdBy:currentUser.uid, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
@@ -816,7 +867,8 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
     const mediaUrl = mediaType === "youtube" ? (finalEmbedUrl || normalizeYoutubeEmbedUrl(finalYoutubeUrl)) : finalVideoUrl;
     if (!mediaUrl) return alert("기존 영상 주소를 찾을 수 없습니다. 영상 URL을 다시 입력하세요.");
     const thumbnailUrl = await getImageDataUrlOrDirectUrl(document.getElementById("videoImageFile").files[0], document.getElementById("videoImageUrl").value, 1000);
-    const payload = { category:"videos", subCategory:document.getElementById("videoSubCategory").value,
+    const subCategoryPayload = makeSubCategoryPayload("videoSubCategory");
+    const payload = { category:"videos", ...subCategoryPayload,
       mediaType, title, youtubeUrl: finalYoutubeUrl || "", mediaUrl,
       year:document.getElementById("videoYear").value.trim(), source:document.getElementById("videoSource").value.trim(),
       description:document.getElementById("videoDescription").value.trim(), body:document.getElementById("videoDescription").value.trim(),
@@ -882,7 +934,7 @@ async function saveOneumPost() {
   const authorName = document.getElementById("oneumAuthorName")?.value.trim() || "";
   const dateTime = document.getElementById("oneumDateTime")?.value.trim() || "";
   const source = document.getElementById("oneumSource")?.value.trim() || "";
-  const subCategory = document.getElementById("oneumSubCategory")?.value || "";
+  const subCategoryPayload = makeSubCategoryPayload("oneumSubCategory");
   const reply = getOneumReplyFormData();
 
   if (!title) return alert("글 제목을 입력하세요.");
@@ -901,7 +953,7 @@ async function saveOneumPost() {
   try {
     const payload = {
       category: "oneum",
-      subCategory,
+      ...subCategoryPayload,
       mediaType: "text",
       title,
       body,
@@ -978,7 +1030,7 @@ async function saveAudioLike(category, prefix) {
 
     await addDoc(collection(db, "contents"), {
       category,
-      subCategory: document.getElementById(`${prefix}SubCategory`)?.value || "",
+      ...makeSubCategoryPayload(`${prefix}SubCategory`),
       mediaType: "audio",
       title,
       mediaUrl,
@@ -2790,7 +2842,7 @@ function matchesPageSearch(page, item) {
     item.description,
     item.year,
     item.source,
-    item.subCategory,
+    renderCategoryText(item),
     item.author,
     item.uploadedByName,
     item.oneumDateTime,
@@ -2802,7 +2854,7 @@ function matchesPageSearch(page, item) {
 
 function filterBySelectedSubCategory(page, items) {
   const selected = document.getElementById(`${page}CategoryFilter`)?.value || "";
-  let filtered = selected ? items.filter(i => i.subCategory === selected) : items;
+  let filtered = selected ? items.filter(i => getItemSubCategories(i).includes(selected)) : items;
   return filtered.filter(item => matchesPageSearch(page, item));
 }
 
@@ -3114,7 +3166,7 @@ function setupRadioMonochromePlayers(root = document) {
 
 function renderAudioArchiveCard(item, id, img, previewText) {
   const safeTitle = escapeHtml(item.title || "제목 없음");
-  const safeCategory = item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : "";
+  const safeCategory = renderCategoryBadges(item);
   const safePreview = previewText ? `<p class="audio-archive-summary">${escapeHtml(previewText)}</p>` : `<p class="audio-archive-summary empty">설명 정보가 없습니다.</p>`;
   const safeYear = escapeHtml(item.year || "미상");
   const safeSource = escapeHtml(item.source || "미기재");
@@ -3165,7 +3217,7 @@ function renderTextArchiveCard(item, id, img, previewText) {
     ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
     <div class="card-body text-archive-card-body">
       <h3>${escapeHtml(item.title)}</h3>
-      ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
+      ${renderCategoryBadges(item)}
       ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
       <p class="read-more-hint">${hintText}</p>
       ${metaMarkup}
@@ -3216,7 +3268,7 @@ function renderList(id, items) {
         ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
         <div>
           <h3>${escapeHtml(item.title)}</h3>
-          ${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}
+          ${renderCategoryBadges(item)}
           ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
           ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
           ${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}
@@ -3243,7 +3295,7 @@ function createCard(item) {
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
 }
 
@@ -3487,7 +3539,8 @@ function openContentDetail(id) {
   mediaArea.classList.toggle("hidden", !mediaHtml);
 
   titleEl.textContent = item.title || "제목 없음";
-  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
+  const detailCats = renderCategoryText(item);
+  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${detailCats ? ` / <strong>카테고리:</strong> ${escapeHtml(detailCats)}` : ""}`;
   if (isOneumItem(item)) {
     const author = getOneumAuthor(item) || "미기재";
     const authorName = getOneumAuthorName(item);
@@ -3548,7 +3601,7 @@ function renderAdminManageList() {
   box.innerHTML = items.length ? "" : "<p>관리할 자료가 없습니다.</p>";
   items.forEach(item => {
     const row = document.createElement("div"); row.className = "admin-row";
-    row.innerHTML = `<div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.category || "")}${item.subCategory ? " / "+escapeHtml(item.subCategory) : ""} / ${escapeHtml(item.year || "미상")}</p></div><div class="admin-row-actions"><button onclick="editContent('${item.id}')">수정</button><button class="delete-btn" onclick="deleteContentItem('${item.id}')">삭제</button></div>`;
+    row.innerHTML = `<div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.category || "")}${renderCategoryText(item) ? " / "+escapeHtml(renderCategoryText(item)) : ""} / ${escapeHtml(item.year || "미상")}</p></div><div class="admin-row-actions"><button onclick="editContent('${item.id}')">수정</button><button class="delete-btn" onclick="deleteContentItem('${item.id}')">삭제</button></div>`;
     box.appendChild(row);
   });
 }
@@ -3558,7 +3611,7 @@ function editContent(id) {
     showAdminForm("video");
     document.getElementById("editVideoId").value = item.id;
     document.getElementById("videoFormTitle").textContent = "영상 수정";
-    populateSpecificSubCategorySelect("videos", "videoSubCategory", item.subCategory || "");
+    populateSpecificSubCategorySelect("videos", "videoSubCategory", getItemSubCategories(item));
     document.getElementById("videoTitle").value = item.title || "";
     document.getElementById("youtubeUrl").value = item.youtubeUrl || (item.mediaType === "youtube" ? (item.mediaUrl || "") : "");
     document.getElementById("videoFileUrl").value = item.mediaType === "video" ? (getVideoMediaUrl(item) || "") : "";
@@ -3573,7 +3626,7 @@ function editContent(id) {
     showAdminForm("oneum");
     document.getElementById("editOneumId").value = item.id;
     document.getElementById("oneumTitle").value = item.title || "";
-    populateSpecificSubCategorySelect("oneum", "oneumSubCategory", item.subCategory || "");
+    populateSpecificSubCategorySelect("oneum", "oneumSubCategory", getItemSubCategories(item));
     document.getElementById("oneumAuthor").value = getOneumAuthor(item) || "";
     document.getElementById("oneumAuthorName").value = getOneumAuthorName(item) || "";
     document.getElementById("oneumDateTime").value = getOneumDateTime(item) || item.year || "";
@@ -3596,7 +3649,7 @@ function editContent(id) {
   showAdminForm("content");
   document.getElementById("editContentId").value = item.id;
   document.getElementById("contentCategory").value = item.category || "stories";
-  populateContentSubCategorySelect(item.category || "stories", item.subCategory || "");
+  populateContentSubCategorySelect(item.category || "stories", getItemSubCategories(item));
   document.getElementById("contentTitle").value = item.title || "";
   document.getElementById("contentBody").value = item.body || item.description || "";
   document.getElementById("contentYear").value = item.year || "";
