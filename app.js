@@ -491,10 +491,12 @@ function showAdminForm(type) {
   ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
   const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm"};
   document.getElementById(map[type])?.classList.remove("hidden");
-  if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory");
-  if (type === "audio") populateSpecificSubCategorySelect("songs", "audioSubCategory");
-  if (type === "radio") populateSpecificSubCategorySelect("radios", "radioSubCategory");
-  if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory");
+  if (type === "content") populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos", []);
+  if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory", []);
+  if (type === "photo") populateSpecificSubCategorySelect("photos", "photoSubCategory", []);
+  if (type === "audio") populateSpecificSubCategorySelect("songs", "audioSubCategory", []);
+  if (type === "radio") populateSpecificSubCategorySelect("radios", "radioSubCategory", []);
+  if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory", []);
   if (type === "template") { fillSettingsFormFromCurrent(); bindDesignPreviewEvents(); }
   if (type === "category") renderCategoryList();
   if (type === "manage") renderAdminManageList();
@@ -714,22 +716,35 @@ function populateAllCategoryFilters() {
     select.value = cur;
   });
 }
+function appendSubCategoryOptions(select, page) {
+  select.innerHTML = "";
+  const cats = pageCategories[page] || [];
+  cats.forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
+  if (!cats.length) {
+    const option = new Option("이 페이지에 만든 카테고리가 없습니다", "");
+    option.disabled = true;
+    select.appendChild(option);
+  }
+}
+
 function populateContentSubCategorySelect(page, selected="") {
   const select = document.getElementById("contentSubCategory"); if (!select) return;
   const cur = Array.isArray(selected) ? selected : (selected ? [selected] : getSelectedSubCategories("contentSubCategory"));
-  select.innerHTML = "";
-  (pageCategories[page] || []).forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
+  appendSubCategoryOptions(select, page);
   setSelectedSubCategories("contentSubCategory", cur);
 }
 function populateSpecificSubCategorySelect(page, id, selected="") {
   const select = document.getElementById(id); if (!select) return;
   const cur = Array.isArray(selected) ? selected : (selected ? [selected] : getSelectedSubCategories(id));
-  select.innerHTML = "";
-  (pageCategories[page] || []).forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
+  appendSubCategoryOptions(select, page);
   setSelectedSubCategories(id, cur);
 }
 
-document.getElementById("contentCategory").addEventListener("change", e => populateContentSubCategorySelect(e.target.value));
+document.getElementById("contentCategory").addEventListener("change", e => {
+  // 등록할 페이지를 바꾸면 이전 페이지에서 선택했던 카테고리는 유지하지 않고,
+  // 새 페이지에 만들어진 카테고리 목록만 다시 보여줍니다.
+  populateContentSubCategorySelect(e.target.value, []);
+});
 document.getElementById("categoryPage").addEventListener("change", renderCategoryList);
 document.getElementById("saveCategoryBtn").addEventListener("click", saveCustomCategory);
 
@@ -826,7 +841,12 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
   } catch(e) { alert("자료 저장 오류: " + e.message); }
 });
 document.getElementById("resetContentBtn").addEventListener("click", resetContentForm);
-function resetContentForm() { document.getElementById("editContentId").value = ""; document.getElementById("adminContentForm").reset(); document.getElementById("saveContentBtn").textContent = "저장하기"; }
+function resetContentForm() {
+  document.getElementById("editContentId").value = "";
+  document.getElementById("adminContentForm").reset();
+  populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos", []);
+  document.getElementById("saveContentBtn").textContent = "저장하기";
+}
 
 document.getElementById("savePhotoBtn").addEventListener("click", async () => {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
@@ -840,7 +860,7 @@ document.getElementById("savePhotoBtn").addEventListener("click", async () => {
       year:document.getElementById("photoYear").value.trim(), source:document.getElementById("photoSource").value.trim(),
       description:document.getElementById("photoDescription").value.trim(), body:document.getElementById("photoDescription").value.trim(),
       isPublic:true, createdBy:currentUser.uid, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
-    alert("사진이 저장되었습니다."); document.getElementById("adminPhotoForm").reset(); await loadContents();
+    alert("사진이 저장되었습니다."); document.getElementById("adminPhotoForm").reset(); populateSpecificSubCategorySelect("photos", "photoSubCategory", []); await loadContents();
   } catch(e) { alert("사진 저장 오류: " + e.message); }
 });
 
@@ -886,6 +906,7 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
 function resetVideoForm() {
   const form = document.getElementById("adminVideoForm");
   if (form) form.reset();
+  populateSpecificSubCategorySelect("videos", "videoSubCategory", []);
   const id = document.getElementById("editVideoId");
   if (id) id.value = "";
   const title = document.getElementById("videoFormTitle");
@@ -1007,6 +1028,7 @@ async function saveOneumPost() {
 function resetOneumForm() {
   document.getElementById("editOneumId").value = "";
   document.getElementById("adminOneumForm")?.reset();
+  populateSpecificSubCategorySelect("oneum", "oneumSubCategory", []);
   toggleOneumReplyFields();
   const btn = document.getElementById("saveOneumBtn");
   if (btn) btn.textContent = "원음 글 저장";
@@ -1043,6 +1065,9 @@ async function saveAudioLike(category, prefix) {
     });
 
     alert("미디어 링크가 저장되었습니다.");
+    const formId = category === "songs" ? "adminAudioForm" : "adminRadioForm";
+    document.getElementById(formId)?.reset();
+    populateSpecificSubCategorySelect(category, `${prefix}SubCategory`, []);
     await loadContents();
   } catch (error) {
     alert("미디어 링크 저장 오류: " + error.message);
