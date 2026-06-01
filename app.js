@@ -343,7 +343,6 @@ let currentSettings = { ...DEFAULT_SETTINGS };
 
 const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
 const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
-const PHOTO_GROUPS = ["아빠 김광석", "아들 김광석", "남편 김광석", "친구 김광석", "나, 김광석", "가수 김광석"];
 
 function getPageFromHash() {
   const page = window.location.hash.replace("#", "").trim();
@@ -446,7 +445,6 @@ function showAdminForm(type) {
   const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm"};
   document.getElementById(map[type])?.classList.remove("hidden");
   if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory");
-  if (type === "photo") populateSpecificSubCategorySelect("photos", "photoSubCategory");
   if (type === "audio") populateSpecificSubCategorySelect("songs", "audioSubCategory");
   if (type === "radio") populateSpecificSubCategorySelect("radios", "radioSubCategory");
   if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory");
@@ -651,7 +649,6 @@ async function loadPageCategories() {
     populateAllCategoryFilters();
     populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos");
     populateSpecificSubCategorySelect("videos","videoSubCategory");
-    populateSpecificSubCategorySelect("photos","photoSubCategory");
     populateSpecificSubCategorySelect("songs","audioSubCategory");
     populateSpecificSubCategorySelect("radios","radioSubCategory");
     populateSpecificSubCategorySelect("oneum","oneumSubCategory");
@@ -789,8 +786,6 @@ document.getElementById("savePhotoBtn").addEventListener("click", async () => {
     const mediaUrl = await getImageDataUrlOrDirectUrl(document.getElementById("photoFile").files[0], document.getElementById("photoImageUrl").value, 1400);
     if (!mediaUrl) return alert("사진 파일 또는 이미지 URL을 입력하세요.");
     await addDoc(collection(db, "contents"), { category:"photos", mediaType:"image", title, mediaUrl,
-      subCategory:document.getElementById("photoSubCategory")?.value || "",
-      photoGroup:document.getElementById("photoGroup")?.value || "",
       year:document.getElementById("photoYear").value.trim(), source:document.getElementById("photoSource").value.trim(),
       description:document.getElementById("photoDescription").value.trim(), body:document.getElementById("photoDescription").value.trim(),
       isPublic:true, createdBy:currentUser.uid, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
@@ -2796,7 +2791,6 @@ function matchesPageSearch(page, item) {
     item.year,
     item.source,
     item.subCategory,
-    item.photoGroup,
     item.author,
     item.uploadedByName,
     item.oneumDateTime,
@@ -2869,53 +2863,7 @@ function renderLatest(contents) {
   source.slice(0,4).forEach(i => box.appendChild(createCard(i)));
 }
 function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
-function getPhotoGroupName(item) {
-  const value = String(item?.photoGroup || item?.photoSection || item?.photoRole || "").trim();
-  return value || "미분류 사진";
-}
-
-function renderPhotos(items) {
-  const box = document.getElementById("photoList");
-  if (!box) return;
-  box.innerHTML = "";
-
-  if (!items.length) {
-    box.innerHTML = "<p>등록된 사진이 없습니다.</p>";
-    return;
-  }
-
-  const groups = [...PHOTO_GROUPS];
-  const ungrouped = items.filter((item) => !PHOTO_GROUPS.includes(getPhotoGroupName(item)));
-  if (ungrouped.length) groups.push("미분류 사진");
-
-  box.className = "photo-section-list";
-  groups.forEach((groupName) => {
-    const groupItems = items.filter((item) => getPhotoGroupName(item) === groupName);
-
-    const section = document.createElement("section");
-    section.className = "photo-role-section";
-
-    const header = document.createElement("div");
-    header.className = "photo-role-header";
-    header.innerHTML = `
-      <h2>${escapeHtml(groupName)}</h2>
-      <span>${groupItems.length ? `${groupItems.length}장의 사진` : "아직 등록된 사진 없음"}</span>
-    `;
-
-    const grid = document.createElement("div");
-    grid.className = "card-grid photo-role-grid";
-
-    if (groupItems.length) {
-      groupItems.forEach((item) => grid.appendChild(createCard(item)));
-    } else {
-      grid.innerHTML = `<div class="photo-empty-slot">이 묶음에 등록된 사진이 아직 없습니다.</div>`;
-    }
-
-    section.appendChild(header);
-    section.appendChild(grid);
-    box.appendChild(section);
-  });
-}
+function renderPhotos(items) { const box = document.getElementById("photoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 사진이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
 
 function makeTextPreview(text, maxLength = 90) {
   const clean = String(text || "").replace(/\s+/g, " ").trim();
@@ -3295,7 +3243,7 @@ function createCard(item) {
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}${item.category === "photos" && getPhotoGroupName(item) !== "미분류 사진" ? `<span class="category-badge photo-group-badge">${escapeHtml(getPhotoGroupName(item))}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${item.subCategory ? `<span class="category-badge">${escapeHtml(item.subCategory)}</span>` : ""}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
 }
 
@@ -3539,7 +3487,7 @@ function openContentDetail(id) {
   mediaArea.classList.toggle("hidden", !mediaHtml);
 
   titleEl.textContent = item.title || "제목 없음";
-  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}${item.category === "photos" && getPhotoGroupName(item) !== "미분류 사진" ? ` / <strong>사진 묶음:</strong> ${escapeHtml(getPhotoGroupName(item))}` : ""}`;
+  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${item.subCategory ? ` / <strong>카테고리:</strong> ${escapeHtml(item.subCategory)}` : ""}`;
   if (isOneumItem(item)) {
     const author = getOneumAuthor(item) || "미기재";
     const authorName = getOneumAuthorName(item);
@@ -3600,7 +3548,7 @@ function renderAdminManageList() {
   box.innerHTML = items.length ? "" : "<p>관리할 자료가 없습니다.</p>";
   items.forEach(item => {
     const row = document.createElement("div"); row.className = "admin-row";
-    row.innerHTML = `<div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.category || "")}${item.subCategory ? " / "+escapeHtml(item.subCategory) : ""}${item.category === "photos" && getPhotoGroupName(item) !== "미분류 사진" ? " / "+escapeHtml(getPhotoGroupName(item)) : ""} / ${escapeHtml(item.year || "미상")}</p></div><div class="admin-row-actions"><button onclick="editContent('${item.id}')">수정</button><button class="delete-btn" onclick="deleteContentItem('${item.id}')">삭제</button></div>`;
+    row.innerHTML = `<div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.category || "")}${item.subCategory ? " / "+escapeHtml(item.subCategory) : ""} / ${escapeHtml(item.year || "미상")}</p></div><div class="admin-row-actions"><button onclick="editContent('${item.id}')">수정</button><button class="delete-btn" onclick="deleteContentItem('${item.id}')">삭제</button></div>`;
     box.appendChild(row);
   });
 }
