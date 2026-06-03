@@ -79,100 +79,6 @@ function getGoogleDriveFileId(url) {
   }
 }
 
-function getGoogleDriveImageUrls(url) {
-  const value = String(url || "").trim();
-  const id = getGoogleDriveFileId(value);
-  if (!id) return value ? [value] : [];
-
-  const encodedId = encodeURIComponent(id);
-  const candidates = [
-    // PC Chrome에서 가장 안정적인 순서입니다.
-    `https://lh3.googleusercontent.com/d/${encodedId}=s1200`,
-    `https://drive.google.com/thumbnail?id=${encodedId}&sz=w1200`,
-    `https://drive.google.com/thumbnail?id=${encodedId}&sz=s1200`,
-    `https://drive.google.com/uc?export=view&id=${encodedId}`,
-    `https://drive.google.com/uc?export=download&id=${encodedId}`,
-    `https://drive.usercontent.google.com/download?id=${encodedId}&export=download&authuser=0`,
-    value
-  ];
-
-  return [...new Set(candidates.filter(Boolean))];
-}
-
-
-function isNamuWikiImageUrl(url) {
-  const value = String(url || "").trim();
-  if (!value) return false;
-  try {
-    const parsed = new URL(value);
-    return /(^|\.)i\.namu\.wiki$/i.test(parsed.hostname) || /(^|\.)namu\.wiki$/i.test(parsed.hostname);
-  } catch (_) {
-    return value.includes("i.namu.wiki") || value.includes("namu.wiki");
-  }
-}
-
-function getUrlWithoutProtocolForProxy(url) {
-  const value = String(url || "").trim();
-  if (!value) return "";
-  try {
-    const parsed = new URL(value);
-    return `${parsed.hostname}${parsed.pathname}${parsed.search || ""}`;
-  } catch (_) {
-    return value.replace(/^https?:\/\//i, "");
-  }
-}
-
-function uniqueImageCandidates(list) {
-  const seen = new Set();
-  return list
-    .map((value) => String(value || "").trim())
-    .filter(Boolean)
-    .filter((value) => {
-      if (seen.has(value)) return false;
-      seen.add(value);
-      return true;
-    });
-}
-
-function getNamuWikiImageUrls(url) {
-  const value = String(url || "").trim();
-  if (!value) return [];
-
-  const noProtocol = getUrlWithoutProtocolForProxy(value);
-  const encodedNoProtocol = encodeURIComponent(noProtocol);
-  const encodedFullUrl = encodeURIComponent(value);
-  const uriNoProtocol = encodeURI(noProtocol);
-  const fullUri = encodeURI(value);
-
-  // PC Chrome/GitHub Pages에서 i.namu.wiki 원본이 hotlink 차단되면
-  // <img>가 깨지거나 빈 박스로 남습니다. 원본 다음에는 실제 이미지 프록시들을
-  // 여러 형식으로 넣고, 실패 시 JS가 순차 재시도합니다.
-  return uniqueImageCandidates([
-    value,
-    `https://images.weserv.nl/?url=${encodedNoProtocol}&w=1200&output=jpg`,
-    `https://images.weserv.nl/?url=${uriNoProtocol}&w=1200&output=jpg`,
-    `https://images.weserv.nl/?url=${encodedFullUrl}&w=1200&output=jpg`,
-    `https://images.weserv.nl/?url=${fullUri}&w=1200&output=jpg`,
-    `https://wsrv.nl/?url=${encodedNoProtocol}&w=1200&output=jpg`,
-    `https://wsrv.nl/?url=${uriNoProtocol}&w=1200&output=jpg`,
-    `https://wsrv.nl/?url=${encodedFullUrl}&w=1200&output=jpg`,
-    `https://wsrv.nl/?url=${fullUri}&w=1200&output=jpg`,
-    `https://wsrv.nl/?url=ssl:${uriNoProtocol}&w=1200&output=jpg`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodedFullUrl}`,
-    `https://api.allorigins.win/raw?url=${encodedFullUrl}`,
-    `https://corsproxy.io/?${encodedFullUrl}`
-  ]);
-}
-
-function getArchiveImageUrls(url) {
-  const value = String(url || "").trim();
-  if (!value) return [];
-  const driveUrls = getGoogleDriveImageUrls(value);
-  if (driveUrls.length && getGoogleDriveFileId(value)) return driveUrls;
-  if (isNamuWikiImageUrl(value)) return getNamuWikiImageUrls(value);
-  return [value];
-}
-
 function normalizeGoogleDriveMediaUrl(url, type = "media") {
   const value = String(url || "").trim();
   if (!value) return "";
@@ -180,171 +86,9 @@ function normalizeGoogleDriveMediaUrl(url, type = "media") {
   const id = getGoogleDriveFileId(value);
   if (!id) return value;
 
-  // PC <img>에서는 drive.google.com/uc download가 깨지는 경우가 많아
-  // 이미지/커버는 googleusercontent 또는 thumbnail 주소를 먼저 사용합니다.
-  if (type === "image" || type === "photo" || type === "cover") {
-    return getGoogleDriveImageUrls(value)[0] || value;
-  }
-
   // 오디오/영상 재생은 download 주소가 가장 많이 호환됨.
+  // 이미 uc?export=download&id=... 형태여도 같은 주소로 정리.
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
-}
-
-function getImageFallbackAttribute(url) {
-  const value = String(url || "").trim();
-  const candidates = getArchiveImageUrls(value).map((candidate) => escapeHtml(candidate));
-  if (!candidates.length) return ` onerror="handleArchiveImageError(this)"`;
-  return ` data-image-fallbacks="${candidates.join("||")}" data-image-fallback-index="0" referrerpolicy="no-referrer" onload="handleArchiveImageLoad(this)" onerror="handleArchiveImageError(this)"`;
-}
-
-function imageErrorAttributes(url) {
-  return getImageFallbackAttribute(url);
-}
-
-
-function looksLikeUnusableImage(img) {
-  const width = Number(img?.naturalWidth || 0);
-  const height = Number(img?.naturalHeight || 0);
-  // 0 또는 1~3px 투명 응답은 사용자에게 빈 커버처럼 보입니다.
-  return !width || !height || width <= 3 || height <= 3;
-}
-
-async function tryFetchImageAsBlobUrl(img, candidates, startIndex) {
-  if (!img || img.dataset.fetchingImageBlob === "yes") return false;
-  img.dataset.fetchingImageBlob = "yes";
-  try {
-    for (let i = startIndex; i < candidates.length; i += 1) {
-      const candidate = candidates[i];
-      if (!/^https?:\/\//i.test(candidate)) continue;
-      // 원본 i.namu.wiki는 CORS가 막히는 경우가 많으므로 프록시 후보 위주로 fetch합니다.
-      if (isNamuWikiImageUrl(candidate)) continue;
-      try {
-        const res = await fetch(candidate, { mode: "cors", cache: "reload", referrerPolicy: "no-referrer" });
-        if (!res.ok) continue;
-        const blob = await res.blob();
-        if (!blob || !String(blob.type || "").startsWith("image/")) continue;
-        if (blob.size < 200) continue;
-        const objectUrl = URL.createObjectURL(blob);
-        const oldObjectUrl = img.dataset.objectImageUrl;
-        if (oldObjectUrl) {
-          try { URL.revokeObjectURL(oldObjectUrl); } catch (_) {}
-        }
-        img.dataset.objectImageUrl = objectUrl;
-        img.dataset.imageFallbackIndex = String(i);
-        img.src = objectUrl;
-        return true;
-      } catch (_) {}
-    }
-  } finally {
-    img.dataset.fetchingImageBlob = "";
-  }
-  return false;
-}
-
-window.handleArchiveImageLoad = function handleArchiveImageLoad(img) {
-  if (!img) return;
-
-  if (looksLikeUnusableImage(img)) {
-    window.handleArchiveImageError(img);
-    return;
-  }
-
-  img.classList.remove("broken-image");
-  const parent = img.closest(".audio-archive-cover, .detail-song-cover-box, .detail-media-box, .playlist-full-detail-cover-wrap");
-  if (parent) {
-    parent.classList.remove("cover-load-failed");
-    parent.querySelectorAll(".cover-load-failed-note").forEach((el) => el.remove());
-  }
-};
-
-window.handleArchiveImageError = async function handleArchiveImageError(img) {
-  if (!img) return;
-
-  const fallbacks = String(img.dataset.imageFallbacks || "")
-    .split("||")
-    .map((value) => value.trim().replace(/&amp;/g, "&"))
-    .filter(Boolean);
-  const currentIndex = Number(img.dataset.imageFallbackIndex || "0");
-  const nextIndex = currentIndex + 1;
-
-  if (fallbacks[nextIndex]) {
-    img.dataset.imageFallbackIndex = String(nextIndex);
-    try { img.referrerPolicy = "no-referrer"; } catch (_) {}
-    try { img.setAttribute("referrerpolicy", "no-referrer"); } catch (_) {}
-    img.src = fallbacks[nextIndex];
-    return;
-  }
-
-  // <img> 재시도가 모두 실패했을 때, 프록시 후보를 fetch→Blob URL로 한 번 더 시도합니다.
-  const fetched = await tryFetchImageAsBlobUrl(img, fallbacks, 1);
-  if (fetched) return;
-
-  img.classList.add("broken-image");
-  img.onerror = null;
-  img.onload = null;
-
-  const parent = img.closest(".audio-archive-cover, .detail-song-cover-box, .detail-media-box, .playlist-full-detail-cover-wrap");
-  if (parent && !parent.querySelector(".cover-load-failed-note")) {
-    parent.classList.add("cover-load-failed");
-    const note = document.createElement("span");
-    note.className = "cover-load-failed-note";
-    note.textContent = "커버 링크 차단";
-    parent.appendChild(note);
-  }
-};
-
-function getItemOwnCoverRawUrl(item = {}) {
-  return item.thumbnailUrl
-    || item.imageUrl
-    || item.photoUrl
-    || item.coverUrl
-    || item.coverImageUrl
-    || item.albumCoverUrl
-    || item.posterUrl
-    || item.cover
-    || item.coverImage
-    || item.albumCover
-    || item.albumImage
-    || item.imgUrl
-    || item.image
-    || item.thumb
-    || item.thumbnail
-    || item.artworkUrl
-    || item.artwork
-    || "";
-}
-
-function getPrimarySubCategoryKey(item = {}) {
-  const cats = getItemSubCategories(item);
-  return cats.length ? String(cats[0] || "").trim() : String(item.subCategory || "").trim();
-}
-
-function findSiblingAlbumCoverRawUrl(item = {}) {
-  if (!item || item.category !== "songs" || !Array.isArray(allContents)) return "";
-  const key = getPrimarySubCategoryKey(item);
-  if (!key) return "";
-  const sibling = allContents.find((candidate) => {
-    if (!candidate || candidate === item || candidate.category !== "songs") return false;
-    if (getPrimarySubCategoryKey(candidate) !== key) return false;
-    return Boolean(getItemOwnCoverRawUrl(candidate));
-  });
-  return sibling ? getItemOwnCoverRawUrl(sibling) : "";
-}
-
-function getItemCoverRawUrl(item = {}) {
-  return getItemOwnCoverRawUrl(item) || findSiblingAlbumCoverRawUrl(item) || "";
-}
-
-function getItemCoverPlaybackUrl(item = {}) {
-  const raw = getItemCoverRawUrl(item);
-  return raw ? normalizeMediaUrlForPlayback(raw, "image") : "";
-}
-
-function archiveImageHtml(src, alt, rawUrl = "", className = "") {
-  const safeSrc = escapeHtml(src || "");
-  if (!safeSrc) return "";
-  const cls = className ? ` class="${escapeHtml(className)}"` : "";
-  return `<img${cls} src="${safeSrc}" alt="${escapeHtml(alt || "")}" draggable="false" oncontextmenu="return false" ${imageErrorAttributes(rawUrl || src)}>`;
 }
 
 function normalizeGitHubPagesAudioUrl(url) {
@@ -377,87 +121,15 @@ function normalizeMediaUrlForPlayback(url, type = "media") {
     return normalizeGitHubPagesAudioUrl(value);
   }
 
-  if ((type === "image" || type === "photo" || type === "cover") && isNamuWikiImageUrl(value)) {
-    return getNamuWikiImageUrls(value)[0] || value;
-  }
-
   return value;
 }
 
-function setExternalImageSrc(imgEl, src, rawUrl = "") {
-  if (!imgEl) return;
-
-  const value = String(src || rawUrl || "").trim();
-  const raw = String(rawUrl || src || "").trim();
-  const candidates = getArchiveImageUrls(raw || value);
-  const first = candidates[0] || value;
-
-  try { imgEl.referrerPolicy = "no-referrer"; } catch (_) {}
-  try { imgEl.setAttribute("referrerpolicy", "no-referrer"); } catch (_) {}
-
-  if (first) {
-    imgEl.dataset.imageFallbacks = candidates.join("||");
-    imgEl.dataset.imageFallbackIndex = "0";
-    imgEl.onerror = function () { window.handleArchiveImageError(this); };
-    imgEl.onload = function () { window.handleArchiveImageLoad(this); };
-    imgEl.src = first;
-  } else {
-    imgEl.removeAttribute("src");
-    imgEl.removeAttribute("data-image-fallbacks");
-    imgEl.removeAttribute("data-image-fallback-index");
-    imgEl.onerror = null;
-  }
-}
-
 function getPlayableAudioUrl(item = {}) {
-  // v9: 오늘의 추천곡이 비는 문제 방지.
-  // 예전 등록/수정 화면과 Firestore 문서별로 음원 URL 필드명이 조금씩 달라질 수 있어서
-  // 가능한 음원 필드를 넓게 확인한다.
-  const directCandidates = [
-    item.mediaUrl,
-    item.fileUrl,
-    item.audioUrl,
-    item.songUrl,
-    item.songMediaUrl,
-    item.musicUrl,
-    item.soundUrl,
-    item.mp3Url,
-    item.wavUrl,
-    item.audioFileUrl,
-    item.audioDownloadUrl,
-    item.downloadUrl,
-    item.streamUrl,
-    item.url
-  ];
-
-  for (const value of directCandidates) {
-    const url = String(value || "").trim();
-    if (!url) continue;
-    // 이미지 URL을 음원으로 착각하지 않도록 기본 필터링
-    if (/\.(png|jpe?g|gif|webp|svg|avif)(\?|#|$)/i.test(url)) continue;
-    if (/^data:image\//i.test(url)) continue;
-    return url;
-  }
-
-  // 마지막 안전장치: 문서 안에 mp3/wav/m4a/ogg 또는 audio data URL이 들어 있으면 사용
-  for (const value of Object.values(item || {})) {
-    const url = String(value || "").trim();
-    if (!url) continue;
-    if (/^data:audio\//i.test(url) || /\.(mp3|wav|m4a|aac|ogg|oga|flac)(\?|#|$)/i.test(url)) {
-      return url;
-    }
-  }
-
-  return "";
-}
-
-function isSongCategory(item = {}) {
-  return String(item.category || "").trim().toLowerCase() === "songs";
+  return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
 }
 
 function isAudioContentItem(item = {}) {
-  const category = String(item.category || "").trim().toLowerCase();
-  return item.mediaType === "audio" || category === "songs" || category === "radios";
+  return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
 
 function isYoutubeUrl(url = "") {
@@ -1368,8 +1040,7 @@ async function saveAudioLike(category, prefix) {
   const title = getInputValueByIds([`${prefix}Title`, category === "songs" ? "songTitle" : "", category === "radios" ? "radioTitle" : ""].filter(Boolean));
   const urlInput = getMediaUrlForPrefix(prefix);
   const file = getFileByIds([`${prefix}File`, `${prefix}UploadFile`, category === "songs" ? "songFile" : "", category === "radios" ? "radioFile" : ""].filter(Boolean));
-  const imageFile = getFileByIds([`${prefix}ImageFile`, `${prefix}CoverFile`, `${prefix}ThumbnailFile`, category === "songs" ? "songImageFile" : "", category === "radios" ? "radioImageFile" : ""].filter(Boolean));
-  const imageDirectUrl = getThumbnailUrlForPrefix(prefix);
+  const imageUrl = getThumbnailUrlForPrefix(prefix);
 
   if (!title) return alert("제목을 입력하세요.");
   if (!urlInput && !file) {
@@ -1378,7 +1049,6 @@ async function saveAudioLike(category, prefix) {
 
   try {
     const mediaUrl = normalizeMediaUrlForPlayback(urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios"), "audio");
-    const imageUrl = await getImageDataUrlOrDirectUrl(imageFile, imageDirectUrl, 1200);
 
     await addDoc(collection(db, "contents"), {
       category,
@@ -1428,29 +1098,17 @@ async function saveMyPageInfo() {
   if (!name || !phone) return alert("이름과 전화번호를 입력하세요.");
 
   try {
-    // 기존 회원 문서가 없거나 예전 데이터 구조여도 저장되도록 updateDoc 대신 setDoc(merge)을 사용합니다.
-    // 사용자가 직접 바꿀 수 있는 값은 이름/전화번호만 두고, uid/email/loginId/role은 유지합니다.
-    await setDoc(doc(db, "users", currentUser.uid), {
-      uid: currentUser.uid,
-      email: currentUser.email || currentUserProfile?.email || "",
-      loginId: currentUserProfile?.loginId || "",
-      role: currentUserProfile?.role || "user",
-      privacyAgree: currentUserProfile?.privacyAgree ?? true,
+    await updateDoc(doc(db, "users", currentUser.uid), {
       name,
       phone,
       updatedAt: serverTimestamp()
-    }, { merge: true });
+    });
 
-    currentUserProfile = { ...(currentUserProfile || {}), uid: currentUser.uid, email: currentUser.email || currentUserProfile?.email || "", name, phone };
+    currentUserProfile = { ...(currentUserProfile || {}), name, phone };
     alert("회원 정보가 수정되었습니다.");
     fillMyPageForm();
   } catch (error) {
-    const msg = String(error?.message || error || "");
-    if (msg.includes("Missing or insufficient permissions")) {
-      alert("회원 정보 수정 오류: Firestore 보안 규칙 권한이 아직 배포되지 않았습니다. Firebase 콘솔에서 firestore.rules 내용을 게시해 주세요.");
-    } else {
-      alert("회원 정보 수정 오류: " + msg);
-    }
+    alert("회원 정보 수정 오류: " + error.message);
   }
 }
 
@@ -1811,7 +1469,8 @@ let playlistResumeAppliedForId = "";
 let dailyRecommendMidnightTimer = null;
 
 function getAudioItemCoverUrl(item) {
-  return getItemCoverPlaybackUrl(item || {});
+  const raw = item?.thumbnailUrl || item?.imageUrl || item?.photoUrl || item?.coverUrl || "";
+  return raw ? normalizeMediaUrlForPlayback(raw, "image") : "";
 }
 
 function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
@@ -1820,7 +1479,7 @@ function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
   const card = imgEl.closest(".daily-player-card");
 
   if (coverUrl) {
-    setExternalImageSrc(imgEl, coverUrl, getItemCoverRawUrl(item || {}));
+    imgEl.src = coverUrl;
     imgEl.alt = `${item?.title || "곡"} 커버`;
     imgEl.classList.remove("empty");
     if (card) {
@@ -1914,31 +1573,18 @@ function seededNumberFromString(text) {
 }
 
 function pickDailyRecommendedSong(songs) {
-  const list = Array.isArray(songs) ? songs.filter(Boolean) : [];
-  const playable = list.filter((item) => !!getPlayableAudioUrl(item));
+  const playable = songs.filter((item) => {
+    const url = getPlayableAudioUrl(item);
+    return !!url;
+  });
 
-  // 추천곡 체크가 된 곡이 있으면 그 안에서 먼저 뽑고, 없으면 전체 곡에서 뽑는다.
-  const preferred = playable.filter((item) =>
-    item.useAsMain === true ||
-    item.isMain === true ||
-    item.isFeatured === true ||
-    item.isRecommended === true ||
-    item.recommended === true ||
-    item.todayRecommend === true ||
-    item.useTodayRecommend === true
-  );
-
-  const pool = preferred.length ? preferred : playable;
-
-  // 음원 URL이 없어도 제목만은 표시되도록 마지막에는 Songs 문서 자체를 반환한다.
-  const fallbackPool = pool.length ? pool : list;
-  if (!fallbackPool.length) return null;
+  if (!playable.length) return null;
 
   const dateKey = getKoreanDateKey();
   const seed = seededNumberFromString(`kwangseoks-${dateKey}`);
-  const index = seed % fallbackPool.length;
+  const index = seed % playable.length;
 
-  return fallbackPool[index];
+  return playable[index];
 }
 
 function formatPlayerTime(seconds) {
@@ -2121,7 +1767,7 @@ function setupDailyRecommendPlayer(options = {}) {
   volumeSlider.style.padding = "0";
   volumeSlider.style.accentColor = "#ffffff";
 
-  const songs = allContents.filter((item) => isSongCategory(item));
+  const songs = allContents.filter((item) => item.category === "songs");
   const selected = pickDailyRecommendedSong(songs);
 
   player.classList.remove("hidden");
@@ -2143,34 +1789,32 @@ function setupDailyRecommendPlayer(options = {}) {
     return;
   }
 
-  const rawSourceUrl = getPlayableAudioUrl(selected);
-  const sourceUrl = normalizeMediaUrlForPlayback(rawSourceUrl, "audio");
-
-  const songCategoryLabel = getDailySongCategoryLabel(selected);
-  setPlayerCoverImage(cover, selected);
-  positionFloatingAudioPlayers();
-  title.textContent = selected.title || "제목 없는 추천곡";
-
+  const sourceUrl = normalizeMediaUrlForPlayback(selected.mediaUrl || selected.fileUrl || selected.audioUrl || "", "audio");
   if (!sourceUrl) {
-    // v9: 곡 문서는 있는데 음원 필드명을 못 찾는 경우에도 제목은 보이게 한다.
-    dailyRecommendedItemId = selected.id || "";
+    dailyRecommendedItemId = "";
     audio.pause();
     audio.removeAttribute("src");
-    audio.dataset.dailySrc = "";
-    sub.textContent = `앨범/분류: ${songCategoryLabel} · 음원 주소 확인 필요`;
+    setPlayerCoverImage(cover, null);
+    title.textContent = "재생할 곡이 없습니다";
+    sub.textContent = "Songs에 재생 가능한 음원 URL이 없습니다.";
     playBtn.textContent = "▶";
     playBtn.disabled = true;
     playBtn.classList.add("disabled");
     progress.value = "0";
     progress.disabled = true;
     current.textContent = "0:00";
-    duration.textContent = "--:--";
+    duration.textContent = "0:00";
     return;
   }
 
   playBtn.disabled = false;
   playBtn.classList.remove("disabled");
   progress.disabled = false;
+
+  const songCategoryLabel = getDailySongCategoryLabel(selected);
+  setPlayerCoverImage(cover, selected);
+  positionFloatingAudioPlayers();
+  title.textContent = selected.title || "제목 없는 추천곡";
   sub.textContent = `앨범/분류: ${songCategoryLabel} · ${getKoreanDateKey()} · 매일 00:00 추천 변경`;
 
   if (options.forceDateRefresh || dailyRecommendedItemId !== selected.id || audio.dataset.dailySrc !== sourceUrl) {
@@ -2369,7 +2013,7 @@ function getUserPlaylistSongs() {
   const validSongs = [];
   ids.forEach((id) => {
     const item = allContents.find((content) => String(content.id) === String(id));
-    if (item && isSongCategory(item) && getPlayableAudioUrl(item)) {
+    if (item && item.category === "songs" && getPlayableAudioUrl(item)) {
       validSongs.push(item);
     }
   });
@@ -2432,7 +2076,7 @@ function addSongToUserPlaylist(songId) {
   const id = String(songId || "").trim();
   if (!id) return;
   const item = allContents.find((content) => String(content.id) === id);
-  if (!item || !isSongCategory(item) || !getPlayableAudioUrl(item)) {
+  if (!item || item.category !== "songs" || !getPlayableAudioUrl(item)) {
     alert("재생 가능한 Songs 음원만 플레이리스트에 담을 수 있습니다.");
     return;
   }
@@ -2501,7 +2145,7 @@ function ensurePlaylistFullDetailElement() {
       <button type="button" id="playlistFullDetailListTop" class="playlist-full-detail-list-top" aria-label="재생목록 열기">☰</button>
     </header>
     <div class="playlist-full-detail-cover-wrap">
-      <img id="playlistFullDetailCover" class="playlist-full-detail-cover" src="" alt="앨범 커버" referrerpolicy="no-referrer" draggable="false" oncontextmenu="return false" />
+      <img id="playlistFullDetailCover" class="playlist-full-detail-cover" src="" alt="앨범 커버" draggable="false" oncontextmenu="return false" />
     </div>
     <div class="playlist-full-detail-meta">
       <strong id="playlistFullDetailTitle">선택한 곡이 없습니다</strong>
@@ -2530,7 +2174,7 @@ function setPlaylistDetailCover(item) {
   if (!cover || !bg) return;
   const coverUrl = getAudioItemCoverUrl(item);
   if (coverUrl) {
-    setExternalImageSrc(cover, coverUrl);
+    cover.src = coverUrl;
     cover.classList.remove("empty");
     bg.style.backgroundImage = `url("${coverUrl.replace(/"/g, "%22")}")`;
   } else {
@@ -3326,14 +2970,14 @@ function renderAboutDocument(items) {
   }
 
   box.innerHTML = sorted.map((item) => {
-    const imageUrl = category === "songs" ? getItemCoverRawUrl(item) : (item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "");
+    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
     const bodyText = item.body || item.description || "";
     const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
     const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
 
     return `
       <section class="about-document-entry">
-        ${imageUrl ? archiveImageHtml(playbackImageUrl, item.title || "김광석", imageUrl, "about-document-image") : ""}
+        ${imageUrl ? `<img class="about-document-image" src="${escapeHtml(playbackImageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" />` : ""}
         <h2>${escapeHtml(item.title || "제목 없는 글")}</h2>
         <div class="about-document-meta">
           ${yearText}
@@ -3556,7 +3200,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const showCover = id === "songList";
   const thumb = showCover
     ? (img
-        ? `<div class="audio-archive-cover">${archiveImageHtml(img, item.title || "앨범 커버", getItemCoverRawUrl(item))}</div>`
+        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
         : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`)
     : "";
   const topClass = showCover ? "audio-archive-top" : "audio-archive-top no-cover";
@@ -3595,7 +3239,7 @@ function renderTextArchiveCard(item, id, img, previewText) {
   const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 일기는 상세보기에서 볼 수 있습니다.";
 
   return `
-    ${img ? archiveImageHtml(img, item.title || "자료 이미지", item.thumbnailUrl || item.imageUrl || item.photoUrl || item.mediaUrl || "") : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
+    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
     <div class="card-body text-archive-card-body">
       <h3>${escapeHtml(item.title)}</h3>
       ${renderCategoryBadges(item)}
@@ -3636,10 +3280,7 @@ function renderList(id, items) {
 
     div.onclick = () => openContentDetail(item.id);
 
-    const rawImg = isAudioContentItem(item)
-      ? getItemCoverRawUrl(item)
-      : (item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || (!isVideoContentItem(item) ? item.mediaUrl : ""));
-    const img = normalizeMediaUrlForPlayback(rawImg, "image");
+    const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (!isAudioContentItem(item) && !isVideoContentItem(item) ? item.mediaUrl : ""), "image");
     const previewLength = isStoryList ? 120 : isOneumList ? 130 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
@@ -3649,7 +3290,7 @@ function renderList(id, items) {
       div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
     } else {
       div.innerHTML = `
-        ${img ? archiveImageHtml(img, item.title || "자료 이미지", rawImg) : ""}
+        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
         <div>
           <h3>${escapeHtml(item.title)}</h3>
           ${renderCategoryBadges(item)}
@@ -3676,12 +3317,8 @@ function createCard(item) {
     const fileType = /\.mov(\?|#|$)/i.test(videoMediaUrl) ? "video/quicktime" : "video/mp4";
     media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="auto" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"><source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}"></video>`;
   }
-  else if (isAudioContentItem(item)) {
-    const rawCover = getItemCoverRawUrl(item);
-    const cover = normalizeMediaUrlForPlayback(rawCover, "image");
-    media = `${cover ? archiveImageHtml(cover, item.title || "앨범 커버", rawCover) : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
-  }
-  else if (item.mediaUrl) media = archiveImageHtml(normalizeMediaUrlForPlayback(item.mediaUrl, "image"), item.title || "자료 이미지", item.mediaUrl);
+  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
+  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
@@ -3798,15 +3435,8 @@ function openCoverZoom(src, title) {
   if (!modal || !img) return;
   if (!src) return;
 
-  setExternalImageSrc(img, src);
+  img.src = src;
   img.alt = title || "앨범 자켓";
-  const raw = src || "";
-  const fallbacks = getGoogleDriveImageUrls(raw);
-  if (fallbacks.length) {
-    img.dataset.imageFallbacks = fallbacks.join("||");
-    img.dataset.imageFallbackIndex = "0";
-    img.onerror = function() { handleArchiveImageError(this); };
-  }
   if (caption) caption.textContent = title || "앨범 자켓";
 
   modal.classList.remove("hidden");
@@ -3836,7 +3466,7 @@ function closeCoverZoom(event) {
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
-  const imageUrl = category === "songs" ? getItemCoverRawUrl(item) : (item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "");
+  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
   const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
@@ -3855,7 +3485,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</div>`;
+      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
     }
 
     return "";
@@ -3866,7 +3496,7 @@ function renderDetailMedia(item) {
       return `
         <div class="detail-song-audio-layout">
           <button type="button" class="detail-song-cover-box detail-song-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기">
-            ${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}
+            <img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" />
           </button>
           <div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>
         </div>
@@ -3878,7 +3508,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<button type="button" class="detail-media-box detail-cover-only detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</button>`;
+      return `<button type="button" class="detail-media-box detail-cover-only detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></button>`;
     }
 
     return "";
@@ -3890,7 +3520,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box detail-cover-only">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</div>`;
+      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
     }
 
     return "";
@@ -3898,14 +3528,14 @@ function renderDetailMedia(item) {
 
   if (category === "photos") {
     if (imageUrl || mediaUrl) {
-      return `<div class="detail-media-box">${archiveImageHtml(playbackImageUrl || playbackMediaUrl, item.title || "자료 이미지", imageUrl || mediaUrl)}</div>`;
+      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl || playbackMediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
     }
 
     return "";
   }
 
   if (imageUrl) {
-    return `<div class="detail-media-box detail-cover-only">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</div>`;
+    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
   }
 
   return "";
@@ -4236,11 +3866,3 @@ document.addEventListener("click", (event) => {
   event.preventDefault();
   goPage(page);
 }, false);
-
-// PC에서 동적으로 들어온 앨범 커버가 깨질 때도 마지막으로 한 번 더 보정합니다.
-document.addEventListener("error", function(event) {
-  const target = event.target;
-  if (target && target.tagName === "IMG" && !target.classList.contains("broken-image")) {
-    handleArchiveImageError(target);
-  }
-}, true);
