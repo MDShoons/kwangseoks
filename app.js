@@ -1040,15 +1040,17 @@ async function saveAudioLike(category, prefix) {
   const title = getInputValueByIds([`${prefix}Title`, category === "songs" ? "songTitle" : "", category === "radios" ? "radioTitle" : ""].filter(Boolean));
   const urlInput = getMediaUrlForPrefix(prefix);
   const file = getFileByIds([`${prefix}File`, `${prefix}UploadFile`, category === "songs" ? "songFile" : "", category === "radios" ? "radioFile" : ""].filter(Boolean));
-  const imageUrl = getThumbnailUrlForPrefix(prefix);
+  const coverFile = getFileByIds([`${prefix}ImageFile`, `${prefix}CoverFile`, `${prefix}ThumbnailFile`]);
+  const coverUrlInput = getThumbnailUrlForPrefix(prefix);
 
   if (!title) return alert("제목을 입력하세요.");
   if (!urlInput && !file) {
-    return alert("미디어 URL 칸에 링크를 입력하세요. 예: https://drive.google.com/file/d/.../view 또는 https://drive.google.com/uc?export=download&id=...");
+    return alert("음원 파일을 선택하거나 음원 URL을 입력하세요. 앨범 커버는 아래 대표 이미지에서 사진 파일로 올릴 수 있습니다.");
   }
 
   try {
     const mediaUrl = normalizeMediaUrlForPlayback(urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios"), "audio");
+    const thumbnailUrl = await getImageDataUrlOrDirectUrl(coverFile, coverUrlInput, 1000);
 
     await addDoc(collection(db, "contents"), {
       category,
@@ -1056,7 +1058,9 @@ async function saveAudioLike(category, prefix) {
       mediaType: "audio",
       title,
       mediaUrl,
-      thumbnailUrl: imageUrl,
+      thumbnailUrl,
+      imageUrl: thumbnailUrl,
+      coverUrl: thumbnailUrl,
       description: getInputValueByIds([`${prefix}Description`, `${prefix}Desc`]),
       year: getInputValueByIds([`${prefix}Year`]),
       source: getInputValueByIds([`${prefix}Source`]),
@@ -1064,13 +1068,13 @@ async function saveAudioLike(category, prefix) {
       updatedAt: serverTimestamp()
     });
 
-    alert("미디어 링크가 저장되었습니다.");
+    alert("미디어와 앨범 커버가 저장되었습니다.");
     const formId = category === "songs" ? "adminAudioForm" : "adminRadioForm";
     document.getElementById(formId)?.reset();
     populateSpecificSubCategorySelect(category, `${prefix}SubCategory`, []);
     await loadContents();
   } catch (error) {
-    alert("미디어 링크 저장 오류: " + error.message);
+    alert("미디어 저장 오류: " + error.message);
   }
 }
 
