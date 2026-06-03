@@ -111,17 +111,50 @@ function isNamuWikiImageUrl(url) {
   }
 }
 
+function getUrlWithoutProtocolForProxy(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  try {
+    const parsed = new URL(value);
+    return `${parsed.hostname}${parsed.pathname}${parsed.search || ""}`;
+  } catch (_) {
+    return value.replace(/^https?:\/\//i, "");
+  }
+}
+
+function uniqueImageCandidates(list) {
+  const seen = new Set();
+  return list
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .filter((value) => {
+      if (seen.has(value)) return false;
+      seen.add(value);
+      return true;
+    });
+}
+
 function getNamuWikiImageUrls(url) {
   const value = String(url || "").trim();
   if (!value) return [];
-  const encoded = encodeURIComponent(value);
-  return [
-    // 나무위키 이미지는 PC 크롬/GitHub Pages 조합에서 원본 hotlink가 막히는 경우가 있어
-    // 외부 이미지 프록시를 먼저 사용하고, 실패 시 원본으로 되돌립니다.
-    `https://images.weserv.nl/?url=${encoded}&w=1400&output=jpg`,
-    `https://wsrv.nl/?url=${encoded}&w=1400&output=jpg`,
-    value
-  ];
+
+  const noProtocol = getUrlWithoutProtocolForProxy(value);
+  const encodedNoProtocol = encodeURIComponent(noProtocol);
+  const encodedFullUrl = encodeURIComponent(value);
+  const uriNoProtocol = encodeURI(noProtocol);
+
+  return uniqueImageCandidates([
+    // 핵심: 나무위키 이미지는 PC에서 프록시가 200 빈 이미지로 응답하는 경우가 있어
+    // 원본 + no-referrer를 먼저 시도하고, 실패할 때만 여러 프록시로 넘어갑니다.
+    value,
+    `https://images.weserv.nl/?url=${encodedNoProtocol}&w=1400&output=jpg`,
+    `https://images.weserv.nl/?url=${uriNoProtocol}&w=1400&output=jpg`,
+    `https://images.weserv.nl/?url=ssl:${uriNoProtocol}&w=1400&output=jpg`,
+    `https://wsrv.nl/?url=${encodedNoProtocol}&w=1400&output=jpg`,
+    `https://wsrv.nl/?url=${uriNoProtocol}&w=1400&output=jpg`,
+    `https://api.allorigins.win/raw?url=${encodedFullUrl}`,
+    `https://corsproxy.io/?${encodedFullUrl}`
+  ]);
 }
 
 function getArchiveImageUrls(url) {
@@ -236,12 +269,28 @@ function normalizeMediaUrlForPlayback(url, type = "media") {
   return value;
 }
 
-function setExternalImageSrc(imgEl, src) {
+function setExternalImageSrc(imgEl, src, rawUrl = "") {
   if (!imgEl) return;
+
+  const value = String(src || rawUrl || "").trim();
+  const raw = String(rawUrl || src || "").trim();
+  const candidates = getArchiveImageUrls(raw || value);
+  const first = candidates[0] || value;
+
   try { imgEl.referrerPolicy = "no-referrer"; } catch (_) {}
   try { imgEl.setAttribute("referrerpolicy", "no-referrer"); } catch (_) {}
-  if (src) imgEl.src = src;
-  else imgEl.removeAttribute("src");
+
+  if (first) {
+    imgEl.dataset.imageFallbacks = candidates.map((candidate) => escapeHtml(candidate)).join("||");
+    imgEl.dataset.imageFallbackIndex = "0";
+    imgEl.onerror = function () { window.handleArchiveImageError(this); };
+    imgEl.src = first;
+  } else {
+    imgEl.removeAttribute("src");
+    imgEl.removeAttribute("data-image-fallbacks");
+    imgEl.removeAttribute("data-image-fallback-index");
+    imgEl.onerror = null;
+  }
 }
 
 function getPlayableAudioUrl(item = {}) {
@@ -1218,17 +1267,29 @@ async function saveMyPageInfo() {
   if (!name || !phone) return alert("이름과 전화번호를 입력하세요.");
 
   try {
-    await updateDoc(doc(db, "users", currentUser.uid), {
+    // 기존 회원 문서가 없거나 예전 데이터 구조여도 저장되도록 updateDoc 대신 setDoc(merge)을 사용합니다.
+    // 사용자가 직접 바꿀 수 있는 값은 이름/전화번호만 두고, uid/email/loginId/role은 유지합니다.
+    await setDoc(doc(db, "users", currentUser.uid), {
+      uid: currentUser.uid,
+      email: currentUser.email || currentUserProfile?.email || "",
+      loginId: currentUserProfile?.loginId || "",
+      role: currentUserProfile?.role || "user",
+      privacyAgree: currentUserProfile?.privacyAgree ?? true,
       name,
       phone,
       updatedAt: serverTimestamp()
-    });
+    }, { merge: true });
 
-    currentUserProfile = { ...(currentUserProfile || {}), name, phone };
+    currentUserProfile = { ...(currentUserProfile || {}), uid: currentUser.uid, email: currentUser.email || currentUserProfile?.email || "", name, phone };
     alert("회원 정보가 수정되었습니다.");
     fillMyPageForm();
   } catch (error) {
-    alert("회원 정보 수정 오류: " + error.message);
+    const msg = String(error?.message || error || "");
+    if (msg.includes("Missing or insufficient permissions")) {
+      alert("회원 정보 수정 오류: Firestore 보안 규칙 권한이 아직 배포되지 않았습니다. Firebase 콘솔에서 firestore.rules 내용을 게시해 주세요.");
+    } else {
+      alert("회원 정보 수정 오류: " + msg);
+    }
   }
 }
 

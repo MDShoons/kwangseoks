@@ -533,17 +533,29 @@ async function saveMyPageInfo() {
   if (!name || !phone) return alert("이름과 전화번호를 입력하세요.");
 
   try {
-    await updateDoc(doc(db, "users", currentUser.uid), {
+    // 기존 회원 문서가 없거나 예전 데이터 구조여도 저장되도록 updateDoc 대신 setDoc(merge)을 사용합니다.
+    // 사용자가 직접 바꿀 수 있는 값은 이름/전화번호만 두고, uid/email/loginId/role은 유지합니다.
+    await setDoc(doc(db, "users", currentUser.uid), {
+      uid: currentUser.uid,
+      email: currentUser.email || currentUserProfile?.email || "",
+      loginId: currentUserProfile?.loginId || "",
+      role: currentUserProfile?.role || "user",
+      privacyAgree: currentUserProfile?.privacyAgree ?? true,
       name,
       phone,
       updatedAt: serverTimestamp()
-    });
+    }, { merge: true });
 
-    currentUserProfile = { ...(currentUserProfile || {}), name, phone };
+    currentUserProfile = { ...(currentUserProfile || {}), uid: currentUser.uid, email: currentUser.email || currentUserProfile?.email || "", name, phone };
     alert("회원 정보가 수정되었습니다.");
     fillMyPageForm();
   } catch (error) {
-    alert("회원 정보 수정 오류: " + error.message);
+    const msg = String(error?.message || error || "");
+    if (msg.includes("Missing or insufficient permissions")) {
+      alert("회원 정보 수정 오류: Firestore 보안 규칙 권한이 아직 배포되지 않았습니다. Firebase 콘솔에서 firestore.rules 내용을 게시해 주세요.");
+    } else {
+      alert("회원 정보 수정 오류: " + msg);
+    }
   }
 }
 
