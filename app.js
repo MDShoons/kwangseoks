@@ -86,13 +86,51 @@ function getGoogleDriveImageUrls(url) {
 
   const encodedId = encodeURIComponent(id);
   const candidates = [
+    // PC Chrome에서 가장 안정적인 순서입니다.
+    `https://lh3.googleusercontent.com/d/${encodedId}=s1200`,
     `https://drive.google.com/thumbnail?id=${encodedId}&sz=w1200`,
+    `https://drive.google.com/thumbnail?id=${encodedId}&sz=s1200`,
     `https://drive.google.com/uc?export=view&id=${encodedId}`,
     `https://drive.google.com/uc?export=download&id=${encodedId}`,
+    `https://drive.usercontent.google.com/download?id=${encodedId}&export=download&authuser=0`,
     value
   ];
 
   return [...new Set(candidates.filter(Boolean))];
+}
+
+
+function isNamuWikiImageUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return false;
+  try {
+    const parsed = new URL(value);
+    return /(^|\.)i\.namu\.wiki$/i.test(parsed.hostname) || /(^|\.)namu\.wiki$/i.test(parsed.hostname);
+  } catch (_) {
+    return value.includes("i.namu.wiki") || value.includes("namu.wiki");
+  }
+}
+
+function getNamuWikiImageUrls(url) {
+  const value = String(url || "").trim();
+  if (!value) return [];
+  const encoded = encodeURIComponent(value);
+  return [
+    // 나무위키 이미지는 PC 크롬/GitHub Pages 조합에서 원본 hotlink가 막히는 경우가 있어
+    // 외부 이미지 프록시를 먼저 사용하고, 실패 시 원본으로 되돌립니다.
+    `https://images.weserv.nl/?url=${encoded}&w=1400&output=jpg`,
+    `https://wsrv.nl/?url=${encoded}&w=1400&output=jpg`,
+    value
+  ];
+}
+
+function getArchiveImageUrls(url) {
+  const value = String(url || "").trim();
+  if (!value) return [];
+  const driveUrls = getGoogleDriveImageUrls(value);
+  if (driveUrls.length && getGoogleDriveFileId(value)) return driveUrls;
+  if (isNamuWikiImageUrl(value)) return getNamuWikiImageUrls(value);
+  return [value];
 }
 
 function normalizeGoogleDriveMediaUrl(url, type = "media") {
@@ -102,15 +140,63 @@ function normalizeGoogleDriveMediaUrl(url, type = "media") {
   const id = getGoogleDriveFileId(value);
   if (!id) return value;
 
-  // PC 크롬에서는 Google Drive의 uc?export=download 이미지가 <img>에서 깨지는 경우가 있어
-  // 이미지 표시는 thumbnail 엔드포인트를 우선 사용하고, 실패 시 아래 onerror fallback에서 다른 주소를 순차 시도한다.
+  // PC <img>에서는 drive.google.com/uc download가 깨지는 경우가 많아
+  // 이미지/커버는 googleusercontent 또는 thumbnail 주소를 먼저 사용합니다.
   if (type === "image" || type === "photo" || type === "cover") {
     return getGoogleDriveImageUrls(value)[0] || value;
   }
 
   // 오디오/영상 재생은 download 주소가 가장 많이 호환됨.
-  // 이미 uc?export=download&id=... 형태여도 같은 주소로 정리.
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
+}
+
+function getImageFallbackAttribute(url) {
+  const value = String(url || "").trim();
+  const candidates = getArchiveImageUrls(value).map((candidate) => escapeHtml(candidate));
+  if (!candidates.length) return ` onerror="handleArchiveImageError(this)"`;
+  return ` data-image-fallbacks="${candidates.join("||")}" data-image-fallback-index="0" referrerpolicy="no-referrer" onerror="handleArchiveImageError(this)"`;
+}
+
+function imageErrorAttributes(url) {
+  return getImageFallbackAttribute(url);
+}
+
+window.handleArchiveImageError = function handleArchiveImageError(img) {
+  if (!img) return;
+
+  const fallbacks = String(img.dataset.imageFallbacks || "")
+    .split("||")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const currentIndex = Number(img.dataset.imageFallbackIndex || "0");
+  const nextIndex = currentIndex + 1;
+
+  if (fallbacks[nextIndex]) {
+    img.dataset.imageFallbackIndex = String(nextIndex);
+    try { img.referrerPolicy = "no-referrer"; } catch (_) {}
+    try { img.setAttribute("referrerpolicy", "no-referrer"); } catch (_) {}
+    img.src = fallbacks[nextIndex];
+    return;
+  }
+
+  img.classList.add("broken-image");
+  img.onerror = null;
+};
+
+function getItemCoverRawUrl(item = {}) {
+  return item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || item.coverImageUrl || item.albumCoverUrl || item.posterUrl || "";
+}
+
+function getItemCoverPlaybackUrl(item = {}) {
+  const raw = getItemCoverRawUrl(item);
+  return raw ? normalizeMediaUrlForPlayback(raw, "image") : "";
+}
+
+function archiveImageHtml(src, alt, rawUrl = "", className = "") {
+  const safeSrc = escapeHtml(src || "");
+  if (!safeSrc) return "";
+  const cls = className ? ` class="${escapeHtml(className)}"` : "";
+  return `<img${cls} src="${safeSrc}" alt="${escapeHtml(alt || "")}" draggable="false" oncontextmenu="return false" ${imageErrorAttributes(rawUrl || src)}>`;
 }
 
 function normalizeGitHubPagesAudioUrl(url) {
@@ -143,39 +229,20 @@ function normalizeMediaUrlForPlayback(url, type = "media") {
     return normalizeGitHubPagesAudioUrl(value);
   }
 
+  if ((type === "image" || type === "photo" || type === "cover") && isNamuWikiImageUrl(value)) {
+    return getNamuWikiImageUrls(value)[0] || value;
+  }
+
   return value;
 }
 
-function getImageFallbackAttribute(url) {
-  const value = String(url || "").trim();
-  if (!value || !(value.includes("drive.google.com") || value.includes("docs.google.com"))) return "";
-  const candidates = getGoogleDriveImageUrls(value).map((candidate) => escapeHtml(candidate));
-  return candidates.length > 1 ? ` data-image-fallbacks="${candidates.join("||")}" data-image-fallback-index="0" onerror="handleArchiveImageError(this)"` : ` onerror="handleArchiveImageError(this)"`;
+function setExternalImageSrc(imgEl, src) {
+  if (!imgEl) return;
+  try { imgEl.referrerPolicy = "no-referrer"; } catch (_) {}
+  try { imgEl.setAttribute("referrerpolicy", "no-referrer"); } catch (_) {}
+  if (src) imgEl.src = src;
+  else imgEl.removeAttribute("src");
 }
-
-function imageErrorAttributes(url) {
-  return getImageFallbackAttribute(url) || ` onerror="handleArchiveImageError(this)"`;
-}
-
-window.handleArchiveImageError = function handleArchiveImageError(img) {
-  if (!img) return;
-
-  const fallbacks = String(img.dataset.imageFallbacks || "")
-    .split("||")
-    .map((value) => value.trim())
-    .filter(Boolean);
-  const currentIndex = Number(img.dataset.imageFallbackIndex || "0");
-  const nextIndex = currentIndex + 1;
-
-  if (fallbacks[nextIndex]) {
-    img.dataset.imageFallbackIndex = String(nextIndex);
-    img.src = fallbacks[nextIndex];
-    return;
-  }
-
-  img.classList.add("broken-image");
-  img.onerror = null;
-};
 
 function getPlayableAudioUrl(item = {}) {
   return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
@@ -1522,8 +1589,7 @@ let playlistResumeAppliedForId = "";
 let dailyRecommendMidnightTimer = null;
 
 function getAudioItemCoverUrl(item) {
-  const raw = item?.thumbnailUrl || item?.imageUrl || item?.photoUrl || item?.coverUrl || "";
-  return raw ? normalizeMediaUrlForPlayback(raw, "image") : "";
+  return getItemCoverPlaybackUrl(item || {});
 }
 
 function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
@@ -1532,7 +1598,7 @@ function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
   const card = imgEl.closest(".daily-player-card");
 
   if (coverUrl) {
-    imgEl.src = coverUrl;
+    setExternalImageSrc(imgEl, coverUrl);
     imgEl.alt = `${item?.title || "곡"} 커버`;
     imgEl.classList.remove("empty");
     if (card) {
@@ -2198,7 +2264,7 @@ function ensurePlaylistFullDetailElement() {
       <button type="button" id="playlistFullDetailListTop" class="playlist-full-detail-list-top" aria-label="재생목록 열기">☰</button>
     </header>
     <div class="playlist-full-detail-cover-wrap">
-      <img id="playlistFullDetailCover" class="playlist-full-detail-cover" src="" alt="앨범 커버" draggable="false" oncontextmenu="return false" />
+      <img id="playlistFullDetailCover" class="playlist-full-detail-cover" src="" alt="앨범 커버" referrerpolicy="no-referrer" draggable="false" oncontextmenu="return false" />
     </div>
     <div class="playlist-full-detail-meta">
       <strong id="playlistFullDetailTitle">선택한 곡이 없습니다</strong>
@@ -2227,7 +2293,7 @@ function setPlaylistDetailCover(item) {
   if (!cover || !bg) return;
   const coverUrl = getAudioItemCoverUrl(item);
   if (coverUrl) {
-    cover.src = coverUrl;
+    setExternalImageSrc(cover, coverUrl);
     cover.classList.remove("empty");
     bg.style.backgroundImage = `url("${coverUrl.replace(/"/g, "%22")}")`;
   } else {
@@ -3023,16 +3089,14 @@ function renderAboutDocument(items) {
   }
 
   box.innerHTML = sorted.map((item) => {
-    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "";
-    const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
-    const imageErrorAttrs = imageErrorAttributes(imageUrl);
+    const imageUrl = category === "songs" ? getItemCoverRawUrl(item) : (item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "");
     const bodyText = item.body || item.description || "";
     const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
     const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
 
     return `
       <section class="about-document-entry">
-        ${imageUrl ? `<img class="about-document-image" src="${escapeHtml(playbackImageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} />` : ""}
+        ${imageUrl ? archiveImageHtml(playbackImageUrl, item.title || "김광석", imageUrl, "about-document-image") : ""}
         <h2>${escapeHtml(item.title || "제목 없는 글")}</h2>
         <div class="about-document-meta">
           ${yearText}
@@ -3255,7 +3319,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const showCover = id === "songList";
   const thumb = showCover
     ? (img
-        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}" ${imageErrorAttributes(item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || "")}></div>`
+        ? `<div class="audio-archive-cover">${archiveImageHtml(img, item.title || "앨범 커버", getItemCoverRawUrl(item))}</div>`
         : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`)
     : "";
   const topClass = showCover ? "audio-archive-top" : "audio-archive-top no-cover";
@@ -3294,7 +3358,7 @@ function renderTextArchiveCard(item, id, img, previewText) {
   const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 일기는 상세보기에서 볼 수 있습니다.";
 
   return `
-    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" ${imageErrorAttributes(item.thumbnailUrl || item.imageUrl || item.photoUrl || item.mediaUrl || "")}>` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
+    ${img ? archiveImageHtml(img, item.title || "자료 이미지", item.thumbnailUrl || item.imageUrl || item.photoUrl || item.mediaUrl || "") : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
     <div class="card-body text-archive-card-body">
       <h3>${escapeHtml(item.title)}</h3>
       ${renderCategoryBadges(item)}
@@ -3336,10 +3400,9 @@ function renderList(id, items) {
     div.onclick = () => openContentDetail(item.id);
 
     const rawImg = isAudioContentItem(item)
-      ? (item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || "")
-      : (item.thumbnailUrl || item.imageUrl || item.photoUrl || (!isVideoContentItem(item) ? item.mediaUrl : ""));
+      ? getItemCoverRawUrl(item)
+      : (item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || (!isVideoContentItem(item) ? item.mediaUrl : ""));
     const img = normalizeMediaUrlForPlayback(rawImg, "image");
-    const imgErrorAttrs = imageErrorAttributes(rawImg);
     const previewLength = isStoryList ? 120 : isOneumList ? 130 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
@@ -3349,7 +3412,7 @@ function renderList(id, items) {
       div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
     } else {
       div.innerHTML = `
-        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" ${imgErrorAttrs}>` : ""}
+        ${img ? archiveImageHtml(img, item.title || "자료 이미지", rawImg) : ""}
         <div>
           <h3>${escapeHtml(item.title)}</h3>
           ${renderCategoryBadges(item)}
@@ -3376,8 +3439,12 @@ function createCard(item) {
     const fileType = /\.mov(\?|#|$)/i.test(videoMediaUrl) ? "video/quicktime" : "video/mp4";
     media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="auto" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"><source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}"></video>`;
   }
-  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
-  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
+  else if (isAudioContentItem(item)) {
+    const rawCover = getItemCoverRawUrl(item);
+    const cover = normalizeMediaUrlForPlayback(rawCover, "image");
+    media = `${cover ? archiveImageHtml(cover, item.title || "앨범 커버", rawCover) : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
+  }
+  else if (item.mediaUrl) media = archiveImageHtml(normalizeMediaUrlForPlayback(item.mediaUrl, "image"), item.title || "자료 이미지", item.mediaUrl);
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
@@ -3494,13 +3561,15 @@ function openCoverZoom(src, title) {
   if (!modal || !img) return;
   if (!src) return;
 
-  img.dataset.imageFallbacks = "";
-  img.dataset.imageFallbackIndex = "0";
-  const fallbacks = getGoogleDriveImageUrls(src);
-  if (fallbacks.length > 1) img.dataset.imageFallbacks = fallbacks.join("||");
-  img.onerror = () => window.handleArchiveImageError(img);
-  img.src = fallbacks[0] || src;
+  setExternalImageSrc(img, src);
   img.alt = title || "앨범 자켓";
+  const raw = src || "";
+  const fallbacks = getGoogleDriveImageUrls(raw);
+  if (fallbacks.length) {
+    img.dataset.imageFallbacks = fallbacks.join("||");
+    img.dataset.imageFallbackIndex = "0";
+    img.onerror = function() { handleArchiveImageError(this); };
+  }
   if (caption) caption.textContent = title || "앨범 자켓";
 
   modal.classList.remove("hidden");
@@ -3520,12 +3589,7 @@ function closeCoverZoom(event) {
   const contentDetailModal = document.getElementById("contentDetailModal");
 
   if (modal) modal.classList.add("hidden");
-  if (img) {
-    img.onerror = null;
-    img.removeAttribute("src");
-    img.dataset.imageFallbacks = "";
-    img.dataset.imageFallbackIndex = "0";
-  }
+  if (img) img.removeAttribute("src");
 
   if (!contentDetailModal || contentDetailModal.classList.contains("hidden")) {
     document.body.style.overflow = "";
@@ -3535,13 +3599,10 @@ function closeCoverZoom(event) {
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
-  const imageUrl = isAudioContentItem(item)
-    ? (item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || "")
-    : (item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "");
+  const imageUrl = category === "songs" ? getItemCoverRawUrl(item) : (item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "");
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
   const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
-  const imageErrorAttrs = imageErrorAttributes(imageUrl);
   const title = escapeHtml(item.title || "");
 
   if (category === "videos") {
@@ -3557,7 +3618,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
+      return `<div class="detail-media-box">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</div>`;
     }
 
     return "";
@@ -3568,7 +3629,7 @@ function renderDetailMedia(item) {
       return `
         <div class="detail-song-audio-layout">
           <button type="button" class="detail-song-cover-box detail-song-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기">
-            <img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} />
+            ${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}
           </button>
           <div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>
         </div>
@@ -3580,7 +3641,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<button type="button" class="detail-media-box detail-cover-only detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></button>`;
+      return `<button type="button" class="detail-media-box detail-cover-only detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</button>`;
     }
 
     return "";
@@ -3592,7 +3653,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
+      return `<div class="detail-media-box detail-cover-only">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</div>`;
     }
 
     return "";
@@ -3600,14 +3661,14 @@ function renderDetailMedia(item) {
 
   if (category === "photos") {
     if (imageUrl || mediaUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl || playbackMediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
+      return `<div class="detail-media-box">${archiveImageHtml(playbackImageUrl || playbackMediaUrl, item.title || "자료 이미지", imageUrl || mediaUrl)}</div>`;
     }
 
     return "";
   }
 
   if (imageUrl) {
-    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
+    return `<div class="detail-media-box detail-cover-only">${archiveImageHtml(playbackImageUrl, item.title || "자료 이미지", imageUrl)}</div>`;
   }
 
   return "";
@@ -3938,3 +3999,11 @@ document.addEventListener("click", (event) => {
   event.preventDefault();
   goPage(page);
 }, false);
+
+// PC에서 동적으로 들어온 앨범 커버가 깨질 때도 마지막으로 한 번 더 보정합니다.
+document.addEventListener("error", function(event) {
+  const target = event.target;
+  if (target && target.tagName === "IMG" && !target.classList.contains("broken-image")) {
+    handleArchiveImageError(target);
+  }
+}, true);

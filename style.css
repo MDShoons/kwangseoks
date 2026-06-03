@@ -7177,3 +7177,11 @@ body.playlist-detail-open {
 .category-badge + .category-badge {
   margin-left: 4px;
 }
+
+
+/* PC cover fallback: 깨진 외부 이미지 아이콘 대신 빈 커버 박스를 유지 */
+.audio-archive-cover img.broken-image,
+.detail-song-cover-box img.broken-image,
+.detail-media-box img.broken-image {
+  opacity: 0.12;
+}
