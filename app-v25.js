@@ -142,16 +142,23 @@ function getNamuWikiImageUrls(url) {
   const encodedNoProtocol = encodeURIComponent(noProtocol);
   const encodedFullUrl = encodeURIComponent(value);
   const uriNoProtocol = encodeURI(noProtocol);
+  const fullUri = encodeURI(value);
 
+  // PC Chrome/GitHub Pages에서 i.namu.wiki 원본이 hotlink 차단되면
+  // <img>가 깨지거나 빈 박스로 남습니다. 원본 다음에는 실제 이미지 프록시들을
+  // 여러 형식으로 넣고, 실패 시 JS가 순차 재시도합니다.
   return uniqueImageCandidates([
-    // 핵심: 나무위키 이미지는 PC에서 프록시가 200 빈 이미지로 응답하는 경우가 있어
-    // 원본 + no-referrer를 먼저 시도하고, 실패할 때만 여러 프록시로 넘어갑니다.
     value,
-    `https://images.weserv.nl/?url=${encodedNoProtocol}&w=1400&output=jpg`,
-    `https://images.weserv.nl/?url=${uriNoProtocol}&w=1400&output=jpg`,
-    `https://images.weserv.nl/?url=ssl:${uriNoProtocol}&w=1400&output=jpg`,
-    `https://wsrv.nl/?url=${encodedNoProtocol}&w=1400&output=jpg`,
-    `https://wsrv.nl/?url=${uriNoProtocol}&w=1400&output=jpg`,
+    `https://images.weserv.nl/?url=${encodedNoProtocol}&w=1200&output=jpg`,
+    `https://images.weserv.nl/?url=${uriNoProtocol}&w=1200&output=jpg`,
+    `https://images.weserv.nl/?url=${encodedFullUrl}&w=1200&output=jpg`,
+    `https://images.weserv.nl/?url=${fullUri}&w=1200&output=jpg`,
+    `https://wsrv.nl/?url=${encodedNoProtocol}&w=1200&output=jpg`,
+    `https://wsrv.nl/?url=${uriNoProtocol}&w=1200&output=jpg`,
+    `https://wsrv.nl/?url=${encodedFullUrl}&w=1200&output=jpg`,
+    `https://wsrv.nl/?url=${fullUri}&w=1200&output=jpg`,
+    `https://wsrv.nl/?url=ssl:${uriNoProtocol}&w=1200&output=jpg`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodedFullUrl}`,
     `https://api.allorigins.win/raw?url=${encodedFullUrl}`,
     `https://corsproxy.io/?${encodedFullUrl}`
   ]);
@@ -195,28 +202,67 @@ function imageErrorAttributes(url) {
 }
 
 
+function looksLikeUnusableImage(img) {
+  const width = Number(img?.naturalWidth || 0);
+  const height = Number(img?.naturalHeight || 0);
+  // 0 또는 1~3px 투명 응답은 사용자에게 빈 커버처럼 보입니다.
+  return !width || !height || width <= 3 || height <= 3;
+}
+
+async function tryFetchImageAsBlobUrl(img, candidates, startIndex) {
+  if (!img || img.dataset.fetchingImageBlob === "yes") return false;
+  img.dataset.fetchingImageBlob = "yes";
+  try {
+    for (let i = startIndex; i < candidates.length; i += 1) {
+      const candidate = candidates[i];
+      if (!/^https?:\/\//i.test(candidate)) continue;
+      // 원본 i.namu.wiki는 CORS가 막히는 경우가 많으므로 프록시 후보 위주로 fetch합니다.
+      if (isNamuWikiImageUrl(candidate)) continue;
+      try {
+        const res = await fetch(candidate, { mode: "cors", cache: "reload", referrerPolicy: "no-referrer" });
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        if (!blob || !String(blob.type || "").startsWith("image/")) continue;
+        if (blob.size < 200) continue;
+        const objectUrl = URL.createObjectURL(blob);
+        const oldObjectUrl = img.dataset.objectImageUrl;
+        if (oldObjectUrl) {
+          try { URL.revokeObjectURL(oldObjectUrl); } catch (_) {}
+        }
+        img.dataset.objectImageUrl = objectUrl;
+        img.dataset.imageFallbackIndex = String(i);
+        img.src = objectUrl;
+        return true;
+      } catch (_) {}
+    }
+  } finally {
+    img.dataset.fetchingImageBlob = "";
+  }
+  return false;
+}
+
 window.handleArchiveImageLoad = function handleArchiveImageLoad(img) {
   if (!img) return;
 
-  // 일부 외부 이미지 프록시는 실패했는데도 1x1 투명 이미지처럼 load 이벤트를 내보냅니다.
-  // 그런 경우 사용자는 빈 앨범 커버처럼 보게 되므로, 실제 표시 가능한 크기가 아닐 때 다음 후보 URL로 넘깁니다.
-  const width = Number(img.naturalWidth || 0);
-  const height = Number(img.naturalHeight || 0);
-  const looksLikeBlankProxy = width > 0 && height > 0 && (width <= 3 || height <= 3);
-  if (looksLikeBlankProxy) {
+  if (looksLikeUnusableImage(img)) {
     window.handleArchiveImageError(img);
     return;
   }
 
   img.classList.remove("broken-image");
+  const parent = img.closest(".audio-archive-cover, .detail-song-cover-box, .detail-media-box, .playlist-full-detail-cover-wrap");
+  if (parent) {
+    parent.classList.remove("cover-load-failed");
+    parent.querySelectorAll(".cover-load-failed-note").forEach((el) => el.remove());
+  }
 };
 
-window.handleArchiveImageError = function handleArchiveImageError(img) {
+window.handleArchiveImageError = async function handleArchiveImageError(img) {
   if (!img) return;
 
   const fallbacks = String(img.dataset.imageFallbacks || "")
     .split("||")
-    .map((value) => value.trim())
+    .map((value) => value.trim().replace(/&amp;/g, "&"))
     .filter(Boolean);
   const currentIndex = Number(img.dataset.imageFallbackIndex || "0");
   const nextIndex = currentIndex + 1;
@@ -228,6 +274,10 @@ window.handleArchiveImageError = function handleArchiveImageError(img) {
     img.src = fallbacks[nextIndex];
     return;
   }
+
+  // <img> 재시도가 모두 실패했을 때, 프록시 후보를 fetch→Blob URL로 한 번 더 시도합니다.
+  const fetched = await tryFetchImageAsBlobUrl(img, fallbacks, 1);
+  if (fetched) return;
 
   img.classList.add("broken-image");
   img.onerror = null;
@@ -243,8 +293,46 @@ window.handleArchiveImageError = function handleArchiveImageError(img) {
   }
 };
 
+function getItemOwnCoverRawUrl(item = {}) {
+  return item.thumbnailUrl
+    || item.imageUrl
+    || item.photoUrl
+    || item.coverUrl
+    || item.coverImageUrl
+    || item.albumCoverUrl
+    || item.posterUrl
+    || item.cover
+    || item.coverImage
+    || item.albumCover
+    || item.albumImage
+    || item.imgUrl
+    || item.image
+    || item.thumb
+    || item.thumbnail
+    || item.artworkUrl
+    || item.artwork
+    || "";
+}
+
+function getPrimarySubCategoryKey(item = {}) {
+  const cats = getItemSubCategories(item);
+  return cats.length ? String(cats[0] || "").trim() : String(item.subCategory || "").trim();
+}
+
+function findSiblingAlbumCoverRawUrl(item = {}) {
+  if (!item || item.category !== "songs" || !Array.isArray(allContents)) return "";
+  const key = getPrimarySubCategoryKey(item);
+  if (!key) return "";
+  const sibling = allContents.find((candidate) => {
+    if (!candidate || candidate === item || candidate.category !== "songs") return false;
+    if (getPrimarySubCategoryKey(candidate) !== key) return false;
+    return Boolean(getItemOwnCoverRawUrl(candidate));
+  });
+  return sibling ? getItemOwnCoverRawUrl(sibling) : "";
+}
+
 function getItemCoverRawUrl(item = {}) {
-  return item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || item.coverImageUrl || item.albumCoverUrl || item.posterUrl || "";
+  return getItemOwnCoverRawUrl(item) || findSiblingAlbumCoverRawUrl(item) || "";
 }
 
 function getItemCoverPlaybackUrl(item = {}) {
@@ -308,7 +396,7 @@ function setExternalImageSrc(imgEl, src, rawUrl = "") {
   try { imgEl.setAttribute("referrerpolicy", "no-referrer"); } catch (_) {}
 
   if (first) {
-    imgEl.dataset.imageFallbacks = candidates.map((candidate) => escapeHtml(candidate)).join("||");
+    imgEl.dataset.imageFallbacks = candidates.join("||");
     imgEl.dataset.imageFallbackIndex = "0";
     imgEl.onerror = function () { window.handleArchiveImageError(this); };
     imgEl.onload = function () { window.handleArchiveImageLoad(this); };
@@ -1689,7 +1777,7 @@ function setPlayerCoverImage(imgEl, item, fallbackText = "NO COVER") {
   const card = imgEl.closest(".daily-player-card");
 
   if (coverUrl) {
-    setExternalImageSrc(imgEl, coverUrl);
+    setExternalImageSrc(imgEl, coverUrl, getItemCoverRawUrl(item || {}));
     imgEl.alt = `${item?.title || "곡"} 커버`;
     imgEl.classList.remove("empty");
     if (card) {
