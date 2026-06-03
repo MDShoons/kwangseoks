@@ -79,12 +79,34 @@ function getGoogleDriveFileId(url) {
   }
 }
 
+function getGoogleDriveImageUrls(url) {
+  const value = String(url || "").trim();
+  const id = getGoogleDriveFileId(value);
+  if (!id) return value ? [value] : [];
+
+  const encodedId = encodeURIComponent(id);
+  const candidates = [
+    `https://drive.google.com/thumbnail?id=${encodedId}&sz=w1200`,
+    `https://drive.google.com/uc?export=view&id=${encodedId}`,
+    `https://drive.google.com/uc?export=download&id=${encodedId}`,
+    value
+  ];
+
+  return [...new Set(candidates.filter(Boolean))];
+}
+
 function normalizeGoogleDriveMediaUrl(url, type = "media") {
   const value = String(url || "").trim();
   if (!value) return "";
 
   const id = getGoogleDriveFileId(value);
   if (!id) return value;
+
+  // PC 크롬에서는 Google Drive의 uc?export=download 이미지가 <img>에서 깨지는 경우가 있어
+  // 이미지 표시는 thumbnail 엔드포인트를 우선 사용하고, 실패 시 아래 onerror fallback에서 다른 주소를 순차 시도한다.
+  if (type === "image" || type === "photo" || type === "cover") {
+    return getGoogleDriveImageUrls(value)[0] || value;
+  }
 
   // 오디오/영상 재생은 download 주소가 가장 많이 호환됨.
   // 이미 uc?export=download&id=... 형태여도 같은 주소로 정리.
@@ -123,6 +145,37 @@ function normalizeMediaUrlForPlayback(url, type = "media") {
 
   return value;
 }
+
+function getImageFallbackAttribute(url) {
+  const value = String(url || "").trim();
+  if (!value || !(value.includes("drive.google.com") || value.includes("docs.google.com"))) return "";
+  const candidates = getGoogleDriveImageUrls(value).map((candidate) => escapeHtml(candidate));
+  return candidates.length > 1 ? ` data-image-fallbacks="${candidates.join("||")}" data-image-fallback-index="0" onerror="handleArchiveImageError(this)"` : ` onerror="handleArchiveImageError(this)"`;
+}
+
+function imageErrorAttributes(url) {
+  return getImageFallbackAttribute(url) || ` onerror="handleArchiveImageError(this)"`;
+}
+
+window.handleArchiveImageError = function handleArchiveImageError(img) {
+  if (!img) return;
+
+  const fallbacks = String(img.dataset.imageFallbacks || "")
+    .split("||")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const currentIndex = Number(img.dataset.imageFallbackIndex || "0");
+  const nextIndex = currentIndex + 1;
+
+  if (fallbacks[nextIndex]) {
+    img.dataset.imageFallbackIndex = String(nextIndex);
+    img.src = fallbacks[nextIndex];
+    return;
+  }
+
+  img.classList.add("broken-image");
+  img.onerror = null;
+};
 
 function getPlayableAudioUrl(item = {}) {
   return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
@@ -2970,14 +3023,16 @@ function renderAboutDocument(items) {
   }
 
   box.innerHTML = sorted.map((item) => {
-    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "";
+    const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
+    const imageErrorAttrs = imageErrorAttributes(imageUrl);
     const bodyText = item.body || item.description || "";
     const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
     const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
 
     return `
       <section class="about-document-entry">
-        ${imageUrl ? `<img class="about-document-image" src="${escapeHtml(playbackImageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" />` : ""}
+        ${imageUrl ? `<img class="about-document-image" src="${escapeHtml(playbackImageUrl)}" alt="${escapeHtml(item.title || "김광석")}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} />` : ""}
         <h2>${escapeHtml(item.title || "제목 없는 글")}</h2>
         <div class="about-document-meta">
           ${yearText}
@@ -3200,7 +3255,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const showCover = id === "songList";
   const thumb = showCover
     ? (img
-        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
+        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}" ${imageErrorAttributes(item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || "")}></div>`
         : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`)
     : "";
   const topClass = showCover ? "audio-archive-top" : "audio-archive-top no-cover";
@@ -3239,7 +3294,7 @@ function renderTextArchiveCard(item, id, img, previewText) {
   const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 일기는 상세보기에서 볼 수 있습니다.";
 
   return `
-    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
+    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" ${imageErrorAttributes(item.thumbnailUrl || item.imageUrl || item.photoUrl || item.mediaUrl || "")}>` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
     <div class="card-body text-archive-card-body">
       <h3>${escapeHtml(item.title)}</h3>
       ${renderCategoryBadges(item)}
@@ -3280,7 +3335,11 @@ function renderList(id, items) {
 
     div.onclick = () => openContentDetail(item.id);
 
-    const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (!isAudioContentItem(item) && !isVideoContentItem(item) ? item.mediaUrl : ""), "image");
+    const rawImg = isAudioContentItem(item)
+      ? (item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || "")
+      : (item.thumbnailUrl || item.imageUrl || item.photoUrl || (!isVideoContentItem(item) ? item.mediaUrl : ""));
+    const img = normalizeMediaUrlForPlayback(rawImg, "image");
+    const imgErrorAttrs = imageErrorAttributes(rawImg);
     const previewLength = isStoryList ? 120 : isOneumList ? 130 : 90;
     const previewText = makeTextPreview(item.body || item.description || "", previewLength);
 
@@ -3290,7 +3349,7 @@ function renderList(id, items) {
       div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
     } else {
       div.innerHTML = `
-        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
+        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" ${imgErrorAttrs}>` : ""}
         <div>
           <h3>${escapeHtml(item.title)}</h3>
           ${renderCategoryBadges(item)}
@@ -3435,7 +3494,12 @@ function openCoverZoom(src, title) {
   if (!modal || !img) return;
   if (!src) return;
 
-  img.src = src;
+  img.dataset.imageFallbacks = "";
+  img.dataset.imageFallbackIndex = "0";
+  const fallbacks = getGoogleDriveImageUrls(src);
+  if (fallbacks.length > 1) img.dataset.imageFallbacks = fallbacks.join("||");
+  img.onerror = () => window.handleArchiveImageError(img);
+  img.src = fallbacks[0] || src;
   img.alt = title || "앨범 자켓";
   if (caption) caption.textContent = title || "앨범 자켓";
 
@@ -3456,7 +3520,12 @@ function closeCoverZoom(event) {
   const contentDetailModal = document.getElementById("contentDetailModal");
 
   if (modal) modal.classList.add("hidden");
-  if (img) img.removeAttribute("src");
+  if (img) {
+    img.onerror = null;
+    img.removeAttribute("src");
+    img.dataset.imageFallbacks = "";
+    img.dataset.imageFallbackIndex = "0";
+  }
 
   if (!contentDetailModal || contentDetailModal.classList.contains("hidden")) {
     document.body.style.overflow = "";
@@ -3466,10 +3535,13 @@ function closeCoverZoom(event) {
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
-  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+  const imageUrl = isAudioContentItem(item)
+    ? (item.thumbnailUrl || item.imageUrl || item.photoUrl || item.coverUrl || "")
+    : (item.imageUrl || item.thumbnailUrl || item.photoUrl || item.coverUrl || "");
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
   const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
+  const imageErrorAttrs = imageErrorAttributes(imageUrl);
   const title = escapeHtml(item.title || "");
 
   if (category === "videos") {
@@ -3485,7 +3557,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
     }
 
     return "";
@@ -3496,7 +3568,7 @@ function renderDetailMedia(item) {
       return `
         <div class="detail-song-audio-layout">
           <button type="button" class="detail-song-cover-box detail-song-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기">
-            <img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" />
+            <img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} />
           </button>
           <div class="detail-audio-box detail-radio-audio-box detail-song-player-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div>
         </div>
@@ -3508,7 +3580,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<button type="button" class="detail-media-box detail-cover-only detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></button>`;
+      return `<button type="button" class="detail-media-box detail-cover-only detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(playbackImageUrl)}" data-cover-title="${title}" aria-label="앨범 자켓 크게 보기"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></button>`;
     }
 
     return "";
@@ -3520,7 +3592,7 @@ function renderDetailMedia(item) {
     }
 
     if (imageUrl) {
-      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+      return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
     }
 
     return "";
@@ -3528,14 +3600,14 @@ function renderDetailMedia(item) {
 
   if (category === "photos") {
     if (imageUrl || mediaUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl || playbackMediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl || playbackMediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
     }
 
     return "";
   }
 
   if (imageUrl) {
-    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+    return `<div class="detail-media-box detail-cover-only"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" ${imageErrorAttrs} /></div>`;
   }
 
   return "";
