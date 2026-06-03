@@ -7185,3 +7185,34 @@ body.playlist-detail-open {
 .detail-media-box img.broken-image {
   opacity: 0.12;
 }
+
+/* 외부 이미지 링크가 PC에서 차단될 때 빈 박스로 보이지 않도록 표시 */
+.audio-archive-cover,
+.detail-song-cover-box,
+.detail-media-box,
+.playlist-full-detail-cover-wrap {
+  position: relative;
+}
+.cover-load-failed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  background: rgba(140, 83, 54, 0.08);
+}
+.cover-load-failed img.broken-image {
+  display: none !important;
+}
+.cover-load-failed-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(140, 83, 54, 0.12);
+  color: #7b4a33;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}

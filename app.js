@@ -187,12 +187,29 @@ function getImageFallbackAttribute(url) {
   const value = String(url || "").trim();
   const candidates = getArchiveImageUrls(value).map((candidate) => escapeHtml(candidate));
   if (!candidates.length) return ` onerror="handleArchiveImageError(this)"`;
-  return ` data-image-fallbacks="${candidates.join("||")}" data-image-fallback-index="0" referrerpolicy="no-referrer" onerror="handleArchiveImageError(this)"`;
+  return ` data-image-fallbacks="${candidates.join("||")}" data-image-fallback-index="0" referrerpolicy="no-referrer" onload="handleArchiveImageLoad(this)" onerror="handleArchiveImageError(this)"`;
 }
 
 function imageErrorAttributes(url) {
   return getImageFallbackAttribute(url);
 }
+
+
+window.handleArchiveImageLoad = function handleArchiveImageLoad(img) {
+  if (!img) return;
+
+  // 일부 외부 이미지 프록시는 실패했는데도 1x1 투명 이미지처럼 load 이벤트를 내보냅니다.
+  // 그런 경우 사용자는 빈 앨범 커버처럼 보게 되므로, 실제 표시 가능한 크기가 아닐 때 다음 후보 URL로 넘깁니다.
+  const width = Number(img.naturalWidth || 0);
+  const height = Number(img.naturalHeight || 0);
+  const looksLikeBlankProxy = width > 0 && height > 0 && (width <= 3 || height <= 3);
+  if (looksLikeBlankProxy) {
+    window.handleArchiveImageError(img);
+    return;
+  }
+
+  img.classList.remove("broken-image");
+};
 
 window.handleArchiveImageError = function handleArchiveImageError(img) {
   if (!img) return;
@@ -214,6 +231,16 @@ window.handleArchiveImageError = function handleArchiveImageError(img) {
 
   img.classList.add("broken-image");
   img.onerror = null;
+  img.onload = null;
+
+  const parent = img.closest(".audio-archive-cover, .detail-song-cover-box, .detail-media-box, .playlist-full-detail-cover-wrap");
+  if (parent && !parent.querySelector(".cover-load-failed-note")) {
+    parent.classList.add("cover-load-failed");
+    const note = document.createElement("span");
+    note.className = "cover-load-failed-note";
+    note.textContent = "커버 링크 차단";
+    parent.appendChild(note);
+  }
 };
 
 function getItemCoverRawUrl(item = {}) {
@@ -284,6 +311,7 @@ function setExternalImageSrc(imgEl, src, rawUrl = "") {
     imgEl.dataset.imageFallbacks = candidates.map((candidate) => escapeHtml(candidate)).join("||");
     imgEl.dataset.imageFallbackIndex = "0";
     imgEl.onerror = function () { window.handleArchiveImageError(this); };
+    imgEl.onload = function () { window.handleArchiveImageLoad(this); };
     imgEl.src = first;
   } else {
     imgEl.removeAttribute("src");
@@ -1209,7 +1237,8 @@ async function saveAudioLike(category, prefix) {
   const title = getInputValueByIds([`${prefix}Title`, category === "songs" ? "songTitle" : "", category === "radios" ? "radioTitle" : ""].filter(Boolean));
   const urlInput = getMediaUrlForPrefix(prefix);
   const file = getFileByIds([`${prefix}File`, `${prefix}UploadFile`, category === "songs" ? "songFile" : "", category === "radios" ? "radioFile" : ""].filter(Boolean));
-  const imageUrl = getThumbnailUrlForPrefix(prefix);
+  const imageFile = getFileByIds([`${prefix}ImageFile`, `${prefix}CoverFile`, `${prefix}ThumbnailFile`, category === "songs" ? "songImageFile" : "", category === "radios" ? "radioImageFile" : ""].filter(Boolean));
+  const imageDirectUrl = getThumbnailUrlForPrefix(prefix);
 
   if (!title) return alert("제목을 입력하세요.");
   if (!urlInput && !file) {
@@ -1218,6 +1247,7 @@ async function saveAudioLike(category, prefix) {
 
   try {
     const mediaUrl = normalizeMediaUrlForPlayback(urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios"), "audio");
+    const imageUrl = await getImageDataUrlOrDirectUrl(imageFile, imageDirectUrl, 1200);
 
     await addDoc(collection(db, "contents"), {
       category,

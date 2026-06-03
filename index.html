@@ -583,7 +583,8 @@
         <textarea id="audioDescription" placeholder="음원 설명"></textarea>
         <label>대표 이미지</label>
         <input id="audioImageFile" type="file" accept="image/*" />
-        <input id="audioImageUrl" type="url" placeholder="https:// 로 시작하는 미디어 링크를 입력하세요" />
+        <input id="audioImageUrl" type="url" placeholder="https:// 로 시작하는 커버 링크를 입력하세요" />
+        <p class="helper-text">PC에서도 확실히 보이게 하려면 URL보다 파일 선택으로 앨범 커버를 저장하세요. 파일 선택 시 압축 후 Firestore에 저장됩니다.</p>
         <button type="button" id="saveAudioBtn">음원 저장</button>
       </form>
 
@@ -599,7 +600,8 @@
         <textarea id="radioDescription" placeholder="라디오 설명"></textarea>
         <label>대표 이미지</label>
         <input id="radioImageFile" type="file" accept="image/*" />
-        <input id="radioImageUrl" type="url" placeholder="https:// 로 시작하는 미디어 링크를 입력하세요" />
+        <input id="radioImageUrl" type="url" placeholder="https:// 로 시작하는 커버 링크를 입력하세요" />
+        <p class="helper-text">PC에서도 확실히 보이게 하려면 URL보다 파일 선택으로 대표 이미지를 저장하세요. 파일 선택 시 압축 후 Firestore에 저장됩니다.</p>
         <button type="button" id="saveRadioBtn">라디오 저장</button>
       </form>
 
@@ -722,6 +724,6 @@
   </div>
 <div class="version-marker">v167-siteinfo-purpose-bold</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=namu-original-first-final-v6"></script>
+  <script type="module" src="app.js?v=cover-file-save-v7"></script>
 </body>
 </html>
