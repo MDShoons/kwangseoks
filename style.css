@@ -7207,3 +7207,100 @@ body.playlist-detail-open {
 .bulk-song-cover-panel button {
   width: 100%;
 }
+
+/* v186: 모바일 하단 플레이리스트가 본문 카드와 겹쳐 보이지 않도록 하단 여백 확보 */
+@media (max-width: 768px) {
+  body.has-open-playlist-player main,
+  body.has-open-playlist-player .page.active {
+    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body.has-open-playlist-player #contentDetailModal,
+  body.has-open-playlist-player .modal {
+    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  #userPlaylistPlayer.daily-player:not(.closed) {
+    pointer-events: none !important;
+  }
+
+  #userPlaylistPlayer.daily-player:not(.closed) .daily-player-card {
+    pointer-events: auto !important;
+  }
+}
+
+/* v187: 모바일 하단 플레이리스트 - 제목과 이전/재생/다음 버튼 겹침 방지 */
+@media (max-width: 768px) {
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    grid-template-columns: 52px minmax(0, 1fr) 136px 44px !important;
+    column-gap: 8px !important;
+  }
+
+  #userPlaylistPlayer .daily-player-title,
+  #userPlaylistPlayer .daily-player-sub {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding-right: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+  #userPlaylistPlayer .daily-player-controls {
+    justify-content: flex-end !important;
+    width: 136px !important;
+    min-width: 136px !important;
+    max-width: 136px !important;
+    gap: 8px !important;
+    transform: translateX(8px) !important;
+  }
+}
+
+@media (max-width: 390px) {
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    grid-template-columns: 46px minmax(0, 1fr) 124px 38px !important;
+    column-gap: 7px !important;
+    padding-left: 12px !important;
+    padding-right: 10px !important;
+  }
+
+  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+  #userPlaylistPlayer .daily-player-controls {
+    width: 124px !important;
+    min-width: 124px !important;
+    max-width: 124px !important;
+    gap: 6px !important;
+    transform: translateX(10px) !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerPrevBtn,
+  #userPlaylistPlayer #playlistPlayerNextBtn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 17px !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerPlayBtn,
+  #userPlaylistPlayer .daily-play-btn {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    transform: translateX(4px) !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerListBtn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+}

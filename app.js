@@ -298,7 +298,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v185-no-telecom";
+const APP_VERSION = "v186-song-cover-rawurl-mobile-playlist-space";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -589,7 +589,12 @@ async function uploadFileToGitHubWorker(file, folder) {
     throw new Error(data.error || data.message || `Worker 업로드 실패: HTTP ${response.status}`);
   }
 
-  return data.url || data.downloadUrl || data.path || "";
+  const preferredUrl = data.rawUrl || data.url || data.downloadUrl || data.pagesUrl || data.path || "";
+  if (/^https?:\/\//i.test(preferredUrl) && /^(images|covers|photos)$/i.test(String(folder || ""))) {
+    const sep = preferredUrl.includes("?") ? "&" : "?";
+    return `${preferredUrl}${sep}v=${Date.now()}`;
+  }
+  return preferredUrl;
 }
 
 function getYoutubeEmbedUrl(url) {
@@ -2076,11 +2081,18 @@ function resetPlaylistPlayerUi(audio, playBtn, progress, current, duration) {
   if (duration) duration.textContent = "0:00";
 }
 
+function syncPlaylistPlayerBodySpace() {
+  const player = document.getElementById("userPlaylistPlayer");
+  const hasOpenPlaylist = !!(player && !player.classList.contains("closed"));
+  document.body.classList.toggle("has-open-playlist-player", hasOpenPlaylist);
+}
+
 function closeUserPlaylistPlayerTemporarily() {
   const player = document.getElementById("userPlaylistPlayer");
   const audio = document.getElementById("playlistPlayerAudio");
   if (audio) { saveUserPlaylistState(audio); audio.pause(); }
   if (player) player.classList.add("closed");
+  syncPlaylistPlayerBodySpace();
 }
 
 function clearUserPlaylist(options = {}) {
@@ -2437,6 +2449,7 @@ function setupUserPlaylistPlayer(options = {}) {
   const songs = getUserPlaylistSongs();
   if (!songs.length) {
     player.classList.add("closed");
+    syncPlaylistPlayerBodySpace();
     playlistCurrentItemId = "";
     if (queuePanel) {
       queuePanel.classList.remove("open");
@@ -2454,6 +2467,7 @@ function setupUserPlaylistPlayer(options = {}) {
 
   if (options.forceOpen) player.classList.remove("closed");
   if (!player.classList.contains("closed")) player.classList.remove("closed");
+  syncPlaylistPlayerBodySpace();
 
   const savedState = loadUserPlaylistState();
   if (!playlistRequestedItemId && !playlistCurrentItemId && savedState?.itemId) {
