@@ -2366,6 +2366,34 @@ function renderPlaylistQueuePanel() {
   });
 }
 
+
+function isPlaylistFullDetailMobileEnabled() {
+  return !!(window.matchMedia && window.matchMedia("(max-width: 920px)").matches);
+}
+
+function updatePlaylistDetailTriggerAccessibility() {
+  const cover = document.getElementById("playlistPlayerCover");
+  const title = document.getElementById("playlistPlayerTitle");
+  const enabled = isPlaylistFullDetailMobileEnabled();
+  [cover, title].forEach((el) => {
+    if (!el) return;
+    if (enabled) {
+      el.classList.add("playlist-detail-trigger");
+      el.setAttribute("role", "button");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-label", "플레이리스트 상세 화면 열기");
+    } else {
+      el.classList.remove("playlist-detail-trigger");
+      el.removeAttribute("role");
+      el.removeAttribute("tabindex");
+      el.removeAttribute("aria-label");
+    }
+  });
+}
+
+
+window.addEventListener("resize", updatePlaylistDetailTriggerAccessibility);
+
 function bindPlaylistDetailTriggerDelegation() {
   if (playlistFullDetailTriggerDelegated) return;
   playlistFullDetailTriggerDelegated = true;
@@ -2376,7 +2404,7 @@ function bindPlaylistDetailTriggerDelegation() {
     if (!trigger) return;
     const player = document.getElementById("userPlaylistPlayer");
     if (!player || player.classList.contains("closed")) return;
-    if (!window.matchMedia || window.matchMedia("(max-width: 920px)").matches) {
+    if (isPlaylistFullDetailMobileEnabled()) {
       event.preventDefault();
       event.stopPropagation();
       openPlaylistFullDetail();
@@ -2451,13 +2479,7 @@ function setupUserPlaylistPlayer(options = {}) {
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡`;
   bindPlaylistFullDetailOnce();
   bindPlaylistDetailTriggerDelegation();
-  [cover, title].forEach((el) => {
-    if (!el) return;
-    el.classList.add("playlist-detail-trigger");
-    el.setAttribute("role", "button");
-    el.setAttribute("tabindex", "0");
-    el.setAttribute("aria-label", "플레이리스트 상세 화면 열기");
-  });
+  updatePlaylistDetailTriggerAccessibility();
   updatePlaylistFullDetailUi();
   renderPlaylistQueuePanel();
   if (listBtn && queuePanel) {
@@ -2506,12 +2528,14 @@ function setupUserPlaylistPlayer(options = {}) {
   });
 
   cover?.addEventListener("click", (event) => {
+    if (!isPlaylistFullDetailMobileEnabled()) return;
     event.preventDefault();
     event.stopPropagation();
     openPlaylistFullDetail();
   });
 
   title?.addEventListener("click", (event) => {
+    if (!isPlaylistFullDetailMobileEnabled()) return;
     event.preventDefault();
     event.stopPropagation();
     openPlaylistFullDetail();
@@ -2519,6 +2543,7 @@ function setupUserPlaylistPlayer(options = {}) {
 
   [cover, title].forEach((el) => {
     el?.addEventListener("keydown", (event) => {
+      if (!isPlaylistFullDetailMobileEnabled()) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         openPlaylistFullDetail();

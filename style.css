@@ -6670,8 +6670,17 @@ body {
 }
 
 /* v183: 모바일 플레이리스트 곡 상세 화면 - 앨범/제목 클릭 시 전체 플레이어 */
-.playlist-detail-trigger {
-  cursor: pointer !important;
+@media (max-width: 920px) {
+  .playlist-detail-trigger {
+    cursor: pointer !important;
+  }
+}
+
+@media (min-width: 921px) {
+  #userPlaylistPlayer #playlistPlayerCover,
+  #userPlaylistPlayer #playlistPlayerTitle {
+    cursor: default !important;
+  }
 }
 
 .playlist-full-detail {
