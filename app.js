@@ -311,6 +311,9 @@ let isAdmin = false;
 let checkedLoginId = "";
 let checkedLoginIdAvailable = false;
 let allContents = [];
+let contentsCacheLoaded = false;
+let contentsLoadingPromise = null;
+let savedTemplatesCacheLoaded = false;
 let pageCategories = {};
 
 const DEFAULT_SETTINGS = {
@@ -479,7 +482,10 @@ function showPage(pageId, fromHash = false) {
 
 
   if (["videos", "songs", "radios", "photos", "stories", "oneum"].includes(pageId)) {
-    loadContents();
+    // 이미 자료를 한 번 불러온 뒤에는 페이지 이동 때마다 Firestore를 다시 읽지 않고
+    // 현재 페이지 목록만 다시 그립니다. 페이지 전환 체감 속도를 빠르게 하기 위한 캐시 처리입니다.
+    if (contentsCacheLoaded) renderContentPage(pageId);
+    else loadContents();
   }
 
   if (typeof installBasicContentProtection === "function") {
@@ -840,7 +846,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
     if (editId) await updateDoc(doc(db, "contents", editId), payload);
     else await addDoc(collection(db, "contents"), { ...payload, createdBy: currentUser.uid, createdAt: serverTimestamp() });
     alert(editId ? "자료가 수정되었습니다." : "자료가 저장되었습니다.");
-    resetContentForm(); await loadContents();
+    resetContentForm(); await loadContents(true);
   } catch(e) { alert("자료 저장 오류: " + e.message); }
 });
 document.getElementById("resetContentBtn").addEventListener("click", resetContentForm);
@@ -863,7 +869,7 @@ document.getElementById("savePhotoBtn").addEventListener("click", async () => {
       year:document.getElementById("photoYear").value.trim(), source:document.getElementById("photoSource").value.trim(),
       description:document.getElementById("photoDescription").value.trim(), body:document.getElementById("photoDescription").value.trim(),
       isPublic:true, createdBy:currentUser.uid, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
-    alert("사진이 저장되었습니다."); document.getElementById("adminPhotoForm").reset(); populateSpecificSubCategorySelect("photos", "photoSubCategory", []); await loadContents();
+    alert("사진이 저장되었습니다."); document.getElementById("adminPhotoForm").reset(); populateSpecificSubCategorySelect("photos", "photoSubCategory", []); await loadContents(true);
   } catch(e) { alert("사진 저장 오류: " + e.message); }
 });
 
@@ -903,7 +909,7 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
     else await addDoc(collection(db, "contents"), { ...payload, createdBy:currentUser.uid, createdAt:serverTimestamp() });
     alert(editId ? "영상이 수정되었습니다." : "영상이 저장되었습니다.");
     resetVideoForm();
-    await loadContents();
+    await loadContents(true);
   } catch(e) { alert("영상 저장 오류: " + e.message); }
 });
 function resetVideoForm() {
@@ -1022,7 +1028,7 @@ async function saveOneumPost() {
 
     alert(editId ? "원음 글이 수정되었습니다." : "원음 글이 저장되었습니다.");
     resetOneumForm();
-    await loadContents();
+    await loadContents(true);
   } catch (error) {
     alert("원음 글 저장 오류: " + error.message);
   }
@@ -1075,7 +1081,7 @@ async function saveAudioLike(category, prefix) {
     const formId = category === "songs" ? "adminAudioForm" : "adminRadioForm";
     document.getElementById(formId)?.reset();
     populateSpecificSubCategorySelect(category, `${prefix}SubCategory`, []);
-    await loadContents();
+    await loadContents(true);
   } catch (error) {
     alert("미디어 저장 오류: " + error.message);
   }
@@ -1345,23 +1351,27 @@ document.getElementById("saveTemplateBtn").addEventListener("click", async () =>
   const page = document.getElementById("templatePage").value;
   const template = document.getElementById("templateType").value;
   await setDoc(doc(db, "templateSettings", page), { page, template, updatedAt: serverTimestamp() });
+  savedTemplatesCacheLoaded = false;
   applyTemplate(page, template); alert("템플릿이 저장되었습니다.");
 });
 
 async function quickTemplate(page, template) {
   applyTemplate(page, template);
   if (isAdmin) await setDoc(doc(db, "templateSettings", page), { page, template, updatedAt: serverTimestamp() });
+  savedTemplatesCacheLoaded = false;
 }
 function applyTemplate(page, template) {
   const section = document.getElementById(page); if (!section) return;
   section.classList.remove("template-card","template-gallery","template-list","template-timeline","template-wide");
   section.classList.add(`template-${template}`);
 }
-async function applySavedTemplates() {
+async function applySavedTemplates(force = false) {
+  if (savedTemplatesCacheLoaded && !force) return;
   for (const p of ["home","videos","songs","radios","photos","stories","about","oneum"]) {
     const snap = await getDoc(doc(db, "templateSettings", p));
     if (snap.exists()) applyTemplate(p, snap.data().template);
   }
+  savedTemplatesCacheLoaded = true;
 }
 
 
@@ -1460,6 +1470,25 @@ function renderAllContentSections() {
   renderAdminManageList();
   installBasicContentProtection();
   setupRadioMonochromePlayers();
+}
+
+function renderContentPage(page) {
+  if (!contentsCacheLoaded) {
+    loadContents();
+    return;
+  }
+
+  const items = prepareItemsForPage(page, filterBySelectedSubCategory(page, allContents.filter(i => i.category === page)));
+
+  if (page === "videos") renderVideos(items);
+  else if (page === "photos") renderPhotos(items);
+  else if (page === "songs") renderList("songList", items);
+  else if (page === "radios") renderList("radioList", items);
+  else if (page === "stories") renderList("storyList", items);
+  else if (page === "oneum") renderList("oneumList", items);
+
+  installBasicContentProtection();
+  setupRadioMonochromePlayers(document.getElementById(page) || document);
 }
 
 
@@ -2613,18 +2642,34 @@ function setupUserPlaylistPlayer(options = {}) {
 
 window.addEventListener("resize", positionFloatingAudioPlayers);
 
-async function loadContents() {
-  try {
-    const snap = await getDocs(query(collection(db, "contents"), orderBy("createdAt", "desc")));
-    allContents = [];
-    snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
+async function loadContents(force = false) {
+  if (contentsLoadingPromise && !force) return contentsLoadingPromise;
+
+  if (contentsCacheLoaded && !force) {
     renderAllContentSections();
-    setupDailyRecommendPlayer();
-    setupUserPlaylistPlayer({ forceOpen: false });
-    scheduleKoreanMidnightRefresh();
-    await applySavedTemplates();
-  applyHomeVoiceSettings(currentSettings);
-  } catch(e) { console.error(e); }
+    return;
+  }
+
+  contentsLoadingPromise = (async () => {
+    try {
+      const snap = await getDocs(query(collection(db, "contents"), orderBy("createdAt", "desc")));
+      allContents = [];
+      snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
+      contentsCacheLoaded = true;
+      renderAllContentSections();
+      setupDailyRecommendPlayer();
+      setupUserPlaylistPlayer({ forceOpen: false });
+      scheduleKoreanMidnightRefresh();
+      await applySavedTemplates();
+      applyHomeVoiceSettings(currentSettings);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      contentsLoadingPromise = null;
+    }
+  })();
+
+  return contentsLoadingPromise;
 }
 
 
@@ -2720,15 +2765,19 @@ function getItemCreatedDateText(item) {
 
 function resetPageAndReload(page) {
   if (pageState[page]) pageState[page] = 1;
-  loadContents();
+  renderContentPage(page);
 }
 
 function goContentPage(page, pageNumber) {
   pageState[page] = pageNumber;
-  loadContents();
+  renderContentPage(page);
 
   const target = document.getElementById(page);
-  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (target) target.scrollIntoView({ behavior: "auto", block: "start" });
+}
+
+function markContentsCacheDirty() {
+  contentsCacheLoaded = false;
 }
 
 function sortItemsForPage(page, items) {
@@ -3010,7 +3059,7 @@ function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
 
   return `
     <div class="radio-mono-player" data-radio-player data-player-id="${safeId}" data-audio-url="${safeUrl}" onclick="event.stopPropagation()">
-      <audio preload="auto" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
+      <audio preload="none" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
       <div class="radio-mono-controls">
         <button type="button" class="radio-mono-play" aria-label="재생 또는 일시정지">▶</button>
         <div class="radio-mono-time"><span class="radio-mono-current">0:00</span> <span class="radio-mono-divider">/</span> <span class="radio-mono-duration">--:--</span></div>
@@ -3043,7 +3092,7 @@ function setupRadioMonochromePlayers(root = document) {
     audio.volume = 0.8;
     audio.muted = false;
     audio.setAttribute('playsinline', '');
-    audio.preload = 'auto';
+    audio.preload = 'none';
     volume.value = '80';
 
     const sourceUrl = player.dataset.audioUrl || audio.getAttribute('src') || '';
@@ -3072,7 +3121,7 @@ function setupRadioMonochromePlayers(root = document) {
       return true;
     };
 
-    loadCandidate(0);
+    setPlayerMessage('--:--');
 
     player.addEventListener('click', (event) => event.stopPropagation());
     player.querySelectorAll('button, input').forEach((control) => {
@@ -3207,7 +3256,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const showCover = id === "songList";
   const thumb = showCover
     ? (img
-        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
+        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}" loading="lazy" decoding="async"></div>`
         : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`)
     : "";
   const topClass = showCover ? "audio-archive-top" : "audio-archive-top no-cover";
@@ -3246,7 +3295,7 @@ function renderTextArchiveCard(item, id, img, previewText) {
   const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 일기는 상세보기에서 볼 수 있습니다.";
 
   return `
-    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
+    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
     <div class="card-body text-archive-card-body">
       <h3>${escapeHtml(item.title)}</h3>
       ${renderCategoryBadges(item)}
@@ -3297,7 +3346,7 @@ function renderList(id, items) {
       div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
     } else {
       div.innerHTML = `
-        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
+        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
         <div>
           <h3>${escapeHtml(item.title)}</h3>
           ${renderCategoryBadges(item)}
@@ -3317,15 +3366,15 @@ function createCard(item) {
   let media = "";
   const videoMediaUrl = getVideoMediaUrl(item);
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
-  if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
+  if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe loading="lazy" src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
   else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) {
     const videoPlaybackUrl = normalizeMediaUrlForPlayback(videoMediaUrl, "video");
     const videoPosterUrl = item.thumbnailUrl || item.imageUrl || item.photoUrl || "";
     const fileType = /\.mov(\?|#|$)/i.test(videoMediaUrl) ? "video/quicktime" : "video/mp4";
-    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="auto" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"><source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}"></video>`;
+    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"><source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}"></video>`;
   }
-  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
-  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
+  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
+  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
@@ -3685,7 +3734,7 @@ async function saveBulkSongCover() {
     document.getElementById("bulkSongCoverFile").value = "";
     document.getElementById("bulkSongCoverUrl").value = "";
     if (status) status.textContent = `완료: '${categoryName}' 카테고리 SONG ${updatedCount}개 커버사진이 수정되었습니다.`;
-    await loadContents();
+    await loadContents(true);
     alert(`'${categoryName}' 카테고리 SONG ${updatedCount}개 커버사진을 수정했습니다.`);
   } catch (error) {
     if (status) status.textContent = "오류: " + error.message;
@@ -3770,7 +3819,7 @@ async function deleteContentItem(id) {
     renderAllContentSections();
 
     // Firestore 서버 상태를 다시 읽어 최종 동기화
-    await loadContents();
+    await loadContents(true);
 
     alert("삭제되었습니다. 목록에서도 제거했습니다.");
   } catch (error) {
