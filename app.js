@@ -3709,11 +3709,27 @@ async function saveBulkSongCover() {
 
   try {
     if (status) status.textContent = "커버사진을 준비하는 중입니다...";
-    const coverUrl = await getImageDataUrlOrDirectUrl(file, directUrl, 1000);
+
+    // 일괄 수정은 같은 커버를 여러 SONG 문서에 반복 저장합니다.
+    // 파일을 base64 데이터로 바꿔 Firestore에 직접 넣으면, 곡 수가 많을 때
+    // batch 요청 크기 10MiB 제한을 넘어서 "Request payload size exceeds the limit" 오류가 납니다.
+    // 그래서 파일 선택 시에는 이미지를 한 번만 GitHub/Worker에 업로드하고,
+    // 각 SONG 문서에는 짧은 이미지 URL만 저장합니다.
+    let coverUrl = "";
+    if (file) {
+      if (status) status.textContent = "커버사진 파일을 업로드하는 중입니다...";
+      coverUrl = await uploadFileToGitHubWorker(file, "images");
+    } else {
+      coverUrl = directUrl.trim();
+    }
+
     if (!coverUrl) return alert("커버사진을 불러오지 못했습니다.");
+    if (/^data:image\//i.test(coverUrl) && targetSongs.length > 8) {
+      throw new Error("카테고리 자료가 많을 때는 base64 이미지 데이터를 직접 저장할 수 없습니다. 이미지 파일을 선택해 업로드하거나, https로 시작하는 이미지 URL을 입력해 주세요.");
+    }
 
     const chunks = [];
-    for (let i = 0; i < targetSongs.length; i += 450) chunks.push(targetSongs.slice(i, i + 450));
+    for (let i = 0; i < targetSongs.length; i += 300) chunks.push(targetSongs.slice(i, i + 300));
 
     let updatedCount = 0;
     for (const chunk of chunks) {
