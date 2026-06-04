@@ -8113,7 +8113,7 @@ body.playlist-detail-open {
     width: max-content !important;
     max-width: none !important;
     white-space: nowrap !important;
-    gap: var(--playlist-title-marquee-gap, 88px) !important;
+    gap: var(--playlist-title-marquee-gap, 18px) !important;
     transform: translate3d(0,0,0) !important;
     will-change: transform !important;
   }
@@ -8137,7 +8137,7 @@ body.playlist-detail-open {
 
   #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-track,
   #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-track {
-    animation: playlistTitleMobileRightReentryV196 var(--playlist-title-marquee-duration, 11s) linear infinite !important;
+    animation: playlistTitleMobileTrueLoopV195 var(--playlist-title-marquee-duration, 11s) linear infinite !important;
   }
 }
 
@@ -8179,62 +8179,32 @@ body.playlist-detail-open {
   }
 }
 
-@keyframes playlistTitleMobileRightReentryV196 {
+@keyframes playlistTitleMobileTrueLoopV195 {
   from { transform: translate3d(0,0,0); }
   to { transform: translate3d(var(--playlist-title-marquee-distance, -110px),0,0); }
 }
 
 
-/* Mobile playlist title marquee v196: right-side re-entry after left exit */
-@media (max-width: 768px) {
-  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
-  #userPlaylistPlayer .daily-player-title {
-    overflow: hidden !important;
-    white-space: nowrap !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-track,
-  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-track {
-    display: inline-flex !important;
-    align-items: center !important;
-    width: max-content !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-    gap: var(--playlist-title-marquee-gap, 88px) !important;
-    transform: translate3d(0,0,0) !important;
-    will-change: transform !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-track,
-  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-track {
-    animation: playlistTitleMobileRightReentryV196 var(--playlist-title-marquee-duration, 12s) linear infinite !important;
-  }
-}
-
-@keyframes playlistTitleMobileRightReentryV196 {
-  0% { transform: translate3d(0,0,0); }
-  100% { transform: translate3d(var(--playlist-title-marquee-distance, -180px),0,0); }
-}
-
-
-/* Mobile playlist title marquee v197: force 6+ chars and true right re-entry */
+/* MOBILE PLAYLIST TITLE MARQUEE FORCE v196
+   요청 반영: 6글자 이상 제목은 JS에서 무조건 is-marquee 처리.
+   이 CSS는 마지막에 배치해 이전 v193~v195 규칙을 확실히 덮어쓴다. */
 @media (max-width: 768px) {
   #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
   #userPlaylistPlayer .daily-player-title {
     overflow: hidden !important;
     white-space: nowrap !important;
     text-overflow: clip !important;
+    isolation: isolate !important;
   }
 
   #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-track,
   #userPlaylistPlayer .daily-player-title .playlist-title-marquee-track {
     display: inline-flex !important;
     align-items: center !important;
-    flex-wrap: nowrap !important;
     width: max-content !important;
     max-width: none !important;
     white-space: nowrap !important;
-    gap: var(--playlist-title-marquee-gap, 90px) !important;
+    gap: var(--playlist-title-marquee-gap, 26px) !important;
     transform: translate3d(0,0,0) !important;
     will-change: transform !important;
   }
@@ -8247,7 +8217,6 @@ body.playlist-detail-open {
     flex: 0 0 auto !important;
     width: max-content !important;
     max-width: none !important;
-    min-width: max-content !important;
     white-space: nowrap !important;
   }
 
@@ -8259,14 +8228,14 @@ body.playlist-detail-open {
 
   #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-track,
   #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-track {
-    animation-name: playlistTitleMobileContinuousV197 !important;
-    animation-duration: var(--playlist-title-marquee-duration, 9s) !important;
+    animation-name: playlistTitleMobileTrueLoopV196 !important;
+    animation-duration: var(--playlist-title-marquee-duration, 10s) !important;
     animation-timing-function: linear !important;
     animation-iteration-count: infinite !important;
   }
 }
 
-@keyframes playlistTitleMobileContinuousV197 {
-  0% { transform: translate3d(0,0,0); }
-  100% { transform: translate3d(var(--playlist-title-marquee-distance, -170px),0,0); }
+@keyframes playlistTitleMobileTrueLoopV196 {
+  from { transform: translate3d(0,0,0); }
+  to { transform: translate3d(var(--playlist-title-marquee-distance, -120px),0,0); }
 }

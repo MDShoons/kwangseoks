@@ -2450,29 +2450,23 @@ function refreshPlaylistPlayerTitleMarquee() {
     const boxWidth = Math.ceil(titleEl.clientWidth || titleEl.getBoundingClientRect().width || 0);
     // 일부 모바일 브라우저에서는 초기 계산 때 scrollWidth가 작게 잡히는 경우가 있어
     // 실제 넘침 + 글자 수 기준을 함께 사용한다.
-    const normalizedTitleLength = fullText.replace(/\s+/g, "").length;
-    // 요청사항: 모바일 하단 플레이리스트 제목은 6글자 이상이면 무조건 흐르게 한다.
-    // 일부 브라우저에서 scrollWidth가 실제보다 작게 잡혀도 길이 기준으로 반드시 작동하도록 한다.
-    const forceMarqueeByLength = normalizedTitleLength >= 6;
-    const hasOverflow = textWidth > boxWidth + 4 || forceMarqueeByLength;
+    const compactTitleLength = fullText.replace(/\s+/g, "").length;
+    // 요청 반영: 모바일 하단 플레이리스트 제목은 6글자 이상이면
+    // 실제 overflow 계산과 무관하게 무조건 흐르도록 처리한다.
+    const likelyLongTitle = compactTitleLength >= 6;
+    const hasOverflow = textWidth > boxWidth + 4 || likelyLongTitle;
 
     titleEl.classList.toggle("is-marquee", isMobile && hasOverflow);
     if (isMobile && hasOverflow) {
-      // 연속 전광판 방식: 원본 제목이 왼쪽으로 완전히 사라질 때,
-      // 복제 제목이 오른쪽 바깥에서 들어오도록 gap을 제목 표시칸 폭만큼 확보한다.
-      const safeBoxWidth = Math.max(boxWidth, 70);
-      const safeTextWidth = Math.max(textWidth, Math.ceil(normalizedTitleLength * 16), 72);
-      const gap = safeBoxWidth;
-      const moveDistance = safeTextWidth + gap;
-      const duration = Math.min(18, Math.max(7, moveDistance / 26));
+      const gap = 26;
+      const moveDistance = Math.max(72, textWidth + gap);
+      const duration = Math.min(18, Math.max(7, moveDistance / 24));
       titleEl.style.setProperty("--playlist-title-marquee-distance", `-${moveDistance}px`);
       titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
-      titleEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
       if (trackEl) trackEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
     } else {
       titleEl.style.removeProperty("--playlist-title-marquee-distance");
       titleEl.style.removeProperty("--playlist-title-marquee-duration");
-      titleEl.style.removeProperty("--playlist-title-marquee-gap");
     }
   };
 
