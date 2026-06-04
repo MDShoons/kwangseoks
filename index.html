@@ -516,6 +516,7 @@
         <button onclick="showAdminForm('manage')">자료 수정/삭제</button>
         <button onclick="showAdminForm('template')">템플릿/사이트 수정</button>
         <button onclick="showAdminForm('category')">페이지별 카테고리 만들기</button>
+        <button onclick="showAdminForm('bulkSongCover')">SONG 커버사진 일괄 수정</button>
       </div>
 
       <form id="adminContentForm" class="admin-form">
@@ -637,17 +638,6 @@
       <section id="adminManageForm" class="admin-form hidden">
         <h2>자료 수정/삭제</h2>
         <div class="toolbar"><select id="manageCategoryFilter" onchange="renderAdminManageList()"><option value="">전체</option><option value="videos">Videos</option><option value="songs">Songs</option><option value="radios">Radios</option><option value="photos">Photos</option><option value="stories">Stories</option><option value="about">About Seok</option><option value="oneum">Oneum</option></select><button type="button" onclick="loadContents()">새로고침</button></div>
-        <div class="bulk-song-cover-panel">
-          <h3>SONG 카테고리 커버사진 일괄 수정</h3>
-          <p class="helper-text">선택한 Songs 카테고리에 들어있는 노래들의 커버사진만 한 번에 같은 이미지로 바꿉니다. 제목, 음원 URL, 설명, 연도, 출처는 수정하지 않습니다.</p>
-          <label>수정할 SONG 카테고리</label>
-          <select id="bulkSongCoverCategory"><option value="">SONG 카테고리 선택</option></select>
-          <label>새 커버사진 파일</label>
-          <input id="bulkSongCoverFile" type="file" accept="image/*" />
-          <input id="bulkSongCoverUrl" type="url" placeholder="또는 이미지 URL 입력" />
-          <button type="button" onclick="saveBulkSongCover()">선택 카테고리 SONG 커버사진 일괄 수정</button>
-          <p id="bulkSongCoverStatus" class="helper-text"></p>
-        </div>
         <div id="adminContentList" class="admin-list"></div>
       </section>
 
@@ -714,6 +704,21 @@
         <h3>현재 카테고리</h3>
         <div id="categoryList" class="category-list"></div>
       </section>
+
+      <section id="adminBulkSongCoverForm" class="admin-form hidden">
+        <h2>SONG 커버사진 일괄 수정</h2>
+        <p class="helper-text">페이지별 카테고리 만들기 옆 메뉴로 분리했습니다. 선택한 Songs 카테고리에 들어있는 노래들의 커버사진만 한 번에 같은 이미지로 바꿉니다.</p>
+        <div class="bulk-song-cover-panel">
+          <label>수정할 SONG 카테고리</label>
+          <select id="bulkSongCoverCategory"><option value="">SONG 카테고리 선택</option></select>
+          <label>새 커버사진 파일</label>
+          <input id="bulkSongCoverFile" type="file" accept="image/*" />
+          <input id="bulkSongCoverUrl" type="url" placeholder="또는 이미지 URL 입력" />
+          <p class="helper-text">제목, 음원 URL, 설명, 연도, 출처, 카테고리는 그대로 두고 커버사진만 수정합니다.</p>
+          <button type="button" onclick="saveBulkSongCover()">선택 카테고리 SONG 커버사진 일괄 수정</button>
+          <p id="bulkSongCoverStatus" class="helper-text"></p>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -732,8 +737,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v186-bulk-song-cover-update</div>
+<div class="version-marker">v187-bulk-song-cover-tab-next-category</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=bulk-song-cover-update-v1"></script>
+  <script type="module" src="app.js?v=bulk-song-cover-tab-next-category-v1"></script>
 </body>
 </html>

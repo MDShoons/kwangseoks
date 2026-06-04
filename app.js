@@ -489,8 +489,8 @@ installScreenProtection();
 }
 
 function showAdminForm(type) {
-  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
-  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm"};
+  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm","adminBulkSongCoverForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
+  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm", bulkSongCover:"adminBulkSongCoverForm"};
   document.getElementById(map[type])?.classList.remove("hidden");
   if (type === "content") populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos", []);
   if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory", []);
@@ -500,6 +500,7 @@ function showAdminForm(type) {
   if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory", []);
   if (type === "template") { fillSettingsFormFromCurrent(); bindDesignPreviewEvents(); }
   if (type === "category") renderCategoryList();
+  if (type === "bulkSongCover") populateBulkSongCoverCategorySelect();
   if (type === "manage") renderAdminManageList();
   hardenMediaDownloadControls();
 }
