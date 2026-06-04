@@ -2450,7 +2450,7 @@ function refreshPlaylistPlayerTitleMarquee() {
     const boxWidth = Math.ceil(titleEl.clientWidth || titleEl.getBoundingClientRect().width || 0);
     // 일부 모바일 브라우저에서는 초기 계산 때 scrollWidth가 작게 잡히는 경우가 있어
     // 실제 넘침 + 글자 수 기준을 함께 사용한다.
-    const likelyLongTitle = fullText.replace(/\s+/g, "").length >= 9;
+    const likelyLongTitle = fullText.replace(/\s+/g, "").length >= 6;
     const hasOverflow = textWidth > boxWidth + 4 || likelyLongTitle;
 
     titleEl.classList.toggle("is-marquee", isMobile && hasOverflow);
@@ -2458,9 +2458,9 @@ function refreshPlaylistPlayerTitleMarquee() {
       // 제목이 왼쪽으로 완전히 사라진 뒤, 복제 제목이 오른쪽 바깥에서 다시 들어오도록
       // gap을 고정값이 아니라 제목 표시 박스 폭만큼 둔다.
       // 이전 방식은 gap이 너무 짧아서 두 번째 제목이 안쪽에서 갑자기 이어져 보였다.
-      const gap = Math.max(boxWidth, 56);
+      const gap = Math.max(boxWidth, 72);
       const moveDistance = Math.max(96, textWidth + gap);
-      const duration = Math.min(22, Math.max(9, moveDistance / 24));
+      const duration = Math.min(24, Math.max(10, moveDistance / 22));
       titleEl.style.setProperty("--playlist-title-marquee-distance", `-${moveDistance}px`);
       titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
       titleEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);

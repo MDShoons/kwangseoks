@@ -8215,3 +8215,58 @@ body.playlist-detail-open {
   0% { transform: translate3d(0,0,0); }
   100% { transform: translate3d(var(--playlist-title-marquee-distance, -180px),0,0); }
 }
+
+
+/* Mobile playlist title marquee v197: force marquee for 6+ characters, right re-entry */
+@media (max-width: 920px) {
+  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
+  #userPlaylistPlayer .daily-player-title {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-track,
+  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-track {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    gap: var(--playlist-title-marquee-gap, 96px) !important;
+    transform: translate3d(0,0,0) !important;
+    will-change: transform !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text,
+  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-copy,
+  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-text,
+  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-copy {
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    max-width: none !important;
+    min-width: max-content !important;
+    white-space: nowrap !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-text,
+  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-text {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-track,
+  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-track {
+    animation-name: playlistTitleMobileRightReentryV197 !important;
+    animation-duration: var(--playlist-title-marquee-duration, 12s) !important;
+    animation-timing-function: linear !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+@keyframes playlistTitleMobileRightReentryV197 {
+  0% { transform: translate3d(0,0,0); }
+  100% { transform: translate3d(var(--playlist-title-marquee-distance, -180px),0,0); }
+}
