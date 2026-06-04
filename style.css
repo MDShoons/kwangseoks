@@ -8217,8 +8217,8 @@ body.playlist-detail-open {
 }
 
 
-/* Mobile playlist title marquee v197: force marquee for 6+ characters, right re-entry */
-@media (max-width: 920px) {
+/* Mobile playlist title marquee v197: force 6+ chars and true right re-entry */
+@media (max-width: 768px) {
   #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
   #userPlaylistPlayer .daily-player-title {
     overflow: hidden !important;
@@ -8234,7 +8234,7 @@ body.playlist-detail-open {
     width: max-content !important;
     max-width: none !important;
     white-space: nowrap !important;
-    gap: var(--playlist-title-marquee-gap, 96px) !important;
+    gap: var(--playlist-title-marquee-gap, 90px) !important;
     transform: translate3d(0,0,0) !important;
     will-change: transform !important;
   }
@@ -8259,14 +8259,14 @@ body.playlist-detail-open {
 
   #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-track,
   #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-track {
-    animation-name: playlistTitleMobileRightReentryV197 !important;
-    animation-duration: var(--playlist-title-marquee-duration, 12s) !important;
+    animation-name: playlistTitleMobileContinuousV197 !important;
+    animation-duration: var(--playlist-title-marquee-duration, 9s) !important;
     animation-timing-function: linear !important;
     animation-iteration-count: infinite !important;
   }
 }
 
-@keyframes playlistTitleMobileRightReentryV197 {
+@keyframes playlistTitleMobileContinuousV197 {
   0% { transform: translate3d(0,0,0); }
-  100% { transform: translate3d(var(--playlist-title-marquee-distance, -180px),0,0); }
+  100% { transform: translate3d(var(--playlist-title-marquee-distance, -170px),0,0); }
 }
