@@ -7601,3 +7601,185 @@ body.playlist-detail-open {
   66% { transform: translate3d(var(--playlist-title-marquee-distance, -140px),0,0); }
   100% { transform: translate3d(0,0,0); }
 }
+
+
+/* v193: 모바일 하단 플레이리스트 실제 겹침 수정
+   - 제목 영역은 왼쪽에 고정하고 버튼 묶음은 오른쪽으로 강제 이동
+   - 긴 제목은 되돌아오는 방식이 아니라 오른쪽 복사본이 이어서 들어오는 연속 마키 */
+@media (max-width: 920px) {
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 54px minmax(0, 1fr) !important;
+    grid-template-rows: 24px 20px 16px !important;
+    grid-template-areas:
+      "cover title"
+      "cover sub"
+      "progress progress" !important;
+    column-gap: 8px !important;
+    padding: 10px 210px calc(11px + env(safe-area-inset-bottom, 0px)) 12px !important;
+    min-height: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+  #userPlaylistPlayer .daily-player-controls {
+    position: absolute !important;
+    right: 58px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 126px !important;
+    min-width: 126px !important;
+    max-width: 126px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 5px !important;
+    z-index: 20 !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerPrevBtn,
+  #userPlaylistPlayer #playlistPlayerNextBtn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    flex: 0 0 32px !important;
+    font-size: 19px !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerPlayBtn,
+  #userPlaylistPlayer .daily-play-btn {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    flex: 0 0 52px !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    z-index: 21 !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerListBtn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
+  #userPlaylistPlayer .daily-player-title {
+    grid-area: title !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    position: relative !important;
+    z-index: 3 !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-track,
+  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-track {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: max-content !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    gap: var(--playlist-title-marquee-gap, 56px) !important;
+    transform: translate3d(0,0,0);
+    will-change: transform !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text,
+  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-copy,
+  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-text,
+  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-copy {
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    padding-right: 0 !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-text,
+  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-text {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-track,
+  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-track {
+    animation: playlistTitleMobileContinuousMarqueeV193 var(--playlist-title-marquee-duration, 12s) linear infinite !important;
+  }
+}
+
+@media (max-width: 390px) {
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    column-gap: 7px !important;
+    padding-left: 10px !important;
+    padding-right: 188px !important;
+  }
+
+  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
+  #userPlaylistPlayer .daily-player-cover {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+  }
+
+  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+  #userPlaylistPlayer .daily-player-controls {
+    right: 52px !important;
+    width: 118px !important;
+    min-width: 118px !important;
+    max-width: 118px !important;
+    gap: 4px !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerPrevBtn,
+  #userPlaylistPlayer #playlistPlayerNextBtn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    flex-basis: 30px !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerPlayBtn,
+  #userPlaylistPlayer .daily-play-btn {
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    flex-basis: 50px !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions {
+    right: 6px !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerListBtn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+}
+
+@keyframes playlistTitleMobileContinuousMarqueeV193 {
+  0% { transform: translate3d(0,0,0); }
+  100% { transform: translate3d(var(--playlist-title-marquee-distance, -160px),0,0); }
+}

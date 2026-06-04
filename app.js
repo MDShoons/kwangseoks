@@ -2431,7 +2431,8 @@ function setPlaylistPlayerTitleText(titleEl, text) {
   const safeText = String(text || "").trim() || "선택한 곡이 없습니다";
   titleEl.dataset.fullTitle = safeText;
   titleEl.classList.remove("is-marquee");
-  titleEl.innerHTML = `<span class="playlist-title-marquee-text">${escapeHtml(safeText)}</span>`;
+  const safeHtml = escapeHtml(safeText);
+  titleEl.innerHTML = `<span class="playlist-title-marquee-track"><span class="playlist-title-marquee-text">${safeHtml}</span><span class="playlist-title-marquee-copy" aria-hidden="true">${safeHtml}</span></span>`;
   refreshPlaylistPlayerTitleMarquee();
 }
 
@@ -2439,6 +2440,7 @@ function refreshPlaylistPlayerTitleMarquee() {
   const titleEl = document.getElementById("playlistPlayerTitle");
   if (!titleEl) return;
   const textEl = titleEl.querySelector(".playlist-title-marquee-text");
+  const trackEl = titleEl.querySelector(".playlist-title-marquee-track");
   if (!textEl) return;
 
   const apply = () => {
@@ -2453,12 +2455,12 @@ function refreshPlaylistPlayerTitleMarquee() {
 
     titleEl.classList.toggle("is-marquee", isMobile && hasOverflow);
     if (isMobile && hasOverflow) {
-      const measuredOverflow = Math.max(32, textWidth - boxWidth + 36);
-      const distanceByText = Math.min(220, Math.max(72, fullText.length * 7));
-      const moveDistance = Math.max(measuredOverflow, distanceByText);
-      const duration = Math.min(18, Math.max(8, moveDistance / 18 + 5));
+      const gap = 56;
+      const moveDistance = Math.max(96, textWidth + gap);
+      const duration = Math.min(22, Math.max(9, moveDistance / 24));
       titleEl.style.setProperty("--playlist-title-marquee-distance", `-${moveDistance}px`);
       titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
+      if (trackEl) trackEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
     } else {
       titleEl.style.removeProperty("--playlist-title-marquee-distance");
       titleEl.style.removeProperty("--playlist-title-marquee-duration");
