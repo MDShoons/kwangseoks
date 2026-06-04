@@ -2405,6 +2405,7 @@ function updatePlaylistDetailTriggerAccessibility() {
 
 
 window.addEventListener("resize", updatePlaylistDetailTriggerAccessibility);
+window.addEventListener("resize", refreshPlaylistPlayerTitleMarquee);
 
 function bindPlaylistDetailTriggerDelegation() {
   if (playlistFullDetailTriggerDelegated) return;
@@ -2422,6 +2423,37 @@ function bindPlaylistDetailTriggerDelegation() {
       openPlaylistFullDetail();
     }
   }, true);
+}
+
+
+function setPlaylistPlayerTitleText(titleEl, text) {
+  if (!titleEl) return;
+  const safeText = String(text || "").trim() || "선택한 곡이 없습니다";
+  titleEl.classList.remove("is-marquee");
+  titleEl.innerHTML = `<span class="playlist-title-marquee-text">${escapeHtml(safeText)}</span>`;
+  const textEl = titleEl.querySelector(".playlist-title-marquee-text");
+  if (!textEl) return;
+
+  requestAnimationFrame(() => {
+    const isMobile = !window.matchMedia || window.matchMedia("(max-width: 768px)").matches;
+    const hasOverflow = textEl.scrollWidth > titleEl.clientWidth + 8;
+    titleEl.classList.toggle("is-marquee", isMobile && hasOverflow);
+    if (isMobile && hasOverflow) {
+      const overflowAmount = Math.max(24, textEl.scrollWidth - titleEl.clientWidth);
+      const duration = Math.min(18, Math.max(7, overflowAmount / 16 + 5));
+      titleEl.style.setProperty("--playlist-title-marquee-distance", `-${overflowAmount}px`);
+      titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
+    } else {
+      titleEl.style.removeProperty("--playlist-title-marquee-distance");
+      titleEl.style.removeProperty("--playlist-title-marquee-duration");
+    }
+  });
+}
+
+function refreshPlaylistPlayerTitleMarquee() {
+  const titleEl = document.getElementById("playlistPlayerTitle");
+  if (!titleEl) return;
+  setPlaylistPlayerTitleText(titleEl, titleEl.textContent || "");
 }
 
 function setupUserPlaylistPlayer(options = {}) {
@@ -2458,7 +2490,7 @@ function setupUserPlaylistPlayer(options = {}) {
     if (listBtn) listBtn.setAttribute("aria-expanded", "false");
     setPlayerCoverImage(cover, null);
     positionFloatingAudioPlayers();
-    title.textContent = "선택한 곡이 없습니다";
+    setPlaylistPlayerTitleText(title, "선택한 곡이 없습니다");
     sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
     resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
     renderPlaylistQueuePanel();
@@ -2489,7 +2521,7 @@ function setupUserPlaylistPlayer(options = {}) {
 
   setPlayerCoverImage(cover, selected);
   positionFloatingAudioPlayers();
-  title.textContent = selected.title || "제목 없는 곡";
+  setPlaylistPlayerTitleText(title, selected.title || "제목 없는 곡");
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡`;
   bindPlaylistFullDetailOnce();
   bindPlaylistDetailTriggerDelegation();

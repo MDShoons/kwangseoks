@@ -7304,3 +7304,42 @@ body.playlist-detail-open {
     min-width: 38px !important;
   }
 }
+
+/* v181: 모바일 플레이리스트 긴 제목 자동 흐름(마키) 처리 */
+@media (max-width: 768px) {
+  #userPlaylistPlayer .daily-player-title {
+    position: relative !important;
+    display: block !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-text {
+    display: inline-block !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    will-change: transform !important;
+  }
+
+  #userPlaylistPlayer .daily-player-title.is-marquee {
+    text-overflow: clip !important;
+  }
+
+  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-text {
+    padding-right: 28px !important;
+    animation: playlistTitleMobileMarquee var(--playlist-title-marquee-duration, 9s) ease-in-out infinite !important;
+  }
+}
+
+@keyframes playlistTitleMobileMarquee {
+  0%, 14% {
+    transform: translateX(0);
+  }
+  68%, 82% {
+    transform: translateX(var(--playlist-title-marquee-distance, -80px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
