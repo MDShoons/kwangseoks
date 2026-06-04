@@ -2455,11 +2455,15 @@ function refreshPlaylistPlayerTitleMarquee() {
 
     titleEl.classList.toggle("is-marquee", isMobile && hasOverflow);
     if (isMobile && hasOverflow) {
-      const gap = 56;
+      // 제목이 왼쪽으로 완전히 사라진 뒤, 복제 제목이 오른쪽 바깥에서 다시 들어오도록
+      // gap을 고정값이 아니라 제목 표시 박스 폭만큼 둔다.
+      // 이전 방식은 gap이 너무 짧아서 두 번째 제목이 안쪽에서 갑자기 이어져 보였다.
+      const gap = Math.max(boxWidth, 56);
       const moveDistance = Math.max(96, textWidth + gap);
       const duration = Math.min(22, Math.max(9, moveDistance / 24));
       titleEl.style.setProperty("--playlist-title-marquee-distance", `-${moveDistance}px`);
       titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
+      titleEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
       if (trackEl) trackEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
     } else {
       titleEl.style.removeProperty("--playlist-title-marquee-distance");
