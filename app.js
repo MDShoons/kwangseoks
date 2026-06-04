@@ -295,7 +295,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
-  doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
+  doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const APP_VERSION = "v185-no-telecom";
@@ -373,6 +373,7 @@ window.renderAdminManageList = renderAdminManageList;
 window.editContent = editContent;
 window.deleteContentItem = deleteContentItem;
 window.deleteCustomCategory = deleteCustomCategory;
+window.saveBulkSongCover = saveBulkSongCover;
 window.openContentDetail = openContentDetail;
 window.resetDetailPhotoZoom = resetDetailPhotoZoom;
 window.zoomDetailPhoto = zoomDetailPhoto;
@@ -700,6 +701,7 @@ async function loadPageCategories() {
     populateSpecificSubCategorySelect("videos","videoSubCategory");
     populateSpecificSubCategorySelect("photos","photoSubCategory");
     populateSpecificSubCategorySelect("songs","audioSubCategory");
+    populateBulkSongCoverCategorySelect();
     populateSpecificSubCategorySelect("radios","radioSubCategory");
     populateSpecificSubCategorySelect("oneum","oneumSubCategory");
     renderCategoryList();
@@ -3622,6 +3624,73 @@ document.addEventListener("keydown", e => {
   if (coverZoomModal && !coverZoomModal.classList.contains("hidden")) return;
   closeContentDetail();
 });
+
+
+function populateBulkSongCoverCategorySelect() {
+  const select = document.getElementById("bulkSongCoverCategory");
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = '<option value="">SONG 카테고리 선택</option>';
+  const cats = pageCategories.songs || [];
+  cats.forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
+  if (!cats.length) {
+    const option = new Option("먼저 Songs 카테고리를 만들어 주세요", "");
+    option.disabled = true;
+    select.appendChild(option);
+  }
+  select.value = current;
+}
+
+async function saveBulkSongCover() {
+  if (!isAdmin) return alert("관리자만 수정할 수 있습니다.");
+
+  const categoryName = String(document.getElementById("bulkSongCoverCategory")?.value || "").trim();
+  const file = document.getElementById("bulkSongCoverFile")?.files?.[0] || null;
+  const directUrl = String(document.getElementById("bulkSongCoverUrl")?.value || "").trim();
+  const status = document.getElementById("bulkSongCoverStatus");
+
+  if (!categoryName) return alert("커버사진을 바꿀 SONG 카테고리를 선택하세요.");
+  if (!file && !directUrl) return alert("새 커버사진 파일을 선택하거나 이미지 URL을 입력하세요.");
+
+  const targetSongs = allContents.filter(item => item.category === "songs" && getItemSubCategories(item).includes(categoryName));
+  if (!targetSongs.length) return alert(`선택한 카테고리(${categoryName})에 등록된 SONG 자료가 없습니다.`);
+
+  if (!confirm(`'${categoryName}' 카테고리의 SONG ${targetSongs.length}개 자료 커버사진만 같은 이미지로 바꿀까요?\n제목, 음원, 설명, 연도, 출처는 바뀌지 않습니다.`)) return;
+
+  try {
+    if (status) status.textContent = "커버사진을 준비하는 중입니다...";
+    const coverUrl = await getImageDataUrlOrDirectUrl(file, directUrl, 1000);
+    if (!coverUrl) return alert("커버사진을 불러오지 못했습니다.");
+
+    const chunks = [];
+    for (let i = 0; i < targetSongs.length; i += 450) chunks.push(targetSongs.slice(i, i + 450));
+
+    let updatedCount = 0;
+    for (const chunk of chunks) {
+      const batch = writeBatch(db);
+      chunk.forEach(item => {
+        batch.update(doc(db, "contents", item.id), {
+          thumbnailUrl: coverUrl,
+          imageUrl: coverUrl,
+          coverUrl: coverUrl,
+          updatedAt: serverTimestamp()
+        });
+      });
+      await batch.commit();
+      updatedCount += chunk.length;
+      if (status) status.textContent = `${updatedCount}/${targetSongs.length}개 SONG 커버사진 수정 중...`;
+    }
+
+    document.getElementById("bulkSongCoverFile").value = "";
+    document.getElementById("bulkSongCoverUrl").value = "";
+    if (status) status.textContent = `완료: '${categoryName}' 카테고리 SONG ${updatedCount}개 커버사진이 수정되었습니다.`;
+    await loadContents();
+    alert(`'${categoryName}' 카테고리 SONG ${updatedCount}개 커버사진을 수정했습니다.`);
+  } catch (error) {
+    if (status) status.textContent = "오류: " + error.message;
+    alert("SONG 커버사진 일괄 수정 오류: " + error.message);
+  }
+}
 
 function renderAdminManageList() {
   const box = document.getElementById("adminContentList"); if (!box || !isAdmin) return;

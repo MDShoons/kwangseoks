@@ -7177,3 +7177,24 @@ body.playlist-detail-open {
 .category-badge + .category-badge {
   margin-left: 4px;
 }
+
+
+.bulk-song-cover-panel {
+  margin: 14px 0 18px;
+  padding: 14px;
+  border: 1px solid rgba(90, 66, 42, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 250, 242, 0.82);
+}
+.bulk-song-cover-panel h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.bulk-song-cover-panel select,
+.bulk-song-cover-panel input {
+  width: 100%;
+  margin-bottom: 8px;
+}
+.bulk-song-cover-panel button {
+  width: 100%;
+}
