@@ -2429,31 +2429,47 @@ function bindPlaylistDetailTriggerDelegation() {
 function setPlaylistPlayerTitleText(titleEl, text) {
   if (!titleEl) return;
   const safeText = String(text || "").trim() || "선택한 곡이 없습니다";
+  titleEl.dataset.fullTitle = safeText;
   titleEl.classList.remove("is-marquee");
   titleEl.innerHTML = `<span class="playlist-title-marquee-text">${escapeHtml(safeText)}</span>`;
-  const textEl = titleEl.querySelector(".playlist-title-marquee-text");
-  if (!textEl) return;
-
-  requestAnimationFrame(() => {
-    const isMobile = !window.matchMedia || window.matchMedia("(max-width: 768px)").matches;
-    const hasOverflow = textEl.scrollWidth > titleEl.clientWidth + 8;
-    titleEl.classList.toggle("is-marquee", isMobile && hasOverflow);
-    if (isMobile && hasOverflow) {
-      const overflowAmount = Math.max(24, textEl.scrollWidth - titleEl.clientWidth);
-      const duration = Math.min(18, Math.max(7, overflowAmount / 16 + 5));
-      titleEl.style.setProperty("--playlist-title-marquee-distance", `-${overflowAmount}px`);
-      titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
-    } else {
-      titleEl.style.removeProperty("--playlist-title-marquee-distance");
-      titleEl.style.removeProperty("--playlist-title-marquee-duration");
-    }
-  });
+  refreshPlaylistPlayerTitleMarquee();
 }
 
 function refreshPlaylistPlayerTitleMarquee() {
   const titleEl = document.getElementById("playlistPlayerTitle");
   if (!titleEl) return;
-  setPlaylistPlayerTitleText(titleEl, titleEl.textContent || "");
+  const textEl = titleEl.querySelector(".playlist-title-marquee-text");
+  if (!textEl) return;
+
+  const apply = () => {
+    const isMobile = !window.matchMedia || window.matchMedia("(max-width: 768px)").matches;
+    const fullText = titleEl.dataset.fullTitle || textEl.textContent || "";
+    const textWidth = Math.ceil(textEl.scrollWidth || 0);
+    const boxWidth = Math.ceil(titleEl.clientWidth || titleEl.getBoundingClientRect().width || 0);
+    // 일부 모바일 브라우저에서는 초기 계산 때 scrollWidth가 작게 잡히는 경우가 있어
+    // 실제 넘침 + 글자 수 기준을 함께 사용한다.
+    const likelyLongTitle = fullText.replace(/\s+/g, "").length >= 9;
+    const hasOverflow = textWidth > boxWidth + 4 || likelyLongTitle;
+
+    titleEl.classList.toggle("is-marquee", isMobile && hasOverflow);
+    if (isMobile && hasOverflow) {
+      const measuredOverflow = Math.max(32, textWidth - boxWidth + 36);
+      const distanceByText = Math.min(220, Math.max(72, fullText.length * 7));
+      const moveDistance = Math.max(measuredOverflow, distanceByText);
+      const duration = Math.min(18, Math.max(8, moveDistance / 18 + 5));
+      titleEl.style.setProperty("--playlist-title-marquee-distance", `-${moveDistance}px`);
+      titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
+    } else {
+      titleEl.style.removeProperty("--playlist-title-marquee-distance");
+      titleEl.style.removeProperty("--playlist-title-marquee-duration");
+    }
+  };
+
+  requestAnimationFrame(() => {
+    apply();
+    setTimeout(apply, 250);
+    setTimeout(apply, 900);
+  });
 }
 
 function setupUserPlaylistPlayer(options = {}) {
