@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=kks-identity-redesign-v300" />
+  <link rel="stylesheet" href="style.css?v=kks-90s-archive-redesign-v202" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -203,15 +203,15 @@
     <button type="button" id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="모바일 메뉴 열기" aria-expanded="false">☰ 메뉴</button>
 
     <nav id="siteNav">
-      <button data-page-fallback="home" onclick="goPage('home')">광석이네집</button>
-      <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 안내</button>
-      <button data-page-fallback="videos" onclick="goPage('videos')">Videos</button>
-      <button data-page-fallback="songs" onclick="goPage('songs')">Songs</button>
-      <button data-page-fallback="radios" onclick="goPage('radios')">Radios</button>
-      <button data-page-fallback="photos" onclick="goPage('photos')">Photos</button>
-      <button data-page-fallback="stories" onclick="goPage('stories')">Stories</button>
-      <button data-page-fallback="about" onclick="goPage('about')">About Seok</button>
-      <button data-page-fallback="oneum" onclick="goPage('oneum')">Oneum</button>
+      <button data-page-fallback="home" onclick="goPage('home')">Home</button>
+      <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">Archive Guide</button>
+      <button data-page-fallback="videos" onclick="goPage('videos')">영상 자료</button>
+      <button data-page-fallback="songs" onclick="goPage('songs')">노래 자료</button>
+      <button data-page-fallback="radios" onclick="goPage('radios')">라디오 기록</button>
+      <button data-page-fallback="photos" onclick="goPage('photos')">사진첩</button>
+      <button data-page-fallback="stories" onclick="goPage('stories')">이야기</button>
+      <button data-page-fallback="about" onclick="goPage('about')">김광석</button>
+      <button data-page-fallback="oneum" onclick="goPage('oneum')">둥근소리</button>
     </nav>
 
     <div class="auth-area">
@@ -226,60 +226,26 @@
   <main>
     <section id="home" class="page active">
       <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
-      <section class="hero hero-1990-stage kks-identity-hero" id="homeHero">
-        <div class="kks-hero-poster" aria-hidden="true">
-          <div class="kks-poster-photo"></div>
-          <div class="kks-poster-caption">KIM KWANG SEOK</div>
-        </div>
+      <section class="hero kks-hero" id="homeHero">
         <div class="kks-hero-copy">
-          <div class="hero-kicker">1990s KOREAN FOLK · LIVE · ALBUM · VOICE</div>
-          <div class="kks-name-stamp" aria-hidden="true">김광석</div>
-          <h1 id="homeTitle">김광석을 기억하는 집</h1>
-          <p id="homeDescription">노래, 무대, 목소리와 사진이 한 사람의 시간으로 이어지는 김광석 디지털 아카이브</p>
-          <div class="kks-song-tickets" aria-hidden="true">
-            <span>거리에서</span>
-            <span>서른 즈음에</span>
-            <span>사랑했지만</span>
-            <span>바람이 불어오는 곳</span>
+          <div class="hero-eyebrow">KIM KWANG-SEOK DIGITAL ARCHIVE · SINCE 1990s MEMORY</div>
+          <h1 id="homeTitle">김광석의 노래가<br />머무는 집</h1>
+          <p id="homeDescription">공연, 노래, 라디오, 사진과 기록을 한곳에 모은 김광석 디지털 아카이브</p>
+          <div class="hero-signature">SONGS · LIVE · RADIO · PHOTOS · STORIES</div>
+          <div class="hero-actions">
+            <button data-page-fallback="songs" onclick="goPage('songs')">노래 자료 듣기</button>
+            <button data-page-fallback="videos" onclick="goPage('videos')">공연 영상 보기</button>
+            <button data-page-fallback="photos" onclick="goPage('photos')">사진 기록 보기</button>
           </div>
-          <div class="hero-action-row">
-            <button class="hero-primary-btn" data-page-fallback="songs" onclick="goPage('songs')">노래부터 듣기</button>
-            <button class="hero-ghost-btn" data-page-fallback="videos" onclick="goPage('videos')">공연 영상 보기</button>
-            <button class="hero-ghost-btn" data-page-fallback="about" onclick="goPage('about')">김광석 소개</button>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="vinyl-disc"><span></span></div>
+          <div class="cassette-card">
+            <strong>광석이네 집</strong>
+            <em>김광석 디지털 아카이브</em>
           </div>
         </div>
       </section>
-
-      <section class="kks-memory-strip" aria-label="김광석 아카이브 정체성">
-        <div><b>노래</b><span>앨범과 라이브 음원</span></div>
-        <div><b>무대</b><span>공연과 방송 영상</span></div>
-        <div><b>목소리</b><span>라디오와 인터뷰</span></div>
-        <div><b>기록</b><span>사진·글·자료 설명</span></div>
-      </section>
-
-      <section class="archive-showcase" aria-label="대표 자료실 바로가기">
-        <article class="showcase-card showcase-video" onclick="goPage('videos')">
-          <span class="showcase-label">무대가 남긴 장면</span>
-          <h2>Videos</h2>
-          <p>공연, 방송, 인터뷰를 김광석의 무대 기록으로 모읍니다.</p>
-        </article>
-        <article class="showcase-card showcase-song" onclick="goPage('songs')">
-          <span class="showcase-label">노래가 남긴 시간</span>
-          <h2>Songs</h2>
-          <p>앨범 커버와 곡 정보를 중심으로 다시 들을 수 있게 정리합니다.</p>
-        </article>
-        <article class="showcase-card showcase-photo" onclick="goPage('photos')">
-          <span class="showcase-label">사진이 남긴 얼굴</span>
-          <h2>Photos</h2>
-          <p>필름, 포스터, 신문 스크랩처럼 남은 장면을 모읍니다.</p>
-        </article>
-        <article class="showcase-card showcase-radio" onclick="goPage('radios')">
-          <span class="showcase-label">목소리가 남긴 말</span>
-          <h2>Radios</h2>
-          <p>라디오 방송과 인터뷰 속 목소리를 조용히 재생합니다.</p>
-        </article>
-      </section>
-
 <section class="content-section latest-by-category-section">
         <h2>자료별 최신 자료</h2>
         <p class="helper-text">각 자료실에 최근 등록된 자료를 모았습니다.</p>
@@ -792,8 +758,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v201-hls-streaming-support</div>
+<div class="version-marker">v202-kks-90s-archive-redesign</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=hls-streaming-v201"></script>
+  <script type="module" src="app.js?v=kks-90s-archive-redesign-v202"></script>
 </body>
 </html>
