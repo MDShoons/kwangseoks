@@ -3573,12 +3573,19 @@ function openCoverZoom(src, title) {
   if (!modal || !img) return;
   if (!src) return;
 
-  img.src = src;
+  modal.classList.remove("hidden");
+  modal.classList.remove("loaded");
+  document.body.classList.add("cover-zoom-open");
+  document.body.style.overflow = "hidden";
+
+  img.removeAttribute("src");
   img.alt = title || "앨범 자켓";
   if (caption) caption.textContent = title || "앨범 자켓";
 
-  modal.classList.remove("hidden");
-  document.body.style.overflow = "hidden";
+  img.onload = function(){
+    modal.classList.add("loaded");
+  };
+  img.src = src;
 }
 
 function openCoverZoomFromElement(element) {
@@ -3593,9 +3600,16 @@ function closeCoverZoom(event) {
   const img = document.getElementById("coverZoomImage");
   const contentDetailModal = document.getElementById("contentDetailModal");
 
-  if (modal) modal.classList.add("hidden");
-  if (img) img.removeAttribute("src");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("loaded");
+  }
+  if (img) {
+    img.onload = null;
+    img.removeAttribute("src");
+  }
 
+  document.body.classList.remove("cover-zoom-open");
   if (!contentDetailModal || contentDetailModal.classList.contains("hidden")) {
     document.body.style.overflow = "";
   }
