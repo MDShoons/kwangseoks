@@ -9094,3 +9094,118 @@ body::after {
     max-width: 520px !important;
   }
 }
+
+
+/* ===== v206 hero text request ===== */
+#home #homeHero.hero::after,
+#home .hero::after {
+  display: none !important;
+  content: none !important;
+}
+#home #homeHero.hero > div:last-child,
+#home .hero > div:last-child {
+  display: none !important;
+}
+#home #homeHero.hero,
+#home .hero {
+  padding: 62px 72px !important;
+}
+#homeTitle {
+  max-width: 760px !important;
+  margin: 0 0 14px !important;
+  font-size: clamp(34px, 4.2vw, 60px) !important;
+  line-height: 1.14 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.045em !important;
+  color: #2f2016 !important;
+  text-shadow: 0 2px 8px rgba(255,255,255,.16) !important;
+}
+#homeDescription {
+  max-width: none !important;
+  margin-top: 18px !important;
+  margin-bottom: 0 !important;
+  font-size: clamp(46px, 5.4vw, 88px) !important;
+  line-height: .96 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.06em !important;
+  color: rgba(117, 76, 43, .30) !important;
+  text-shadow: none !important;
+}
+#homeDescription::before {
+  content: "광석이네 집은 김광석의 목소리와 추억이 방마다 머무는 디지털 아카이브입니다." !important;
+  display: block !important;
+  margin: 0 0 18px !important;
+  font-size: clamp(18px, 1.55vw, 28px) !important;
+  line-height: 1.55 !important;
+  font-weight: 700 !important;
+  color: #fff7ef !important;
+  text-shadow: 0 3px 14px rgba(0,0,0,.30) !important;
+}
+@media (max-width: 900px) {
+  #home #homeHero.hero,
+  #home .hero {
+    padding: 30px 22px !important;
+  }
+  #homeTitle {
+    font-size: clamp(28px, 7.2vw, 40px) !important;
+  }
+  #homeDescription {
+    margin-top: 10px !important;
+    font-size: clamp(36px, 9vw, 56px) !important;
+  }
+  #homeDescription::before {
+    margin-bottom: 12px !important;
+    font-size: clamp(15px, 4.2vw, 19px) !important;
+  }
+}
+
+
+/* ===== v207 delayed scroll background ===== */
+body {
+  background-image: none !important;
+  background-color: #efe7dc !important;
+}
+#roomScrollBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  --room-scroll-shift: 0px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  filter: blur(2.1px) saturate(1.04) contrast(1.01) brightness(.95);
+  transform: translate3d(0, var(--room-scroll-shift), 0) scale(1.05);
+  transition: transform .3s ease-out;
+  will-change: transform;
+}
+#roomScrollBg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 10%, rgba(255,243,224,.12), transparent 24%),
+    linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%);
+}
+.site-header,
+main,
+footer,
+#roomTransitionOverlay {
+  position: relative;
+  z-index: 1;
+}
+body[data-room="home"] #roomScrollBg { background-image: url("images/room-backgrounds/home.webp"); }
+body[data-room="siteinfo"] #roomScrollBg { background-image: url("images/room-backgrounds/siteinfo.webp"); }
+body[data-room="videos"] #roomScrollBg { background-image: url("images/room-backgrounds/videos.webp"); }
+body[data-room="songs"] #roomScrollBg { background-image: url("images/room-backgrounds/songs.webp"); }
+body[data-room="radios"] #roomScrollBg { background-image: url("images/room-backgrounds/radios.webp"); }
+body[data-room="photos"] #roomScrollBg { background-image: url("images/room-backgrounds/photos.webp"); }
+body[data-room="stories"] #roomScrollBg { background-image: url("images/room-backgrounds/stories.webp"); }
+body[data-room="about"] #roomScrollBg { background-image: url("images/room-backgrounds/about.webp"); }
+body[data-room="oneum"] #roomScrollBg { background-image: url("images/room-backgrounds/oneum.webp"); }
+@media (max-width: 900px) {
+  #roomScrollBg {
+    filter: blur(1.9px) saturate(1.03) brightness(.95);
+    transform: translate3d(0, var(--room-scroll-shift), 0) scale(1.06);
+  }
+}
