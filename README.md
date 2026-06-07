@@ -884,7 +884,7 @@ v78-songs-match-radios-ui
 
 
 ## v136-stable-interaction-actual
-- v130 정상본 기준 통신방만 실제 패치
+- v130 정상본 기준 만 실제 패치
 - 회원별 말투/호칭 관계 보정
 - 뭐하세요 질문 의미 보정
 - 김광석 퇴장 후 바쁨 안내 반복 제거
@@ -893,19 +893,19 @@ v78-songs-match-radios-ui
 
 
 ## v139-pc-webllm-experiment
-- 광석이네 통신방을 PC 전용으로 제한했습니다.
-- 대화 방식에 기본 PC통신 대화 / 실험: PC 브라우저 생성형 옵션을 추가했습니다.
+- 광석이네 을 PC 전용으로 제한했습니다.
+- 대화 방식에 기본  대화 / 실험: PC 브라우저 생성형 옵션을 추가했습니다.
 - 생성형 실험 모드는 WebGPU 지원 PC 브라우저에서 WebLLM을 동적으로 불러와 김광석 답변 생성을 시도하고, 실패하면 기본 대화로 자동 전환합니다.
 
 
 ## v144-human-dialogue-flow
-- 통신방에 제타식 대화 묶음 흐름 추가: 사용자 입력 후 회원 1~2명, 회원끼리 후속 질문, 김광석 끼어듦, 추가 회원 반응이 시간차로 이어집니다.
+- 에 제타식 대화 묶음 흐름 추가: 사용자 입력 후 회원 1~2명, 회원끼리 후속 질문, 김광석 끼어듦, 추가 회원 반응이 시간차로 이어집니다.
 - '뭐하세요?' 질문은 실제 행동 답변으로 분기합니다.
 - WebLLM 실험 모드는 유지하되 실패 시 기본 관계형 대화로 자동 전환합니다.
 
 
 ## v144-human-dialogue-flow
-- 통신방 대화를 랜덤 발화가 아니라 주제별 턴 흐름으로 보정했습니다.
+-  대화를 랜덤 발화가 아니라 주제별 턴 흐름으로 보정했습니다.
 - 질문/답변/회원 간 이어받기/김광석 끼어들기 흐름을 추가했습니다.
 
 
@@ -913,68 +913,12 @@ v78-songs-match-radios-ui
 - Added .nojekyll to bypass GitHub Pages Jekyll processing.
 - app.js syntax checked with node -c.
 
-## v173 광석이네 통신방: Cloud Functions + OpenAI AI 대사 생성
-
-이번 버전은 기존 Firebase 실시간 통신방에 `functions/telecomAiReply` callable function을 추가했습니다.
-브라우저는 사용자 메시지만 Firestore에 저장하고, AI API 키는 Firebase Secret으로 숨긴 Cloud Functions에서만 사용합니다.
-
-배포 요약:
-
-```bash
-firebase login
-firebase use --add
-cd functions
-npm install
-cd ..
-firebase functions:secrets:set OPENAI_API_KEY
-firebase deploy --only firestore:rules,functions
-```
-
-GitHub Pages를 계속 쓰는 경우 정적 파일은 GitHub에 올리고, `functions`와 `firestore.rules`는 Firebase CLI로 별도 배포해야 합니다.
-자세한 순서는 `FIREBASE_AI_TELECOM_SETUP.txt`를 확인하세요.
-
-
-## v174 광석이네 통신방: Cloudflare Workers AI 대사 생성
-
-이 버전은 Firebase Cloud Functions/OpenAI 결제 구조 대신 Cloudflare Workers AI를 호출하도록 변경했습니다.
-
-구조:
-
-```text
-GitHub Pages 화면
-→ Cloudflare Worker 호출
-→ Workers AI가 통신방 멤버 대사 생성
-→ 브라우저가 로그인 사용자 권한으로 Firestore에 generated member 메시지 저장
-```
-
-핵심 파일:
-
-```text
-app.js
-cloudflare-worker-ai-telecom.js
-CLOUDFLARE_WORKERS_AI_TELECOM_SETUP.txt
-firestore.rules
-```
-
-설정 순서:
-
-1. Cloudflare에서 Worker를 만들고 `cloudflare-worker-ai-telecom.js` 내용을 붙여넣습니다.
-2. Worker에 Workers AI binding을 추가하고 binding name을 `AI`로 설정합니다.
-3. 배포 후 나온 Worker URL을 `app.js`의 `FB_TELECOM_AI_WORKER_URL` 값에 넣습니다.
-4. GitHub Pages에는 수정된 정적 파일을 올립니다.
-5. Firestore 규칙은 기존 규칙과 충돌하지 않게 `chatRooms` 부분을 합쳐 적용합니다.
-
-자세한 순서는 `CLOUDFLARE_WORKERS_AI_TELECOM_SETUP.txt`를 확인하세요.
 
 
 ## 변경 안내
 
-- 광석이네 통신방 메뉴와 페이지를 제거했습니다.
-- Cloudflare Workers AI 통신방 관련 파일은 삭제했습니다.
+- 광석이네  메뉴와 페이지를 제거했습니다.
+- Cloudflare Workers AI  관련 파일은 삭제했습니다.
 - 기존 자료실, Songs, Radios, Photos, Stories, About, Oneum, 관리자 기능은 유지했습니다.
 
 
-## v186 통신방 안내 제거
-
-- 사이트 안내 페이지에서 광석이네 통신방 설명 카드를 제거했습니다.
-- 통신방 메뉴/페이지 제거 상태를 유지합니다.
