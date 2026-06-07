@@ -8943,3 +8943,154 @@ body[data-room="oneum"]::before { background-position: center center !important;
     z-index: 4 !important;
   }
 }
+
+/* ===== v205: 배경 스크롤 연동 + 플레이리스트 원래 방식 복구 ===== */
+body {
+  background-repeat: no-repeat !important;
+  background-attachment: scroll !important;
+  background-size: cover !important;
+  background-position: center top !important;
+}
+body[data-room="home"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/home.webp") !important; }
+body[data-room="siteinfo"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/siteinfo.webp") !important; }
+body[data-room="videos"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/videos.webp") !important; }
+body[data-room="songs"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/songs.webp") !important; }
+body[data-room="radios"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/radios.webp") !important; }
+body[data-room="photos"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/photos.webp") !important; }
+body[data-room="stories"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/stories.webp") !important; }
+body[data-room="about"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/about.webp") !important; }
+body[data-room="oneum"] { background-image: linear-gradient(180deg, rgba(42,27,18,.24), rgba(245,237,228,.58) 22%, rgba(243,236,228,.74) 100%), url("images/room-backgrounds/oneum.webp") !important; }
+body::before,
+body::after {
+  display: none !important;
+  content: none !important;
+}
+
+#home #homeHero.hero,
+#home .hero {
+  background-image:
+    linear-gradient(90deg, rgba(36,22,13,.68), rgba(70,45,28,.38) 42%, rgba(90,62,42,.15) 72%, rgba(45,28,16,.16)),
+    url("images/main-bg.png") !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* 플리: 강제 마키/강제 재배치 해제, 원래처럼 말줄임 중심 */
+#userPlaylistPlayer #playlistPlayerTitle,
+#userPlaylistPlayer .daily-player-title {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  animation: none !important;
+  transform: none !important;
+}
+#userPlaylistPlayer #playlistPlayerTitle.is-marquee,
+#userPlaylistPlayer .daily-player-title.is-marquee {
+  text-overflow: ellipsis !important;
+}
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text,
+#userPlaylistPlayer .daily-player-title .playlist-title-marquee-text,
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-item,
+#userPlaylistPlayer .daily-player-title .playlist-title-marquee-item {
+  display: inline !important;
+  animation: none !important;
+  transform: none !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+}
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-copy,
+#userPlaylistPlayer .daily-player-title .playlist-title-marquee-copy {
+  display: none !important;
+}
+#userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-text,
+#userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-text {
+  animation: none !important;
+  transform: none !important;
+}
+
+@media (min-width: 921px) {
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    display: grid !important;
+    grid-template-columns: 58px minmax(240px, 1fr) minmax(320px, 520px) 104px minmax(158px, 190px) !important;
+    grid-template-rows: 22px 20px 16px !important;
+    grid-template-areas:
+      "cover title controls volume actions"
+      "cover sub controls volume actions"
+      "cover sub progress volume actions" !important;
+    column-gap: 14px !important;
+    min-height: 76px !important;
+    max-height: 84px !important;
+    padding: 8px 22px !important;
+    overflow: visible !important;
+  }
+  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
+  #userPlaylistPlayer .daily-player-cover {
+    position: static !important;
+    grid-area: cover !important;
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+  }
+  #userPlaylistPlayer #playlistPlayerTitle,
+  #userPlaylistPlayer .daily-player-title {
+    position: static !important;
+    grid-area: title !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    line-height: 1.15 !important;
+  }
+  #userPlaylistPlayer #playlistPlayerSub,
+  #userPlaylistPlayer .daily-player-sub {
+    position: static !important;
+    grid-area: sub !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+  }
+  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+  #userPlaylistPlayer .daily-player-controls {
+    position: static !important;
+    grid-area: controls !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    transform: none !important;
+  }
+  #userPlaylistPlayer .playlist-volume-row {
+    display: flex !important;
+    grid-area: volume !important;
+  }
+  #userPlaylistPlayer .playlist-player-actions {
+    position: static !important;
+    grid-area: actions !important;
+    width: 150px !important;
+    max-width: 150px !important;
+    height: auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 28px 28px !important;
+    gap: 5px !important;
+    transform: none !important;
+  }
+  #userPlaylistPlayer #playlistPlayerProgress,
+  #userPlaylistPlayer .daily-player-progress {
+    position: static !important;
+    grid-area: progress !important;
+    width: min(100%, 520px) !important;
+    max-width: 520px !important;
+  }
+}

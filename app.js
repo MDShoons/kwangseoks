@@ -2450,49 +2450,19 @@ function setPlaylistPlayerTitleText(titleEl, text) {
   const safeText = String(text || "").trim() || "선택한 곡이 없습니다";
   titleEl.dataset.fullTitle = safeText;
   titleEl.classList.remove("is-marquee");
-  const escaped = escapeHtml(safeText);
-  // v193: 모바일 하단 플레이어 긴 제목은 같은 문구를 2번 배치해
-  // 왼쪽으로 사라진 뒤 오른쪽에서 이어 나오는 연속 마키로 처리한다.
-  titleEl.innerHTML = `<span class="playlist-title-marquee-text"><span class="playlist-title-marquee-item">${escaped}</span><span class="playlist-title-marquee-item playlist-title-marquee-copy" aria-hidden="true">${escaped}</span></span>`;
-  refreshPlaylistPlayerTitleMarquee();
+  titleEl.style.removeProperty("--playlist-title-marquee-gap");
+  titleEl.style.removeProperty("--playlist-title-marquee-distance");
+  titleEl.style.removeProperty("--playlist-title-marquee-duration");
+  titleEl.textContent = safeText;
 }
 
 function refreshPlaylistPlayerTitleMarquee() {
   const titleEl = document.getElementById("playlistPlayerTitle");
   if (!titleEl) return;
-  const textEl = titleEl.querySelector(".playlist-title-marquee-text");
-  if (!textEl) return;
-  const firstItem = titleEl.querySelector(".playlist-title-marquee-item");
-
-  const apply = () => {
-    const fullText = titleEl.dataset.fullTitle || (firstItem ? firstItem.textContent : textEl.textContent) || "";
-    const compactLen = fullText.replace(/\s+/g, "").length;
-    const itemWidth = Math.ceil((firstItem ? firstItem.scrollWidth : textEl.scrollWidth) || 0);
-    const boxWidth = Math.ceil(titleEl.clientWidth || titleEl.getBoundingClientRect().width || 0);
-    // v204: PC/모바일 모두 6글자 이상이면 무조건 연속 마키 적용
-    const shouldMarquee = compactLen >= 6 || itemWidth > boxWidth + 2;
-
-    titleEl.classList.toggle("is-marquee", shouldMarquee);
-    if (shouldMarquee) {
-      const gap = Math.max(52, Math.min(120, Math.round(Math.max(boxWidth, 120) * 0.45)));
-      const distance = Math.max(90, itemWidth + gap);
-      const duration = Math.min(18, Math.max(8, distance / 28));
-      titleEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
-      titleEl.style.setProperty("--playlist-title-marquee-distance", `-${distance}px`);
-      titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
-    } else {
-      titleEl.style.removeProperty("--playlist-title-marquee-gap");
-      titleEl.style.removeProperty("--playlist-title-marquee-distance");
-      titleEl.style.removeProperty("--playlist-title-marquee-duration");
-    }
-  };
-
-  requestAnimationFrame(() => {
-    apply();
-    setTimeout(apply, 150);
-    setTimeout(apply, 500);
-    setTimeout(apply, 1200);
-  });
+  titleEl.classList.remove("is-marquee");
+  titleEl.style.removeProperty("--playlist-title-marquee-gap");
+  titleEl.style.removeProperty("--playlist-title-marquee-distance");
+  titleEl.style.removeProperty("--playlist-title-marquee-duration");
 }
 
 function setupUserPlaylistPlayer(options = {}) {
