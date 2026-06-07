@@ -9812,148 +9812,64 @@ body.cover-zoom-open #coverZoomModal {
 }
 
 
-/* ===== v212 song cover zoom real jacket enlarge fix ===== */
+/* ===== v213 safe CSS-only cover zoom fix; app.js restored to stable v211 ===== */
 .cover-zoom-modal {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 5000 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   padding: 18px !important;
-  background: rgba(9, 7, 6, 0.88) !important;
-  backdrop-filter: blur(2px);
+  background: rgba(8, 6, 5, 0.88) !important;
+  backdrop-filter: blur(3px) !important;
 }
-.cover-zoom-modal.hidden {
-  display: none !important;
-}
+.cover-zoom-modal.hidden { display: none !important; }
 .cover-zoom-inner {
   position: relative !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
   width: auto !important;
+  min-width: 0 !important;
   max-width: calc(100vw - 36px) !important;
+  height: auto !important;
   max-height: calc(100vh - 36px) !important;
-  padding: 50px 0 14px !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-#coverZoomImage {
-  display: block !important;
-  width: auto !important;
-  height: auto !important;
-  max-width: min(86vw, 900px) !important;
-  max-height: calc(100vh - 120px) !important;
-  object-fit: contain !important;
-  background: transparent !important;
-  border-radius: 18px !important;
-  box-shadow: 0 26px 80px rgba(0,0,0,.42) !important;
-}
-.cover-zoom-caption {
-  margin-top: 14px !important;
-  color: rgba(255,255,255,.95) !important;
-  font-size: 15px !important;
-  text-align: center !important;
-}
-@media (max-width: 820px) {
-  .cover-zoom-inner {
-    max-width: calc(100vw - 24px) !important;
-    max-height: calc(100vh - 24px) !important;
-    padding: 44px 0 10px !important;
-  }
-  #coverZoomImage {
-    max-width: calc(100vw - 28px) !important;
-    max-height: calc(100vh - 112px) !important;
-  }
-}
-
-
-/* ===== v211 cover zoom real jacket + hide transition text ===== */
-.room-transition-overlay .transition-note,
-#roomTransitionLabel,
-.transition-house {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-}
-#coverZoomModal.cover-zoom-modal,
-body.cover-zoom-open #coverZoomModal.cover-zoom-modal {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 2147483000 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 20px !important;
-  background: rgba(10, 7, 6, .92) !important;
-  backdrop-filter: blur(5px) !important;
-}
-#coverZoomModal.cover-zoom-modal.hidden {
-  display: none !important;
-}
-#coverZoomModal .cover-zoom-inner {
-  position: relative !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: auto !important;
-  height: auto !important;
-  max-width: calc(100vw - 40px) !important;
-  max-height: calc(100vh - 40px) !important;
-  margin: auto !important;
-  padding: 50px 0 12px !important;
+  padding: 48px 0 12px !important;
+  margin: 0 !important;
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
-  backdrop-filter: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
   overflow: visible !important;
 }
 #coverZoomImage {
   display: block !important;
-  width: min(82vw, calc(100vh - 150px), 760px) !important;
+  width: auto !important;
   height: auto !important;
-  max-width: calc(100vw - 40px) !important;
-  max-height: calc(100vh - 132px) !important;
+  max-width: min(88vw, 920px) !important;
+  max-height: calc(100vh - 128px) !important;
   object-fit: contain !important;
-  object-position: center center !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
   background: transparent !important;
   border-radius: 18px !important;
+  box-shadow: 0 26px 80px rgba(0,0,0,.42) !important;
   transform: none !important;
-  box-shadow: 0 24px 70px rgba(0,0,0,.45) !important;
 }
-#coverZoomModal .cover-zoom-close {
-  position: absolute !important;
-  top: 0 !important;
-  right: 0 !important;
-  z-index: 2147483001 !important;
-}
-#coverZoomModal .cover-zoom-caption {
-  display: block !important;
+.cover-zoom-caption {
   margin-top: 14px !important;
-  color: rgba(255,255,255,.94) !important;
+  color: rgba(255,255,255,.95) !important;
   text-align: center !important;
   font-weight: 700 !important;
-  background: transparent !important;
 }
 @media (max-width: 820px) {
-  #coverZoomModal.cover-zoom-modal,
-  body.cover-zoom-open #coverZoomModal.cover-zoom-modal {
-    padding: 12px !important;
-  }
-  #coverZoomModal .cover-zoom-inner {
-    max-width: calc(100vw - 24px) !important;
-    max-height: calc(100vh - 24px) !important;
-    padding: 44px 0 10px !important;
+  .cover-zoom-modal { padding: 10px !important; }
+  .cover-zoom-inner {
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    padding: 42px 0 10px !important;
   }
   #coverZoomImage {
-    width: min(88vw, calc(100vh - 128px), 620px) !important;
-    max-width: calc(100vw - 28px) !important;
-    max-height: calc(100vh - 120px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 112px) !important;
   }
 }

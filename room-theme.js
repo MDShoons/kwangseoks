@@ -34,7 +34,7 @@
     overlay = document.createElement('div');
     overlay.id = 'roomTransitionOverlay';
     overlay.className = 'room-transition-overlay';
-    overlay.innerHTML = '<div class="door door-left"></div><div class="door door-right"></div>';
+    overlay.innerHTML = '<div class="door door-left"></div><div class="door door-right"></div><div class="transition-note"><span class="transition-house">광석이네 집</span><strong id="roomTransitionLabel">방으로 이동 중</strong></div>';
     document.body.appendChild(overlay);
     return overlay;
   }

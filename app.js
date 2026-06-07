@@ -128,10 +128,6 @@ function getPlayableAudioUrl(item = {}) {
   return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
 }
 
-function getBestCoverImageUrl(item = {}) {
-  return item.coverImageUrl || item.albumCoverUrl || item.coverUrl || item.jacketUrl || item.imageUrl || item.thumbnailUrl || item.photoUrl || item.image || "";
-}
-
 function isAudioContentItem(item = {}) {
   return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
@@ -3119,7 +3115,7 @@ function renderAboutDocument(items) {
   }
 
   box.innerHTML = sorted.map((item) => {
-    const imageUrl = getBestCoverImageUrl(item);
+    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
     const bodyText = item.body || item.description || "";
     const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
     const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
@@ -3592,34 +3588,18 @@ function openCoverZoom(src, title) {
   document.body.style.overflow = "hidden";
 
   img.removeAttribute("src");
-  img.removeAttribute("style");
   img.alt = title || "앨범 자켓";
   if (caption) caption.textContent = title || "앨범 자켓";
 
   img.onload = function(){
     modal.classList.add("loaded");
-    img.style.setProperty("display", "block", "important");
-    img.style.setProperty("width", "min(82vw, calc(100vh - 150px), 760px)", "important");
-    img.style.setProperty("height", "auto", "important");
-    img.style.setProperty("max-width", "calc(100vw - 40px)", "important");
-    img.style.setProperty("max-height", "calc(100vh - 132px)", "important");
-    img.style.setProperty("object-fit", "contain", "important");
-    img.style.setProperty("transform", "none", "important");
   };
   img.src = src;
 }
 
 function openCoverZoomFromElement(element) {
   if (!element) return;
-  let src = element.dataset.coverSrc || "";
-  const foundImg = element.matches && element.matches("img") ? element : element.querySelector && element.querySelector("img");
-  if (!src && foundImg) src = foundImg.currentSrc || foundImg.src || "";
-  if (!src) {
-    const bg = window.getComputedStyle(element).backgroundImage || "";
-    const match = bg.match(/url\(["']?(.*?)["']?\)/);
-    if (match) src = match[1];
-  }
-  openCoverZoom(src, element.dataset.coverTitle || element.getAttribute("aria-label") || "앨범 자켓");
+  openCoverZoom(element.dataset.coverSrc || "", element.dataset.coverTitle || "앨범 자켓");
 }
 
 function closeCoverZoom(event) {
@@ -3808,7 +3788,7 @@ function renderVideoQualitySelector(item = {}, videoId = "") {
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
-  const imageUrl = getBestCoverImageUrl(item);
+  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
   const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
