@@ -2465,19 +2465,18 @@ function refreshPlaylistPlayerTitleMarquee() {
   const firstItem = titleEl.querySelector(".playlist-title-marquee-item");
 
   const apply = () => {
-    const isMobile = !window.matchMedia || window.matchMedia("(max-width: 920px)").matches;
     const fullText = titleEl.dataset.fullTitle || (firstItem ? firstItem.textContent : textEl.textContent) || "";
     const compactLen = fullText.replace(/\s+/g, "").length;
     const itemWidth = Math.ceil((firstItem ? firstItem.scrollWidth : textEl.scrollWidth) || 0);
     const boxWidth = Math.ceil(titleEl.clientWidth || titleEl.getBoundingClientRect().width || 0);
-    // 사용자 요청: 6글자 이상이면 무조건 움직이게 한다.
+    // v204: PC/모바일 모두 6글자 이상이면 무조건 연속 마키 적용
     const shouldMarquee = compactLen >= 6 || itemWidth > boxWidth + 2;
 
-    titleEl.classList.toggle("is-marquee", isMobile && shouldMarquee);
-    if (isMobile && shouldMarquee) {
-      const gap = Math.max(48, Math.min(96, Math.round(boxWidth * 0.55)));
-      const distance = Math.max(80, itemWidth + gap);
-      const duration = Math.min(16, Math.max(7, distance / 26));
+    titleEl.classList.toggle("is-marquee", shouldMarquee);
+    if (shouldMarquee) {
+      const gap = Math.max(52, Math.min(120, Math.round(Math.max(boxWidth, 120) * 0.45)));
+      const distance = Math.max(90, itemWidth + gap);
+      const duration = Math.min(18, Math.max(8, distance / 28));
       titleEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
       titleEl.style.setProperty("--playlist-title-marquee-distance", `-${distance}px`);
       titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
