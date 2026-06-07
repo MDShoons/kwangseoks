@@ -9209,3 +9209,374 @@ body[data-room="oneum"] #roomScrollBg { background-image: url("images/room-backg
     transform: translate3d(0, var(--room-scroll-shift), 0) scale(1.06);
   }
 }
+
+
+/* ===== v208 playlist restore - PC/mobile stable bottom bar ===== */
+html, body {
+  scroll-padding-bottom: 108px !important;
+}
+body {
+  padding-bottom: 96px !important;
+}
+#userPlaylistPlayer.daily-player {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  z-index: 12000 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  display: block !important;
+  transform: none !important;
+}
+#userPlaylistPlayer.daily-player.closed {
+  display: none !important;
+}
+#userPlaylistPlayer .daily-player-card.playlist-player-card,
+#userPlaylistPlayer .daily-player-card {
+  pointer-events: auto !important;
+  position: relative !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  min-width: 0 !important;
+  height: 86px !important;
+  min-height: 86px !important;
+  max-height: 86px !important;
+  box-sizing: border-box !important;
+  border-radius: 0 !important;
+  padding: 10px 28px 14px !important;
+  display: grid !important;
+  grid-template-columns: 58px minmax(260px, 1fr) minmax(360px, 520px) 150px !important;
+  grid-template-rows: 18px 28px 18px !important;
+  grid-template-areas:
+    "cover label controls actions"
+    "cover title controls actions"
+    "cover sub progress actions" !important;
+  align-items: center !important;
+  column-gap: 16px !important;
+  row-gap: 2px !important;
+  overflow: hidden !important;
+  background: linear-gradient(90deg, rgba(56,44,38,.94), rgba(94,73,62,.94), rgba(61,48,42,.94)) !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(255,255,255,.20) !important;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.22) !important;
+  color: #fff !important;
+}
+#userPlaylistPlayer .daily-player-card::before {
+  opacity: .18 !important;
+  filter: blur(1.2px) saturate(1.08) contrast(1.03) !important;
+  transform: scale(1.05) !important;
+  background-position: center center !important;
+}
+#userPlaylistPlayer .daily-player-card::after {
+  background: linear-gradient(90deg, rgba(24,18,15,.48), rgba(55,40,33,.34), rgba(28,21,18,.52)) !important;
+}
+#userPlaylistPlayer .daily-player-card > * {
+  position: relative !important;
+  z-index: 2 !important;
+}
+#userPlaylistPlayer .daily-player-close {
+  display: none !important;
+}
+#userPlaylistPlayer .daily-player-cover.playlist-player-cover,
+#userPlaylistPlayer .daily-player-cover {
+  grid-area: cover !important;
+  position: static !important;
+  display: block !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  margin: 0 !important;
+  border-radius: 8px !important;
+  object-fit: cover !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.24) !important;
+}
+#userPlaylistPlayer .daily-player-label.playlist-player-label,
+#userPlaylistPlayer .daily-player-label {
+  grid-area: label !important;
+  display: block !important;
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: rgba(255,255,255,.82) !important;
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+#userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
+#userPlaylistPlayer .daily-player-title {
+  grid-area: title !important;
+  position: static !important;
+  display: block !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #fff !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  transform: none !important;
+  animation: none !important;
+}
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text,
+#userPlaylistPlayer .daily-player-title .playlist-title-marquee-text,
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-item,
+#userPlaylistPlayer .daily-player-title .playlist-title-marquee-item {
+  display: inline !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  transform: none !important;
+  animation: none !important;
+}
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-copy,
+#userPlaylistPlayer .daily-player-title .playlist-title-marquee-copy {
+  display: none !important;
+}
+#userPlaylistPlayer #playlistPlayerSub.daily-player-sub,
+#userPlaylistPlayer .daily-player-sub {
+  grid-area: sub !important;
+  position: static !important;
+  display: block !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: rgba(255,255,255,.78) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+#userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+#userPlaylistPlayer .daily-player-controls {
+  grid-area: controls !important;
+  position: static !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+#userPlaylistPlayer .daily-player-time.playlist-player-time,
+#userPlaylistPlayer .daily-player-time {
+  display: flex !important;
+  width: 88px !important;
+  min-width: 88px !important;
+  color: rgba(255,255,255,.86) !important;
+  font-size: 11px !important;
+}
+#userPlaylistPlayer .playlist-nav-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  flex: 0 0 32px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,.24) !important;
+  background: rgba(255,255,255,.12) !important;
+  color: #fff !important;
+  font-size: 20px !important;
+}
+#userPlaylistPlayer #playlistPlayerPlayBtn,
+#userPlaylistPlayer .daily-play-btn {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  flex: 0 0 48px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.96) !important;
+  color: #6d5045 !important;
+  font-size: 17px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18) !important;
+}
+#userPlaylistPlayer #playlistPlayerProgress.daily-player-progress,
+#userPlaylistPlayer .daily-player-progress {
+  grid-area: progress !important;
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  height: 4px !important;
+  z-index: 2 !important;
+}
+#userPlaylistPlayer .daily-volume-row,
+#userPlaylistPlayer .playlist-volume-row {
+  display: none !important;
+}
+#userPlaylistPlayer .playlist-player-actions {
+  grid-area: actions !important;
+  position: static !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  width: 100% !important;
+  max-width: 150px !important;
+  min-width: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+#userPlaylistPlayer .playlist-action-btn,
+#userPlaylistPlayer #playlistPlayerRemoveBtn,
+#userPlaylistPlayer #playlistPlayerListBtn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 118px !important;
+  max-width: 118px !important;
+  min-width: 118px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  padding: 0 12px !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+#playlistQueuePanel {
+  bottom: 94px !important;
+}
+@media (max-width: 920px) {
+  body { padding-bottom: calc(102px + env(safe-area-inset-bottom, 0px)) !important; }
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    height: calc(94px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: calc(94px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(94px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 9px 12px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    grid-template-columns: 54px minmax(0, 1fr) 136px 46px !important;
+    grid-template-rows: 26px 18px 16px !important;
+    grid-template-areas:
+      "cover title controls actions"
+      "cover sub controls actions"
+      "progress progress progress progress" !important;
+    column-gap: 8px !important;
+    row-gap: 2px !important;
+  }
+  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
+  #userPlaylistPlayer .daily-player-cover {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
+  }
+  #userPlaylistPlayer .daily-player-label { display: none !important; }
+  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
+  #userPlaylistPlayer .daily-player-title {
+    font-size: 15px !important;
+    line-height: 1.18 !important;
+  }
+  #userPlaylistPlayer #playlistPlayerSub.daily-player-sub,
+  #userPlaylistPlayer .daily-player-sub {
+    font-size: 11px !important;
+  }
+  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
+  #userPlaylistPlayer .daily-player-controls {
+    gap: 5px !important;
+  }
+  #userPlaylistPlayer .daily-player-time { display: none !important; }
+  #userPlaylistPlayer .playlist-nav-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    flex-basis: 30px !important;
+  }
+  #userPlaylistPlayer #playlistPlayerPlayBtn,
+  #userPlaylistPlayer .daily-play-btn {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    flex-basis: 48px !important;
+  }
+  #userPlaylistPlayer .playlist-player-actions {
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    width: 46px !important;
+    max-width: 46px !important;
+  }
+  #userPlaylistPlayer #playlistPlayerRemoveBtn {
+    display: none !important;
+  }
+  #userPlaylistPlayer #playlistPlayerListBtn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+  }
+  #userPlaylistPlayer #playlistPlayerListBtn::before {
+    content: "☰" !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+  }
+}
+@media (max-width: 390px) {
+  #userPlaylistPlayer .daily-player-card.playlist-player-card,
+  #userPlaylistPlayer .daily-player-card {
+    grid-template-columns: 50px minmax(0, 1fr) 130px 42px !important;
+    column-gap: 7px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
+  #userPlaylistPlayer .daily-player-cover {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+  }
+  #userPlaylistPlayer .playlist-nav-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    flex-basis: 28px !important;
+  }
+  #userPlaylistPlayer #playlistPlayerPlayBtn,
+  #userPlaylistPlayer .daily-play-btn {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    flex-basis: 46px !important;
+  }
+}
