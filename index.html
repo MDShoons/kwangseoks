@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=mobile-playlist-marquee-v191" />
+  <link rel="stylesheet" href="style.css?v=atelier-redesign-v310" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -226,13 +226,31 @@
   <main>
     <section id="home" class="page active">
       <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
-      <section class="hero" id="homeHero">
-        <h1 id="homeTitle">노래가 머무는 이 곳, 광석이네집</h1>
-        <p id="homeDescription">김광석 아카이브</p>
-        <div>
-          <button data-page-fallback="videos" onclick="goPage('videos')">영상 보러가기</button>
-          <button data-page-fallback="photos" onclick="goPage('photos')">사진 보러가기</button>
+      <section class="hero atelier-hero" id="homeHero">
+        <div class="hero-copy">
+          <span class="hero-kicker">KIM KWANG SEOK DIGITAL ARCHIVE</span>
+          <h1 id="homeTitle">광석이네 집</h1>
+          <p id="homeDescription">노래와 사진, 목소리와 기록이 조용히 머무는 김광석 디지털 아카이브</p>
+          <div class="hero-action-row">
+            <button class="hero-primary" data-page-fallback="songs" onclick="goPage('songs')">노래 듣기</button>
+            <button class="hero-ghost" data-page-fallback="videos" onclick="goPage('videos')">영상 보기</button>
+            <button class="hero-ghost" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">공간 안내</button>
+          </div>
         </div>
+        <div class="hero-object" aria-hidden="true">
+          <div class="vinyl-disc"><span></span></div>
+          <div class="archive-ticket">
+            <strong>ARCHIVE ROOM</strong>
+            <small>songs · videos · radios · photos</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-dock" aria-label="주요 자료실 바로가기">
+        <button onclick="goPage('videos')" data-page-fallback="videos"><span>01</span><strong>Videos</strong><small>공연과 방송 영상</small></button>
+        <button onclick="goPage('songs')" data-page-fallback="songs"><span>02</span><strong>Songs</strong><small>노래와 앨범 자료</small></button>
+        <button onclick="goPage('radios')" data-page-fallback="radios"><span>03</span><strong>Radios</strong><small>라디오와 목소리</small></button>
+        <button onclick="goPage('photos')" data-page-fallback="photos"><span>04</span><strong>Photos</strong><small>사진 아카이브</small></button>
       </section>
 <section class="content-section latest-by-category-section">
         <h2>자료별 최신 자료</h2>
@@ -547,7 +565,16 @@
         <input id="videoTitle" type="text" placeholder="영상 제목" />
         <input id="youtubeUrl" type="url" placeholder="https:// 로 시작하는 미디어 링크를 입력하세요" />
         <input id="videoFile" type="file" accept="video/mp4" />
-        <input id="videoFileUrl" type="url" placeholder="https:// 로 시작하는 미디어 링크를 입력하세요" />
+        <input id="videoFileUrl" type="url" placeholder="기본 영상 URL 또는 원본 URL" />
+        <input id="videoHlsUrl" type="url" placeholder="HLS 스트리밍 URL master.m3u8 (Archive에 올린 HLS용)" />
+        <div class="video-quality-admin-box">
+          <h3>화질별 영상 URL</h3>
+          <p class="helper-text">큰 원본 영상이 끊길 때는 480p/720p 재생용 파일을 따로 만들거나, FFmpeg로 만든 HLS master.m3u8 주소를 위 입력칸에 넣으면 더 안정적으로 재생됩니다. 모바일은 480p가 먼저 선택됩니다.</p>
+          <input id="videoUrl480" type="url" placeholder="480p 모바일용 영상 URL" />
+          <input id="videoUrl720" type="url" placeholder="720p 기본 재생용 영상 URL" />
+          <input id="videoUrl1080" type="url" placeholder="1080p 고화질 영상 URL" />
+          <input id="videoUrlOriginal" type="url" placeholder="원본 영상 URL" />
+        </div>
         <input id="videoYear" type="text" placeholder="연도 예: 1995" />
         <input id="videoSource" type="text" placeholder="출처" />
         <textarea id="videoDescription" placeholder="영상 설명"></textarea>
@@ -737,8 +764,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v187-bulk-song-cover-tab-next-category</div>
+<div class="version-marker">v201-hls-streaming-support</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=mobile-playlist-title-marquee-v196"></script>
+  <script type="module" src="app.js?v=premium-archive-v202"></script>
 </body>
 </html>
