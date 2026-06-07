@@ -8927,3 +8927,324 @@ footer {
   .archive-ticket strong { font-size: 17px; }
   .home-dock strong { font-size: 22px; }
 }
+
+/* =========================================================
+   v420 MUSEUM ARCHIVE REDESIGN
+   방향: 과한 장식/레코드 오브젝트 제거, 조용한 전시관형 아카이브 UI
+   ========================================================= */
+:root{
+  --museum-ink:#1f1d1a;
+  --museum-muted:#6f685f;
+  --museum-paper:#f7f3ec;
+  --museum-panel:#fffdf8;
+  --museum-line:#ddd1c1;
+  --museum-line-strong:#c8b59f;
+  --museum-brown:#6b4a35;
+  --museum-brown-dark:#3a2a20;
+  --museum-gold:#b9905a;
+  --museum-shadow:0 18px 46px rgba(39,29,21,.10);
+  --museum-shadow-soft:0 8px 24px rgba(39,29,21,.07);
+}
+
+html{background:var(--museum-paper) !important;}
+body{
+  background:
+    radial-gradient(circle at 12% 0%, rgba(181,145,99,.11), transparent 34%),
+    linear-gradient(180deg,#fbf8f1 0%,#f2eadf 56%,#ede3d5 100%) !important;
+  color:var(--museum-ink) !important;
+  letter-spacing:-.025em;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.18;
+  z-index:-1;
+  background-image:
+    linear-gradient(rgba(70,52,37,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(70,52,37,.025) 1px, transparent 1px);
+  background-size:38px 38px,38px 38px;
+}
+
+.site-header{
+  min-height:74px !important;
+  padding:0 40px !important;
+  background:rgba(250,247,240,.88) !important;
+  color:var(--museum-ink) !important;
+  border-bottom:1px solid rgba(93,68,47,.16);
+  backdrop-filter:blur(18px);
+  box-shadow:0 6px 24px rgba(32,25,20,.055);
+}
+.logo{
+  color:var(--museum-ink) !important;
+  line-height:1.1;
+  letter-spacing:-.04em;
+}
+.logo strong{font-size:22px; font-weight:900;}
+.logo small{
+  margin-top:5px;
+  color:var(--museum-muted) !important;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+nav{gap:2px !important;}
+nav button{
+  background:transparent !important;
+  color:#34281f !important;
+  border:1px solid transparent !important;
+  border-radius:999px !important;
+  padding:8px 12px !important;
+  font-size:14px;
+  font-weight:800;
+  box-shadow:none !important;
+}
+nav button:hover{
+  background:#efe6d9 !important;
+  border-color:#dfcfbb !important;
+  transform:none !important;
+}
+.auth-area{color:var(--museum-muted) !important;}
+.auth-area button,
+#loginBtn,#signupBtn,#logoutBtn,#mypageBtn,#adminBtn{
+  background:#f4ede4 !important;
+  color:#3e2c21 !important;
+  border:1px solid #decfbc !important;
+  border-radius:999px !important;
+  padding:8px 12px !important;
+  box-shadow:none !important;
+}
+#adminBtn{background:#30241c !important;color:#fff7ed !important;border-color:#30241c !important;}
+
+main{
+  max-width:1180px !important;
+  padding:44px 22px 150px !important;
+}
+
+/* HOME: 장식보다 첫인상 중심 */
+.hero.atelier-hero,
+.hero{
+  min-height:0 !important;
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:0 !important;
+  padding:76px 74px 68px !important;
+  margin:0 0 26px !important;
+  border-radius:34px !important;
+  overflow:hidden;
+  background:
+    linear-gradient(135deg,rgba(35,28,23,.80),rgba(79,57,41,.66)),
+    radial-gradient(circle at 76% 28%,rgba(205,164,100,.25),transparent 38%),
+    linear-gradient(135deg,#2c231e,#6c4b36) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  box-shadow:var(--museum-shadow) !important;
+}
+.hero::before{
+  opacity:.26 !important;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.10),transparent 32%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 8px) !important;
+}
+.hero-copy{max-width:760px; position:relative; z-index:2;}
+.hero-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+  color:#edd7b9 !important;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.18em;
+}
+.hero-kicker::before{content:"";width:34px;height:1px;background:#d6b17a;display:inline-block;}
+.hero h1{
+  font-size:clamp(45px,7vw,82px) !important;
+  line-height:.98 !important;
+  margin:0 0 22px !important;
+  color:#fffaf2 !important;
+  letter-spacing:-.07em;
+  text-shadow:0 18px 45px rgba(0,0,0,.24) !important;
+}
+.hero p{
+  max-width:620px;
+  font-size:clamp(18px,2.2vw,24px) !important;
+  line-height:1.65 !important;
+  color:#f4e8d9 !important;
+  text-shadow:none !important;
+}
+.hero-object{display:none !important;}
+.hero-action-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;}
+.hero-primary,.hero-ghost{
+  border-radius:999px !important;
+  padding:13px 20px !important;
+  font-weight:900 !important;
+  box-shadow:none !important;
+}
+.hero-primary{background:#f7ead6 !important;color:#2a2019 !important;border:1px solid #f7ead6 !important;}
+.hero-ghost{background:rgba(255,255,255,.08) !important;color:#fff4e7 !important;border:1px solid rgba(255,255,255,.34) !important;}
+.hero-primary:hover,.hero-ghost:hover{transform:translateY(-1px);}
+
+.home-dock{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:14px !important;
+  margin:0 0 28px !important;
+}
+.home-dock button{
+  min-height:156px;
+  display:flex !important;
+  flex-direction:column;
+  align-items:flex-start !important;
+  justify-content:space-between;
+  text-align:left !important;
+  background:var(--museum-panel) !important;
+  color:var(--museum-ink) !important;
+  border:1px solid var(--museum-line) !important;
+  border-radius:28px !important;
+  padding:22px !important;
+  box-shadow:var(--museum-shadow-soft) !important;
+  position:relative;
+  overflow:hidden;
+}
+.home-dock button::after{
+  content:"";
+  position:absolute;
+  right:18px; top:18px;
+  width:38px; height:38px;
+  border-radius:50%;
+  border:1px solid #d8c5ae;
+  background:linear-gradient(135deg,#fffaf3,#efe1cf);
+}
+.home-dock button:hover{transform:translateY(-4px);box-shadow:0 18px 36px rgba(54,39,28,.14) !important;}
+.home-dock span{font-size:12px;color:var(--museum-gold);font-weight:900;letter-spacing:.16em;}
+.home-dock strong{font-size:25px;letter-spacing:-.04em;color:#221b16;}
+.home-dock small{font-size:14px;color:var(--museum-muted);font-weight:700;}
+
+.content-section,.page-title,.auth-page,.admin-form,.list-box,.site-guide-card{
+  background:rgba(255,253,248,.90) !important;
+  border:1px solid var(--museum-line) !important;
+  border-radius:30px !important;
+  box-shadow:var(--museum-shadow-soft) !important;
+  color:var(--museum-ink) !important;
+}
+.content-section h2,.page-title h1{
+  color:var(--museum-ink) !important;
+  font-weight:950;
+  letter-spacing:-.055em;
+}
+.page-title{
+  padding:34px 38px !important;
+  border-left:0 !important;
+}
+.page-title h1{font-size:clamp(32px,4.2vw,52px) !important;}
+.page-title p,.helper-text{color:var(--museum-muted) !important;line-height:1.75;}
+
+button,
+.admin-tabs button,
+.toolbar button,
+.secondary-btn{
+  border-radius:999px !important;
+  background:#39291f !important;
+  color:#fff7ef !important;
+  border:1px solid #39291f !important;
+  box-shadow:0 8px 18px rgba(45,31,22,.12) !important;
+}
+button:hover{filter:none; transform:translateY(-1px);}
+.delete-btn{background:#8e3429 !important;border-color:#8e3429 !important;}
+
+input,textarea,select{
+  background:#fffdf8 !important;
+  border:1px solid #d9c8b4 !important;
+  color:var(--museum-ink) !important;
+  border-radius:16px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65);
+}
+input:focus,textarea:focus,select:focus{
+  outline:2px solid rgba(185,144,90,.28);
+  border-color:#b99463 !important;
+}
+
+.card-grid{gap:18px !important;}
+.card,
+.song-card,
+.radio-card,
+.latest-category-card{
+  background:rgba(255,253,248,.92) !important;
+  border:1px solid var(--museum-line) !important;
+  border-radius:28px !important;
+  box-shadow:var(--museum-shadow-soft) !important;
+  overflow:hidden;
+}
+.card:hover,.song-card:hover,.radio-card:hover,.latest-category-card:hover{
+  transform:translateY(-4px) !important;
+  box-shadow:0 20px 42px rgba(54,39,28,.15) !important;
+}
+.card img,.card iframe,.card video{
+  border-radius:0 !important;
+  filter:saturate(.92) contrast(1.02);
+}
+.card-body{padding:18px 18px 20px !important;}
+.card-body h3{font-size:20px !important;font-weight:950;letter-spacing:-.055em;}
+.category-badge,
+.song-category-badge,
+.radio-category-badge{
+  background:#efe3d4 !important;
+  color:#5b3b27 !important;
+  border:1px solid #dfcdb8;
+  border-radius:999px !important;
+  font-weight:900 !important;
+}
+
+/* 하단 플레이어: 과한 갈색 덩어리 느낌 줄이기 */
+.daily-player.playlist-player .daily-player-card,
+.daily-player-card{
+  background:rgba(45,35,28,.78) !important;
+  border-top:1px solid rgba(255,255,255,.16) !important;
+  backdrop-filter:blur(18px) saturate(1.1);
+  box-shadow:0 -12px 34px rgba(0,0,0,.20) !important;
+}
+.daily-player-title,.playlist-player-title{font-weight:950 !important;}
+.daily-play-btn{background:#fff8f0 !important;color:#35261d !important;border-color:#fff8f0 !important;}
+.playlist-nav-btn{background:rgba(255,255,255,.12) !important;color:#fff8f0 !important;border-color:rgba(255,255,255,.20) !important;}
+
+/* 관리자 메뉴도 격자 카드처럼 */
+.admin-tabs{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(180px,1fr)) !important;
+  gap:14px !important;
+}
+.admin-tabs button{
+  min-height:74px;
+  border-radius:22px !important;
+  background:#fffdf8 !important;
+  color:#2c211a !important;
+  border:1px solid var(--museum-line) !important;
+  box-shadow:var(--museum-shadow-soft) !important;
+  font-size:18px;
+}
+.admin-tabs button:hover{background:#f2e6d8 !important;}
+
+@media (max-width: 900px){
+  .site-header{padding:12px 16px !important;min-height:66px !important;}
+  .mobile-menu-toggle{background:#33251d !important;color:#fff6ec !important;border-radius:999px !important;}
+  nav{background:rgba(255,252,246,.96) !important;border:1px solid var(--museum-line) !important;box-shadow:var(--museum-shadow) !important;}
+  nav button{color:#2d2119 !important;background:transparent !important;border-radius:14px !important;}
+  main{padding:24px 14px 140px !important;}
+  .hero.atelier-hero,.hero{padding:48px 26px !important;border-radius:28px !important;}
+  .hero h1{font-size:48px !important;}
+  .hero p{font-size:17px !important;}
+  .home-dock{grid-template-columns:1fr 1fr !important;gap:10px !important;}
+  .home-dock button{min-height:126px;border-radius:22px !important;padding:18px !important;}
+  .home-dock strong{font-size:20px;}
+  .card-grid{grid-template-columns:1fr !important;}
+  .page-title,.content-section{padding:24px 20px !important;border-radius:24px !important;}
+  .admin-tabs{grid-template-columns:1fr 1fr !important;gap:10px !important;}
+  .admin-tabs button{min-height:64px;font-size:15px;}
+}
+
+@media (max-width: 480px){
+  .home-dock{grid-template-columns:1fr !important;}
+  .hero h1{font-size:42px !important;}
+  .hero-action-row button{width:100%;}
+}
