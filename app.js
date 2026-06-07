@@ -128,6 +128,10 @@ function getPlayableAudioUrl(item = {}) {
   return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
 }
 
+function getBestCoverImageUrl(item = {}) {
+  return item.coverImageUrl || item.albumCoverUrl || item.coverUrl || item.jacketUrl || item.imageUrl || item.thumbnailUrl || item.photoUrl || item.image || "";
+}
+
 function isAudioContentItem(item = {}) {
   return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
@@ -328,8 +332,8 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 이 곳, 광석이네 집",
-  homeDescription: "김광석 아카이브",
+  homeTitle: "노래가 마무는 이 곳,\n광석이네 집",
+  homeDescription: "김광석 디지털 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
@@ -1268,8 +1272,17 @@ function applySiteSettings(settings) {
   applyDesignSettings(settings);
   document.getElementById("siteLogoText").textContent = settings.siteName;
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
-  document.getElementById("homeTitle").textContent = settings.homeTitle;
-  document.getElementById("homeDescription").textContent = settings.homeDescription;
+
+  const normalizedHomeTitle = (!settings.homeTitle || settings.homeTitle === "노래가 머무는 이 곳, 광석이네 집")
+    ? "노래가 마무는 이 곳,
+광석이네 집"
+    : settings.homeTitle;
+  const normalizedHomeDescription = (!settings.homeDescription || settings.homeDescription === "김광석 아카이브")
+    ? "김광석 디지털 아카이브"
+    : settings.homeDescription;
+
+  document.getElementById("homeTitle").textContent = normalizedHomeTitle;
+  document.getElementById("homeDescription").textContent = normalizedHomeDescription;
   ["videos","songs","radios","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
     if (el) el.textContent = settings[`${p}Desc`] || DEFAULT_SETTINGS[`${p}Desc`];
@@ -3106,7 +3119,7 @@ function renderAboutDocument(items) {
   }
 
   box.innerHTML = sorted.map((item) => {
-    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+    const imageUrl = getBestCoverImageUrl(item);
     const bodyText = item.body || item.description || "";
     const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
     const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
@@ -3582,10 +3595,16 @@ function openCoverZoom(src, title) {
   img.alt = title || "앨범 자켓";
   if (caption) caption.textContent = title || "앨범 자켓";
 
-  img.onload = function(){
+  const preloader = new Image();
+  preloader.onload = function () {
+    img.src = src;
     modal.classList.add("loaded");
   };
-  img.src = src;
+  preloader.onerror = function () {
+    img.src = src;
+    modal.classList.add("loaded");
+  };
+  preloader.src = src;
 }
 
 function openCoverZoomFromElement(element) {
@@ -3779,7 +3798,7 @@ function renderVideoQualitySelector(item = {}, videoId = "") {
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
-  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+  const imageUrl = getBestCoverImageUrl(item);
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
   const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
