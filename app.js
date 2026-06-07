@@ -128,10 +128,6 @@ function getPlayableAudioUrl(item = {}) {
   return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
 }
 
-function getBestCoverImageUrl(item = {}) {
-  return item.coverImageUrl || item.albumCoverUrl || item.coverUrl || item.jacketUrl || item.imageUrl || item.thumbnailUrl || item.photoUrl || item.image || "";
-}
-
 function isAudioContentItem(item = {}) {
   return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
@@ -3119,7 +3115,7 @@ function renderAboutDocument(items) {
   }
 
   box.innerHTML = sorted.map((item) => {
-    const imageUrl = getBestCoverImageUrl(item);
+    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
     const bodyText = item.body || item.description || "";
     const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
     const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
@@ -3595,16 +3591,10 @@ function openCoverZoom(src, title) {
   img.alt = title || "앨범 자켓";
   if (caption) caption.textContent = title || "앨범 자켓";
 
-  const preloader = new Image();
-  preloader.onload = function () {
-    img.src = src;
+  img.onload = function(){
     modal.classList.add("loaded");
   };
-  preloader.onerror = function () {
-    img.src = src;
-    modal.classList.add("loaded");
-  };
-  preloader.src = src;
+  img.src = src;
 }
 
 function openCoverZoomFromElement(element) {
@@ -3798,7 +3788,7 @@ function renderVideoQualitySelector(item = {}, videoId = "") {
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
-  const imageUrl = getBestCoverImageUrl(item);
+  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
   const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");
