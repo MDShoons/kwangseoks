@@ -1,0 +1,21 @@
+광석이네 집 v210 디자인 전면 리뉴얼 메모
+
+반영 내용
+1. PC통신 느낌이 아닌 1990년대 따뜻한 집/음악 아카이브 콘셉트로 홈 화면과 전체 UI를 재설계했습니다.
+2. 메인 첫 화면은 실제 '집' 느낌이 나도록 거실 배경, 집 문패, 창문, 레코드 오브제, 방 메뉴 구조를 추가했습니다.
+3. 메뉴는 '노래방 / 상영방 / 사진방 / 라디오방'처럼 광석이네 집 안의 방을 둘러보는 방식으로 바꿨습니다.
+4. 카드, 버튼, 검색창, 관리자 탭, 상세 영역에 세피아/브라운/골드 계열의 입체감을 적용했습니다.
+5. 기존 기능은 유지하고 CSS 오버라이드 중심으로 적용했습니다.
+6. 불필요한 텔레콤 관련 파일은 ZIP에서 제거했습니다.
+
+삭제한 대표 파일
+- CLOUDFLARE_WORKERS_AI_TELECOM_SETUP.txt
+- cloudflare-worker-ai-telecom.js
+- DIRECT_REPLY_FIX_NOTE.txt
+- WORKER_DIRECT_REPLY_FIX_NOTE.txt
+- WORKER_PROMPT_UPDATE_NOTE.txt
+- ROUNDSOUND_MEMBERS_NOTE.txt
+- ROUNDSOUND_MEMBER_STYLE_LEARNING_NOTE.txt
+
+주의
+- 기존 캐시가 남아 있으면 디자인이 즉시 안 바뀔 수 있습니다. index.html의 style.css 버전값은 home-archive-redesign-v210으로 변경했습니다.

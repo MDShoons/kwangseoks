@@ -4637,7 +4637,60 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   }
 }
 
-/* v122: PC header overlap fix after adding admin nav */
+/* v123 광석이네 통신방 */
+.telecom-page { background:#001f8f; color:#e9f1ff; min-height:calc(100vh - 92px); padding:22px; }
+.telecom-shell { max-width:1120px; margin:0 auto; border:2px solid #8aa7ff; background:#0027ad; box-shadow:0 0 0 4px rgba(0,0,0,.18) inset; font-family:"D2Coding","Courier New",monospace; }
+.telecom-titlebar { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid #8aa7ff; background:#001b79; }
+.telecom-titlebar h1 { margin:0 0 5px; color:#fff; font-size:24px; letter-spacing:-.02em; }
+.telecom-titlebar p { margin:0; color:#c8d8ff; font-size:13px; }
+.telecom-setup { padding:28px; display:flex; justify-content:center; }
+.telecom-connect-box { width:min(420px,100%); border:1px solid #9fb5ff; padding:18px; background:#002dbf; }
+.telecom-connect-box h2 { margin:0 0 14px; color:#fff; font-size:20px; }
+.telecom-connect-box label { display:block; margin:12px 0 5px; color:#d8e4ff; font-size:13px; }
+.telecom-connect-box input, .telecom-input-row input { width:100%; box-sizing:border-box; background:#00165f; color:#fff; border:1px solid #8aa7ff; border-radius:0; padding:10px; font-family:inherit; }
+.telecom-connect-box select { width:100%; box-sizing:border-box; background:#00165f; color:#ffffff; border:2px solid #d8e4ff; border-radius:0; padding:11px 10px; font-family:inherit; font-size:16px; font-weight:700; }
+.telecom-connect-box select option { background:#00165f; color:#ffffff; font-size:16px; }
+.telecom-readonly { background:#00104a !important; color:#d8e4ff !important; opacity:1; }
+.telecom-fixed-label { display:inline-block; margin-left:6px; padding:2px 6px; border:1px solid #8aa7ff; color:#fff; font-size:11px; }
+.telecom-account-note { margin:8px 0 12px; color:#c8d8ff; font-size:12px; line-height:1.5; }
+.telecom-connect-box select:focus, .telecom-connect-box input:focus, .telecom-input-row input:focus { outline:3px solid #fff; outline-offset:1px; }
+.telecom-enter-btn, .telecom-small-btn, .telecom-input-row button { background:#dbe6ff; color:#001b79; border:1px solid #fff; border-radius:0; padding:9px 12px; font-family:inherit; font-weight:700; cursor:pointer; }
+.telecom-enter-btn { width:100%; margin-top:16px; }
+.telecom-small-btn:disabled { opacity:.62; cursor:not-allowed; }
+.telecom-room { padding:12px 14px 16px; }
+.telecom-status-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px dashed #8aa7ff; color:#fff; }
+#telecomRoomName { flex:1; min-width:210px; font-weight:700; }
+.telecom-room-date { display:inline-block; color:#ffffff; border:1px solid #8aa7ff; padding:3px 8px; font-size:13px; font-weight:700; background:#001b79; }
+.telecom-log { height:440px; overflow:auto; padding:14px 4px; background:#0027ad; color:#ffffff; font-size:16px; line-height:1.7; }
+.telecom-line { white-space:pre-wrap; word-break:keep-all; margin-bottom:6px; }
+.telecom-time { display:inline-block; margin-left:8px; color:#d5e3ff; font-size:11px; line-height:1; opacity:.82; vertical-align:baseline; }
+.telecom-after-exit { margin:10px 0 0; padding:10px; border:1px dashed #9fb5ff; color:#fff; display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:rgba(0,0,0,.14); }
+.telecom-after-exit span { flex:1 1 240px; }
+.telecom-system { color:#ffffff; }
+.telecom-nick { display:inline-block; min-width:86px; color:#fff; font-weight:700; }
+.telecom-real { color:#ffffff; }
+.telecom-text { color:#ffffff; }
+.telecom-input-row { display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; padding-top:10px; border-top:1px dashed #8aa7ff; }
+.telecom-input-row span { color:#fff; font-weight:700; }
+.telecom-notice { margin:10px 0 0; color:#c8d8ff; font-size:12px; }
+
+@media (max-width:820px) {
+  .telecom-page { padding:10px; min-height:calc(100vh - 72px); }
+  .telecom-shell { width:100%; }
+  .telecom-titlebar { padding:12px; flex-direction:column; }
+  .telecom-titlebar h1 { font-size:20px; }
+  .telecom-setup { padding:16px; }
+  .telecom-room { padding:10px; }
+  .telecom-log { height:56vh; font-size:14px; line-height:1.62; }
+  .telecom-nick { min-width:70px; }
+  .telecom-input-row { grid-template-columns:1fr; }
+  .telecom-input-row span { display:none; }
+  .telecom-time { margin-left:6px; font-size:10px; }
+  .telecom-status-row { align-items:stretch; }
+  .telecom-status-row .telecom-small-btn { flex:1 1 auto; }
+}
+
+/* v122: PC header overlap fix after adding telecom/admin nav */
 @media (min-width: 821px) {
   .site-header {
     min-width: 0 !important;
@@ -4753,6 +4806,106 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
   #siteNav::-webkit-scrollbar { display: none !important; }
 }
 
+
+/* v139: PC-only telecom + browser local AI experiment */
+.telecom-pc-only {
+  max-width: 760px;
+  margin: 40px auto;
+  padding: 26px;
+  border: 2px solid #8aa7ff;
+  background: #0027ad;
+  color: #fff;
+  font-family: "D2Coding", "Courier New", monospace;
+  text-align: center;
+}
+.telecom-pc-only h2 { margin: 0 0 12px; color: #fff; }
+.telecom-pc-only p { margin: 0; color: #d8e4ff; line-height: 1.65; }
+.telecom-ai-status {
+  margin: 8px 0 12px;
+  padding: 8px 10px;
+  border: 1px dashed #8aa7ff;
+  color: #ffffff;
+  background: rgba(0,0,0,.16);
+  font-size: 12px;
+  line-height: 1.55;
+}
+@media (max-width: 899px) {
+  #telecom .telecom-shell { display: none !important; }
+  #telecomPcOnlyNotice.hidden { display: block !important; }
+}
+
+/* v150: 통신방 선택 박스/입력창 가독성 강제 보정 */
+#telecom .telecom-connect-box select,
+#telecom .telecom-connect-box select option,
+#telecom .telecom-connect-box input,
+#telecom .telecom-input-row input,
+#telecom input[type="text"],
+#telecom input[type="search"],
+#telecom input[type="password"],
+#telecom input[type="email"],
+#telecom textarea {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background-color: #00165f !important;
+  border-color: #8fb3ff !important;
+  opacity: 1 !important;
+  caret-color: #ffffff !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+#telecom .telecom-connect-box select {
+  appearance: auto !important;
+  -webkit-appearance: menulist !important;
+  height: 36px !important;
+  line-height: 1.3 !important;
+  padding: 6px 10px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+#telecom .telecom-connect-box select option,
+#telecom .telecom-connect-box select optgroup {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: #00165f !important;
+}
+
+#telecom .telecom-connect-box select:focus,
+#telecom .telecom-connect-box input:focus,
+#telecom .telecom-input-row input:focus,
+#telecom textarea:focus {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background-color: #00165f !important;
+  outline: 2px solid #ffffff !important;
+  outline-offset: 1px !important;
+}
+
+#telecom .telecom-connect-box input::placeholder,
+#telecom .telecom-input-row input::placeholder,
+#telecom textarea::placeholder {
+  color: #c8d8ff !important;
+  -webkit-text-fill-color: #c8d8ff !important;
+  opacity: 1 !important;
+}
+
+#telecom input:-webkit-autofill,
+#telecom input:-webkit-autofill:hover,
+#telecom input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 0 0 1000px #00165f inset !important;
+  transition: background-color 9999s ease-out 0s !important;
+}
+
+/* readonly 계정 입력칸도 흐릿하게 죽지 않게 유지 */
+#telecom .telecom-readonly,
+#telecom input[readonly] {
+  color: #e9f1ff !important;
+  -webkit-text-fill-color: #e9f1ff !important;
+  background-color: #00104a !important;
+  opacity: 1 !important;
+}
 
 /* v163: 플레이어 커버/위치/가독성 보정 */
 #dailyRecommendPlayer .daily-player-cover,
@@ -5808,6 +5961,305 @@ body {
   }
 }
 
+
+/* v-cloudflare-pcui: 실제 PC통신 대화방 화면 복원 */
+#telecom.telecom-page {
+  background:#0633bb !important;
+  color:#eaf3ff !important;
+  padding:18px !important;
+  min-height:calc(100vh - 92px) !important;
+}
+#telecom .telecom-shell {
+  max-width:1180px !important;
+  min-height:650px !important;
+  margin:0 auto !important;
+  border:2px solid #8dafff !important;
+  background:#0633bb !important;
+  box-shadow: inset 0 0 0 4px rgba(0,0,70,.28) !important;
+  font-family:"Courier New","D2Coding","Nanum Gothic Coding",monospace !important;
+}
+#telecom .telecom-titlebar {
+  padding:14px 18px !important;
+  border-bottom:1px solid #88aaff !important;
+  background:#061f80 !important;
+}
+#telecom .telecom-titlebar h1 {
+  font-size:24px !important;
+  letter-spacing:.02em !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-titlebar p {
+  color:#d7e4ff !important;
+  font-size:13px !important;
+}
+#telecom .telecom-room {
+  padding:14px 18px 16px !important;
+}
+#telecom .telecom-status-row {
+  display:flex !important;
+  align-items:center !important;
+  gap:12px !important;
+  border-bottom:1px dashed #89a9ff !important;
+  padding-bottom:8px !important;
+  color:#fff !important;
+  font-size:18px !important;
+}
+#telecom #telecomRoomName {
+  font-weight:700 !important;
+  letter-spacing:.02em !important;
+}
+#telecom .telecom-room-date {
+  margin-left:auto !important;
+  min-width:72px !important;
+  text-align:center !important;
+  background:transparent !important;
+  border:1px solid #7fa2ff !important;
+  color:#dce8ff !important;
+}
+#telecom .telecom-log {
+  height:520px !important;
+  overflow:auto !important;
+  padding:18px 10px 12px !important;
+  background:#0633bb !important;
+  color:#f5fbff !important;
+  font-size:20px !important;
+  line-height:1.95 !important;
+  letter-spacing:.01em !important;
+}
+#telecom .telecom-line {
+  display:grid !important;
+  grid-template-columns: 170px 120px minmax(280px, 1fr) 64px !important;
+  align-items:baseline !important;
+  column-gap:10px !important;
+  margin:0 !important;
+  min-height:35px !important;
+  white-space:normal !important;
+  word-break:keep-all !important;
+}
+#telecom .telecom-line-system {
+  grid-template-columns: 96px minmax(480px,1fr) 64px !important;
+  color:#f7fbff !important;
+}
+#telecom .telecom-system-prefix {
+  color:#f9fbff !important;
+  font-weight:700 !important;
+}
+#telecom .telecom-system-text {
+  color:#f7fbff !important;
+}
+#telecom .telecom-nick {
+  min-width:0 !important;
+  color:#ffffff !important;
+  font-weight:700 !important;
+  font-size:22px !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-real {
+  color:#f2f7ff !important;
+  font-size:22px !important;
+  font-weight:700 !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-text {
+  color:#f9fdff !important;
+  font-size:22px !important;
+  font-weight:700 !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-line-time {
+  color:#9dbbff !important;
+  font-size:15px !important;
+  font-weight:700 !important;
+  letter-spacing:.06em !important;
+}
+#telecom .telecom-input-row {
+  display:grid !important;
+  grid-template-columns:auto 1fr auto !important;
+  gap:8px !important;
+  align-items:center !important;
+  border-top:1px dashed #8dafff !important;
+  padding-top:10px !important;
+}
+#telecom .telecom-input-row span {
+  display:inline !important;
+  font-size:16px !important;
+  color:#fff !important;
+}
+#telecom .telecom-input-row input {
+  background:#001c73 !important;
+  border:1px solid #9db8ff !important;
+  color:#ffffff !important;
+  height:34px !important;
+  padding:6px 10px !important;
+  font-size:16px !important;
+}
+#telecom .telecom-input-row button,
+#telecom .telecom-small-btn,
+#telecom .telecom-enter-btn {
+  background:#8a542f !important;
+  color:#001b58 !important;
+  border:1px solid #f2d6bb !important;
+  font-weight:700 !important;
+}
+#telecom .telecom-notice,
+#telecom .telecom-ai-status {
+  color:#cbdcff !important;
+  font-size:12px !important;
+}
+#telecom .telecom-setup.hidden { display:none !important; }
+
+@media (max-width: 760px) {
+  #telecom .telecom-log { font-size:14px !important; height:58vh !important; line-height:1.75 !important; }
+  #telecom .telecom-line { grid-template-columns: 88px 70px 1fr 42px !important; column-gap:5px !important; }
+  #telecom .telecom-line-system { grid-template-columns: 48px 1fr 42px !important; }
+  #telecom .telecom-nick,
+  #telecom .telecom-real,
+  #telecom .telecom-text { font-size:14px !important; text-shadow:none !important; }
+  #telecom .telecom-line-time { font-size:10px !important; }
+}
+
+/* v-kks-presence-flow: 요청 반영 - PC통신 글자는 그림자 없는 흰색 */
+#telecom .telecom-line,
+#telecom .telecom-system-prefix,
+#telecom .telecom-system-text,
+#telecom .telecom-nick,
+#telecom .telecom-real,
+#telecom .telecom-text { color:#ffffff !important; text-shadow:none !important; }
+#telecom .telecom-ai-status { color:#ffffff !important; }
+
+
+/* v183: PC통신 글씨 축소 + 촘촘한 로그 */
+#telecom .telecom-titlebar h1 { font-size:20px !important; }
+#telecom .telecom-titlebar p { font-size:11px !important; }
+#telecom .telecom-status-row { font-size:15px !important; }
+#telecom .telecom-room-date { font-size:11px !important; min-width:66px !important; padding:2px 6px !important; }
+#telecom .telecom-log {
+  font-size:14px !important;
+  line-height:1.48 !important;
+  height:500px !important;
+  padding:12px 8px 10px !important;
+}
+#telecom .telecom-line {
+  grid-template-columns: 118px 86px minmax(240px, 1fr) 48px !important;
+  column-gap:8px !important;
+  min-height:22px !important;
+  line-height:1.48 !important;
+}
+#telecom .telecom-line-system {
+  grid-template-columns: 56px minmax(320px,1fr) 48px !important;
+  min-height:22px !important;
+}
+#telecom .telecom-nick,
+#telecom .telecom-real,
+#telecom .telecom-text {
+  font-size:14px !important;
+  font-weight:700 !important;
+  line-height:1.48 !important;
+}
+#telecom .telecom-line-time { font-size:10px !important; }
+#telecom .telecom-input-row span { font-size:13px !important; }
+#telecom .telecom-input-row input { height:30px !important; font-size:13px !important; padding:4px 8px !important; }
+#telecom .telecom-input-row button,
+#telecom .telecom-small-btn,
+#telecom .telecom-enter-btn { font-size:12px !important; padding:6px 10px !important; }
+#telecom .telecom-notice,
+#telecom .telecom-ai-status { font-size:10.5px !important; }
+
+
+/* v184: PC통신 실제 로그처럼 더 작고 촘촘하게, 캐시 강제 갱신용 최종 오버라이드 */
+#telecom .telecom-titlebar { padding:12px 16px !important; }
+#telecom .telecom-titlebar h1 { font-size:18px !important; line-height:1.25 !important; }
+#telecom .telecom-titlebar p { font-size:10.5px !important; }
+#telecom .telecom-room { padding:10px 12px 14px !important; }
+#telecom .telecom-status-row { font-size:13px !important; padding-bottom:8px !important; }
+#telecom #telecomRoomName { font-size:14px !important; }
+#telecom .telecom-room-date { font-size:10.5px !important; min-width:62px !important; padding:2px 5px !important; }
+#telecom .telecom-log {
+  height:500px !important;
+  padding:10px 8px 8px !important;
+  font-size:12.5px !important;
+  line-height:1.42 !important;
+  letter-spacing:0 !important;
+}
+#telecom .telecom-line {
+  grid-template-columns: 102px 76px minmax(220px, 1fr) 42px !important;
+  column-gap:7px !important;
+  min-height:18px !important;
+  line-height:1.42 !important;
+  margin:0 !important;
+}
+#telecom .telecom-line-system {
+  grid-template-columns: 48px minmax(300px,1fr) 42px !important;
+  min-height:18px !important;
+}
+#telecom .telecom-nick,
+#telecom .telecom-real,
+#telecom .telecom-text {
+  font-size:12.5px !important;
+  line-height:1.42 !important;
+  font-weight:700 !important;
+}
+#telecom .telecom-line-time { font-size:9px !important; line-height:1.42 !important; }
+#telecom .telecom-system-prefix,
+#telecom .telecom-system-text { font-size:12.5px !important; line-height:1.42 !important; }
+#telecom .telecom-input-row { padding-top:8px !important; gap:7px !important; }
+#telecom .telecom-input-row span { font-size:12px !important; }
+#telecom .telecom-input-row input { height:28px !important; font-size:12px !important; padding:3px 7px !important; }
+#telecom .telecom-input-row button,
+#telecom .telecom-small-btn,
+#telecom .telecom-enter-btn { font-size:11px !important; padding:5px 9px !important; }
+#telecom .telecom-notice,
+#telecom .telecom-ai-status { font-size:10px !important; }
+
+@media (max-width: 760px) {
+  #telecom .telecom-log { font-size:12px !important; line-height:1.46 !important; }
+  #telecom .telecom-line { grid-template-columns: 78px 58px 1fr 36px !important; column-gap:4px !important; }
+  #telecom .telecom-line-system { grid-template-columns: 44px 1fr 36px !important; }
+  #telecom .telecom-nick,
+  #telecom .telecom-real,
+  #telecom .telecom-text,
+  #telecom .telecom-system-prefix,
+  #telecom .telecom-system-text { font-size:12px !important; }
+  #telecom .telecom-line-time { font-size:8.5px !important; }
+}
+
+
+/* v18 stable dialogue: PC통신 로그를 더 작고 촘촘하게 */
+#telecom .telecom-titlebar h1 { font-size:17px !important; line-height:1.2 !important; }
+#telecom .telecom-titlebar p { font-size:10px !important; }
+#telecom .telecom-room-date { font-size:10px !important; min-width:58px !important; padding:2px 5px !important; }
+#telecom .telecom-log {
+  font-size:11.5px !important;
+  line-height:1.38 !important;
+  letter-spacing:-0.2px !important;
+}
+#telecom .telecom-line {
+  grid-template-columns: 82px 64px 1fr 38px !important;
+  column-gap:4px !important;
+  min-height:17px !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+#telecom .telecom-line-system {
+  grid-template-columns: 46px 1fr 38px !important;
+  column-gap:4px !important;
+}
+#telecom .telecom-nick,
+#telecom .telecom-real,
+#telecom .telecom-text,
+#telecom .telecom-system-prefix,
+#telecom .telecom-system-text {
+  font-size:11.5px !important;
+  line-height:1.38 !important;
+  color:#fff !important;
+  text-shadow:none !important;
+}
+#telecom .telecom-line-time { font-size:8.5px !important; line-height:1.38 !important; }
+#telecom .telecom-input-row span { font-size:11px !important; }
+#telecom .telecom-input-row input { height:26px !important; font-size:11px !important; padding:3px 7px !important; }
+#telecom .telecom-enter-btn,
+#telecom .telecom-small-btn { font-size:10.5px !important; padding:5px 9px !important; }
+#telecom .telecom-ai-status { font-size:9.5px !important; }
 
 /* v180: 모바일 플레이리스트를 PC 하단 바 스타일로 축소 적용 */
 @media (max-width: 768px) {
@@ -7430,46 +7882,39 @@ body.playlist-detail-open {
   }
 }
 
-
 /* =========================================================
-   v210 1990s Warm Archive Luxury Redesign
-   - 오래된 파란 대화방 느낌 제거
-   - 김광석 음악 아카이브/작은 집 정체성 강화
-   - 브라운 단순 버튼 UI에서 공연 포스터 + 앨범 재킷 느낌으로 전면 리디자인
+   v210 1990s Warm House Archive Redesign
+   - PC통신 느낌 제거, '광석이네 집'의 집/음악 아카이브 정체성 강화
+   - 기존 기능은 유지하고 시각 디자인만 고급형으로 오버라이드
    ========================================================= */
 :root {
-  --body-bg: #120f0b;
-  --header-bg: rgba(22, 16, 11, .86);
-  --button-bg: #8d5b35;
-  --card-bg: rgba(255, 249, 239, .94);
-  --text-color: #281d17;
-  --hero-text-color: #fff8e8;
-  --nav-text-color: #fff4dc;
-  --kks-ink: #261811;
-  --kks-cream: #fff4df;
-  --kks-paper: #f6ead3;
-  --kks-paper-2: #fffaf0;
-  --kks-sepia: #8a5630;
-  --kks-deep: #1a110c;
-  --kks-gold: #d4a75f;
-  --kks-red: #8d3327;
-  --kks-line: rgba(96, 60, 34, .25);
-  --kks-shadow: 0 22px 70px rgba(23, 12, 5, .28);
-  --base-font-size: 16px;
-  --hero-title-size: clamp(44px, 6vw, 82px);
-  --hero-desc-size: clamp(16px, 2.1vw, 22px);
+  --body-bg: #efe2cf;
+  --header-bg: #2a1710;
+  --button-bg: #7f4b2e;
+  --card-bg: #fff8ec;
+  --text-color: #261a14;
+  --nav-text-color: #fff4df;
+  --kks-ink: #251711;
+  --kks-brown: #6d3f25;
+  --kks-brown-2: #8e5632;
+  --kks-deep: #1d100b;
+  --kks-gold: #d8a85f;
+  --kks-paper: #fff7e8;
+  --kks-paper-2: #f4e2c8;
+  --kks-line: rgba(99, 57, 31, .22);
+  --kks-shadow: 0 24px 70px rgba(43, 24, 14, .22);
 }
 
-html { background: #120f0b !important; scroll-behavior: smooth; }
+html { scroll-behavior: smooth; }
 body {
-  min-height: 100vh;
+  min-width: 0 !important;
   background:
-    radial-gradient(circle at 18% 2%, rgba(214, 156, 81, .28) 0, transparent 32%),
-    radial-gradient(circle at 88% 10%, rgba(130, 42, 31, .24) 0, transparent 30%),
-    linear-gradient(180deg, #17100b 0%, #27170d 36%, #efe2c9 36%, #f8edd9 100%) !important;
+    radial-gradient(circle at 14% 6%, rgba(255, 237, 190, .55), transparent 32%),
+    radial-gradient(circle at 82% 18%, rgba(116, 61, 31, .12), transparent 28%),
+    linear-gradient(90deg, rgba(105, 62, 32, .10) 0 1px, transparent 1px 96px),
+    linear-gradient(180deg, #f6ebd9 0%, #ead7bc 100%) !important;
   color: var(--kks-ink) !important;
-  font-family: "Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", system-ui, sans-serif !important;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
 }
 body::before {
   content: "";
@@ -7477,577 +7922,467 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: -1;
+  opacity: .26;
   background-image:
-    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
-    radial-gradient(circle at 50% 0%, rgba(255, 225, 159, .12), transparent 42%);
-  background-size: 34px 34px, 34px 34px, 100% 100%;
-  mix-blend-mode: screen;
-  opacity: .55;
-}
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 999999;
-  opacity: .07;
-  background:
-    repeating-linear-gradient(0deg, rgba(0,0,0,.9) 0 1px, transparent 1px 3px),
-    radial-gradient(circle at 20% 30%, rgba(255,255,255,.45), transparent 1px),
-    radial-gradient(circle at 80% 70%, rgba(0,0,0,.35), transparent 1px);
-  background-size: auto, 83px 97px, 111px 101px;
+    radial-gradient(circle at 20% 20%, rgba(72, 41, 21, .16) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 70% 65%, rgba(255, 255, 255, .45) 0 1px, transparent 1.5px);
+  background-size: 22px 22px, 37px 37px;
+  mix-blend-mode: multiply;
 }
 
 .site-header {
+  min-width: 0 !important;
   min-height: 78px !important;
-  padding: 12px clamp(16px, 4vw, 54px) !important;
-  position: sticky !important;
-  top: 0;
-  z-index: 1000 !important;
-  background: linear-gradient(90deg, rgba(22,13,8,.92), rgba(52,31,18,.86), rgba(22,13,8,.9)) !important;
-  color: var(--kks-cream) !important;
-  border-bottom: 1px solid rgba(231, 185, 102, .3) !important;
-  box-shadow: 0 12px 35px rgba(0,0,0,.32) !important;
-  backdrop-filter: blur(14px) saturate(120%);
-}
-.site-header::before {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: -1px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(233,188,100,.85), transparent);
-  pointer-events: none;
+  height: auto !important;
+  padding: 14px clamp(18px, 4vw, 52px) !important;
+  background:
+    linear-gradient(180deg, rgba(34, 18, 11, .98), rgba(55, 29, 17, .96)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 20px) !important;
+  border-bottom: 1px solid rgba(216, 168, 95, .34);
+  box-shadow: 0 14px 34px rgba(31, 18, 12, .28);
+  backdrop-filter: blur(10px);
 }
 .logo {
-  min-width: 170px;
-  color: var(--kks-cream) !important;
-  line-height: 1.05;
-  display: grid;
-  gap: 4px;
+  min-width: 178px !important;
+  position: relative;
+  padding: 8px 14px 8px 46px;
+  border: 1px solid rgba(216, 168, 95, .32);
+  border-radius: 999px;
+  background: rgba(255, 242, 216, .07);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
 }
-.logo strong {
-  font-size: clamp(22px, 2.4vw, 34px) !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.07em;
-  text-shadow: 0 2px 16px rgba(212,167,95,.28);
-}
-.logo strong::before {
+.logo::before {
   content: "⌂";
-  margin-right: 8px;
-  color: var(--kks-gold);
-  font-size: .84em;
-  vertical-align: 1px;
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-52%);
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #26160d;
+  background: linear-gradient(135deg, #ffe4a7, #c9883d);
+  font-size: 14px;
+  font-weight: 900;
 }
-.logo small {
-  color: rgba(255,244,220,.78) !important;
-  font-size: 11px !important;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-#siteNav { gap: 6px !important; }
-#siteNav button,
-.auth-area button,
-.mobile-menu-toggle {
-  background: rgba(255, 248, 230, .08) !important;
-  color: var(--kks-cream) !important;
-  border: 1px solid rgba(232, 190, 111, .18) !important;
+.logo strong { font-size: 21px; line-height: 1.05; color: #fff7e6; }
+.logo small { color: rgba(255,244,223,.72) !important; font-size: 11px !important; letter-spacing: .02em; }
+nav { gap: 6px !important; }
+nav button {
+  border: 1px solid transparent !important;
   border-radius: 999px !important;
-  padding: 9px 12px !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.10) !important;
-  transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  padding: 10px 13px !important;
+  color: rgba(255, 246, 225, .88) !important;
+  background: transparent !important;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
 }
-#siteNav button:hover,
-.auth-area button:hover,
-.mobile-menu-toggle:hover {
+nav button:hover {
+  background: rgba(255, 232, 184, .12) !important;
+  border-color: rgba(216, 168, 95, .28) !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
-  background: linear-gradient(180deg, rgba(212,167,95,.28), rgba(141,91,53,.24)) !important;
-  border-color: rgba(231, 184, 100, .55) !important;
-  box-shadow: 0 8px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.16) !important;
 }
-#userStatus { color: rgba(255,244,220,.78) !important; font-size: 12px; }
+.auth-area button, .mobile-menu-toggle {
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #8f542f, #6f371e) !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.16) !important;
+}
+#userStatus { color: rgba(255,246,225,.72); }
 
 main {
-  max-width: 1280px !important;
-  padding: clamp(20px, 3.5vw, 48px) clamp(14px, 3vw, 28px) 110px !important;
+  min-width: 0 !important;
+  max-width: 1320px !important;
+  padding: clamp(22px, 4vw, 54px) clamp(16px, 3vw, 36px) 120px !important;
 }
 
-/* Home Hero */
-.hero.kks-hero,
-.hero {
-  min-height: clamp(520px, 68vh, 760px) !important;
+.kks-home-hero,
+.hero.kks-home-hero {
+  min-height: clamp(520px, 58vw, 680px) !important;
+  max-width: 1240px !important;
+  margin: 0 auto 34px !important;
+  padding: clamp(34px, 6vw, 72px) !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, .52fr);
+  align-items: end;
+  gap: clamp(24px, 5vw, 58px);
+  overflow: hidden;
   border-radius: 34px !important;
-  margin: 10px 0 32px !important;
-  padding: clamp(32px, 6vw, 82px) !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.12fr) minmax(260px, .88fr);
-  align-items: center;
-  gap: clamp(24px, 5vw, 70px);
   color: #fff8e7 !important;
   background-image:
-    linear-gradient(90deg, rgba(22,12,8,.98) 0%, rgba(41,23,13,.78) 46%, rgba(86,45,24,.38) 100%),
-    radial-gradient(circle at 76% 20%, rgba(236,186,87,.5), transparent 24%),
-    radial-gradient(circle at 85% 74%, rgba(130,38,31,.45), transparent 28%),
-    url("images/main-bg.png") !important;
-  background-size: cover, cover, cover, cover !important;
-  background-position: center !important;
-  box-shadow: 0 35px 100px rgba(20, 10, 4, .48), inset 0 0 0 1px rgba(255,235,190,.18) !important;
-  overflow: hidden;
-  isolation: isolate;
+    linear-gradient(90deg, rgba(27, 14, 8, .84) 0%, rgba(53, 27, 15, .64) 42%, rgba(96, 52, 28, .22) 100%),
+    radial-gradient(circle at 80% 15%, rgba(255, 214, 134, .30), transparent 28%),
+    url('images/main-bg.png') !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  box-shadow: var(--kks-shadow), inset 0 0 0 1px rgba(255, 231, 184, .20) !important;
 }
-.hero.kks-hero::before,
-.hero::before {
-  content: "" !important;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+.hero.kks-home-hero::before {
   background:
-    linear-gradient(110deg, rgba(255,255,255,.08) 0 1px, transparent 1px 10px),
-    radial-gradient(ellipse at 28% 30%, rgba(255,222,143,.14), transparent 38%),
-    linear-gradient(180deg, transparent 0%, rgba(0,0,0,.46) 100%) !important;
-  opacity: 1 !important;
+    linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(22, 11, 7, .78) 100%),
+    repeating-linear-gradient(90deg, rgba(255, 247, 226, .05) 0 1px, transparent 1px 5px) !important;
+  opacity: .70;
 }
-.hero.kks-hero::after,
-.hero::after {
-  content: "김광석";
+.hero.kks-home-hero::after {
+  content: "";
   position: absolute;
-  right: -8px;
-  bottom: -28px;
-  z-index: 0;
-  font-family: Georgia, serif;
-  font-size: clamp(82px, 15vw, 210px);
-  font-weight: 900;
-  letter-spacing: -0.12em;
-  color: rgba(255, 240, 206, .08);
+  inset: 18px;
+  border: 1px solid rgba(255, 229, 178, .28);
+  border-radius: 24px;
   pointer-events: none;
+  z-index: 1;
 }
-.kks-hero-copy, .kks-hero-panel, .hero h1, .hero p, .hero div { position: relative; z-index: 2; }
-.kks-hero-kicker {
+.kks-hero-copy, .kks-hero-room-card, .kks-hero-plaque { position: relative; z-index: 2; }
+.kks-hero-plaque {
+  position: absolute;
+  top: 26px;
+  left: 34px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 18px;
-  padding: 8px 13px;
-  border: 1px solid rgba(231,185,100,.44);
+  padding: 9px 16px;
   border-radius: 999px;
-  color: #ffe0a4;
-  background: rgba(0,0,0,.22);
+  color: rgba(255, 243, 218, .86);
+  background: rgba(28, 13, 7, .48);
+  border: 1px solid rgba(255, 226, 170, .22);
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: .14em;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
-.kks-hero-kicker::before { content: "●"; color: #d54b34; text-shadow: 0 0 12px rgba(213,75,52,.75); }
-.hero h1 {
+.kks-hero-plaque::before {
+  content: "●";
+  color: #e4b66d;
+  text-shadow: 0 0 14px rgba(228, 182, 109, .75);
+}
+.kks-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: #2b180d;
+  background: linear-gradient(135deg, #ffe5ae, #d39a51);
+  font-size: 14px;
+  font-weight: 1000;
+  box-shadow: 0 10px 24px rgba(0,0,0,.20);
+}
+.kks-hero-kicker::before { content: "⌂"; }
+.hero.kks-home-hero h1,
+.hero.kks-home-hero #homeTitle {
+  max-width: 720px;
   margin: 0 0 18px !important;
   color: #fff6df !important;
-  font-size: var(--hero-title-size) !important;
+  font-size: clamp(43px, 7vw, 82px) !important;
   line-height: .98 !important;
-  font-weight: 950 !important;
-  letter-spacing: -0.095em;
-  text-shadow: 0 4px 32px rgba(0,0,0,.55), 0 0 26px rgba(212,167,95,.25) !important;
+  letter-spacing: -0.075em;
+  text-shadow: 0 6px 30px rgba(0,0,0,.42) !important;
 }
-.hero p {
-  max-width: 720px;
-  color: rgba(255,246,225,.86) !important;
-  font-size: var(--hero-desc-size) !important;
-  line-height: 1.72 !important;
-  word-break: keep-all;
-  text-shadow: 0 2px 14px rgba(0,0,0,.42) !important;
+.hero.kks-home-hero p,
+.hero.kks-home-hero #homeDescription {
+  max-width: 640px;
+  margin: 0 0 28px !important;
+  color: rgba(255, 246, 225, .88) !important;
+  font-size: clamp(17px, 2.1vw, 22px) !important;
+  line-height: 1.68;
+  text-shadow: 0 2px 14px rgba(0,0,0,.45) !important;
 }
-.kks-hero-actions,
-.hero > div:not(.kks-hero-copy):not(.kks-hero-panel) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 28px;
-}
-.hero button,
-.hero-primary-btn,
-.hero-secondary-btn {
+.kks-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.kks-hero-actions button,
+.hero.kks-home-hero button {
   min-height: 48px;
   padding: 13px 20px !important;
+  border: 1px solid rgba(255, 230, 176, .36) !important;
   border-radius: 999px !important;
-  border: 1px solid rgba(255,230,178,.34) !important;
-  color: #fff8e7 !important;
-  background: linear-gradient(180deg, #a76837 0%, #704126 100%) !important;
-  box-shadow: 0 12px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  color: #fff9ea !important;
+  background: linear-gradient(135deg, rgba(174, 103, 54, .98), rgba(113, 55, 27, .98)) !important;
+  box-shadow: 0 12px 24px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.18) !important;
 }
-.hero-secondary-btn { background: rgba(255,248,230,.12) !important; }
-.hero button:hover { transform: translateY(-2px); filter: brightness(1.05); }
-.kks-hero-panel {
-  min-height: 390px;
-  display: grid;
-  place-items: center;
+.kks-hero-actions button:hover { transform: translateY(-2px); }
+.kks-hero-room-card {
+  align-self: stretch;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 246, 226, .16), rgba(62, 30, 15, .44)),
+    rgba(30, 15, 8, .32);
+  border: 1px solid rgba(255, 232, 184, .28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 20px 44px rgba(0,0,0,.22);
+  backdrop-filter: blur(4px);
 }
-.kks-record-disc {
-  width: min(72vw, 390px);
-  aspect-ratio: 1;
+.kks-room-window {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  height: 150px;
+  border-radius: 22px 22px 12px 12px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.14) 0 2px, transparent 2px 50%),
+    linear-gradient(180deg, rgba(255,230,168,.60), rgba(111,63,31,.18));
+  border: 1px solid rgba(255, 232, 184, .35);
+  box-shadow: inset 0 0 34px rgba(255, 237, 198, .22);
+}
+.kks-room-line {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 20px;
+  color: rgba(255,246,226,.92);
+  font-size: 17px;
+  font-weight: 900;
+}
+.kks-room-record {
+  position: relative;
+  z-index: 1;
+  width: 132px;
+  height: 132px;
+  margin-left: auto;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 50%, #e9c57f 0 6%, #4b2b1d 6.4% 13%, #0b0908 13.5% 100%),
-    repeating-radial-gradient(circle at 50% 50%, #151210 0 2px, #24201c 2px 4px);
-  box-shadow: 0 35px 70px rgba(0,0,0,.45), inset 0 0 0 11px rgba(255,255,255,.05), inset 0 0 65px rgba(230,188,105,.14);
-  position: relative;
-  animation: kksDiscSlow 16s linear infinite;
-  opacity: .92;
+    radial-gradient(circle, #e2b363 0 14px, #3a2115 15px 17px, transparent 18px),
+    repeating-radial-gradient(circle, #27150f 0 5px, #422416 6px 7px, #25130d 8px 12px);
+  box-shadow: 0 16px 28px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.08);
 }
-.kks-record-disc::before {
-  content: "";
-  position: absolute;
-  inset: 11%;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: inset 0 0 45px rgba(255,255,255,.08);
-}
-.kks-record-disc::after {
-  content: "KIM\A KWANG\A SEOK";
-  white-space: pre;
-  position: absolute;
-  inset: 34%;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  border-radius: 50%;
-  color: #2f1c12;
-  font-weight: 950;
-  letter-spacing: -.05em;
-  background: radial-gradient(circle, #ffe3a3, #c89245);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
-}
-@keyframes kksDiscSlow { to { transform: rotate(360deg); } }
-.kks-archive-ticket {
-  position: absolute;
-  right: clamp(8px, 2vw, 28px);
-  bottom: clamp(22px, 5vw, 58px);
-  width: min(330px, 78vw);
-  padding: 18px 20px;
-  border-radius: 18px;
-  transform: rotate(-4deg);
-  background: rgba(255, 244, 219, .92);
-  color: #3a2215;
-  border: 1px solid rgba(105,65,34,.25);
-  box-shadow: 0 20px 42px rgba(0,0,0,.27);
-}
-.kks-archive-ticket strong { display:block; font-size: 26px; font-weight: 950; letter-spacing: -.08em; }
-.kks-archive-ticket span { display:block; margin-top: 6px; color: rgba(58,34,21,.72); font-size: 13px; font-weight: 800; }
 
-/* Home room cards */
-.kks-home-room-grid {
+.kks-house-menu {
+  max-width: 1240px;
+  margin: 0 auto 34px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  margin: -6px 0 32px;
 }
-.kks-home-room-grid button {
-  min-height: 160px;
-  padding: 22px !important;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-radius: 26px !important;
-  color: #fff5df !important;
-  background:
-    linear-gradient(150deg, rgba(52, 31, 19, .94), rgba(117, 64, 34, .88)),
-    radial-gradient(circle at 85% 20%, rgba(224,178,92,.35), transparent 30%) !important;
-  border: 1px solid rgba(231,185,100,.24) !important;
-  box-shadow: var(--kks-shadow) !important;
+.kks-house-card {
   position: relative;
+  min-height: 156px;
   overflow: hidden;
+  text-align: left;
+  padding: 24px 22px !important;
+  border-radius: 26px !important;
+  border: 1px solid rgba(112, 65, 35, .24) !important;
+  color: var(--kks-ink) !important;
+  background:
+    linear-gradient(135deg, rgba(255,250,239,.96), rgba(239, 213, 176, .88)) !important;
+  box-shadow: 0 18px 38px rgba(64, 34, 18, .14), inset 0 1px 0 rgba(255,255,255,.65) !important;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
-.kks-home-room-grid button::after {
-  content:"";
-  position:absolute;
-  width: 140px; height: 140px;
-  border-radius:50%;
-  right:-50px; bottom:-50px;
-  background: repeating-radial-gradient(circle, rgba(255,255,255,.13) 0 2px, transparent 2px 8px);
+.kks-house-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 7px;
+  background: linear-gradient(90deg, #703e21, #e0ad62, #7b4627);
 }
-.kks-home-room-grid button span { color: #e2b86a; font-size: 12px; font-weight: 900; letter-spacing: .14em; }
-.kks-home-room-grid button strong { font-size: clamp(26px, 2.8vw, 38px); font-weight: 950; letter-spacing: -.07em; }
-.kks-home-room-grid button em { font-style: normal; color: rgba(255,244,220,.72); font-weight: 800; }
-.kks-home-room-grid button:hover { transform: translateY(-4px); filter: brightness(1.08); }
+.kks-house-card::after {
+  content: "";
+  position: absolute;
+  right: -36px;
+  bottom: -46px;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, rgba(83,45,24,.10) 0 5px, transparent 6px 12px);
+}
+.kks-house-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 28px 54px rgba(64, 34, 18, .20), inset 0 1px 0 rgba(255,255,255,.70) !important;
+}
+.kks-house-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7f4725, #2a1710);
+  color: #ffe8b7;
+  font-size: 21px;
+  box-shadow: 0 10px 18px rgba(46, 23, 12, .22);
+}
+.kks-house-card strong {
+  display: block;
+  font-size: 25px;
+  margin-bottom: 8px;
+  letter-spacing: -0.055em;
+}
+.kks-house-card em {
+  display: block;
+  font-style: normal;
+  color: rgba(38, 26, 20, .68);
+  font-size: 14px;
+  line-height: 1.45;
+}
 
-/* Page titles / content shells */
-.page-title,
 .content-section,
+.page-title,
 .auth-page,
 .admin-form,
 .list-box,
 .site-guide-card,
-.latest-category-grid > *,
-.detail-modal-inner {
+.latest-category-box,
+.latest-category-card {
+  border-color: rgba(111, 63, 31, .20) !important;
   background:
-    linear-gradient(180deg, rgba(255, 251, 242, .97), rgba(246, 233, 211, .96)) !important;
-  border: 1px solid rgba(121, 77, 43, .18) !important;
-  box-shadow: 0 18px 52px rgba(69, 41, 21, .14), inset 0 1px 0 rgba(255,255,255,.82) !important;
+    linear-gradient(180deg, rgba(255, 252, 244, .96), rgba(255, 245, 228, .92)) !important;
+  box-shadow: 0 16px 34px rgba(66, 36, 18, .10), inset 0 1px 0 rgba(255,255,255,.72) !important;
 }
 .page-title {
-  border-radius: 30px !important;
-  padding: clamp(26px, 4vw, 48px) !important;
   position: relative;
   overflow: hidden;
+  border-radius: 28px !important;
+  padding: 34px 38px !important;
 }
 .page-title::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(141,51,39,.08), transparent 45%),
-    radial-gradient(circle at 94% 14%, rgba(212,167,95,.22), transparent 28%);
-  pointer-events: none;
+  inset: 0 auto 0 0;
+  width: 9px;
+  background: linear-gradient(180deg, #6f3d20, #e2b266, #7d4928);
 }
 .page-title h1 {
-  position: relative;
-  margin: 0 0 10px !important;
-  color: #2e1b12 !important;
-  font-size: clamp(40px, 5vw, 66px) !important;
-  line-height: 1 !important;
-  font-weight: 950 !important;
-  letter-spacing: -0.09em;
+  color: var(--kks-ink) !important;
+  font-size: clamp(32px, 3.8vw, 48px) !important;
+  line-height: 1.05;
+  letter-spacing: -0.065em;
 }
-.page-title h1::after {
-  content: "";
-  display: block;
-  width: 86px;
-  height: 4px;
-  margin-top: 18px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #8d3327, #d4a75f);
+.page-title p { color: rgba(38,26,20,.70); line-height: 1.75; }
+.kks-latest-section {
+  max-width: 1240px !important;
+  border-radius: 30px !important;
+  padding: 32px !important;
 }
-.page-title p {
-  position: relative;
-  max-width: 780px;
-  color: rgba(40,29,23,.72) !important;
-  font-size: 17px;
-  line-height: 1.75;
-  word-break: keep-all;
+.kks-section-head { margin-bottom: 22px; }
+.kks-section-head span {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #8b572f;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: .12em;
+  text-transform: uppercase;
 }
+.kks-section-head h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.06em; }
 
 .toolbar {
-  align-items: center;
-  gap: 10px !important;
-  padding: 14px !important;
-  margin-bottom: 22px !important;
+  padding: 14px;
+  border: 1px solid rgba(111,63,31,.16);
   border-radius: 22px;
-  background: rgba(255, 246, 229, .68);
-  border: 1px solid rgba(121,77,43,.14);
-  box-shadow: 0 10px 30px rgba(69,41,21,.08);
+  background: rgba(255, 248, 236, .72);
+  box-shadow: 0 12px 26px rgba(66,36,18,.08);
 }
 .toolbar input,
 .toolbar select,
 input, textarea, select {
-  min-height: 46px;
   border-radius: 16px !important;
-  border: 1px solid rgba(110, 71, 40, .22) !important;
-  background: rgba(255,255,255,.86) !important;
-  color: #2d1b13 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.9) !important;
-  outline-color: rgba(212,167,95,.45);
+  border-color: rgba(111,63,31,.22) !important;
+  background: rgba(255, 253, 248, .92) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.72) !important;
 }
-.toolbar input:focus,
-.toolbar select:focus,
-input:focus, textarea:focus, select:focus {
-  border-color: rgba(141,51,39,.45) !important;
-  box-shadow: 0 0 0 4px rgba(212,167,95,.18) !important;
+button:not(.kks-house-card):not(nav button) {
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #8f5531, #6c381f) !important;
+  box-shadow: 0 10px 20px rgba(58,30,15,.16), inset 0 1px 0 rgba(255,255,255,.15) !important;
 }
-button,
-.secondary-btn,
-.delete-btn {
-  border-radius: 999px !important;
-  border: 1px solid rgba(255,230,178,.30) !important;
-  background: linear-gradient(180deg, #9b6138 0%, #704126 100%) !important;
-  color: #fff7e8 !important;
-  box-shadow: 0 8px 22px rgba(79, 44, 24, .18), inset 0 1px 0 rgba(255,255,255,.17) !important;
-}
-button:hover { transform: translateY(-1px); filter: brightness(1.04); }
-.delete-btn { background: linear-gradient(180deg, #b84d38 0%, #7a261c 100%) !important; }
-
-/* Cards / list */
-.card-grid { gap: 24px !important; }
 .card,
-.list-item,
-.admin-row,
-.category-chip,
-.playlist-queue-panel,
-.detail-media-box,
-.notice-card {
-  background: rgba(255, 250, 241, .96) !important;
-  border: 1px solid rgba(111, 71, 40, .16) !important;
-  border-radius: 26px !important;
-  box-shadow: 0 16px 44px rgba(71, 42, 21, .13), inset 0 1px 0 rgba(255,255,255,.82) !important;
+#radioList .list-item,
+#songList .list-item,
+#radioList .content-card,
+#songList .content-card,
+.admin-row {
+  border-radius: 24px !important;
+  border: 1px solid rgba(111, 63, 31, .18) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 244, .98), rgba(255, 242, 220, .92)) !important;
+  box-shadow: 0 16px 34px rgba(66, 36, 18, .12), inset 0 1px 0 rgba(255,255,255,.70) !important;
   overflow: hidden;
 }
-.card,
-.list-item {
-  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, filter .22s ease !important;
-}
 .card:hover,
-.list-item:hover {
-  transform: translateY(-6px) !important;
-  border-color: rgba(212,167,95,.55) !important;
-  box-shadow: 0 28px 70px rgba(61,34,16,.22), inset 0 1px 0 rgba(255,255,255,.9) !important;
+#radioList .list-item:hover,
+#songList .list-item:hover,
+.admin-row:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 24px 50px rgba(66,36,18,.18), inset 0 1px 0 rgba(255,255,255,.72) !important;
 }
-.card img,
-.card video,
-.card iframe,
-.list-item img,
-.song-cover,
-.radio-cover,
-.photo-thumb {
-  filter: sepia(.12) contrast(1.04) saturate(.92);
-}
-.card img,
-.card iframe,
-.card video,
-.card-placeholder {
-  height: 220px !important;
-  background: linear-gradient(135deg, #2a1a12, #76502f) !important;
-}
-.card-body,
-.list-item-content,
-.item-content {
-  color: #2b1d16 !important;
+.card img, .card iframe, .card video {
+  height: 215px !important;
+  filter: saturate(1.04) contrast(1.02);
 }
 .card-body h3,
-.list-item h3,
-.item-content h3,
-.latest-category-title,
-.site-guide-card h2 {
-  color: #261811 !important;
-  font-weight: 950 !important;
-  letter-spacing: -.07em;
+#radioList h3,
+#songList h3 { font-weight: 1000; letter-spacing: -0.055em; }
+.category-badge {
+  border: 1px solid rgba(143, 85, 49, .16);
+  background: linear-gradient(135deg, #f4dfbd, #e8c98e) !important;
+  color: #6f3e22 !important;
 }
-.category-badge,
-.song-category-badge,
-.latest-category-badge {
-  background: linear-gradient(180deg, #f1ddba, #e2c18a) !important;
-  color: #5a321e !important;
-  border: 1px solid rgba(117,67,35,.14) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.5) !important;
-}
-.list-item.with-image {
-  grid-template-columns: 168px minmax(0, 1fr) !important;
-  gap: 24px !important;
-  padding: 22px !important;
-  margin-bottom: 18px !important;
-  border-bottom: 0 !important;
-}
-.list-item img {
-  width: 168px !important;
-  height: 168px !important;
-  border-radius: 22px !important;
-  box-shadow: 0 12px 28px rgba(42,24,12,.22) !important;
-}
+.pagination button { border-radius: 999px !important; }
 
-/* Site guide */
-.site-guide-grid { gap: 20px !important; }
-.site-guide-card {
-  border-radius: 28px !important;
-  padding: clamp(22px, 3vw, 34px) !important;
-}
-.site-purpose-closing {
-  padding: 22px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, rgba(141,51,39,.10), rgba(212,167,95,.16));
-  border: 1px solid rgba(141,91,53,.16);
-}
-
-/* Admin */
 .admin-tabs {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-  gap: 14px !important;
+  padding: 18px;
+  border-radius: 28px;
+  background: rgba(255, 248, 236, .68);
+  border: 1px solid rgba(111,63,31,.16);
+  box-shadow: 0 16px 34px rgba(66,36,18,.10);
 }
 .admin-tabs button {
-  min-height: 86px !important;
-  border-radius: 24px !important;
-  font-size: 18px;
+  min-height: 58px;
+  padding: 13px 18px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #865031, #60321e) !important;
+}
+
+footer {
   background:
-    linear-gradient(150deg, #6d3d22, #9b6138),
-    radial-gradient(circle at 90% 10%, rgba(255,226,170,.4), transparent 32%) !important;
-}
-.admin-form h2,
-.admin-form h3 { color: #261811 !important; letter-spacing: -.06em; }
-
-/* Detail modal */
-.detail-modal { background: rgba(10, 7, 5, .78) !important; backdrop-filter: blur(8px); }
-.detail-modal-inner { border-radius: 34px !important; }
-.detail-close-btn { background: linear-gradient(180deg, #3d2a1e, #1c110b) !important; }
-
-/* Bottom players: premium archive bar */
-.daily-player,
-.playlist-player {
-  color: #fff8e8 !important;
-}
-.daily-player-card,
-.playlist-player-card {
-  background:
-    linear-gradient(90deg, rgba(35,20,12,.94), rgba(90,55,34,.82), rgba(35,20,12,.94)) !important;
-  border: 1px solid rgba(231,185,100,.24) !important;
-  box-shadow: 0 -18px 55px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.10) !important;
-  backdrop-filter: blur(14px) saturate(115%) !important;
-}
-.daily-player-title,
-.daily-player-sub,
-.playlist-player-label { color: #fff7e8 !important; }
-.daily-player-cover,
-.playlist-player-cover { box-shadow: 0 10px 24px rgba(0,0,0,.35) !important; border: 1px solid rgba(255,244,220,.28) !important; }
-.daily-play-btn { background: #fff7e8 !important; color: #66391f !important; }
-.playlist-nav-btn { background: rgba(255,247,232,.12) !important; }
-.daily-player-progress { accent-color: #e8bb70 !important; }
-
-/* Pagination */
-.pagination button {
-  background: rgba(255,250,241,.9) !important;
-  color: #51311f !important;
-  border: 1px solid rgba(117,67,35,.18) !important;
-}
-.pagination button.active,
-.pagination button:hover {
-  background: linear-gradient(180deg, #9b6138, #704126) !important;
-  color: #fff7e8 !important;
+    linear-gradient(180deg, #2a1710, #150c08) !important;
+  border-top: 1px solid rgba(216, 168, 95, .30);
 }
 
-
-@media (max-width: 980px) {
-  .site-header { flex-wrap: wrap; gap: 10px; }
-  #siteNav { width: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
-  .hero.kks-hero,
-  .hero { grid-template-columns: 1fr !important; min-height: auto !important; padding: 38px 24px 30px !important; border-radius: 28px !important; }
-  .kks-hero-panel { min-height: 240px; }
-  .kks-record-disc { width: min(62vw, 260px); }
-  .kks-archive-ticket { position: relative; right: auto; bottom: auto; margin: -40px auto 0; transform: rotate(-2deg); }
-  .kks-home-room-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .admin-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 모바일: 집 느낌은 유지하되 겹침과 과도한 폭을 방지 */
+@media (max-width: 900px) {
+  body { min-width: 0 !important; }
+  .site-header {
+    min-width: 0 !important;
+    padding: 12px 14px !important;
+  }
+  main {
+    min-width: 0 !important;
+    padding: 18px 12px 120px !important;
+  }
+  .logo { min-width: 0 !important; max-width: calc(100vw - 120px); }
+  nav { flex-wrap: wrap !important; }
+  .hero.kks-home-hero,
+  .kks-home-hero {
+    grid-template-columns: 1fr !important;
+    min-height: 620px !important;
+    padding: 86px 22px 26px !important;
+    border-radius: 28px !important;
+    background-position: 58% center !important;
+  }
+  .hero.kks-home-hero h1,
+  .hero.kks-home-hero #homeTitle {
+    font-size: clamp(38px, 12vw, 58px) !important;
+  }
+  .kks-hero-plaque { left: 20px; top: 22px; max-width: calc(100% - 40px); }
+  .kks-hero-room-card { min-height: 190px; padding: 18px; }
+  .kks-room-window { display: none; }
+  .kks-room-record { width: 96px; height: 96px; }
+  .kks-house-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .kks-house-card { min-height: 134px; padding: 20px 16px !important; }
+  .kks-house-card strong { font-size: 22px; }
+  .toolbar { display: grid !important; grid-template-columns: 1fr; gap: 10px; }
+  .page-title { padding: 28px 24px !important; }
 }
 
-@media (max-width: 640px) {
-  body { background: linear-gradient(180deg, #17100b 0 170px, #f6ead3 170px 100%) !important; }
-  .site-header { min-height: 66px !important; padding: 10px 12px !important; }
-  .logo { min-width: 0; }
-  .logo strong { font-size: 23px !important; }
-  .logo small { display: none !important; }
-  .auth-area { width: 100%; overflow-x: auto; padding-bottom: 2px; }
-  main { padding: 16px 12px 118px !important; }
-  .hero.kks-hero,
-  .hero { margin-top: 4px !important; padding: 28px 18px 24px !important; border-radius: 24px !important; }
-  .kks-hero-kicker { font-size: 10px; letter-spacing: .08em; }
-  .hero h1 { font-size: clamp(40px, 13vw, 60px) !important; }
-  .hero p { font-size: 15px !important; line-height: 1.65 !important; }
-  .kks-hero-actions { gap: 8px; }
-  .hero button { width: 100%; justify-content: center; }
-  .kks-home-room-grid { grid-template-columns: 1fr; gap: 12px; }
-  .kks-home-room-grid button { min-height: 112px; border-radius: 22px !important; }
-  .page-title, .content-section, .auth-page, .admin-form, .list-box, .site-guide-card { border-radius: 24px !important; padding: 22px 18px !important; }
-  .page-title h1 { font-size: 38px !important; }
-  .toolbar { flex-direction: column; padding: 12px !important; }
-  .card-grid { grid-template-columns: 1fr !important; }
-  .list-item.with-image { grid-template-columns: 112px minmax(0,1fr) !important; gap: 14px !important; padding: 14px !important; }
-  .list-item img { width: 112px !important; height: 112px !important; border-radius: 18px !important; }
-  .admin-tabs { grid-template-columns: 1fr !important; }
-  .admin-tabs button { min-height: 72px !important; }
-  .kks-record-disc { width: min(66vw, 220px); }
-  .kks-archive-ticket { width: min(280px, 90%); }
+@media (max-width: 460px) {
+  .kks-house-menu { grid-template-columns: 1fr; }
+  .kks-hero-actions { display: grid; grid-template-columns: 1fr; }
+  .hero.kks-home-hero { min-height: 650px !important; }
+  .kks-latest-section { padding: 22px 16px !important; }
 }

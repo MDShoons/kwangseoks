@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=warm-archive-luxury-v210" />
+  <link rel="stylesheet" href="style.css?v=home-archive-redesign-v210" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -226,34 +226,54 @@
   <main>
     <section id="home" class="page active">
       <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
-      <section class="hero kks-hero" id="homeHero">
+      <section class="hero kks-home-hero" id="homeHero">
+        <div class="kks-hero-plaque">Kim Kwang-seok Digital Archive</div>
         <div class="kks-hero-copy">
-          <span class="kks-hero-kicker">KIM KWANG SEOK DIGITAL ARCHIVE</span>
-          <h1 id="homeTitle">노래가 흐르고<br />기억이 머무는 집</h1>
-          <p id="homeDescription">광석이네 집은 김광석을 기억하고 추억하는 사람들을 위해 열어 둔 따뜻한 온라인 자료방입니다.</p>
+          <span class="kks-hero-kicker">광석이네 집</span>
+          <h1 id="homeTitle">문을 열면,<br />김광석의 노래가 머무는 집</h1>
+          <p id="homeDescription">오래된 방 안의 온기처럼, 노래·영상·사진·라디오·글을 한곳에 모아둔 김광석 디지털 아카이브입니다.</p>
           <div class="kks-hero-actions">
-            <button class="hero-primary-btn" data-page-fallback="songs" onclick="goPage('songs')">노래 들어가기</button>
-            <button class="hero-secondary-btn" data-page-fallback="videos" onclick="goPage('videos')">공연 영상 보기</button>
-            <button class="hero-secondary-btn" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">집 안내 보기</button>
+            <button data-page-fallback="songs" onclick="goPage('songs')">노래 듣기</button>
+            <button data-page-fallback="videos" onclick="goPage('videos')">영상 보기</button>
+            <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">집 둘러보기</button>
           </div>
         </div>
-        <div class="kks-hero-panel" aria-hidden="true">
-          <div class="kks-record-disc"></div>
-          <div class="kks-archive-ticket">
-            <strong>광석이네 집</strong>
-            <span>노래 · 영상 · 사진 · 라디오 · 기록</span>
-          </div>
+        <div class="kks-hero-room-card" aria-hidden="true">
+          <div class="kks-room-window"></div>
+          <div class="kks-room-line">오늘도 노래가 켜져 있습니다</div>
+          <div class="kks-room-record"></div>
         </div>
       </section>
-      <section class="kks-home-room-grid" aria-label="광석이네 집 주요 방">
-        <button type="button" data-page-fallback="songs" onclick="goPage('songs')"><span>01</span><strong>Songs</strong><em>노래가 흐르는 방</em></button>
-        <button type="button" data-page-fallback="videos" onclick="goPage('videos')"><span>02</span><strong>Videos</strong><em>무대가 다시 켜지는 방</em></button>
-        <button type="button" data-page-fallback="radios" onclick="goPage('radios')"><span>03</span><strong>Radios</strong><em>목소리를 듣는 방</em></button>
-        <button type="button" data-page-fallback="photos" onclick="goPage('photos')"><span>04</span><strong>Photos</strong><em>표정을 간직한 방</em></button>
+
+      <section class="kks-house-menu" aria-label="광석이네 집 주요 공간">
+        <button class="kks-house-card" data-page-fallback="songs" onclick="goPage('songs')">
+          <span class="kks-house-icon">♪</span>
+          <strong>노래방</strong>
+          <em>앨범과 공연 음원을 듣는 방</em>
+        </button>
+        <button class="kks-house-card" data-page-fallback="videos" onclick="goPage('videos')">
+          <span class="kks-house-icon">▣</span>
+          <strong>상영방</strong>
+          <em>무대와 방송 영상을 보는 방</em>
+        </button>
+        <button class="kks-house-card" data-page-fallback="photos" onclick="goPage('photos')">
+          <span class="kks-house-icon">▧</span>
+          <strong>사진방</strong>
+          <em>시간과 표정을 모아둔 방</em>
+        </button>
+        <button class="kks-house-card" data-page-fallback="radios" onclick="goPage('radios')">
+          <span class="kks-house-icon">◉</span>
+          <strong>라디오방</strong>
+          <em>목소리와 이야기를 듣는 방</em>
+        </button>
       </section>
-<section class="content-section latest-by-category-section">
-        <h2>자료별 최신 자료</h2>
-        <p class="helper-text">각 자료실에 최근 등록된 자료를 모았습니다.</p>
+
+<section class="content-section latest-by-category-section kks-latest-section">
+        <div class="kks-section-head">
+          <span>Latest Records</span>
+          <h2>집 안에 새로 놓인 자료</h2>
+          <p class="helper-text">각 자료실에 최근 등록된 기록을 모았습니다.</p>
+        </div>
         <div id="latestByCategory" class="latest-category-grid"></div>
       </section>
     </section>
