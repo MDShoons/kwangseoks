@@ -138,11 +138,20 @@ function isYoutubeUrl(url = "") {
 }
 
 function getVideoMediaUrl(item = {}) {
-  return item.mediaUrl || item.fileUrl || item.videoUrl || item.videoFileUrl || "";
+  return item.mediaUrl || item.fileUrl || item.videoUrl || item.videoFileUrl || getVideoHlsUrl(item) || "";
 }
 
 function isVideoContentItem(item = {}) {
-  return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube";
+  return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube" || item.mediaType === "hls";
+}
+
+function getVideoHlsUrl(item = {}) {
+  const nested = item.videoQualityUrls && typeof item.videoQualityUrls === "object" ? item.videoQualityUrls : {};
+  return String(item.hlsUrl || item.videoHlsUrl || item.hlsMasterUrl || nested.hls || nested.m3u8 || "").trim();
+}
+
+function isHlsUrl(url = "") {
+  return /\.m3u8(\?|#|$)/i.test(String(url || ""));
 }
 
 
@@ -295,10 +304,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
-  doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit
+  doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v185-no-telecom";
+const APP_VERSION = "v186-song-cover-rawurl-mobile-playlist-space";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -311,13 +320,16 @@ let isAdmin = false;
 let checkedLoginId = "";
 let checkedLoginIdAvailable = false;
 let allContents = [];
+let contentsCacheLoaded = false;
+let contentsLoadingPromise = null;
+let savedTemplatesCacheLoaded = false;
 let pageCategories = {};
 
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 집, 광석이네 집",
-  homeDescription: "김광석의 노래, 목소리, 사진과 기억을 방마다 담아둔 디지털 아카이브",
+  homeTitle: "노래가 머무는 이 곳, 광석이네집",
+  homeDescription: "김광석 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
@@ -343,38 +355,6 @@ let currentSettings = { ...DEFAULT_SETTINGS };
 
 const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
 const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
-
-const ROOM_LABELS = {
-  home: "거실",
-  siteinfo: "집 안내",
-  videos: "영상방",
-  songs: "음악방",
-  radios: "부엌 라디오",
-  photos: "사진방",
-  stories: "이야기방",
-  about: "광석 소개",
-  oneum: "원음 글방",
-  login: "로그인",
-  signup: "회원가입",
-  mypage: "내 정보",
-  admin: "관리자"
-};
-let doorTransitionInProgress = false;
-let queuedDoorPage = null;
-
-function syncRoomTheme(pageId) {
-  const currentPage = VALID_PAGES.includes(pageId) ? pageId : "home";
-  document.body.setAttribute("data-current-page", currentPage);
-  document.querySelectorAll("#siteNav [data-page-fallback]").forEach((btn) => {
-    btn.classList.toggle("active-page", btn.getAttribute("data-page-fallback") === currentPage);
-  });
-  const roomName = ROOM_LABELS[currentPage] || "광석이네 집";
-  const logoSub = document.getElementById("siteLogoSubText");
-  if (logoSub) {
-    logoSub.textContent = `노래와 기억이 머무는 집 · ${roomName}`;
-  }
-}
-
 
 function getPageFromHash() {
   const page = window.location.hash.replace("#", "").trim();
@@ -405,6 +385,7 @@ window.renderAdminManageList = renderAdminManageList;
 window.editContent = editContent;
 window.deleteContentItem = deleteContentItem;
 window.deleteCustomCategory = deleteCustomCategory;
+window.saveBulkSongCover = saveBulkSongCover;
 window.openContentDetail = openContentDetail;
 window.resetDetailPhotoZoom = resetDetailPhotoZoom;
 window.zoomDetailPhoto = zoomDetailPhoto;
@@ -466,48 +447,11 @@ function renderCategoryText(item) {
   return getItemSubCategories(item).join(", ");
 }
 
-
 function showPage(pageId, fromHash = false) {
   if (!VALID_PAGES.includes(pageId)) pageId = "home";
 
   if (!fromHash && window.location.hash !== `#${pageId}`) {
     window.location.hash = pageId;
-    return;
-  }
-
-  const currentActivePage = document.querySelector(".page.active")?.id || "";
-  const doorTransition = document.getElementById("doorTransition");
-
-  if (doorTransitionInProgress && !(fromHash && currentActivePage !== pageId)) {
-    queuedDoorPage = { pageId, fromHash };
-    return;
-  }
-
-  const shouldAnimate = !!doorTransition && currentActivePage && currentActivePage !== pageId && !doorTransitionInProgress;
-
-  if (shouldAnimate) {
-
-    doorTransitionInProgress = true;
-    queuedDoorPage = null;
-    doorTransition.classList.remove("play");
-    void doorTransition.offsetWidth;
-    doorTransition.classList.add("play");
-    document.body.classList.add("door-transition-running");
-
-    window.setTimeout(() => {
-      showPage(pageId, true);
-    }, 320);
-
-    window.setTimeout(() => {
-      doorTransition.classList.remove("play");
-      document.body.classList.remove("door-transition-running");
-      doorTransitionInProgress = false;
-      if (queuedDoorPage) {
-        const nextPage = queuedDoorPage;
-        queuedDoorPage = null;
-        showPage(nextPage.pageId, nextPage.fromHash);
-      }
-    }, 790);
     return;
   }
 
@@ -529,8 +473,6 @@ function showPage(pageId, fromHash = false) {
   const target = document.getElementById(pageId);
   if (target) target.classList.add("active");
 
-  syncRoomTheme(pageId);
-
   if (pageId === "admin") {
     fillSettingsFormFromCurrent();
     renderAdminManageList();
@@ -547,19 +489,23 @@ function showPage(pageId, fromHash = false) {
 
   if (pageId === "home") tryPlayHomeVoiceOnce();
 
+
   if (["videos", "songs", "radios", "photos", "stories", "oneum"].includes(pageId)) {
-    loadContents();
+    // 이미 자료를 한 번 불러온 뒤에는 페이지 이동 때마다 Firestore를 다시 읽지 않고
+    // 현재 페이지 목록만 다시 그립니다. 페이지 전환 체감 속도를 빠르게 하기 위한 캐시 처리입니다.
+    if (contentsCacheLoaded) renderContentPage(pageId);
+    else loadContents();
   }
 
   if (typeof installBasicContentProtection === "function") {
     installBasicContentProtection();
-    installScreenProtection();
+installScreenProtection();
   }
 }
 
 function showAdminForm(type) {
-  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
-  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm"};
+  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm","adminBulkSongCoverForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
+  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm", bulkSongCover:"adminBulkSongCoverForm"};
   document.getElementById(map[type])?.classList.remove("hidden");
   if (type === "content") populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos", []);
   if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory", []);
@@ -569,6 +515,7 @@ function showAdminForm(type) {
   if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory", []);
   if (type === "template") { fillSettingsFormFromCurrent(); bindDesignPreviewEvents(); }
   if (type === "category") renderCategoryList();
+  if (type === "bulkSongCover") populateBulkSongCoverCategorySelect();
   if (type === "manage") renderAdminManageList();
   hardenMediaDownloadControls();
 }
@@ -651,7 +598,12 @@ async function uploadFileToGitHubWorker(file, folder) {
     throw new Error(data.error || data.message || `Worker 업로드 실패: HTTP ${response.status}`);
   }
 
-  return data.url || data.downloadUrl || data.path || "";
+  const preferredUrl = data.rawUrl || data.url || data.downloadUrl || data.pagesUrl || data.path || "";
+  if (/^https?:\/\//i.test(preferredUrl) && /^(images|covers|photos)$/i.test(String(folder || ""))) {
+    const sep = preferredUrl.includes("?") ? "&" : "?";
+    return `${preferredUrl}${sep}v=${Date.now()}`;
+  }
+  return preferredUrl;
 }
 
 function getYoutubeEmbedUrl(url) {
@@ -751,7 +703,7 @@ onAuthStateChanged(auth, async (user) => {
   }
   if (!isAdmin && adminBtn) adminBtn.remove();
   await window.addEventListener("hashchange", handleHashRoute);
-window.addEventListener("DOMContentLoaded", () => { handleHashRoute(); syncRoomTheme(getPageFromHash()); });
+window.addEventListener("DOMContentLoaded", handleHashRoute);
 loadSiteSettings(); await loadPageCategories(); await loadContents();
   handleHashRoute();
 });
@@ -770,6 +722,7 @@ async function loadPageCategories() {
     populateSpecificSubCategorySelect("videos","videoSubCategory");
     populateSpecificSubCategorySelect("photos","photoSubCategory");
     populateSpecificSubCategorySelect("songs","audioSubCategory");
+    populateBulkSongCoverCategorySelect();
     populateSpecificSubCategorySelect("radios","radioSubCategory");
     populateSpecificSubCategorySelect("oneum","oneumSubCategory");
     renderCategoryList();
@@ -907,7 +860,7 @@ document.getElementById("saveContentBtn").addEventListener("click", async () => 
     if (editId) await updateDoc(doc(db, "contents", editId), payload);
     else await addDoc(collection(db, "contents"), { ...payload, createdBy: currentUser.uid, createdAt: serverTimestamp() });
     alert(editId ? "자료가 수정되었습니다." : "자료가 저장되었습니다.");
-    resetContentForm(); await loadContents();
+    resetContentForm(); await loadContents(true);
   } catch(e) { alert("자료 저장 오류: " + e.message); }
 });
 document.getElementById("resetContentBtn").addEventListener("click", resetContentForm);
@@ -930,7 +883,7 @@ document.getElementById("savePhotoBtn").addEventListener("click", async () => {
       year:document.getElementById("photoYear").value.trim(), source:document.getElementById("photoSource").value.trim(),
       description:document.getElementById("photoDescription").value.trim(), body:document.getElementById("photoDescription").value.trim(),
       isPublic:true, createdBy:currentUser.uid, createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
-    alert("사진이 저장되었습니다."); document.getElementById("adminPhotoForm").reset(); populateSpecificSubCategorySelect("photos", "photoSubCategory", []); await loadContents();
+    alert("사진이 저장되었습니다."); document.getElementById("adminPhotoForm").reset(); populateSpecificSubCategorySelect("photos", "photoSubCategory", []); await loadContents(true);
   } catch(e) { alert("사진 저장 오류: " + e.message); }
 });
 
@@ -943,7 +896,13 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
   const youtubeUrl = document.getElementById("youtubeUrl").value.trim();
   const videoFile = document.getElementById("videoFile").files[0];
   const directVideoUrl = document.getElementById("videoFileUrl").value.trim();
-  if (!editId && !youtubeUrl && !videoFile && !directVideoUrl) return alert("유튜브 URL, mp4 파일, 또는 영상 URL 중 하나를 입력하세요.");
+  const videoHlsUrl = document.getElementById("videoHlsUrl")?.value.trim() || "";
+  const videoUrl480 = document.getElementById("videoUrl480")?.value.trim() || "";
+  const videoUrl720 = document.getElementById("videoUrl720")?.value.trim() || "";
+  const videoUrl1080 = document.getElementById("videoUrl1080")?.value.trim() || "";
+  const videoUrlOriginal = document.getElementById("videoUrlOriginal")?.value.trim() || "";
+  const hasQualityVideoUrl = !!(videoUrl480 || videoUrl720 || videoUrl1080 || videoUrlOriginal || videoHlsUrl);
+  if (!editId && !youtubeUrl && !videoFile && !directVideoUrl && !hasQualityVideoUrl) return alert("유튜브 URL, mp4 파일, 영상 URL, HLS master.m3u8 URL, 또는 화질별 영상 URL 중 하나를 입력하세요.");
   try {
     const embedUrl = youtubeUrl ? getYoutubeEmbedUrl(youtubeUrl) : "";
     if (youtubeUrl && !embedUrl) return alert("올바른 유튜브 URL을 입력하세요.");
@@ -952,14 +911,18 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
     const existingYoutubeUrl = originalItem ? (originalItem.youtubeUrl || (isYoutubeUrl(originalItem.mediaUrl) ? originalItem.mediaUrl : "")) : "";
     const finalYoutubeUrl = youtubeUrl || existingYoutubeUrl;
     const finalEmbedUrl = youtubeUrl ? embedUrl : (originalItem?.mediaType === "youtube" ? (originalItem.mediaUrl || normalizeYoutubeEmbedUrl(existingYoutubeUrl)) : "");
-    const finalVideoUrl = directVideoUrl || uploadedVideoUrl || (originalItem?.mediaType !== "youtube" ? existingVideoUrl : "");
-    const mediaType = (finalEmbedUrl || (finalYoutubeUrl && !finalVideoUrl)) ? "youtube" : "video";
+    const existingHlsUrl = originalItem ? getVideoHlsUrl(originalItem) : "";
+    const finalHlsUrl = videoHlsUrl || existingHlsUrl;
+    const finalVideoUrl = directVideoUrl || uploadedVideoUrl || videoUrl720 || videoUrl480 || videoUrl1080 || videoUrlOriginal || finalHlsUrl || (originalItem?.mediaType !== "youtube" ? existingVideoUrl : "");
+    const mediaType = (finalEmbedUrl || (finalYoutubeUrl && !finalVideoUrl && !finalHlsUrl)) ? "youtube" : (finalHlsUrl && !finalVideoUrl ? "hls" : "video");
     const mediaUrl = mediaType === "youtube" ? (finalEmbedUrl || normalizeYoutubeEmbedUrl(finalYoutubeUrl)) : finalVideoUrl;
     if (!mediaUrl) return alert("기존 영상 주소를 찾을 수 없습니다. 영상 URL을 다시 입력하세요.");
     const thumbnailUrl = await getImageDataUrlOrDirectUrl(document.getElementById("videoImageFile").files[0], document.getElementById("videoImageUrl").value, 1000);
     const subCategoryPayload = makeSubCategoryPayload("videoSubCategory");
     const payload = { category:"videos", ...subCategoryPayload,
       mediaType, title, youtubeUrl: finalYoutubeUrl || "", mediaUrl,
+      videoUrl480, videoUrl720, videoUrl1080, videoUrlOriginal, videoHlsUrl: finalHlsUrl, hlsUrl: finalHlsUrl,
+      videoQualityUrls: { q480: videoUrl480, q720: videoUrl720, q1080: videoUrl1080, original: videoUrlOriginal, hls: finalHlsUrl },
       year:document.getElementById("videoYear").value.trim(), source:document.getElementById("videoSource").value.trim(),
       description:document.getElementById("videoDescription").value.trim(), body:document.getElementById("videoDescription").value.trim(),
       isPublic:true, updatedAt:serverTimestamp() };
@@ -970,7 +933,7 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
     else await addDoc(collection(db, "contents"), { ...payload, createdBy:currentUser.uid, createdAt:serverTimestamp() });
     alert(editId ? "영상이 수정되었습니다." : "영상이 저장되었습니다.");
     resetVideoForm();
-    await loadContents();
+    await loadContents(true);
   } catch(e) { alert("영상 저장 오류: " + e.message); }
 });
 function resetVideoForm() {
@@ -1089,7 +1052,7 @@ async function saveOneumPost() {
 
     alert(editId ? "원음 글이 수정되었습니다." : "원음 글이 저장되었습니다.");
     resetOneumForm();
-    await loadContents();
+    await loadContents(true);
   } catch (error) {
     alert("원음 글 저장 오류: " + error.message);
   }
@@ -1142,7 +1105,7 @@ async function saveAudioLike(category, prefix) {
     const formId = category === "songs" ? "adminAudioForm" : "adminRadioForm";
     document.getElementById(formId)?.reset();
     populateSpecificSubCategorySelect(category, `${prefix}SubCategory`, []);
-    await loadContents();
+    await loadContents(true);
   } catch (error) {
     alert("미디어 저장 오류: " + error.message);
   }
@@ -1412,23 +1375,27 @@ document.getElementById("saveTemplateBtn").addEventListener("click", async () =>
   const page = document.getElementById("templatePage").value;
   const template = document.getElementById("templateType").value;
   await setDoc(doc(db, "templateSettings", page), { page, template, updatedAt: serverTimestamp() });
+  savedTemplatesCacheLoaded = false;
   applyTemplate(page, template); alert("템플릿이 저장되었습니다.");
 });
 
 async function quickTemplate(page, template) {
   applyTemplate(page, template);
   if (isAdmin) await setDoc(doc(db, "templateSettings", page), { page, template, updatedAt: serverTimestamp() });
+  savedTemplatesCacheLoaded = false;
 }
 function applyTemplate(page, template) {
   const section = document.getElementById(page); if (!section) return;
   section.classList.remove("template-card","template-gallery","template-list","template-timeline","template-wide");
   section.classList.add(`template-${template}`);
 }
-async function applySavedTemplates() {
+async function applySavedTemplates(force = false) {
+  if (savedTemplatesCacheLoaded && !force) return;
   for (const p of ["home","videos","songs","radios","photos","stories","about","oneum"]) {
     const snap = await getDoc(doc(db, "templateSettings", p));
     if (snap.exists()) applyTemplate(p, snap.data().template);
   }
+  savedTemplatesCacheLoaded = true;
 }
 
 
@@ -1527,6 +1494,25 @@ function renderAllContentSections() {
   renderAdminManageList();
   installBasicContentProtection();
   setupRadioMonochromePlayers();
+}
+
+function renderContentPage(page) {
+  if (!contentsCacheLoaded) {
+    loadContents();
+    return;
+  }
+
+  const items = prepareItemsForPage(page, filterBySelectedSubCategory(page, allContents.filter(i => i.category === page)));
+
+  if (page === "videos") renderVideos(items);
+  else if (page === "photos") renderPhotos(items);
+  else if (page === "songs") renderList("songList", items);
+  else if (page === "radios") renderList("radioList", items);
+  else if (page === "stories") renderList("storyList", items);
+  else if (page === "oneum") renderList("oneumList", items);
+
+  installBasicContentProtection();
+  setupRadioMonochromePlayers(document.getElementById(page) || document);
 }
 
 
@@ -2114,11 +2100,18 @@ function resetPlaylistPlayerUi(audio, playBtn, progress, current, duration) {
   if (duration) duration.textContent = "0:00";
 }
 
+function syncPlaylistPlayerBodySpace() {
+  const player = document.getElementById("userPlaylistPlayer");
+  const hasOpenPlaylist = !!(player && !player.classList.contains("closed"));
+  document.body.classList.toggle("has-open-playlist-player", hasOpenPlaylist);
+}
+
 function closeUserPlaylistPlayerTemporarily() {
   const player = document.getElementById("userPlaylistPlayer");
   const audio = document.getElementById("playlistPlayerAudio");
   if (audio) { saveUserPlaylistState(audio); audio.pause(); }
   if (player) player.classList.add("closed");
+  syncPlaylistPlayerBodySpace();
 }
 
 function clearUserPlaylist(options = {}) {
@@ -2404,6 +2397,35 @@ function renderPlaylistQueuePanel() {
   });
 }
 
+
+function isPlaylistFullDetailMobileEnabled() {
+  return !!(window.matchMedia && window.matchMedia("(max-width: 920px)").matches);
+}
+
+function updatePlaylistDetailTriggerAccessibility() {
+  const cover = document.getElementById("playlistPlayerCover");
+  const title = document.getElementById("playlistPlayerTitle");
+  const enabled = isPlaylistFullDetailMobileEnabled();
+  [cover, title].forEach((el) => {
+    if (!el) return;
+    if (enabled) {
+      el.classList.add("playlist-detail-trigger");
+      el.setAttribute("role", "button");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-label", "플레이리스트 상세 화면 열기");
+    } else {
+      el.classList.remove("playlist-detail-trigger");
+      el.removeAttribute("role");
+      el.removeAttribute("tabindex");
+      el.removeAttribute("aria-label");
+    }
+  });
+}
+
+
+window.addEventListener("resize", updatePlaylistDetailTriggerAccessibility);
+window.addEventListener("resize", refreshPlaylistPlayerTitleMarquee);
+
 function bindPlaylistDetailTriggerDelegation() {
   if (playlistFullDetailTriggerDelegated) return;
   playlistFullDetailTriggerDelegated = true;
@@ -2414,12 +2436,64 @@ function bindPlaylistDetailTriggerDelegation() {
     if (!trigger) return;
     const player = document.getElementById("userPlaylistPlayer");
     if (!player || player.classList.contains("closed")) return;
-    if (!window.matchMedia || window.matchMedia("(max-width: 920px)").matches) {
+    if (isPlaylistFullDetailMobileEnabled()) {
       event.preventDefault();
       event.stopPropagation();
       openPlaylistFullDetail();
     }
   }, true);
+}
+
+
+function setPlaylistPlayerTitleText(titleEl, text) {
+  if (!titleEl) return;
+  const safeText = String(text || "").trim() || "선택한 곡이 없습니다";
+  titleEl.dataset.fullTitle = safeText;
+  titleEl.classList.remove("is-marquee");
+  const escaped = escapeHtml(safeText);
+  // v193: 모바일 하단 플레이어 긴 제목은 같은 문구를 2번 배치해
+  // 왼쪽으로 사라진 뒤 오른쪽에서 이어 나오는 연속 마키로 처리한다.
+  titleEl.innerHTML = `<span class="playlist-title-marquee-text"><span class="playlist-title-marquee-item">${escaped}</span><span class="playlist-title-marquee-item playlist-title-marquee-copy" aria-hidden="true">${escaped}</span></span>`;
+  refreshPlaylistPlayerTitleMarquee();
+}
+
+function refreshPlaylistPlayerTitleMarquee() {
+  const titleEl = document.getElementById("playlistPlayerTitle");
+  if (!titleEl) return;
+  const textEl = titleEl.querySelector(".playlist-title-marquee-text");
+  if (!textEl) return;
+  const firstItem = titleEl.querySelector(".playlist-title-marquee-item");
+
+  const apply = () => {
+    const isMobile = !window.matchMedia || window.matchMedia("(max-width: 920px)").matches;
+    const fullText = titleEl.dataset.fullTitle || (firstItem ? firstItem.textContent : textEl.textContent) || "";
+    const compactLen = fullText.replace(/\s+/g, "").length;
+    const itemWidth = Math.ceil((firstItem ? firstItem.scrollWidth : textEl.scrollWidth) || 0);
+    const boxWidth = Math.ceil(titleEl.clientWidth || titleEl.getBoundingClientRect().width || 0);
+    // 사용자 요청: 6글자 이상이면 무조건 움직이게 한다.
+    const shouldMarquee = compactLen >= 6 || itemWidth > boxWidth + 2;
+
+    titleEl.classList.toggle("is-marquee", isMobile && shouldMarquee);
+    if (isMobile && shouldMarquee) {
+      const gap = Math.max(48, Math.min(96, Math.round(boxWidth * 0.55)));
+      const distance = Math.max(80, itemWidth + gap);
+      const duration = Math.min(16, Math.max(7, distance / 26));
+      titleEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
+      titleEl.style.setProperty("--playlist-title-marquee-distance", `-${distance}px`);
+      titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
+    } else {
+      titleEl.style.removeProperty("--playlist-title-marquee-gap");
+      titleEl.style.removeProperty("--playlist-title-marquee-distance");
+      titleEl.style.removeProperty("--playlist-title-marquee-duration");
+    }
+  };
+
+  requestAnimationFrame(() => {
+    apply();
+    setTimeout(apply, 150);
+    setTimeout(apply, 500);
+    setTimeout(apply, 1200);
+  });
 }
 
 function setupUserPlaylistPlayer(options = {}) {
@@ -2447,6 +2521,7 @@ function setupUserPlaylistPlayer(options = {}) {
   const songs = getUserPlaylistSongs();
   if (!songs.length) {
     player.classList.add("closed");
+    syncPlaylistPlayerBodySpace();
     playlistCurrentItemId = "";
     if (queuePanel) {
       queuePanel.classList.remove("open");
@@ -2455,7 +2530,7 @@ function setupUserPlaylistPlayer(options = {}) {
     if (listBtn) listBtn.setAttribute("aria-expanded", "false");
     setPlayerCoverImage(cover, null);
     positionFloatingAudioPlayers();
-    title.textContent = "선택한 곡이 없습니다";
+    setPlaylistPlayerTitleText(title, "선택한 곡이 없습니다");
     sub.textContent = "Songs에서 듣고 싶은 곡을 담으면 표시됩니다.";
     resetPlaylistPlayerUi(audio, playBtn, progress, current, duration);
     renderPlaylistQueuePanel();
@@ -2464,6 +2539,7 @@ function setupUserPlaylistPlayer(options = {}) {
 
   if (options.forceOpen) player.classList.remove("closed");
   if (!player.classList.contains("closed")) player.classList.remove("closed");
+  syncPlaylistPlayerBodySpace();
 
   const savedState = loadUserPlaylistState();
   if (!playlistRequestedItemId && !playlistCurrentItemId && savedState?.itemId) {
@@ -2485,17 +2561,11 @@ function setupUserPlaylistPlayer(options = {}) {
 
   setPlayerCoverImage(cover, selected);
   positionFloatingAudioPlayers();
-  title.textContent = selected.title || "제목 없는 곡";
+  setPlaylistPlayerTitleText(title, selected.title || "제목 없는 곡");
   sub.textContent = `${selectedIndex + 1}/${songs.length}곡`;
   bindPlaylistFullDetailOnce();
   bindPlaylistDetailTriggerDelegation();
-  [cover, title].forEach((el) => {
-    if (!el) return;
-    el.classList.add("playlist-detail-trigger");
-    el.setAttribute("role", "button");
-    el.setAttribute("tabindex", "0");
-    el.setAttribute("aria-label", "플레이리스트 상세 화면 열기");
-  });
+  updatePlaylistDetailTriggerAccessibility();
   updatePlaylistFullDetailUi();
   renderPlaylistQueuePanel();
   if (listBtn && queuePanel) {
@@ -2544,12 +2614,14 @@ function setupUserPlaylistPlayer(options = {}) {
   });
 
   cover?.addEventListener("click", (event) => {
+    if (!isPlaylistFullDetailMobileEnabled()) return;
     event.preventDefault();
     event.stopPropagation();
     openPlaylistFullDetail();
   });
 
   title?.addEventListener("click", (event) => {
+    if (!isPlaylistFullDetailMobileEnabled()) return;
     event.preventDefault();
     event.stopPropagation();
     openPlaylistFullDetail();
@@ -2557,6 +2629,7 @@ function setupUserPlaylistPlayer(options = {}) {
 
   [cover, title].forEach((el) => {
     el?.addEventListener("keydown", (event) => {
+      if (!isPlaylistFullDetailMobileEnabled()) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         openPlaylistFullDetail();
@@ -2680,18 +2753,34 @@ function setupUserPlaylistPlayer(options = {}) {
 
 window.addEventListener("resize", positionFloatingAudioPlayers);
 
-async function loadContents() {
-  try {
-    const snap = await getDocs(query(collection(db, "contents"), orderBy("createdAt", "desc")));
-    allContents = [];
-    snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
+async function loadContents(force = false) {
+  if (contentsLoadingPromise && !force) return contentsLoadingPromise;
+
+  if (contentsCacheLoaded && !force) {
     renderAllContentSections();
-    setupDailyRecommendPlayer();
-    setupUserPlaylistPlayer({ forceOpen: false });
-    scheduleKoreanMidnightRefresh();
-    await applySavedTemplates();
-  applyHomeVoiceSettings(currentSettings);
-  } catch(e) { console.error(e); }
+    return;
+  }
+
+  contentsLoadingPromise = (async () => {
+    try {
+      const snap = await getDocs(query(collection(db, "contents"), orderBy("createdAt", "desc")));
+      allContents = [];
+      snap.forEach(d => { const item = { id:d.id, ...d.data() }; if (item.isPublic !== false) allContents.push(item); });
+      contentsCacheLoaded = true;
+      renderAllContentSections();
+      setupDailyRecommendPlayer();
+      setupUserPlaylistPlayer({ forceOpen: false });
+      scheduleKoreanMidnightRefresh();
+      await applySavedTemplates();
+      applyHomeVoiceSettings(currentSettings);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      contentsLoadingPromise = null;
+    }
+  })();
+
+  return contentsLoadingPromise;
 }
 
 
@@ -2787,15 +2876,19 @@ function getItemCreatedDateText(item) {
 
 function resetPageAndReload(page) {
   if (pageState[page]) pageState[page] = 1;
-  loadContents();
+  renderContentPage(page);
 }
 
 function goContentPage(page, pageNumber) {
   pageState[page] = pageNumber;
-  loadContents();
+  renderContentPage(page);
 
   const target = document.getElementById(page);
-  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (target) target.scrollIntoView({ behavior: "auto", block: "start" });
+}
+
+function markContentsCacheDirty() {
+  contentsCacheLoaded = false;
 }
 
 function sortItemsForPage(page, items) {
@@ -3013,7 +3106,7 @@ function renderLatest(contents) {
   if (!source.length) { box.innerHTML = "<p>등록된 최신 자료가 없습니다.</p>"; return; }
   source.slice(0,4).forEach(i => box.appendChild(createCard(i)));
 }
-function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
+function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); setupHlsVideos(box); }
 function renderPhotos(items) { const box = document.getElementById("photoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 사진이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
 
 function makeTextPreview(text, maxLength = 90) {
@@ -3077,7 +3170,7 @@ function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
 
   return `
     <div class="radio-mono-player" data-radio-player data-player-id="${safeId}" data-audio-url="${safeUrl}" onclick="event.stopPropagation()">
-      <audio preload="auto" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
+      <audio preload="none" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
       <div class="radio-mono-controls">
         <button type="button" class="radio-mono-play" aria-label="재생 또는 일시정지">▶</button>
         <div class="radio-mono-time"><span class="radio-mono-current">0:00</span> <span class="radio-mono-divider">/</span> <span class="radio-mono-duration">--:--</span></div>
@@ -3110,7 +3203,7 @@ function setupRadioMonochromePlayers(root = document) {
     audio.volume = 0.8;
     audio.muted = false;
     audio.setAttribute('playsinline', '');
-    audio.preload = 'auto';
+    audio.preload = 'none';
     volume.value = '80';
 
     const sourceUrl = player.dataset.audioUrl || audio.getAttribute('src') || '';
@@ -3139,7 +3232,7 @@ function setupRadioMonochromePlayers(root = document) {
       return true;
     };
 
-    loadCandidate(0);
+    setPlayerMessage('--:--');
 
     player.addEventListener('click', (event) => event.stopPropagation());
     player.querySelectorAll('button, input').forEach((control) => {
@@ -3274,7 +3367,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const showCover = id === "songList";
   const thumb = showCover
     ? (img
-        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}"></div>`
+        ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}" loading="lazy" decoding="async"></div>`
         : `<div class="audio-archive-cover audio-archive-cover-placeholder"><span>NO<br>COVER</span></div>`)
     : "";
   const topClass = showCover ? "audio-archive-top" : "audio-archive-top no-cover";
@@ -3313,7 +3406,7 @@ function renderTextArchiveCard(item, id, img, previewText) {
   const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 일기는 상세보기에서 볼 수 있습니다.";
 
   return `
-    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
+    ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
     <div class="card-body text-archive-card-body">
       <h3>${escapeHtml(item.title)}</h3>
       ${renderCategoryBadges(item)}
@@ -3364,7 +3457,7 @@ function renderList(id, items) {
       div.innerHTML = renderAudioArchiveCard(item, id, img, previewText);
     } else {
       div.innerHTML = `
-        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}">` : ""}
+        ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : ""}
         <div>
           <h3>${escapeHtml(item.title)}</h3>
           ${renderCategoryBadges(item)}
@@ -3384,15 +3477,17 @@ function createCard(item) {
   let media = "";
   const videoMediaUrl = getVideoMediaUrl(item);
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
-  if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
+  if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe loading="lazy" src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
   else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) {
-    const videoPlaybackUrl = normalizeMediaUrlForPlayback(videoMediaUrl, "video");
+    const videoPlaybackUrl = normalizeMediaUrlForPlayback(getPreferredVideoUrl(item, "card") || videoMediaUrl, "video");
     const videoPosterUrl = item.thumbnailUrl || item.imageUrl || item.photoUrl || "";
-    const fileType = /\.mov(\?|#|$)/i.test(videoMediaUrl) ? "video/quicktime" : "video/mp4";
-    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="auto" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"><source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}"></video>`;
+    const fileType = /\.mov(\?|#|$)/i.test(videoPlaybackUrl) ? "video/quicktime" : "video/mp4";
+    const hlsAttr = isHlsUrl(videoPlaybackUrl) ? ` data-hls-src="${escapeHtml(videoPlaybackUrl)}"` : "";
+    const sourceHtml = isHlsUrl(videoPlaybackUrl) ? "" : `<source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}">`;
+    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"${hlsAttr}>${sourceHtml}</video>`;
   }
-  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
-  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}">`;
+  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
+  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
@@ -3537,6 +3632,167 @@ function closeCoverZoom(event) {
   }
 }
 
+
+function getVideoQualityMap(item = {}) {
+  const nested = item.videoQualityUrls && typeof item.videoQualityUrls === "object" ? item.videoQualityUrls : {};
+  return {
+    q480: String(item.videoUrl480 || nested.q480 || nested["480"] || "").trim(),
+    q720: String(item.videoUrl720 || nested.q720 || nested["720"] || "").trim(),
+    q1080: String(item.videoUrl1080 || nested.q1080 || nested["1080"] || "").trim(),
+    original: String(item.videoUrlOriginal || nested.original || item.originalVideoUrl || "").trim(),
+    hls: getVideoHlsUrl(item)
+  };
+}
+
+function getVideoQualityOptions(item = {}) {
+  const q = getVideoQualityMap(item);
+  const base = getVideoMediaUrl(item);
+  const rawOptions = [
+    { key: "q480", label: "480p", url: q.q480 },
+    { key: "q720", label: "720p", url: q.q720 },
+    { key: "q1080", label: "1080p", url: q.q1080 },
+    { key: "hls", label: "자동/HLS", url: q.hls },
+    { key: "original", label: "원본", url: q.original },
+    { key: "default", label: "기본", url: base }
+  ];
+  const seen = new Set();
+  return rawOptions.filter(opt => {
+    if (!opt.url) return false;
+    const normalized = normalizeMediaUrlForPlayback(opt.url, "video");
+    if (seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+function getPreferredVideoQualityKey(item = {}, mode = "detail") {
+  const options = getVideoQualityOptions(item);
+  const has = (key) => options.some(opt => opt.key === key);
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+  const preferredOrder = mode === "card"
+    ? ["hls", "q480", "q720", "default", "q1080", "original"]
+    : (isMobile ? ["hls", "q480", "q720", "default", "q1080", "original"] : ["hls", "q720", "q1080", "default", "q480", "original"]);
+  return preferredOrder.find(has) || (options[0] && options[0].key) || "default";
+}
+
+function getVideoUrlByQuality(item = {}, key = "") {
+  const options = getVideoQualityOptions(item);
+  const found = options.find(opt => opt.key === key) || options[0];
+  return found ? found.url : getVideoMediaUrl(item);
+}
+
+function getPreferredVideoUrl(item = {}, mode = "detail") {
+  return getVideoUrlByQuality(item, getPreferredVideoQualityKey(item, mode));
+}
+
+let hlsJsLoadingPromise = null;
+
+function loadHlsJsIfNeeded() {
+  if (window.Hls) return Promise.resolve(window.Hls);
+  if (hlsJsLoadingPromise) return hlsJsLoadingPromise;
+  hlsJsLoadingPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-hls-js="true"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.Hls), { once: true });
+      existing.addEventListener("error", reject, { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js";
+    script.async = true;
+    script.dataset.hlsJs = "true";
+    script.onload = () => resolve(window.Hls);
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return hlsJsLoadingPromise;
+}
+
+function destroyVideoHlsInstance(video) {
+  if (video && video._hlsInstance) {
+    try { video._hlsInstance.destroy(); } catch(e) {}
+    video._hlsInstance = null;
+  }
+}
+
+function setVideoSource(video, src) {
+  if (!video || !src) return;
+  destroyVideoHlsInstance(video);
+  const source = video.querySelector("source");
+  if (isHlsUrl(src)) {
+    video.dataset.hlsSrc = src;
+    if (source) source.removeAttribute("src");
+    video.removeAttribute("src");
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = src;
+      video.load();
+      return;
+    }
+    loadHlsJsIfNeeded().then((Hls) => {
+      if (!Hls || !Hls.isSupported()) {
+        video.src = src;
+        video.load();
+        return;
+      }
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 30 });
+      video._hlsInstance = hls;
+      hls.loadSource(src);
+      hls.attachMedia(video);
+    }).catch(() => {
+      video.src = src;
+      video.load();
+    });
+    return;
+  }
+
+  delete video.dataset.hlsSrc;
+  if (source) {
+    source.src = src;
+    source.type = /\.mov(\?|#|$)/i.test(src) ? "video/quicktime" : "video/mp4";
+  } else {
+    video.src = src;
+  }
+  video.load();
+}
+
+function setupHlsVideos(root = document) {
+  root.querySelectorAll("video[data-hls-src]").forEach((video) => {
+    const src = video.dataset.hlsSrc || "";
+    if (!src || video.dataset.hlsReady === src) return;
+    video.dataset.hlsReady = src;
+    setVideoSource(video, src);
+  });
+}
+
+function changeVideoQuality(selectEl) {
+  const videoId = selectEl?.dataset?.videoTarget;
+  const video = videoId ? document.getElementById(videoId) : null;
+  if (!video) return;
+  const selectedOption = selectEl.options[selectEl.selectedIndex];
+  const nextSrc = selectedOption?.dataset?.src || selectEl.value || "";
+  if (!nextSrc) return;
+  const wasPaused = video.paused;
+  const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  setVideoSource(video, nextSrc);
+  video.addEventListener("loadedmetadata", function restoreVideoTime() {
+    video.removeEventListener("loadedmetadata", restoreVideoTime);
+    try { if (currentTime && currentTime < video.duration) video.currentTime = currentTime; } catch(e) {}
+    if (!wasPaused) video.play().catch(() => {});
+  });
+}
+
+function renderVideoQualitySelector(item = {}, videoId = "") {
+  const options = getVideoQualityOptions(item);
+  if (options.length <= 1) return "";
+  const selectedKey = getPreferredVideoQualityKey(item, "detail");
+  const opts = options.map(opt => {
+    const src = normalizeMediaUrlForPlayback(opt.url, "video");
+    const selected = opt.key === selectedKey ? " selected" : "";
+    return `<option value="${escapeHtml(src)}" data-src="${escapeHtml(src)}"${selected}>${escapeHtml(opt.label)}</option>`;
+  }).join("");
+  return `<div class="video-quality-selector"><label>화질</label><select data-video-target="${escapeHtml(videoId)}" onchange="changeVideoQuality(this)">${opts}</select></div>`;
+}
+
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
@@ -3552,10 +3808,16 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
+      const selectedVideoUrl = getPreferredVideoUrl(item, "detail") || mediaUrl;
+      const selectedPlaybackUrl = normalizeMediaUrlForPlayback(selectedVideoUrl, "video");
       const posterUrl = playbackImageUrl || "";
       const posterAttr = posterUrl ? ` poster="${escapeHtml(posterUrl)}"` : "";
-      const fileType = /\.mov(\?|#|$)/i.test(mediaUrl) ? "video/quicktime" : "video/mp4";
-      return `<div class="detail-media-box detail-video-box"><video class="detail-inline-video" controls playsinline webkit-playsinline preload="auto"${posterAttr} controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false"><source src="${escapeHtml(playbackMediaUrl)}" type="${fileType}"></video></div>`;
+      const fileType = /\.mov(\?|#|$)/i.test(selectedVideoUrl) ? "video/quicktime" : "video/mp4";
+      const videoId = `detailVideo_${String(item.id || Math.random()).replace(/[^a-zA-Z0-9_-]/g, "")}`;
+      const selector = renderVideoQualitySelector(item, videoId);
+      const hlsAttr = isHlsUrl(selectedPlaybackUrl) ? ` data-hls-src="${escapeHtml(selectedPlaybackUrl)}"` : "";
+      const sourceHtml = isHlsUrl(selectedPlaybackUrl) ? "" : `<source src="${escapeHtml(selectedPlaybackUrl)}" type="${fileType}">`;
+      return `<div class="detail-media-box detail-video-box">${selector}<video id="${escapeHtml(videoId)}" class="detail-inline-video" controls playsinline webkit-playsinline preload="metadata"${posterAttr}${hlsAttr} controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false">${sourceHtml}</video></div>`;
     }
 
     if (imageUrl) {
@@ -3661,6 +3923,7 @@ function openContentDetail(id) {
   }
   bindDetailPhotoZoom();
   setupRadioMonochromePlayers(mediaArea);
+  setupHlsVideos(mediaArea);
   document.body.style.overflow = "hidden";
 }
 
@@ -3693,6 +3956,89 @@ document.addEventListener("keydown", e => {
   closeContentDetail();
 });
 
+
+function populateBulkSongCoverCategorySelect() {
+  const select = document.getElementById("bulkSongCoverCategory");
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = '<option value="">SONG 카테고리 선택</option>';
+  const cats = pageCategories.songs || [];
+  cats.forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
+  if (!cats.length) {
+    const option = new Option("먼저 Songs 카테고리를 만들어 주세요", "");
+    option.disabled = true;
+    select.appendChild(option);
+  }
+  select.value = current;
+}
+
+async function saveBulkSongCover() {
+  if (!isAdmin) return alert("관리자만 수정할 수 있습니다.");
+
+  const categoryName = String(document.getElementById("bulkSongCoverCategory")?.value || "").trim();
+  const file = document.getElementById("bulkSongCoverFile")?.files?.[0] || null;
+  const directUrl = String(document.getElementById("bulkSongCoverUrl")?.value || "").trim();
+  const status = document.getElementById("bulkSongCoverStatus");
+
+  if (!categoryName) return alert("커버사진을 바꿀 SONG 카테고리를 선택하세요.");
+  if (!file && !directUrl) return alert("새 커버사진 파일을 선택하거나 이미지 URL을 입력하세요.");
+
+  const targetSongs = allContents.filter(item => item.category === "songs" && getItemSubCategories(item).includes(categoryName));
+  if (!targetSongs.length) return alert(`선택한 카테고리(${categoryName})에 등록된 SONG 자료가 없습니다.`);
+
+  if (!confirm(`'${categoryName}' 카테고리의 SONG ${targetSongs.length}개 자료 커버사진만 같은 이미지로 바꿀까요?\n제목, 음원, 설명, 연도, 출처는 바뀌지 않습니다.`)) return;
+
+  try {
+    if (status) status.textContent = "커버사진을 준비하는 중입니다...";
+
+    // 일괄 수정은 같은 커버를 여러 SONG 문서에 반복 저장합니다.
+    // 파일을 base64 데이터로 바꿔 Firestore에 직접 넣으면, 곡 수가 많을 때
+    // batch 요청 크기 10MiB 제한을 넘어서 "Request payload size exceeds the limit" 오류가 납니다.
+    // 그래서 파일 선택 시에는 이미지를 한 번만 GitHub/Worker에 업로드하고,
+    // 각 SONG 문서에는 짧은 이미지 URL만 저장합니다.
+    let coverUrl = "";
+    if (file) {
+      if (status) status.textContent = "커버사진 파일을 업로드하는 중입니다...";
+      coverUrl = await uploadFileToGitHubWorker(file, "images");
+    } else {
+      coverUrl = directUrl.trim();
+    }
+
+    if (!coverUrl) return alert("커버사진을 불러오지 못했습니다.");
+    if (/^data:image\//i.test(coverUrl) && targetSongs.length > 8) {
+      throw new Error("카테고리 자료가 많을 때는 base64 이미지 데이터를 직접 저장할 수 없습니다. 이미지 파일을 선택해 업로드하거나, https로 시작하는 이미지 URL을 입력해 주세요.");
+    }
+
+    const chunks = [];
+    for (let i = 0; i < targetSongs.length; i += 300) chunks.push(targetSongs.slice(i, i + 300));
+
+    let updatedCount = 0;
+    for (const chunk of chunks) {
+      const batch = writeBatch(db);
+      chunk.forEach(item => {
+        batch.update(doc(db, "contents", item.id), {
+          thumbnailUrl: coverUrl,
+          imageUrl: coverUrl,
+          coverUrl: coverUrl,
+          updatedAt: serverTimestamp()
+        });
+      });
+      await batch.commit();
+      updatedCount += chunk.length;
+      if (status) status.textContent = `${updatedCount}/${targetSongs.length}개 SONG 커버사진 수정 중...`;
+    }
+
+    document.getElementById("bulkSongCoverFile").value = "";
+    document.getElementById("bulkSongCoverUrl").value = "";
+    if (status) status.textContent = `완료: '${categoryName}' 카테고리 SONG ${updatedCount}개 커버사진이 수정되었습니다.`;
+    await loadContents(true);
+    alert(`'${categoryName}' 카테고리 SONG ${updatedCount}개 커버사진을 수정했습니다.`);
+  } catch (error) {
+    if (status) status.textContent = "오류: " + error.message;
+    alert("SONG 커버사진 일괄 수정 오류: " + error.message);
+  }
+}
+
 function renderAdminManageList() {
   const box = document.getElementById("adminContentList"); if (!box || !isAdmin) return;
   const filter = document.getElementById("manageCategoryFilter")?.value || "";
@@ -3713,7 +4059,13 @@ function editContent(id) {
     populateSpecificSubCategorySelect("videos", "videoSubCategory", getItemSubCategories(item));
     document.getElementById("videoTitle").value = item.title || "";
     document.getElementById("youtubeUrl").value = item.youtubeUrl || (item.mediaType === "youtube" ? (item.mediaUrl || "") : "");
-    document.getElementById("videoFileUrl").value = item.mediaType === "video" ? (getVideoMediaUrl(item) || "") : "";
+    document.getElementById("videoFileUrl").value = (item.mediaType === "video" || item.mediaType === "hls") ? (getVideoMediaUrl(item) || "") : "";
+    if (document.getElementById("videoHlsUrl")) document.getElementById("videoHlsUrl").value = getVideoHlsUrl(item) || "";
+    const videoQualityMap = getVideoQualityMap(item);
+    if (document.getElementById("videoUrl480")) document.getElementById("videoUrl480").value = videoQualityMap.q480 || "";
+    if (document.getElementById("videoUrl720")) document.getElementById("videoUrl720").value = videoQualityMap.q720 || "";
+    if (document.getElementById("videoUrl1080")) document.getElementById("videoUrl1080").value = videoQualityMap.q1080 || "";
+    if (document.getElementById("videoUrlOriginal")) document.getElementById("videoUrlOriginal").value = videoQualityMap.original || "";
     document.getElementById("videoYear").value = item.year || "";
     document.getElementById("videoSource").value = item.source || "";
     document.getElementById("videoDescription").value = item.body || item.description || "";
@@ -3770,7 +4122,7 @@ async function deleteContentItem(id) {
     renderAllContentSections();
 
     // Firestore 서버 상태를 다시 읽어 최종 동기화
-    await loadContents();
+    await loadContents(true);
 
     alert("삭제되었습니다. 목록에서도 제거했습니다.");
   } catch (error) {
