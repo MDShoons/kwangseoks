@@ -7881,3 +7881,409 @@ body.playlist-detail-open {
     padding: 7px 10px;
   }
 }
+
+
+/* ===== v202 광석이네 집 room redesign ===== */
+:root {
+  --kks-paper: rgba(255, 249, 242, 0.82);
+  --kks-paper-strong: rgba(255, 251, 246, 0.9);
+  --kks-ink: #332419;
+  --kks-muted: #6f5d4d;
+  --kks-line: rgba(111, 84, 53, 0.16);
+  --kks-accent: #7b5232;
+  --kks-accent-soft: #c9a06f;
+}
+
+html, body { min-height:100%; }
+body {
+  position: relative;
+  color: var(--kks-ink) !important;
+  background: #efe6d9 !important;
+}
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-3;
+  background-position:center center;
+  background-repeat:no-repeat;
+  background-size:cover;
+  filter: blur(10px) saturate(.9) brightness(.9);
+  transform: scale(1.08);
+  transition: background-image .28s ease, opacity .3s ease;
+}
+body::after {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255,236,208,.28), transparent 28%),
+    radial-gradient(circle at 82% 14%, rgba(255,241,221,.18), transparent 25%),
+    linear-gradient(180deg, rgba(42,27,18,.42) 0%, rgba(245,237,228,.60) 20%, rgba(244,236,226,.86) 44%, rgba(243,236,228,.93) 100%);
+}
+body[data-room="home"]::before { background-image: url("images/room-backgrounds/home.webp"); }
+body[data-room="siteinfo"]::before { background-image: url("images/room-backgrounds/siteinfo.webp"); }
+body[data-room="videos"]::before { background-image: url("images/room-backgrounds/videos.webp"); }
+body[data-room="songs"]::before { background-image: url("images/room-backgrounds/songs.webp"); }
+body[data-room="radios"]::before { background-image: url("images/room-backgrounds/radios.webp"); }
+body[data-room="photos"]::before { background-image: url("images/room-backgrounds/photos.webp"); }
+body[data-room="stories"]::before { background-image: url("images/room-backgrounds/stories.webp"); }
+body[data-room="about"]::before { background-image: url("images/room-backgrounds/about.webp"); }
+body[data-room="oneum"]::before { background-image: url("images/room-backgrounds/oneum.webp"); }
+
+main, footer, .site-header, .daily-player, .playlist-player, .detail-modal, .cover-zoom-modal { position: relative; z-index: 1; }
+main { padding-top: 18px; }
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  background: linear-gradient(180deg, rgba(52,34,22,.82), rgba(60,41,28,.72)) !important;
+  border-bottom: 1px solid rgba(255,238,214,.18);
+  box-shadow: 0 14px 34px rgba(26, 15, 10, 0.18);
+  backdrop-filter: blur(14px);
+}
+.site-header .logo {
+  padding: 8px 16px 8px 18px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,239,220,.10);
+}
+.site-header .logo strong {
+  display:block;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  color: #fff5ea !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.site-header .logo strong::before {
+  content: "⌂";
+  display:inline-block;
+  margin-right: 8px;
+  color: #ffddaa;
+}
+.site-header .logo small {
+  display:block;
+  margin-top: 4px;
+  color: #f2ddc1 !important;
+  opacity: .92;
+}
+
+#siteNav { gap: 8px; }
+#siteNav button,
+.auth-area button,
+.mobile-menu-toggle {
+  position: relative;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 242, 222, 0.18) !important;
+  background: rgba(255,255,255,.08) !important;
+  color: #fff7ef !important;
+  transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+  overflow: visible;
+}
+#siteNav button:hover,
+.auth-area button:hover,
+.mobile-menu-toggle:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.14) !important;
+}
+#siteNav button.active-room,
+#siteNav button[aria-current="page"] {
+  background: linear-gradient(180deg, rgba(139,92,56,.92), rgba(111,74,45,.96)) !important;
+  border-color: rgba(255, 231, 188, 0.72) !important;
+  box-shadow: 0 10px 20px rgba(64, 35, 15, 0.22), inset 0 1px 0 rgba(255, 239, 214, 0.28);
+  padding-left: 38px !important;
+}
+#siteNav button.active-room::before,
+#siteNav button[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f9e4bf' d='M26 7c-4.8 0-8 5.4-8 11.5 0 2.8.7 5.4 1.8 7.5L9.7 36.2A11 11 0 0 0 7 43.8C7 50.5 12.4 56 19 56s12-5.5 12-12.2c0-2.9-.9-5.6-2.5-7.8l11.7-11.4c2 .9 4.1 1.4 6.4 1.4 6.8 0 11.4-4 11.4-9.6 0-4.7-3.3-8.5-8.6-9.4l-.3 1.7c2.9.8 4.6 2.7 4.6 5.1 0 3.3-3.2 5.9-7.5 5.9-1.7 0-3.4-.4-5.1-1.2l-1.2-.6-14 13.7.8 1.1a9.4 9.4 0 0 1 1.9 5.6c0 5.1-4.1 9.3-9.1 9.3s-9.1-4.2-9.1-9.3c0-2.3.8-4.4 2.4-6.1l12.5-12.1-.9-1.1c-1.6-2-2.6-5-2.6-8.2 0-5 2.4-8.9 5.1-8.9 1.7 0 3.2 1.5 4.2 4.2l1.7-.6C33 10 29.8 7 26 7zm-7 34.8a3 3 0 1 0 0 6.1 3 3 0 0 0 0-6.1z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-size:contain;
+  opacity:.96;
+}
+#siteNav button.active-room::after,
+#siteNav button[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(233, 198, 144, 0.88);
+  pointer-events:none;
+}
+
+#userStatus { color: #f4e5d0 !important; }
+
+.page-title,
+.content-section,
+.auth-page,
+.admin-form,
+.list-box,
+.detail-modal-inner,
+.cover-zoom-inner,
+.site-guide-card,
+.latest-category-box,
+.card,
+.text-archive-card,
+.content-body,
+.detail-text-area,
+.bulk-song-cover-panel {
+  background: var(--kks-paper) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--kks-line) !important;
+  box-shadow: 0 18px 42px rgba(54, 35, 22, 0.08), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.page-title,
+.content-section,
+.auth-page,
+.admin-form,
+.list-box,
+.detail-modal-inner,
+.cover-zoom-inner,
+.site-guide-card,
+.latest-category-box,
+.bulk-song-cover-panel {
+  border-radius: 28px !important;
+}
+.card,
+.text-archive-card { border-radius: 26px !important; }
+
+.content-section h2,
+.page-title h1,
+.site-guide-card h2,
+.hero h1,
+.card h3,
+.text-archive-card h3,
+.detail-text-area h2,
+.admin-form h2,
+.admin-form h3 {
+  color: var(--kks-ink) !important;
+  letter-spacing: -0.03em;
+}
+.page-title p,
+.content-section p,
+.site-guide-card p,
+.hero p,
+.helper-text,
+.card p,
+.text-archive-card p,
+label,
+.detail-text-area p,
+.detail-text-area div,
+.admin-form p,
+.admin-form li {
+  color: var(--kks-muted) !important;
+}
+
+.page-title h1::after {
+  display:block;
+  margin-top: 10px;
+  font-size: 13px;
+  letter-spacing: .08em;
+  font-weight: 700;
+  color: #a07b57;
+  text-transform: uppercase;
+}
+body[data-room="siteinfo"] #siteinfo .page-title h1::after { content:"Welcome to the house"; }
+body[data-room="videos"] #videos .page-title h1::after { content:"안방에서 꺼내 보는 무대와 화면"; }
+body[data-room="songs"] #songs .page-title h1::after { content:"노래와 악보가 쌓인 작업실"; }
+body[data-room="radios"] #radios .page-title h1::after { content:"따뜻한 목소리가 흐르는 부엌"; }
+body[data-room="photos"] #photos .page-title h1::after { content:"광석의 흔적을 모아둔 방"; }
+body[data-room="stories"] #stories .page-title h1::after { content:"공책과 편지처럼 남은 이야기"; }
+body[data-room="about"] #about .page-title h1::after { content:"사람 김광석을 소개하는 방"; }
+body[data-room="oneum"] #oneum .page-title h1::after { content:"원음을 정리해 둔 사무실"; }
+
+#home .hero,
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 38px !important;
+  border: 1px solid rgba(255, 232, 204, 0.26) !important;
+  box-shadow: 0 28px 48px rgba(51, 32, 21, 0.14);
+  background: linear-gradient(135deg, rgba(73, 46, 30, .86), rgba(122, 88, 58, .58)) !important;
+}
+#home .hero::before,
+.hero::before {
+  background: linear-gradient(120deg, rgba(34, 20, 10, .26), rgba(34,20,10,.05) 42%, rgba(255,255,255,.02)) !important;
+}
+#home .hero::after,
+.hero::after {
+  content: "기억과 노래가 머무는 집";
+  position: absolute;
+  right: 24px;
+  top: 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255,244,224,.16);
+  border: 1px solid rgba(255,232,198,.24);
+  color: #f6e7d2;
+  font-size: 12px;
+  letter-spacing: .08em;
+  font-weight: 700;
+}
+.hero h1,
+.hero p,
+.hero div { text-shadow: 0 3px 14px rgba(0,0,0,.28); }
+.hero button {
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,239,216,.34) !important;
+  background: rgba(255,247,234,.18) !important;
+  color: #fff7ef !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+}
+.hero button:hover { background: rgba(255,247,234,.25) !important; }
+
+.latest-category-box,
+.card,
+.text-archive-card {
+  overflow:hidden;
+}
+.card img,
+.text-archive-card img,
+.latest-category-box img {
+  border-radius: 20px;
+}
+
+#homeTitle { line-height: 1.12; }
+#homeDescription { max-width: 720px; }
+#homeDescription::before {
+  content: "광석이네 집은 김광석의 목소리와 추억이 방마다 머무는 디지털 아카이브입니다.";
+  display:block;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f3e2cd;
+}
+
+footer {
+  margin-top: 34px;
+  background: rgba(42,27,18,.72) !important;
+  color: #f6e8d5 !important;
+  border-top: 1px solid rgba(255,236,214,.18);
+  backdrop-filter: blur(10px);
+}
+footer p { color: #f6e8d5 !important; }
+
+.room-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+}
+.room-transition-overlay.is-visible { opacity: 1; }
+.room-transition-overlay .door {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5%;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.15), rgba(255,255,255,.02) 12%, rgba(0,0,0,.08) 88%, rgba(0,0,0,.16)),
+    repeating-linear-gradient(90deg, #5b3c28 0 18px, #6c4a31 18px 36px, #7a5235 36px 54px);
+  box-shadow: inset 0 0 0 4px rgba(255,236,214,.07), inset 0 0 40px rgba(0,0,0,.22);
+  transition: transform .58s cubic-bezier(.68,-0.02,.26,1.01);
+}
+.room-transition-overlay .door-left {
+  left: 0;
+  transform: translateX(-105%);
+  border-right: 2px solid rgba(255,227,191,.1);
+}
+.room-transition-overlay .door-right {
+  right: 0;
+  transform: translateX(105%);
+  border-left: 2px solid rgba(255,227,191,.1);
+}
+.room-transition-overlay.closing .door-left,
+.room-transition-overlay.closing .door-right { transform: translateX(0); }
+.room-transition-overlay.opening .door-left { transform: translateX(-105%); }
+.room-transition-overlay.opening .door-right { transform: translateX(105%); }
+.room-transition-overlay .transition-note {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(86vw, 420px);
+  padding: 20px 24px;
+  text-align:center;
+  border-radius: 22px;
+  background: rgba(255,251,244,.15);
+  border: 1px solid rgba(255,240,218,.22);
+  backdrop-filter: blur(6px);
+  color: #f9ecdd;
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+.room-transition-overlay.closing .transition-note,
+.room-transition-overlay.opening .transition-note { opacity: 1; }
+.transition-house {
+  display:block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  opacity: .9;
+}
+#roomTransitionLabel {
+  display:block;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 900px) {
+  #home .hero::after,
+  .hero::after { right: 16px; top: 14px; font-size: 11px; padding: 7px 12px; }
+  .page-title,
+  .content-section,
+  .auth-page,
+  .admin-form,
+  .list-box,
+  .site-guide-card,
+  .latest-category-box,
+  .card,
+  .text-archive-card { border-radius: 22px !important; }
+  #roomTransitionLabel { font-size: 22px; }
+}
+
+@media (max-width: 640px) {
+  body::before { filter: blur(8px) saturate(.92) brightness(.9); }
+  .site-header .logo strong { font-size: 22px; }
+  .site-header .logo small { font-size: 12px; }
+  #siteNav button.active-room,
+  #siteNav button[aria-current="page"] { padding-left: 34px !important; }
+  #homeDescription::before { font-size: 16px; }
+  .room-transition-overlay .transition-note { padding: 18px 18px; width: min(90vw, 320px); }
+  #roomTransitionLabel { font-size: 19px; }
+}
+
+body.is-mobile-site .site-header,
+body.is-mobile-site .site-header * { box-sizing: border-box; }
+body.is-mobile-site .site-header {
+  background: linear-gradient(180deg, rgba(52,34,22,.90), rgba(61,40,27,.84)) !important;
+}
+body.is-mobile-site .site-header nav,
+body.is-mobile-site .site-header .auth-area {
+  background: rgba(48,31,19,.78) !important;
+  border: 1px solid rgba(255,238,215,.08);
+  backdrop-filter: blur(16px);
+}
+body.is-mobile-site .site-header nav button,
+body.is-mobile-site .site-header .auth-area button {
+  background: rgba(255,255,255,.07) !important;
+}
+body.is-mobile-site .page,
+body.is-mobile-site .content-page,
+body.is-mobile-site .content-section,
+body.is-mobile-site .page-title,
+body.is-mobile-site .card,
+body.is-mobile-site .text-archive-card {
+  background: var(--kks-paper-strong) !important;
+}
