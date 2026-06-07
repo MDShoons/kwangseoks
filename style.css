@@ -8218,3 +8218,423 @@ input, textarea, select{
   .hero-action-row button,.hero button{min-width:0!important; flex:1 1 130px!important; padding:12px 14px!important; font-size:14px!important;}
   .content-section,.page-title,.site-guide-card,.list-item,.content-card,.card,.admin-form{border-radius:22px!important;}
 }
+
+/* =========================================================
+   KKS IDENTITY REDESIGN v300
+   목표: 사이트를 보는 즉시 '김광석 아카이브'로 인식되도록
+   - PC통신 느낌 제거
+   - 90년대 공연 포스터 / 앨범 재킷 / 필름 질감 / 기타·LP 모티프
+   ========================================================= */
+:root{
+  --kks-ink:#1b120d;
+  --kks-brown:#5b2f20;
+  --kks-caramel:#a46737;
+  --kks-amber:#e1ad5f;
+  --kks-paper:#f4e4c9;
+  --kks-cream:#fff4df;
+  --kks-red:#7b1f16;
+  --kks-stage:#130b08;
+}
+
+body{
+  background:
+    radial-gradient(circle at 18% 6%, rgba(169,92,43,.20), transparent 34%),
+    radial-gradient(circle at 90% 0%, rgba(83,38,24,.18), transparent 32%),
+    repeating-linear-gradient(90deg, rgba(79,46,26,.025) 0 1px, transparent 1px 54px),
+    linear-gradient(180deg, #fff5e5 0%, #f0dcc0 46%, #e8d0b1 100%)!important;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0; pointer-events:none; z-index:-1;
+  background:
+    radial-gradient(circle at 20% 16%, rgba(255,255,255,.18), transparent 26%),
+    repeating-linear-gradient(0deg, rgba(54,31,18,.026) 0 1px, transparent 1px 5px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+  opacity:.5;
+}
+
+.site-header{
+  background:
+    linear-gradient(180deg, rgba(36,18,12,.98), rgba(20,10,7,.96)),
+    radial-gradient(circle at 70% -20%, rgba(230,173,87,.26), transparent 38%)!important;
+  border-bottom:1px solid rgba(255,214,142,.25)!important;
+  box-shadow:0 16px 46px rgba(42,20,10,.28)!important;
+}
+.logo strong{
+  display:block;
+  font-size:28px!important;
+  letter-spacing:-.08em;
+  color:#fff2ce!important;
+  text-shadow:0 4px 20px rgba(225,151,72,.35);
+}
+.logo strong::before{
+  content:"♪";
+  display:inline-block;
+  margin-right:8px;
+  color:var(--kks-amber);
+  transform:rotate(-10deg);
+}
+.logo small{
+  text-transform:uppercase;
+  letter-spacing:.22em!important;
+  color:rgba(255,226,177,.74)!important;
+}
+#siteNav{
+  background:rgba(255,235,188,.07)!important;
+  border-color:rgba(255,216,145,.20)!important;
+}
+#siteNav button{
+  font-size:13px!important;
+  color:#fff0d1!important;
+}
+#siteNav button:hover{
+  background:linear-gradient(180deg, rgba(236,177,89,.32), rgba(111,49,30,.50))!important;
+  color:#fff!important;
+}
+
+main{max-width:1220px!important;}
+
+/* 홈 히어로: 김광석 사진 + 포스터형 타이포 */
+.hero.hero-1990-stage.kks-identity-hero,
+#home .hero.kks-identity-hero{
+  min-height:640px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.08fr) minmax(320px,.72fr)!important;
+  align-items:end!important;
+  gap:34px!important;
+  padding:clamp(28px,5vw,66px)!important;
+  border-radius:44px!important;
+  border:1px solid rgba(255,220,147,.38)!important;
+  background:
+    linear-gradient(90deg, rgba(18,9,6,.98) 0%, rgba(50,20,12,.91) 37%, rgba(50,20,12,.32) 67%, rgba(20,10,7,.72) 100%),
+    radial-gradient(circle at 72% 22%, rgba(255,191,91,.40), transparent 31%),
+    url('images/main-bg.png') center/cover no-repeat!important;
+  box-shadow:
+    0 34px 90px rgba(48,23,12,.36),
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    inset 0 -160px 160px rgba(17,8,5,.28)!important;
+}
+.hero.hero-1990-stage.kks-identity-hero::before,
+#home .hero.kks-identity-hero::before{
+  content:""!important;
+  position:absolute!important; inset:0!important; z-index:0!important;
+  background:
+    linear-gradient(90deg, rgba(255,231,183,.11) 0 1px, transparent 1px 20px),
+    repeating-linear-gradient(180deg, rgba(255,255,255,.045) 0 1px, transparent 1px 8px),
+    radial-gradient(circle at 7% 88%, rgba(211,146,63,.26), transparent 24%)!important;
+  opacity:.95!important;
+}
+.hero.hero-1990-stage.kks-identity-hero::after,
+#home .hero.kks-identity-hero::after{
+  content:""!important;
+  position:absolute!important;
+  right:clamp(240px,28vw,420px)!important;
+  bottom:-140px!important;
+  width:430px!important; height:430px!important;
+  border-radius:50%!important;
+  border:46px solid rgba(11,6,4,.56)!important;
+  background:
+    radial-gradient(circle, transparent 0 22%, rgba(238,196,119,.20) 23% 24%, transparent 25%),
+    repeating-radial-gradient(circle, rgba(255,224,158,.17) 0 1px, transparent 1px 12px)!important;
+  box-shadow:0 0 0 1px rgba(255,227,164,.25), 0 26px 80px rgba(0,0,0,.35), inset 0 0 48px rgba(0,0,0,.65)!important;
+  opacity:.9!important; z-index:0!important;
+}
+.kks-hero-copy{position:relative; z-index:2; align-self:end; max-width:760px;}
+.kks-hero-poster{
+  position:relative; z-index:2;
+  align-self:center;
+  justify-self:end;
+  width:min(360px,34vw);
+  min-width:300px;
+  transform:rotate(2.2deg);
+  border-radius:28px;
+  padding:16px 16px 20px;
+  background:linear-gradient(180deg, #fff1d1, #e3b875 72%, #6e2c1d 100%);
+  box-shadow:0 32px 80px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.65);
+}
+.kks-hero-poster::before{
+  content:"김광석 자료방";
+  position:absolute; left:-24px; top:28px;
+  padding:8px 18px;
+  border-radius:999px;
+  background:#7b1f16;
+  color:#fff6dd;
+  font-weight:900;
+  font-size:14px;
+  letter-spacing:-.04em;
+  box-shadow:0 12px 28px rgba(0,0,0,.24);
+  transform:rotate(-8deg);
+}
+.kks-hero-poster::after{
+  content:"1990s ARCHIVE";
+  position:absolute; right:18px; bottom:52px;
+  color:rgba(255,246,225,.80);
+  letter-spacing:.18em;
+  font-size:10px;
+  font-weight:900;
+}
+.kks-poster-photo{
+  height:430px;
+  border-radius:20px;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(0,0,0,.08) 46%, rgba(0,0,0,.50) 100%),
+    url('images/main-bg.png') center/cover no-repeat;
+  filter:contrast(1.05) saturate(1.02) sepia(.12);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);
+}
+.kks-poster-caption{
+  padding-top:14px;
+  color:#25130d;
+  font-size:13px;
+  font-weight:950;
+  letter-spacing:.20em;
+  text-align:center;
+}
+.hero-kicker{
+  color:#ffc874!important;
+  background:rgba(123,31,22,.62);
+  border:1px solid rgba(255,217,144,.24);
+  display:inline-flex;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:11px!important;
+  margin-bottom:14px!important;
+}
+.kks-name-stamp{
+  position:absolute;
+  left:-8px;
+  bottom:calc(100% - 48px);
+  font-size:clamp(74px,12vw,150px);
+  line-height:.88;
+  font-weight:950;
+  letter-spacing:-.15em;
+  color:rgba(255,238,198,.12);
+  text-shadow:0 0 1px rgba(255,255,255,.12);
+  pointer-events:none;
+  white-space:nowrap;
+}
+.kks-identity-hero h1,
+#home .kks-identity-hero h1{
+  max-width:720px!important;
+  margin:0 0 18px!important;
+  color:#fff1cf!important;
+  font-size:clamp(50px,8vw,94px)!important;
+  line-height:.98!important;
+  letter-spacing:-.105em!important;
+  text-shadow:0 14px 46px rgba(0,0,0,.58), 0 0 36px rgba(215,151,69,.18)!important;
+}
+.kks-identity-hero h1::after{
+  content:"";
+  display:block;
+  width:min(420px,70vw);
+  height:4px;
+  margin:22px 0 0;
+  background:linear-gradient(90deg, #e8b15f, rgba(232,177,95,.05));
+  border-radius:999px;
+}
+.kks-identity-hero p,
+#home .kks-identity-hero p{
+  max-width:640px!important;
+  color:rgba(255,239,207,.90)!important;
+  font-size:clamp(18px,2.1vw,24px)!important;
+  font-weight:750!important;
+}
+.kks-song-tickets{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:18px 0 28px;
+}
+.kks-song-tickets span{
+  display:inline-flex;
+  align-items:center;
+  min-height:34px;
+  padding:7px 13px;
+  border-radius:999px;
+  background:linear-gradient(180deg, rgba(255,239,203,.22), rgba(139,67,33,.20));
+  border:1px solid rgba(255,223,162,.24);
+  color:#ffe7b6;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:-.03em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+.hero-action-row button{
+  letter-spacing:-.04em!important;
+}
+.hero-primary-btn,
+.hero button:first-child{
+  background:linear-gradient(135deg,#f0c469 0%,#9b5429 54%,#651f18 100%)!important;
+  color:#fff7e7!important;
+  box-shadow:0 20px 44px rgba(102,38,18,.45)!important;
+}
+.hero-ghost-btn,
+.hero button:not(:first-child){
+  background:rgba(23,10,6,.42)!important;
+  border-color:rgba(255,225,159,.30)!important;
+}
+
+/* 김광석이라는 정체성을 홈 중간에서 다시 한번 각인 */
+.kks-memory-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:-12px 0 24px;
+}
+.kks-memory-strip div{
+  position:relative;
+  overflow:hidden;
+  min-height:98px;
+  padding:20px 20px 18px;
+  border-radius:26px;
+  background:
+    linear-gradient(145deg, rgba(255,247,231,.96), rgba(227,188,126,.72)),
+    radial-gradient(circle at 100% 0%, rgba(121,31,22,.18), transparent 42%);
+  border:1px solid rgba(92,48,27,.15);
+  box-shadow:0 18px 42px rgba(54,31,18,.11), inset 0 1px 0 rgba(255,255,255,.74);
+}
+.kks-memory-strip div::after{
+  content:""; position:absolute; right:-26px; bottom:-34px; width:108px; height:108px; border-radius:50%;
+  border:17px solid rgba(58,28,16,.08);
+}
+.kks-memory-strip b{
+  display:block;
+  font-size:30px;
+  letter-spacing:-.10em;
+  color:#26130c;
+  margin-bottom:6px;
+}
+.kks-memory-strip span{
+  color:#72472a;
+  font-size:13px;
+  font-weight:850;
+}
+
+/* 자료실 카드: 앨범/공연 티켓 같은 인상 */
+.archive-showcase{gap:20px!important;}
+.showcase-card{
+  min-height:240px!important;
+  padding:24px 22px 22px!important;
+  border-radius:32px!important;
+  border:1px solid rgba(78,37,20,.16)!important;
+  box-shadow:0 22px 52px rgba(51,28,14,.14), inset 0 1px 0 rgba(255,255,255,.66)!important;
+}
+.showcase-card::before{
+  width:154px!important; height:154px!important;
+  right:-56px!important; top:-54px!important;
+  border:22px solid rgba(49,22,14,.10)!important;
+  background:repeating-radial-gradient(circle, rgba(255,255,255,.10) 0 1px, transparent 1px 9px)!important;
+}
+.showcase-card::after{
+  content:""!important;
+  left:22px!important; right:auto!important; bottom:22px!important; top:auto!important;
+  width:82px!important; height:5px!important;
+  border-radius:999px!important;
+  background:linear-gradient(90deg, #7b1f16, rgba(123,31,22,.08))!important;
+  border:0!important;
+}
+.showcase-label{
+  margin-bottom:44px!important;
+  color:#7b1f16!important;
+  background:rgba(255,246,225,.48);
+  border:1px solid rgba(123,31,22,.12);
+  padding:6px 10px;
+  border-radius:999px;
+}
+.showcase-card h2{
+  font-size:38px!important;
+  letter-spacing:-.08em!important;
+  color:#23110b!important;
+}
+.showcase-card p{font-size:16px!important; color:#6c4428!important;}
+.showcase-video,
+.showcase-radio{
+  background:
+    linear-gradient(145deg, rgba(30,13,9,.96), rgba(105,47,27,.88) 55%, rgba(180,107,52,.72)),
+    radial-gradient(circle at 90% 10%, rgba(255,204,119,.48), transparent 36%)!important;
+}
+.showcase-song{
+  background:
+    linear-gradient(145deg, rgba(255,246,224,.98), rgba(226,184,119,.86)),
+    radial-gradient(circle at 90% 0%, rgba(123,31,22,.18), transparent 40%)!important;
+}
+.showcase-photo{
+  background:
+    linear-gradient(145deg, rgba(247,227,193,.98), rgba(190,119,76,.44)),
+    radial-gradient(circle at 80% 8%, rgba(255,255,255,.54), transparent 30%)!important;
+}
+.showcase-video h2,.showcase-video p,.showcase-video .showcase-label,
+.showcase-radio h2,.showcase-radio p,.showcase-radio .showcase-label{
+  color:#fff2d4!important;
+}
+.showcase-video .showcase-label,.showcase-radio .showcase-label{
+  background:rgba(255,237,198,.14)!important;
+  border-color:rgba(255,225,157,.22)!important;
+}
+
+/* 각 페이지 제목도 '김광석 자료관' 느낌으로 통일 */
+.page-title{
+  background:
+    linear-gradient(135deg, rgba(255,249,237,.96), rgba(238,205,155,.72)),
+    radial-gradient(circle at 96% 0%, rgba(123,31,22,.14), transparent 36%)!important;
+  border-radius:34px!important;
+}
+.page-title h1{
+  font-size:clamp(36px,5vw,58px)!important;
+  letter-spacing:-.10em!important;
+}
+.page-title h1::before{
+  content:"김광석 · ";
+  color:#7b1f16;
+  font-size:.46em;
+  vertical-align:middle;
+  letter-spacing:-.04em;
+}
+
+/* 썸네일과 리스트를 좀 더 '앨범 재킷'처럼 */
+.card img,.list-item img,.latest-mini-card img{
+  border-radius:18px!important;
+  box-shadow:0 14px 32px rgba(42,23,12,.18)!important;
+}
+.card,.list-item,.latest-mini-card,.content-card{
+  background:linear-gradient(180deg, rgba(255,250,240,.95), rgba(244,225,195,.88))!important;
+}
+.category-badge{
+  background:linear-gradient(180deg, #f1dfbf, #e3c58e)!important;
+  color:#5b2f20!important;
+  border:1px solid rgba(104,62,36,.13);
+}
+
+/* 텔레콤/PC통신 느낌 요소는 보이지 않게 유지 */
+.telecom-page,.telecom-shell,.telecom-titlebar,.telecom-setup,.telecom-chat,[class*="telecom"],[id*="telecom"]{display:none!important;}
+
+@media (max-width: 980px){
+  .hero.hero-1990-stage.kks-identity-hero,#home .hero.kks-identity-hero{
+    min-height:620px!important;
+    grid-template-columns:1fr!important;
+    padding:38px 24px!important;
+    background:
+      linear-gradient(180deg, rgba(18,9,6,.82) 0%, rgba(46,19,12,.82) 48%, rgba(18,9,6,.94) 100%),
+      url('images/main-bg.png') center/cover no-repeat!important;
+  }
+  .kks-hero-poster{display:none;}
+  .kks-memory-strip{grid-template-columns:repeat(2,1fr);}
+}
+@media (max-width: 560px){
+  .hero.hero-1990-stage.kks-identity-hero,#home .hero.kks-identity-hero{
+    min-height:560px!important;
+    border-radius:30px!important;
+    padding:34px 20px!important;
+  }
+  .kks-name-stamp{font-size:74px; bottom:calc(100% - 34px);}
+  .kks-identity-hero h1,#home .kks-identity-hero h1{font-size:48px!important;}
+  .kks-identity-hero p,#home .kks-identity-hero p{font-size:16px!important;}
+  .kks-song-tickets span{font-size:12px; padding:6px 10px;}
+  .kks-memory-strip{grid-template-columns:1fr; gap:10px;}
+  .kks-memory-strip div{min-height:78px; padding:16px 18px;}
+  .kks-memory-strip b{font-size:25px;}
+  .showcase-card{min-height:190px!important;}
+  .showcase-card h2{font-size:32px!important;}
+  .page-title h1::before{display:block; margin-bottom:4px;}
+}

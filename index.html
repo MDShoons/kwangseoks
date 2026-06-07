@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=warm-stage-1990-v220" />
+  <link rel="stylesheet" href="style.css?v=kks-identity-redesign-v300" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -226,37 +226,57 @@
   <main>
     <section id="home" class="page active">
       <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
-      <section class="hero hero-1990-stage" id="homeHero">
-        <div class="hero-kicker">KIM KWANG SEOK DIGITAL ARCHIVE</div>
-        <h1 id="homeTitle">노래가 머무는 이 곳, 광석이네집</h1>
-        <p id="homeDescription">김광석의 노래와 무대, 사진과 기록이 따뜻한 조명 아래 다시 모이는 온라인 자료관</p>
-        <div class="hero-action-row">
-          <button class="hero-primary-btn" data-page-fallback="songs" onclick="goPage('songs')">노래 자료실</button>
-          <button class="hero-ghost-btn" data-page-fallback="videos" onclick="goPage('videos')">영상 자료실</button>
-          <button class="hero-ghost-btn" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 안내</button>
+      <section class="hero hero-1990-stage kks-identity-hero" id="homeHero">
+        <div class="kks-hero-poster" aria-hidden="true">
+          <div class="kks-poster-photo"></div>
+          <div class="kks-poster-caption">KIM KWANG SEOK</div>
         </div>
+        <div class="kks-hero-copy">
+          <div class="hero-kicker">1990s KOREAN FOLK · LIVE · ALBUM · VOICE</div>
+          <div class="kks-name-stamp" aria-hidden="true">김광석</div>
+          <h1 id="homeTitle">김광석을 기억하는 집</h1>
+          <p id="homeDescription">노래, 무대, 목소리와 사진이 한 사람의 시간으로 이어지는 김광석 디지털 아카이브</p>
+          <div class="kks-song-tickets" aria-hidden="true">
+            <span>거리에서</span>
+            <span>서른 즈음에</span>
+            <span>사랑했지만</span>
+            <span>바람이 불어오는 곳</span>
+          </div>
+          <div class="hero-action-row">
+            <button class="hero-primary-btn" data-page-fallback="songs" onclick="goPage('songs')">노래부터 듣기</button>
+            <button class="hero-ghost-btn" data-page-fallback="videos" onclick="goPage('videos')">공연 영상 보기</button>
+            <button class="hero-ghost-btn" data-page-fallback="about" onclick="goPage('about')">김광석 소개</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="kks-memory-strip" aria-label="김광석 아카이브 정체성">
+        <div><b>노래</b><span>앨범과 라이브 음원</span></div>
+        <div><b>무대</b><span>공연과 방송 영상</span></div>
+        <div><b>목소리</b><span>라디오와 인터뷰</span></div>
+        <div><b>기록</b><span>사진·글·자료 설명</span></div>
       </section>
 
       <section class="archive-showcase" aria-label="대표 자료실 바로가기">
         <article class="showcase-card showcase-video" onclick="goPage('videos')">
-          <span class="showcase-label">LIVE & TV</span>
-          <h2>영상 자료</h2>
-          <p>공연, 방송, 인터뷰를 무대 조명처럼 크게 펼쳐봅니다.</p>
+          <span class="showcase-label">무대가 남긴 장면</span>
+          <h2>Videos</h2>
+          <p>공연, 방송, 인터뷰를 김광석의 무대 기록으로 모읍니다.</p>
         </article>
         <article class="showcase-card showcase-song" onclick="goPage('songs')">
-          <span class="showcase-label">ALBUM & SONG</span>
-          <h2>노래 자료</h2>
-          <p>앨범 커버와 곡 정보를 중심으로 오래 들을 수 있게 정리합니다.</p>
+          <span class="showcase-label">노래가 남긴 시간</span>
+          <h2>Songs</h2>
+          <p>앨범 커버와 곡 정보를 중심으로 다시 들을 수 있게 정리합니다.</p>
         </article>
         <article class="showcase-card showcase-photo" onclick="goPage('photos')">
-          <span class="showcase-label">PHOTO FILM</span>
-          <h2>사진 자료</h2>
-          <p>필름, 포스터, 신문 스크랩의 감성으로 남은 장면을 모읍니다.</p>
+          <span class="showcase-label">사진이 남긴 얼굴</span>
+          <h2>Photos</h2>
+          <p>필름, 포스터, 신문 스크랩처럼 남은 장면을 모읍니다.</p>
         </article>
         <article class="showcase-card showcase-radio" onclick="goPage('radios')">
-          <span class="showcase-label">VOICE ARCHIVE</span>
-          <h2>라디오 자료</h2>
-          <p>목소리와 이야기가 남아 있는 음성 기록을 재생합니다.</p>
+          <span class="showcase-label">목소리가 남긴 말</span>
+          <h2>Radios</h2>
+          <p>라디오 방송과 인터뷰 속 목소리를 조용히 재생합니다.</p>
         </article>
       </section>
 
