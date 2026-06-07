@@ -1,0 +1,23 @@
+90년대 빈티지 글램 디자인 전면 개편 v600
+
+반영 방향
+- 기존의 싼티 나는 단색 버튼/카드 느낌을 줄이고, 1990년대 음악잡지·LP숍·극장 간판·아날로그 필름 질감을 섞은 화려한 빈티지 톤으로 전면 변경했습니다.
+- 배경은 어두운 버건디/블랙 계열에 필름 그레인, 스캔라인, 네온 포인트를 적용했습니다.
+- 홈 히어로 영역은 오래된 공연 포스터/음반 광고처럼 보이도록 크게 재구성했습니다.
+- 버튼은 90년대 웹/기기 버튼 느낌의 각진 입체형으로 변경했습니다.
+- 카드형 자료 목록은 어두운 음반 진열대 느낌으로 변경하고, 커버 이미지와 제목이 더 또렷하게 보이도록 했습니다.
+- 관리자 화면은 기능을 유지하되, 버튼/폼/목록의 질감을 새 디자인과 맞췄습니다.
+- 모바일 하단 플레이리스트는 제목/버튼/목록 버튼이 겹치지 않도록 칸을 나누는 보정을 유지했습니다.
+
+삭제한 불필요 텔레콤 관련 파일
+- CLOUDFLARE_WORKERS_AI_TELECOM_SETUP.txt
+- cloudflare-worker-ai-telecom.js
+- WORKER_DIRECT_REPLY_FIX_NOTE.txt
+- WORKER_PROMPT_UPDATE_NOTE.txt
+- DIRECT_REPLY_FIX_NOTE.txt
+- ROUNDSOUND_MEMBERS_NOTE.txt
+- ROUNDSOUND_MEMBER_STYLE_LEARNING_NOTE.txt
+
+주의
+- 이번 버전은 기능 구조를 크게 바꾸지 않고 style.css 최하단 오버라이드로 디자인을 전면 교체한 버전입니다.
+- GitHub Pages 업로드 후 모바일/PC에서 캐시가 남으면 새로고침 또는 방문기록/캐시 삭제가 필요할 수 있습니다.

@@ -1,0 +1,10 @@
+오늘의 추천곡/앨범 커버 v8 수정 내용
+
+1. PC에서 i.namu.wiki 커버가 깨질 때 원본 URL, weserv/wsrv 계열 프록시, codetabs/allorigins/corsproxy 순서로 자동 재시도합니다.
+2. <img> 재시도가 모두 실패하면 fetch→Blob URL 방식으로 한 번 더 복구를 시도합니다.
+3. JS로 넣는 오늘의 추천곡/플레이리스트 커버에서 fallback URL의 &amp; 변환 오류를 제거했습니다.
+4. thumbnailUrl 외에 cover, coverImage, albumCover, albumImage, imgUrl, image, thumb, artworkUrl 등 다양한 커버 필드명을 인식합니다.
+5. 같은 앨범/카테고리 안에 커버가 있는 곡이 하나라도 있으면, 커버가 비어 있는 다른 곡에도 같은 앨범 커버를 자동 적용합니다.
+6. app.js 캐시 버전을 today-cover-v8로 변경했습니다.
+
+주의: i.namu.wiki 원본 링크 자체가 외부 표시를 막으면 브라우저/프록시 환경에 따라 여전히 불안정할 수 있습니다. 가장 안정적인 방법은 관리자 화면에서 대표 이미지 파일을 직접 업로드하는 것입니다.
