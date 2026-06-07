@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=museum-redesign-v420" />
+  <link rel="stylesheet" href="style.css?v=pccom-v202" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -122,7 +122,7 @@
   </script>
 
 </head>
-<body>
+<body class="pccom-theme">
 
   <aside id="dailyRecommendPlayer" class="daily-player" aria-label="오늘의 추천곡 플레이어">
     <div class="daily-player-card">
@@ -223,34 +223,22 @@
     </div>
   </header>
 
+  <div class="retro-status-bar" aria-hidden="true">
+    <span>PC 통신 모드</span>
+    <span>김광석 디지털 아카이브</span>
+    <span>9600bps CONNECTED</span>
+  </div>
+
   <main>
     <section id="home" class="page active">
       <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
-      <section class="hero atelier-hero" id="homeHero">
-        <div class="hero-copy">
-          <span class="hero-kicker">KIM KWANG SEOK DIGITAL ARCHIVE</span>
-          <h1 id="homeTitle">광석이네 집</h1>
-          <p id="homeDescription">노래와 사진, 목소리와 기록이 조용히 머무는 김광석 디지털 아카이브</p>
-          <div class="hero-action-row">
-            <button class="hero-primary" data-page-fallback="songs" onclick="goPage('songs')">노래 듣기</button>
-            <button class="hero-ghost" data-page-fallback="videos" onclick="goPage('videos')">영상 보기</button>
-            <button class="hero-ghost" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">공간 안내</button>
-          </div>
+      <section class="hero" id="homeHero">
+        <h1 id="homeTitle">노래가 머무는 이 곳, 광석이네집</h1>
+        <p id="homeDescription">김광석 아카이브</p>
+        <div>
+          <button data-page-fallback="videos" onclick="goPage('videos')">영상 보러가기</button>
+          <button data-page-fallback="photos" onclick="goPage('photos')">사진 보러가기</button>
         </div>
-        <div class="hero-object" aria-hidden="true">
-          <div class="vinyl-disc"><span></span></div>
-          <div class="archive-ticket">
-            <strong>ARCHIVE ROOM</strong>
-            <small>songs · videos · radios · photos</small>
-          </div>
-        </div>
-      </section>
-
-      <section class="home-dock" aria-label="주요 자료실 바로가기">
-        <button onclick="goPage('videos')" data-page-fallback="videos"><span>01</span><strong>Videos</strong><small>공연과 방송 영상</small></button>
-        <button onclick="goPage('songs')" data-page-fallback="songs"><span>02</span><strong>Songs</strong><small>노래와 앨범 자료</small></button>
-        <button onclick="goPage('radios')" data-page-fallback="radios"><span>03</span><strong>Radios</strong><small>라디오와 목소리</small></button>
-        <button onclick="goPage('photos')" data-page-fallback="photos"><span>04</span><strong>Photos</strong><small>사진 아카이브</small></button>
       </section>
 <section class="content-section latest-by-category-section">
         <h2>자료별 최신 자료</h2>
@@ -766,6 +754,6 @@
   </div>
 <div class="version-marker">v201-hls-streaming-support</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=premium-archive-v202"></script>
+  <script type="module" src="app.js?v=hls-streaming-v201"></script>
 </body>
 </html>
