@@ -328,8 +328,8 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 마무는 이 곳,\n광석이네 집",
-  homeDescription: "김광석 디지털 아카이브",
+  homeTitle: "노래가 머무는 이 곳, 광석이네 집",
+  homeDescription: "김광석 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
@@ -1268,17 +1268,8 @@ function applySiteSettings(settings) {
   applyDesignSettings(settings);
   document.getElementById("siteLogoText").textContent = settings.siteName;
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
-
-  const normalizedHomeTitle = (!settings.homeTitle || settings.homeTitle === "노래가 머무는 이 곳, 광석이네 집")
-    ? "노래가 마무는 이 곳,
-광석이네 집"
-    : settings.homeTitle;
-  const normalizedHomeDescription = (!settings.homeDescription || settings.homeDescription === "김광석 아카이브")
-    ? "김광석 디지털 아카이브"
-    : settings.homeDescription;
-
-  document.getElementById("homeTitle").textContent = normalizedHomeTitle;
-  document.getElementById("homeDescription").textContent = normalizedHomeDescription;
+  document.getElementById("homeTitle").textContent = settings.homeTitle;
+  document.getElementById("homeDescription").textContent = settings.homeDescription;
   ["videos","songs","radios","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
     if (el) el.textContent = settings[`${p}Desc`] || DEFAULT_SETTINGS[`${p}Desc`];
@@ -3582,19 +3573,12 @@ function openCoverZoom(src, title) {
   if (!modal || !img) return;
   if (!src) return;
 
-  modal.classList.remove("hidden");
-  modal.classList.remove("loaded");
-  document.body.classList.add("cover-zoom-open");
-  document.body.style.overflow = "hidden";
-
-  img.removeAttribute("src");
+  img.src = src;
   img.alt = title || "앨범 자켓";
   if (caption) caption.textContent = title || "앨범 자켓";
 
-  img.onload = function(){
-    modal.classList.add("loaded");
-  };
-  img.src = src;
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
 }
 
 function openCoverZoomFromElement(element) {
@@ -3609,16 +3593,9 @@ function closeCoverZoom(event) {
   const img = document.getElementById("coverZoomImage");
   const contentDetailModal = document.getElementById("contentDetailModal");
 
-  if (modal) {
-    modal.classList.add("hidden");
-    modal.classList.remove("loaded");
-  }
-  if (img) {
-    img.onload = null;
-    img.removeAttribute("src");
-  }
+  if (modal) modal.classList.add("hidden");
+  if (img) img.removeAttribute("src");
 
-  document.body.classList.remove("cover-zoom-open");
   if (!contentDetailModal || contentDetailModal.classList.contains("hidden")) {
     document.body.style.overflow = "";
   }
