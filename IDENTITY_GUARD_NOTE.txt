@@ -1,6 +1,0 @@
-이번 버전은 AI 회원들이 대사 안에서 "저는 ○○입니다", "제가 ○○인데요"처럼 다른 사람/닉네임을 사칭하거나 자기소개하는 문장을 만들지 못하도록 Worker와 app.js 양쪽에 필터를 넣었습니다.
-
-반영 필요:
-1) GitHub: app.js, index.html, style.css 업로드
-2) Cloudflare Worker: cloudflare-worker-ai-telecom.js 전체 교체 후 Save and deploy
-3) Firebase: firestore.rules 게시
