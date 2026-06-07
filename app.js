@@ -128,6 +128,10 @@ function getPlayableAudioUrl(item = {}) {
   return item.mediaUrl || item.fileUrl || item.audioUrl || item.songUrl || item.songMediaUrl || "";
 }
 
+function getBestCoverImageUrl(item = {}) {
+  return item.coverImageUrl || item.albumCoverUrl || item.coverUrl || item.jacketUrl || item.imageUrl || item.thumbnailUrl || item.photoUrl || item.image || "";
+}
+
 function isAudioContentItem(item = {}) {
   return item.mediaType === "audio" || item.category === "songs" || item.category === "radios";
 }
@@ -328,8 +332,8 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 이 곳, 광석이네 집",
-  homeDescription: "김광석 아카이브",
+  homeTitle: "노래가 마무는 이 곳,\n광석이네 집",
+  homeDescription: "김광석 디지털 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
@@ -1268,8 +1272,17 @@ function applySiteSettings(settings) {
   applyDesignSettings(settings);
   document.getElementById("siteLogoText").textContent = settings.siteName;
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
-  document.getElementById("homeTitle").textContent = settings.homeTitle;
-  document.getElementById("homeDescription").textContent = settings.homeDescription;
+
+  const normalizedHomeTitle = (!settings.homeTitle || settings.homeTitle === "노래가 머무는 이 곳, 광석이네 집")
+    ? "노래가 마무는 이 곳,
+광석이네 집"
+    : settings.homeTitle;
+  const normalizedHomeDescription = (!settings.homeDescription || settings.homeDescription === "김광석 아카이브")
+    ? "김광석 디지털 아카이브"
+    : settings.homeDescription;
+
+  document.getElementById("homeTitle").textContent = normalizedHomeTitle;
+  document.getElementById("homeDescription").textContent = normalizedHomeDescription;
   ["videos","songs","radios","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
     if (el) el.textContent = settings[`${p}Desc`] || DEFAULT_SETTINGS[`${p}Desc`];
@@ -3106,7 +3119,7 @@ function renderAboutDocument(items) {
   }
 
   box.innerHTML = sorted.map((item) => {
-    const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+    const imageUrl = getBestCoverImageUrl(item);
     const bodyText = item.body || item.description || "";
     const yearText = item.year ? `<span><strong>연도:</strong> ${escapeHtml(item.year)}</span>` : "";
     const sourceText = item.source ? `<span><strong>출처:</strong> ${escapeHtml(item.source)}</span>` : `<span><strong>출처:</strong> 미기재</span>`;
@@ -3573,17 +3586,40 @@ function openCoverZoom(src, title) {
   if (!modal || !img) return;
   if (!src) return;
 
-  img.src = src;
+  modal.classList.remove("hidden");
+  modal.classList.remove("loaded");
+  document.body.classList.add("cover-zoom-open");
+  document.body.style.overflow = "hidden";
+
+  img.removeAttribute("src");
+  img.removeAttribute("style");
   img.alt = title || "앨범 자켓";
   if (caption) caption.textContent = title || "앨범 자켓";
 
-  modal.classList.remove("hidden");
-  document.body.style.overflow = "hidden";
+  img.onload = function(){
+    modal.classList.add("loaded");
+    img.style.setProperty("display", "block", "important");
+    img.style.setProperty("width", "min(82vw, calc(100vh - 150px), 760px)", "important");
+    img.style.setProperty("height", "auto", "important");
+    img.style.setProperty("max-width", "calc(100vw - 40px)", "important");
+    img.style.setProperty("max-height", "calc(100vh - 132px)", "important");
+    img.style.setProperty("object-fit", "contain", "important");
+    img.style.setProperty("transform", "none", "important");
+  };
+  img.src = src;
 }
 
 function openCoverZoomFromElement(element) {
   if (!element) return;
-  openCoverZoom(element.dataset.coverSrc || "", element.dataset.coverTitle || "앨범 자켓");
+  let src = element.dataset.coverSrc || "";
+  const foundImg = element.matches && element.matches("img") ? element : element.querySelector && element.querySelector("img");
+  if (!src && foundImg) src = foundImg.currentSrc || foundImg.src || "";
+  if (!src) {
+    const bg = window.getComputedStyle(element).backgroundImage || "";
+    const match = bg.match(/url\(["']?(.*?)["']?\)/);
+    if (match) src = match[1];
+  }
+  openCoverZoom(src, element.dataset.coverTitle || element.getAttribute("aria-label") || "앨범 자켓");
 }
 
 function closeCoverZoom(event) {
@@ -3593,9 +3629,16 @@ function closeCoverZoom(event) {
   const img = document.getElementById("coverZoomImage");
   const contentDetailModal = document.getElementById("contentDetailModal");
 
-  if (modal) modal.classList.add("hidden");
-  if (img) img.removeAttribute("src");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("loaded");
+  }
+  if (img) {
+    img.onload = null;
+    img.removeAttribute("src");
+  }
 
+  document.body.classList.remove("cover-zoom-open");
   if (!contentDetailModal || contentDetailModal.classList.contains("hidden")) {
     document.body.style.overflow = "";
   }
@@ -3765,7 +3808,7 @@ function renderVideoQualitySelector(item = {}, videoId = "") {
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
-  const imageUrl = item.imageUrl || item.thumbnailUrl || item.photoUrl || "";
+  const imageUrl = getBestCoverImageUrl(item);
   const youtubeUrl = item.youtubeUrl || item.url || "";
   const playbackMediaUrl = normalizeMediaUrlForPlayback(mediaUrl, category);
   const playbackImageUrl = normalizeMediaUrlForPlayback(imageUrl, "image");

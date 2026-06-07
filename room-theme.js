@@ -18,7 +18,6 @@
   function setTheme(page){
     page = normalize(page);
     document.body.setAttribute('data-room', page);
-    ensureScrollBackground();
     document.body.setAttribute('data-room-label', LABELS[page] || '');
     document.querySelectorAll('#siteNav button[data-page-fallback]').forEach(function(btn){
       var active = btn.getAttribute('data-page-fallback') === page;
@@ -28,21 +27,6 @@
     });
   }
 
-  function ensureScrollBackground(){
-    var bg = document.getElementById('roomScrollBg');
-    if (bg) return bg;
-    bg = document.createElement('div');
-    bg.id = 'roomScrollBg';
-    bg.setAttribute('aria-hidden', 'true');
-    document.body.insertBefore(bg, document.body.firstChild);
-    return bg;
-  }
-
-  function updateScrollBackground(){
-    var bg = ensureScrollBackground();
-    var y = Math.round((window.scrollY || window.pageYOffset || 0) * -0.18);
-    bg.style.setProperty('--room-scroll-shift', y + 'px');
-  }
 
   function ensureTransitionOverlay(){
     var overlay = document.getElementById('roomTransitionOverlay');
@@ -50,7 +34,7 @@
     overlay = document.createElement('div');
     overlay.id = 'roomTransitionOverlay';
     overlay.className = 'room-transition-overlay';
-    overlay.innerHTML = '<div class="door door-left"></div><div class="door door-right"></div><div class="transition-note"><span class="transition-house">광석이네 집</span><strong id="roomTransitionLabel">방으로 이동 중</strong></div>';
+    overlay.innerHTML = '<div class="door door-left"></div><div class="door door-right"></div>';
     document.body.appendChild(overlay);
     return overlay;
   }
@@ -100,19 +84,7 @@
   });
   document.addEventListener('DOMContentLoaded', function(){
     ensureTransitionOverlay();
-    ensureScrollBackground();
     var current = location.hash.replace('#','').trim() || (document.querySelector('.page.active') && document.querySelector('.page.active').id) || 'home';
     setTheme(current);
-    updateScrollBackground();
-    var ticking = false;
-    window.addEventListener('scroll', function(){
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(function(){
-        updateScrollBackground();
-        ticking = false;
-      });
-    }, { passive: true });
-    window.addEventListener('resize', updateScrollBackground, { passive: true });
   });
 })();
