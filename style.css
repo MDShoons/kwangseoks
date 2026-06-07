@@ -4638,3207 +4638,6 @@ body.is-mobile-site .admin-download-row { justify-content: stretch; }
 }
 
 /* v123 광석이네 통신방 */
-.telecom-page { background:#001f8f; color:#e9f1ff; min-height:calc(100vh - 92px); padding:22px; }
-.telecom-shell { max-width:1120px; margin:0 auto; border:2px solid #8aa7ff; background:#0027ad; box-shadow:0 0 0 4px rgba(0,0,0,.18) inset; font-family:"D2Coding","Courier New",monospace; }
-.telecom-titlebar { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; border-bottom:1px solid #8aa7ff; background:#001b79; }
-.telecom-titlebar h1 { margin:0 0 5px; color:#fff; font-size:24px; letter-spacing:-.02em; }
-.telecom-titlebar p { margin:0; color:#c8d8ff; font-size:13px; }
-.telecom-setup { padding:28px; display:flex; justify-content:center; }
-.telecom-connect-box { width:min(420px,100%); border:1px solid #9fb5ff; padding:18px; background:#002dbf; }
-.telecom-connect-box h2 { margin:0 0 14px; color:#fff; font-size:20px; }
-.telecom-connect-box label { display:block; margin:12px 0 5px; color:#d8e4ff; font-size:13px; }
-.telecom-connect-box input, .telecom-input-row input { width:100%; box-sizing:border-box; background:#00165f; color:#fff; border:1px solid #8aa7ff; border-radius:0; padding:10px; font-family:inherit; }
-.telecom-connect-box select { width:100%; box-sizing:border-box; background:#00165f; color:#ffffff; border:2px solid #d8e4ff; border-radius:0; padding:11px 10px; font-family:inherit; font-size:16px; font-weight:700; }
-.telecom-connect-box select option { background:#00165f; color:#ffffff; font-size:16px; }
-.telecom-readonly { background:#00104a !important; color:#d8e4ff !important; opacity:1; }
-.telecom-fixed-label { display:inline-block; margin-left:6px; padding:2px 6px; border:1px solid #8aa7ff; color:#fff; font-size:11px; }
-.telecom-account-note { margin:8px 0 12px; color:#c8d8ff; font-size:12px; line-height:1.5; }
-.telecom-connect-box select:focus, .telecom-connect-box input:focus, .telecom-input-row input:focus { outline:3px solid #fff; outline-offset:1px; }
-.telecom-enter-btn, .telecom-small-btn, .telecom-input-row button { background:#dbe6ff; color:#001b79; border:1px solid #fff; border-radius:0; padding:9px 12px; font-family:inherit; font-weight:700; cursor:pointer; }
-.telecom-enter-btn { width:100%; margin-top:16px; }
-.telecom-small-btn:disabled { opacity:.62; cursor:not-allowed; }
-.telecom-room { padding:12px 14px 16px; }
-.telecom-status-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px dashed #8aa7ff; color:#fff; }
-#telecomRoomName { flex:1; min-width:210px; font-weight:700; }
-.telecom-room-date { display:inline-block; color:#ffffff; border:1px solid #8aa7ff; padding:3px 8px; font-size:13px; font-weight:700; background:#001b79; }
-.telecom-log { height:440px; overflow:auto; padding:14px 4px; background:#0027ad; color:#ffffff; font-size:16px; line-height:1.7; }
-.telecom-line { white-space:pre-wrap; word-break:keep-all; margin-bottom:6px; }
-.telecom-time { display:inline-block; margin-left:8px; color:#d5e3ff; font-size:11px; line-height:1; opacity:.82; vertical-align:baseline; }
-.telecom-after-exit { margin:10px 0 0; padding:10px; border:1px dashed #9fb5ff; color:#fff; display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:rgba(0,0,0,.14); }
-.telecom-after-exit span { flex:1 1 240px; }
-.telecom-system { color:#ffffff; }
-.telecom-nick { display:inline-block; min-width:86px; color:#fff; font-weight:700; }
-.telecom-real { color:#ffffff; }
-.telecom-text { color:#ffffff; }
-.telecom-input-row { display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; padding-top:10px; border-top:1px dashed #8aa7ff; }
-.telecom-input-row span { color:#fff; font-weight:700; }
-.telecom-notice { margin:10px 0 0; color:#c8d8ff; font-size:12px; }
-
-@media (max-width:820px) {
-  .telecom-page { padding:10px; min-height:calc(100vh - 72px); }
-  .telecom-shell { width:100%; }
-  .telecom-titlebar { padding:12px; flex-direction:column; }
-  .telecom-titlebar h1 { font-size:20px; }
-  .telecom-setup { padding:16px; }
-  .telecom-room { padding:10px; }
-  .telecom-log { height:56vh; font-size:14px; line-height:1.62; }
-  .telecom-nick { min-width:70px; }
-  .telecom-input-row { grid-template-columns:1fr; }
-  .telecom-input-row span { display:none; }
-  .telecom-time { margin-left:6px; font-size:10px; }
-  .telecom-status-row { align-items:stretch; }
-  .telecom-status-row .telecom-small-btn { flex:1 1 auto; }
-}
-
-/* v122: PC header overlap fix after adding telecom/admin nav */
-@media (min-width: 821px) {
-  .site-header {
-    min-width: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) auto !important;
-    align-items: center !important;
-    column-gap: 14px !important;
-    padding-left: 32px !important;
-    padding-right: 32px !important;
-  }
-
-  .site-header .logo,
-  .logo {
-    min-width: 150px !important;
-    flex: 0 0 auto !important;
-  }
-
-  .site-header nav,
-  #siteNav {
-    min-width: 0 !important;
-    width: 100% !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 6px !important;
-    overflow: visible !important;
-  }
-
-  .site-header nav button,
-  #siteNav button {
-    white-space: nowrap !important;
-    font-size: 13px !important;
-    padding: 9px 11px !important;
-    line-height: 1.1 !important;
-  }
-
-  .site-header .auth-area,
-  .auth-area {
-    min-width: 0 !important;
-    flex: 0 0 auto !important;
-    justify-content: flex-end !important;
-    gap: 6px !important;
-    white-space: nowrap !important;
-    overflow: visible !important;
-  }
-
-  .site-header .auth-area #userStatus,
-  #userStatus {
-    display: inline-block !important;
-    max-width: 96px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    vertical-align: middle !important;
-    font-size: 13px !important;
-  }
-
-  .site-header .auth-area button,
-  .auth-area button {
-    white-space: nowrap !important;
-    font-size: 13px !important;
-    padding: 9px 11px !important;
-  }
-}
-
-@media (min-width: 821px) and (max-width: 1500px) {
-  .site-header {
-    column-gap: 9px !important;
-    padding-left: 22px !important;
-    padding-right: 22px !important;
-  }
-
-  .site-header .logo,
-  .logo {
-    min-width: 135px !important;
-  }
-
-  .logo { font-size: 21px !important; }
-  .logo small { font-size: 11px !important; }
-
-  .site-header nav,
-  #siteNav { gap: 4px !important; }
-
-  .site-header nav button,
-  #siteNav button {
-    font-size: 12px !important;
-    padding: 8px 8px !important;
-  }
-
-  .site-header .auth-area,
-  .auth-area { gap: 4px !important; }
-
-  .site-header .auth-area #userStatus,
-  #userStatus { max-width: 82px !important; font-size: 12px !important; }
-
-  .site-header .auth-area button,
-  .auth-area button {
-    font-size: 12px !important;
-    padding: 8px 9px !important;
-  }
-}
-
-@media (min-width: 821px) and (max-width: 1280px) {
-  .site-header nav,
-  #siteNav {
-    justify-content: flex-start !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-  }
-  .site-header nav::-webkit-scrollbar,
-  #siteNav::-webkit-scrollbar { display: none !important; }
-}
-
-
-/* v139: PC-only telecom + browser local AI experiment */
-.telecom-pc-only {
-  max-width: 760px;
-  margin: 40px auto;
-  padding: 26px;
-  border: 2px solid #8aa7ff;
-  background: #0027ad;
-  color: #fff;
-  font-family: "D2Coding", "Courier New", monospace;
-  text-align: center;
-}
-.telecom-pc-only h2 { margin: 0 0 12px; color: #fff; }
-.telecom-pc-only p { margin: 0; color: #d8e4ff; line-height: 1.65; }
-.telecom-ai-status {
-  margin: 8px 0 12px;
-  padding: 8px 10px;
-  border: 1px dashed #8aa7ff;
-  color: #ffffff;
-  background: rgba(0,0,0,.16);
-  font-size: 12px;
-  line-height: 1.55;
-}
-@media (max-width: 899px) {
-  #telecom .telecom-shell { display: none !important; }
-  #telecomPcOnlyNotice.hidden { display: block !important; }
-}
-
-/* v150: 통신방 선택 박스/입력창 가독성 강제 보정 */
-#telecom .telecom-connect-box select,
-#telecom .telecom-connect-box select option,
-#telecom .telecom-connect-box input,
-#telecom .telecom-input-row input,
-#telecom input[type="text"],
-#telecom input[type="search"],
-#telecom input[type="password"],
-#telecom input[type="email"],
-#telecom textarea {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  background-color: #00165f !important;
-  border-color: #8fb3ff !important;
-  opacity: 1 !important;
-  caret-color: #ffffff !important;
-  text-shadow: none !important;
-  filter: none !important;
-}
-
-#telecom .telecom-connect-box select {
-  appearance: auto !important;
-  -webkit-appearance: menulist !important;
-  height: 36px !important;
-  line-height: 1.3 !important;
-  padding: 6px 10px !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-}
-
-#telecom .telecom-connect-box select option,
-#telecom .telecom-connect-box select optgroup {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  background: #00165f !important;
-}
-
-#telecom .telecom-connect-box select:focus,
-#telecom .telecom-connect-box input:focus,
-#telecom .telecom-input-row input:focus,
-#telecom textarea:focus {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  background-color: #00165f !important;
-  outline: 2px solid #ffffff !important;
-  outline-offset: 1px !important;
-}
-
-#telecom .telecom-connect-box input::placeholder,
-#telecom .telecom-input-row input::placeholder,
-#telecom textarea::placeholder {
-  color: #c8d8ff !important;
-  -webkit-text-fill-color: #c8d8ff !important;
-  opacity: 1 !important;
-}
-
-#telecom input:-webkit-autofill,
-#telecom input:-webkit-autofill:hover,
-#telecom input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #ffffff !important;
-  box-shadow: 0 0 0 1000px #00165f inset !important;
-  transition: background-color 9999s ease-out 0s !important;
-}
-
-/* readonly 계정 입력칸도 흐릿하게 죽지 않게 유지 */
-#telecom .telecom-readonly,
-#telecom input[readonly] {
-  color: #e9f1ff !important;
-  -webkit-text-fill-color: #e9f1ff !important;
-  background-color: #00104a !important;
-  opacity: 1 !important;
-}
-
-/* v163: 플레이어 커버/위치/가독성 보정 */
-#dailyRecommendPlayer .daily-player-cover,
-#userPlaylistPlayer .daily-player-cover {
-  display: block !important;
-  width: 72px !important;
-  height: 72px !important;
-  margin: 0 0 10px 0 !important;
-  border-radius: 14px !important;
-  object-fit: cover !important;
-  background: rgba(255,255,255,0.16) !important;
-  border: 1px solid rgba(255,255,255,0.22) !important;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
-}
-
-#dailyRecommendPlayer .daily-player-cover.empty,
-#userPlaylistPlayer .daily-player-cover.empty {
-  display: none !important;
-}
-
-#userPlaylistPlayer.daily-player {
-  top: 470px !important;
-}
-
-@media (max-width: 1500px) {
-  #userPlaylistPlayer.daily-player {
-    right: 16px !important;
-    top: 450px !important;
-    width: 184px !important;
-    max-width: 184px !important;
-  }
-}
-
-@media (max-width: 1180px) {
-  #userPlaylistPlayer.daily-player {
-    right: 12px !important;
-    top: 395px !important;
-    width: 168px !important;
-    max-width: 168px !important;
-  }
-}
-
-/* v164: floating players cover background + no-overlap layout */
-#dailyRecommendPlayer .daily-player-card,
-#userPlaylistPlayer .daily-player-card {
-  position: relative !important;
-  overflow: hidden !important;
-  isolation: isolate !important;
-}
-
-#dailyRecommendPlayer .daily-player-card::before,
-#userPlaylistPlayer .daily-player-card::before {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 0 !important;
-  background-image: var(--player-cover-bg) !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  opacity: 0.18 !important;
-  filter: blur(1.5px) saturate(1.06) contrast(1.03) !important;
-  transform: scale(1.08) !important;
-  pointer-events: none !important;
-}
-
-#dailyRecommendPlayer .daily-player-card::after,
-#userPlaylistPlayer .daily-player-card::after {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 1 !important;
-  background: linear-gradient(180deg, rgba(30, 16, 30, 0.16), rgba(0, 0, 0, 0.20)) !important;
-  pointer-events: none !important;
-}
-
-#dailyRecommendPlayer .daily-player-card > *,
-#userPlaylistPlayer .daily-player-card > * {
-  position: relative !important;
-  z-index: 2 !important;
-}
-
-#dailyRecommendPlayer .daily-player-cover,
-#userPlaylistPlayer .daily-player-cover {
-  background: rgba(255,255,255,0.16) !important;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.16) !important;
-}
-
-/* JS가 카드 높이를 읽어 자동으로 더 정확히 내리지만, JS 전에도 겹치지 않도록 기본값 보정 */
-#userPlaylistPlayer.daily-player {
-  top: 585px !important;
-}
-
-@media (max-width: 1500px) {
-  #userPlaylistPlayer.daily-player {
-    top: 555px !important;
-  }
-}
-
-@media (max-width: 1180px) {
-  #userPlaylistPlayer.daily-player {
-    top: 525px !important;
-  }
-}
-
-@media (max-width: 760px) {
-  #dailyRecommendPlayer.daily-player,
-  #userPlaylistPlayer.daily-player {
-    right: 10px !important;
-    width: min(86vw, 260px) !important;
-    max-width: min(86vw, 260px) !important;
-  }
-
-  #dailyRecommendPlayer.daily-player {
-    top: 84px !important;
-    bottom: auto !important;
-  }
-
-  #userPlaylistPlayer.daily-player {
-    top: 430px !important;
-    bottom: auto !important;
-  }
-}
-
-/* v166 siteinfo purpose readability */
-.site-guide-purpose-card p {
-  line-height: 1.9;
-  margin-bottom: 16px;
-  word-break: keep-all;
-}
-.site-guide-purpose-card p:first-of-type {
-  font-weight: 700;
-  font-size: 1.05rem;
-}
-
-
-/* Site info closing sentence emphasis */
-.site-purpose-closing {
-  font-weight: 800;
-}
-
-.site-purpose-closing strong {
-  font-weight: 800;
-}
-
-
-/* v168 siteinfo list hanging alignment */
-.site-storage-list-card .site-storage-list {
-  list-style: none;
-  margin: 0;
-  padding-left: 0;
-}
-
-.site-storage-list-card .site-storage-list li {
-  position: relative;
-  display: grid;
-  grid-template-columns: 168px minmax(0, 1fr);
-  column-gap: 12px;
-  align-items: start;
-  margin: 8px 0;
-  padding-left: 24px;
-  word-break: keep-all;
-  overflow-wrap: break-word;
-}
-
-.site-storage-list-card .site-storage-list li::before {
-  content: "•";
-  position: absolute;
-  left: 2px;
-  top: 0;
-  font-weight: 800;
-}
-
-.site-storage-name {
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.site-storage-desc {
-  display: block;
-  min-width: 0;
-}
-
-@media (max-width: 760px) {
-  .site-storage-list-card .site-storage-list li {
-    grid-template-columns: 1fr;
-    row-gap: 2px;
-    padding-left: 22px;
-  }
-
-  .site-storage-desc {
-    padding-left: 0;
-  }
-}
-
-
-/* v174: Bugs 스타일 하단 고정 내 플레이리스트 바 */
-html,
-body {
-  scroll-padding-bottom: 108px !important;
-}
-
-body {
-  padding-bottom: 96px !important;
-}
-
-#userPlaylistPlayer.daily-player {
-  position: fixed !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  top: auto !important;
-  width: 100vw !important;
-  max-width: none !important;
-  z-index: 12000 !important;
-  pointer-events: none !important;
-  margin: 0 !important;
-  display: block !important;
-}
-
-#userPlaylistPlayer.daily-player.closed {
-  display: none !important;
-}
-
-#userPlaylistPlayer .daily-player-card.playlist-player-card,
-#userPlaylistPlayer .daily-player-card {
-  pointer-events: auto !important;
-  width: 100% !important;
-  min-height: 76px !important;
-  max-height: 86px !important;
-  box-sizing: border-box !important;
-  border-radius: 0 !important;
-  padding: 10px 24px !important;
-  display: grid !important;
-  grid-template-columns: 54px minmax(220px, 1fr) minmax(280px, 440px) 120px 32px !important;
-  grid-template-rows: 24px 22px 18px !important;
-  grid-template-areas:
-    "cover label controls actions close"
-    "cover title controls actions close"
-    "cover sub progress actions close" !important;
-  align-items: center !important;
-  column-gap: 14px !important;
-  row-gap: 2px !important;
-  background: linear-gradient(90deg, rgba(80, 63, 55, 0.96), rgba(122, 96, 83, 0.96), rgba(92, 71, 62, 0.96)) !important;
-  color: #fff !important;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.22) !important;
-  border-top: 1px solid rgba(255,255,255,0.22) !important;
-  border-left: 0 !important;
-  border-right: 0 !important;
-  border-bottom: 0 !important;
-  overflow: hidden !important;
-}
-
-#userPlaylistPlayer .daily-player-card::before {
-  opacity: 0.20 !important;
-  filter: blur(1px) saturate(1.05) contrast(1.02) !important;
-  transform: scale(1.04) !important;
-  background-position: center 42% !important;
-}
-
-#userPlaylistPlayer .daily-player-card::after {
-  background: linear-gradient(90deg, rgba(35, 24, 20, 0.52), rgba(63, 45, 39, 0.40), rgba(35, 24, 20, 0.58)) !important;
-}
-
-#userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-#userPlaylistPlayer .daily-player-cover {
-  grid-area: cover !important;
-  display: block !important;
-  width: 52px !important;
-  height: 52px !important;
-  min-width: 52px !important;
-  border-radius: 8px !important;
-  object-fit: cover !important;
-  background: rgba(255,255,255,0.14) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.22) !important;
-}
-
-#userPlaylistPlayer .daily-player-label.playlist-player-label,
-#userPlaylistPlayer .daily-player-label {
-  grid-area: label !important;
-  display: block !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: rgba(255,255,255,0.82) !important;
-  font-size: 11px !important;
-  font-weight: 800 !important;
-  line-height: 1.2 !important;
-}
-
-#userPlaylistPlayer .daily-player-title {
-  grid-area: title !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  color: #fff !important;
-  font-size: 16px !important;
-  font-weight: 900 !important;
-  line-height: 1.2 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-#userPlaylistPlayer .daily-player-sub {
-  grid-area: sub !important;
-  margin: 0 !important;
-  color: rgba(255,255,255,0.78) !important;
-  font-size: 11px !important;
-  line-height: 1.2 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-#userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-#userPlaylistPlayer .daily-player-controls {
-  grid-area: controls !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  margin: 0 !important;
-}
-
-#userPlaylistPlayer .daily-play-btn {
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  padding: 0 !important;
-  border-radius: 999px !important;
-  background: rgba(255,255,255,0.95) !important;
-  color: #6d5045 !important;
-  font-size: 17px !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18) !important;
-}
-
-#userPlaylistPlayer .playlist-nav-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  border-radius: 999px !important;
-  background: rgba(255,255,255,0.13) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255,255,255,0.24) !important;
-  font-size: 20px !important;
-}
-
-#userPlaylistPlayer .daily-player-time.playlist-player-time,
-#userPlaylistPlayer .daily-player-time {
-  display: flex !important;
-  width: 76px !important;
-  min-width: 76px !important;
-  justify-content: space-between !important;
-  gap: 6px !important;
-  color: rgba(255,255,255,0.86) !important;
-  font-size: 11px !important;
-}
-
-#userPlaylistPlayer .daily-player-progress {
-  grid-area: progress !important;
-  width: 100% !important;
-  max-width: 440px !important;
-  justify-self: center !important;
-  margin: 0 !important;
-  height: 4px !important;
-  accent-color: #fff !important;
-}
-
-#userPlaylistPlayer .playlist-volume-row {
-  grid-area: actions !important;
-  justify-self: stretch !important;
-  align-self: end !important;
-  width: 100% !important;
-  max-width: 110px !important;
-  margin: 0 !important;
-}
-
-#userPlaylistPlayer .playlist-player-actions {
-  grid-area: actions !important;
-  align-self: start !important;
-  display: flex !important;
-  gap: 6px !important;
-  margin: 0 !important;
-  width: 100% !important;
-}
-
-#userPlaylistPlayer .playlist-action-btn {
-  min-height: 24px !important;
-  padding: 4px 8px !important;
-  font-size: 10.5px !important;
-  border-radius: 999px !important;
-  background: rgba(255,255,255,0.12) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255,255,255,0.26) !important;
-}
-
-#userPlaylistPlayer .daily-player-close {
-  grid-area: close !important;
-  position: static !important;
-  justify-self: end !important;
-  align-self: start !important;
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  padding: 0 !important;
-  border-radius: 999px !important;
-  background: rgba(255,255,255,0.16) !important;
-  color: #fff !important;
-  font-size: 18px !important;
-  line-height: 1 !important;
-}
-
-@media (max-width: 920px) {
-  body {
-    padding-bottom: 112px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    min-height: 102px !important;
-    max-height: none !important;
-    padding: 10px 12px !important;
-    grid-template-columns: 48px 1fr 34px !important;
-    grid-template-rows: 18px 22px 22px 20px !important;
-    grid-template-areas:
-      "cover label close"
-      "cover title close"
-      "cover controls controls"
-      "progress progress progress" !important;
-    column-gap: 10px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-  #userPlaylistPlayer .daily-player-cover {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title {
-    font-size: 14px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-sub,
-  #userPlaylistPlayer .playlist-volume-row,
-  #userPlaylistPlayer .playlist-player-actions {
-    display: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    justify-content: flex-start !important;
-    gap: 8px !important;
-  }
-
-  #userPlaylistPlayer .daily-play-btn {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    font-size: 14px !important;
-  }
-
-  #userPlaylistPlayer .playlist-nav-btn {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    font-size: 17px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-time.playlist-player-time,
-  #userPlaylistPlayer .daily-player-time {
-    width: 64px !important;
-    min-width: 64px !important;
-    font-size: 10px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-progress {
-    max-width: none !important;
-  }
-}
-
-/* v175: 설명 이미지 기준 - 하단 바를 재생곡 / 재생컨트롤 / 재생목록 3영역으로 재정렬 */
-#userPlaylistPlayer .daily-player-card.playlist-player-card,
-#userPlaylistPlayer .daily-player-card {
-  min-height: 72px !important;
-  max-height: 78px !important;
-  padding: 8px 22px !important;
-  grid-template-columns: 58px minmax(260px, 1fr) minmax(360px, 560px) minmax(160px, 210px) !important;
-  grid-template-rows: 22px 20px 16px !important;
-  grid-template-areas:
-    "cover title controls actions"
-    "cover sub controls actions"
-    "cover sub progress actions" !important;
-  column-gap: 16px !important;
-  row-gap: 0 !important;
-}
-
-#userPlaylistPlayer .daily-player-label.playlist-player-label,
-#userPlaylistPlayer .daily-player-label {
-  display: none !important;
-}
-
-#userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-#userPlaylistPlayer .daily-player-cover {
-  width: 52px !important;
-  height: 52px !important;
-  border-radius: 4px !important;
-}
-
-#userPlaylistPlayer .daily-player-title {
-  align-self: end !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-  line-height: 1.15 !important;
-}
-
-#userPlaylistPlayer .daily-player-sub {
-  align-self: start !important;
-  font-size: 10.5px !important;
-  line-height: 1.25 !important;
-  max-width: 100% !important;
-}
-
-#userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-#userPlaylistPlayer .daily-player-controls {
-  align-self: center !important;
-  justify-self: center !important;
-  width: 100% !important;
-  gap: 12px !important;
-}
-
-#userPlaylistPlayer .daily-player-time.playlist-player-time,
-#userPlaylistPlayer .daily-player-time {
-  width: 88px !important;
-  min-width: 88px !important;
-  font-size: 10.5px !important;
-}
-
-#userPlaylistPlayer .daily-player-progress {
-  justify-self: center !important;
-  width: min(100%, 520px) !important;
-  max-width: 520px !important;
-}
-
-#userPlaylistPlayer .playlist-player-actions {
-  grid-area: actions !important;
-  align-self: center !important;
-  justify-self: end !important;
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  grid-template-rows: 28px 28px !important;
-  gap: 5px !important;
-  width: 150px !important;
-  max-width: 150px !important;
-}
-
-#userPlaylistPlayer .playlist-action-btn {
-  width: 100% !important;
-  min-height: 28px !important;
-  height: 28px !important;
-  padding: 4px 10px !important;
-  font-size: 11px !important;
-  font-weight: 800 !important;
-  white-space: nowrap !important;
-}
-
-#playlistPlayerListBtn.playlist-list-toggle {
-  background: rgba(255,255,255,0.20) !important;
-}
-
-#userPlaylistPlayer .playlist-volume-row {
-  display: none !important;
-}
-
-#userPlaylistPlayer .daily-player-close {
-  display: none !important;
-}
-
-#userPlaylistPlayer .playlist-queue-panel {
-  position: absolute !important;
-  right: 18px !important;
-  bottom: 84px !important;
-  width: min(360px, calc(100vw - 36px)) !important;
-  max-height: 48vh !important;
-  overflow: hidden !important;
-  display: none !important;
-  border-radius: 16px !important;
-  background: rgba(46, 34, 30, 0.96) !important;
-  border: 1px solid rgba(255,255,255,0.22) !important;
-  box-shadow: 0 14px 34px rgba(0,0,0,0.32) !important;
-  color: #fff !important;
-  z-index: 2 !important;
-}
-
-#userPlaylistPlayer .playlist-queue-panel.open {
-  display: block !important;
-}
-
-#userPlaylistPlayer .playlist-queue-head {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 10px !important;
-  padding: 12px 12px 9px !important;
-  border-bottom: 1px solid rgba(255,255,255,0.16) !important;
-}
-
-#userPlaylistPlayer .playlist-queue-clear {
-  border: 1px solid rgba(255,255,255,0.24) !important;
-  border-radius: 999px !important;
-  padding: 4px 10px !important;
-  background: rgba(255,255,255,0.12) !important;
-  color: #fff !important;
-  font-size: 11px !important;
-  cursor: pointer !important;
-}
-
-#userPlaylistPlayer .playlist-queue-list {
-  max-height: calc(48vh - 48px) !important;
-  overflow: auto !important;
-  padding: 6px !important;
-}
-
-#userPlaylistPlayer .playlist-queue-item {
-  width: 100% !important;
-  display: grid !important;
-  grid-template-columns: 28px 1fr !important;
-  gap: 8px !important;
-  align-items: center !important;
-  border: 0 !important;
-  border-radius: 10px !important;
-  background: transparent !important;
-  color: #fff !important;
-  text-align: left !important;
-  padding: 8px !important;
-  cursor: pointer !important;
-}
-
-#userPlaylistPlayer .playlist-queue-item:hover,
-#userPlaylistPlayer .playlist-queue-item.active {
-  background: rgba(255,255,255,0.13) !important;
-}
-
-#userPlaylistPlayer .playlist-queue-num {
-  width: 22px !important;
-  height: 22px !important;
-  border-radius: 999px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: rgba(255,255,255,0.14) !important;
-  font-size: 11px !important;
-  font-weight: 900 !important;
-}
-
-#userPlaylistPlayer .playlist-queue-meta {
-  min-width: 0 !important;
-  display: grid !important;
-  gap: 2px !important;
-}
-
-#userPlaylistPlayer .playlist-queue-title,
-#userPlaylistPlayer .playlist-queue-sub {
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-}
-
-#userPlaylistPlayer .playlist-queue-title {
-  font-size: 12px !important;
-  font-weight: 900 !important;
-}
-
-#userPlaylistPlayer .playlist-queue-sub,
-#userPlaylistPlayer .playlist-queue-empty {
-  color: rgba(255,255,255,0.72) !important;
-  font-size: 10.5px !important;
-}
-
-#userPlaylistPlayer .playlist-queue-empty {
-  padding: 16px 12px !important;
-}
-
-@media (max-width: 920px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    min-height: 104px !important;
-    grid-template-columns: 48px 1fr 96px !important;
-    grid-template-rows: 23px 23px 34px 12px !important;
-    grid-template-areas:
-      "cover title actions"
-      "cover sub actions"
-      "controls controls controls"
-      "progress progress progress" !important;
-  }
-
-  #userPlaylistPlayer .daily-player-sub {
-    display: block !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    width: 92px !important;
-    max-width: 92px !important;
-    grid-template-rows: 25px 25px !important;
-  }
-
-  #userPlaylistPlayer .playlist-action-btn {
-    height: 25px !important;
-    min-height: 25px !important;
-    font-size: 10px !important;
-    padding: 3px 6px !important;
-  }
-
-  #userPlaylistPlayer .playlist-queue-panel {
-    right: 10px !important;
-    bottom: 112px !important;
-  }
-}
-
-
-/* v176: 재생목록 버튼 클릭 시 실제 곡 목록 패널이 하단 플레이어 위에 확실히 보이도록 보정 */
-#userPlaylistPlayer .playlist-queue-panel {
-  position: fixed !important;
-  right: 22px !important;
-  bottom: 92px !important;
-  width: min(380px, calc(100vw - 44px)) !important;
-  max-height: min(420px, calc(100vh - 128px)) !important;
-  overflow: hidden !important;
-  display: none !important;
-  z-index: 13050 !important;
-  pointer-events: auto !important;
-  border-radius: 16px !important;
-  background: rgba(46, 34, 30, 0.98) !important;
-  border: 1px solid rgba(255,255,255,0.24) !important;
-  box-shadow: 0 18px 42px rgba(0,0,0,0.42) !important;
-  color: #fff !important;
-}
-
-#userPlaylistPlayer .playlist-queue-panel.open {
-  display: block !important;
-}
-
-#userPlaylistPlayer .playlist-queue-list {
-  max-height: min(350px, calc(100vh - 190px)) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
-#playlistPlayerListBtn.playlist-list-toggle[aria-expanded="true"] {
-  background: rgba(255,255,255,0.32) !important;
-  border-color: rgba(255,255,255,0.48) !important;
-}
-
-@media (max-width: 920px) {
-  #userPlaylistPlayer .playlist-queue-panel {
-    right: 10px !important;
-    bottom: 118px !important;
-    width: calc(100vw - 20px) !important;
-    max-height: min(420px, calc(100vh - 150px)) !important;
-  }
-}
-
-
-/* v177: 하단 플레이어 볼륨 조절 복구 */
-#userPlaylistPlayer .daily-player-card.playlist-player-card,
-#userPlaylistPlayer .daily-player-card {
-  min-height: 76px !important;
-  max-height: 84px !important;
-  padding: 8px 22px !important;
-  grid-template-columns: 58px minmax(240px, 1fr) minmax(320px, 520px) 104px minmax(158px, 190px) !important;
-  grid-template-rows: 22px 20px 16px !important;
-  grid-template-areas:
-    "cover title controls volume actions"
-    "cover sub controls volume actions"
-    "cover sub progress volume actions" !important;
-  column-gap: 14px !important;
-  overflow: visible !important;
-}
-
-#userPlaylistPlayer .playlist-volume-row {
-  grid-area: volume !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  align-self: center !important;
-  justify-self: center !important;
-  width: 96px !important;
-  max-width: 96px !important;
-  min-width: 96px !important;
-  height: 24px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  z-index: 5 !important;
-}
-
-#userPlaylistPlayer #playlistPlayerMuteBtn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  border-radius: 999px !important;
-  font-size: 9px !important;
-  line-height: 1 !important;
-  color: #fff !important;
-  background: rgba(255,255,255,0.16) !important;
-  border: 1px solid rgba(255,255,255,0.28) !important;
-}
-
-#userPlaylistPlayer #playlistPlayerVolume {
-  display: block !important;
-  width: 64px !important;
-  max-width: 64px !important;
-  min-width: 64px !important;
-  height: 4px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  accent-color: #ffffff !important;
-  cursor: pointer !important;
-}
-
-#userPlaylistPlayer .playlist-player-actions {
-  grid-area: actions !important;
-  align-self: center !important;
-  justify-self: end !important;
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  grid-template-rows: 28px 28px !important;
-  gap: 5px !important;
-  width: 150px !important;
-  max-width: 150px !important;
-}
-
-@media (max-width: 860px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 46px minmax(120px, 1fr) 104px !important;
-    grid-template-rows: 18px 18px 28px 16px !important;
-    grid-template-areas:
-      "cover title actions"
-      "cover sub actions"
-      "controls controls volume"
-      "progress progress progress" !important;
-    column-gap: 10px !important;
-    min-height: 94px !important;
-    max-height: 104px !important;
-  }
-
-  #userPlaylistPlayer .playlist-volume-row {
-    width: 92px !important;
-    min-width: 92px !important;
-    max-width: 92px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerVolume {
-    width: 60px !important;
-    min-width: 60px !important;
-    max-width: 60px !important;
-  }
-}
-
-
-/* v179: 모바일 하단 플레이어를 심플한 미니바 UI로 재구성 */
-@media (max-width: 768px) {
-  body.is-mobile-site {
-    padding-bottom: 132px !important;
-  }
-
-  #userPlaylistPlayer.daily-player {
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 100vw !important;
-    border-radius: 0 !important;
-    z-index: 1200 !important;
-  }
-
-  #userPlaylistPlayer.daily-player.closed {
-    transform: translateY(calc(100% - 18px)) !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    min-height: 104px !important;
-    max-height: none !important;
-    padding: 18px 18px 18px !important;
-    border-radius: 0 !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    grid-template-columns: minmax(0,1fr) 88px 52px !important;
-    grid-template-rows: 34px 26px !important;
-    grid-template-areas:
-      "title controls actions"
-      "sub controls actions" !important;
-    align-items: center !important;
-    column-gap: 14px !important;
-    background: #efefef !important;
-    box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.12) !important;
-    overflow: visible !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card::before,
-  #userPlaylistPlayer .daily-player-card::after {
-    display: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-label,
-  #userPlaylistPlayer .daily-player-cover,
-  #userPlaylistPlayer .daily-player-progress,
-  #userPlaylistPlayer .playlist-volume-row,
-  #userPlaylistPlayer .daily-player-close,
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn,
-  #userPlaylistPlayer #playlistPlayerCurrent,
-  #userPlaylistPlayer #playlistPlayerDuration,
-  #userPlaylistPlayer #playlistPlayerRemoveBtn {
-    display: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title {
-    grid-area: title !important;
-    align-self: end !important;
-    justify-self: start !important;
-    width: 100% !important;
-    color: #222 !important;
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
-    margin: 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  #userPlaylistPlayer .daily-player-sub {
-    grid-area: sub !important;
-    align-self: start !important;
-    justify-self: start !important;
-    width: 100% !important;
-    color: #7c7c7c !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    line-height: 1.2 !important;
-    margin: 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    opacity: 1 !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    grid-area: controls !important;
-    align-self: center !important;
-    justify-self: center !important;
-    width: 88px !important;
-    max-width: 88px !important;
-    min-width: 88px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn {
-    width: 56px !important;
-    height: 56px !important;
-    min-width: 56px !important;
-    border-radius: 999px !important;
-    background: #ffffff !important;
-    color: #2f2f2f !important;
-    border: 1px solid rgba(0,0,0,0.08) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
-    font-size: 24px !important;
-    line-height: 1 !important;
-    padding: 0 !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    grid-area: actions !important;
-    align-self: center !important;
-    justify-self: center !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 52px !important;
-    min-width: 52px !important;
-    max-width: 52px !important;
-    height: 52px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    position: relative !important;
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    color: transparent !important;
-    font-size: 0 !important;
-    box-shadow: none !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn::before {
-    content: "☰";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-54%, -50%);
-    color: #404040;
-    font-size: 28px;
-    line-height: 1;
-    font-weight: 700;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn::after {
-    content: "▷";
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-40%);
-    color: #404040;
-    font-size: 14px;
-    line-height: 1;
-    font-weight: 700;
-  }
-
-  #userPlaylistPlayer .playlist-queue-panel {
-    left: 10px !important;
-    right: 10px !important;
-    width: auto !important;
-    max-width: none !important;
-    bottom: calc(100% + 10px) !important;
-    border-radius: 16px !important;
-    background: rgba(255,255,255,0.96) !important;
-    backdrop-filter: blur(8px) !important;
-  }
-}
-
-
-/* v-cloudflare-pcui: 실제 PC통신 대화방 화면 복원 */
-#telecom.telecom-page {
-  background:#0633bb !important;
-  color:#eaf3ff !important;
-  padding:18px !important;
-  min-height:calc(100vh - 92px) !important;
-}
-#telecom .telecom-shell {
-  max-width:1180px !important;
-  min-height:650px !important;
-  margin:0 auto !important;
-  border:2px solid #8dafff !important;
-  background:#0633bb !important;
-  box-shadow: inset 0 0 0 4px rgba(0,0,70,.28) !important;
-  font-family:"Courier New","D2Coding","Nanum Gothic Coding",monospace !important;
-}
-#telecom .telecom-titlebar {
-  padding:14px 18px !important;
-  border-bottom:1px solid #88aaff !important;
-  background:#061f80 !important;
-}
-#telecom .telecom-titlebar h1 {
-  font-size:24px !important;
-  letter-spacing:.02em !important;
-  text-shadow:none !important;
-}
-#telecom .telecom-titlebar p {
-  color:#d7e4ff !important;
-  font-size:13px !important;
-}
-#telecom .telecom-room {
-  padding:14px 18px 16px !important;
-}
-#telecom .telecom-status-row {
-  display:flex !important;
-  align-items:center !important;
-  gap:12px !important;
-  border-bottom:1px dashed #89a9ff !important;
-  padding-bottom:8px !important;
-  color:#fff !important;
-  font-size:18px !important;
-}
-#telecom #telecomRoomName {
-  font-weight:700 !important;
-  letter-spacing:.02em !important;
-}
-#telecom .telecom-room-date {
-  margin-left:auto !important;
-  min-width:72px !important;
-  text-align:center !important;
-  background:transparent !important;
-  border:1px solid #7fa2ff !important;
-  color:#dce8ff !important;
-}
-#telecom .telecom-log {
-  height:520px !important;
-  overflow:auto !important;
-  padding:18px 10px 12px !important;
-  background:#0633bb !important;
-  color:#f5fbff !important;
-  font-size:20px !important;
-  line-height:1.95 !important;
-  letter-spacing:.01em !important;
-}
-#telecom .telecom-line {
-  display:grid !important;
-  grid-template-columns: 170px 120px minmax(280px, 1fr) 64px !important;
-  align-items:baseline !important;
-  column-gap:10px !important;
-  margin:0 !important;
-  min-height:35px !important;
-  white-space:normal !important;
-  word-break:keep-all !important;
-}
-#telecom .telecom-line-system {
-  grid-template-columns: 96px minmax(480px,1fr) 64px !important;
-  color:#f7fbff !important;
-}
-#telecom .telecom-system-prefix {
-  color:#f9fbff !important;
-  font-weight:700 !important;
-}
-#telecom .telecom-system-text {
-  color:#f7fbff !important;
-}
-#telecom .telecom-nick {
-  min-width:0 !important;
-  color:#ffffff !important;
-  font-weight:700 !important;
-  font-size:22px !important;
-  text-shadow:none !important;
-}
-#telecom .telecom-real {
-  color:#f2f7ff !important;
-  font-size:22px !important;
-  font-weight:700 !important;
-  text-shadow:none !important;
-}
-#telecom .telecom-text {
-  color:#f9fdff !important;
-  font-size:22px !important;
-  font-weight:700 !important;
-  text-shadow:none !important;
-}
-#telecom .telecom-line-time {
-  color:#9dbbff !important;
-  font-size:15px !important;
-  font-weight:700 !important;
-  letter-spacing:.06em !important;
-}
-#telecom .telecom-input-row {
-  display:grid !important;
-  grid-template-columns:auto 1fr auto !important;
-  gap:8px !important;
-  align-items:center !important;
-  border-top:1px dashed #8dafff !important;
-  padding-top:10px !important;
-}
-#telecom .telecom-input-row span {
-  display:inline !important;
-  font-size:16px !important;
-  color:#fff !important;
-}
-#telecom .telecom-input-row input {
-  background:#001c73 !important;
-  border:1px solid #9db8ff !important;
-  color:#ffffff !important;
-  height:34px !important;
-  padding:6px 10px !important;
-  font-size:16px !important;
-}
-#telecom .telecom-input-row button,
-#telecom .telecom-small-btn,
-#telecom .telecom-enter-btn {
-  background:#8a542f !important;
-  color:#001b58 !important;
-  border:1px solid #f2d6bb !important;
-  font-weight:700 !important;
-}
-#telecom .telecom-notice,
-#telecom .telecom-ai-status {
-  color:#cbdcff !important;
-  font-size:12px !important;
-}
-#telecom .telecom-setup.hidden { display:none !important; }
-
-@media (max-width: 760px) {
-  #telecom .telecom-log { font-size:14px !important; height:58vh !important; line-height:1.75 !important; }
-  #telecom .telecom-line { grid-template-columns: 88px 70px 1fr 42px !important; column-gap:5px !important; }
-  #telecom .telecom-line-system { grid-template-columns: 48px 1fr 42px !important; }
-  #telecom .telecom-nick,
-  #telecom .telecom-real,
-  #telecom .telecom-text { font-size:14px !important; text-shadow:none !important; }
-  #telecom .telecom-line-time { font-size:10px !important; }
-}
-
-/* v-kks-presence-flow: 요청 반영 - PC통신 글자는 그림자 없는 흰색 */
-#telecom .telecom-line,
-#telecom .telecom-system-prefix,
-#telecom .telecom-system-text,
-#telecom .telecom-nick,
-#telecom .telecom-real,
-#telecom .telecom-text { color:#ffffff !important; text-shadow:none !important; }
-#telecom .telecom-ai-status { color:#ffffff !important; }
-
-
-/* v183: PC통신 글씨 축소 + 촘촘한 로그 */
-#telecom .telecom-titlebar h1 { font-size:20px !important; }
-#telecom .telecom-titlebar p { font-size:11px !important; }
-#telecom .telecom-status-row { font-size:15px !important; }
-#telecom .telecom-room-date { font-size:11px !important; min-width:66px !important; padding:2px 6px !important; }
-#telecom .telecom-log {
-  font-size:14px !important;
-  line-height:1.48 !important;
-  height:500px !important;
-  padding:12px 8px 10px !important;
-}
-#telecom .telecom-line {
-  grid-template-columns: 118px 86px minmax(240px, 1fr) 48px !important;
-  column-gap:8px !important;
-  min-height:22px !important;
-  line-height:1.48 !important;
-}
-#telecom .telecom-line-system {
-  grid-template-columns: 56px minmax(320px,1fr) 48px !important;
-  min-height:22px !important;
-}
-#telecom .telecom-nick,
-#telecom .telecom-real,
-#telecom .telecom-text {
-  font-size:14px !important;
-  font-weight:700 !important;
-  line-height:1.48 !important;
-}
-#telecom .telecom-line-time { font-size:10px !important; }
-#telecom .telecom-input-row span { font-size:13px !important; }
-#telecom .telecom-input-row input { height:30px !important; font-size:13px !important; padding:4px 8px !important; }
-#telecom .telecom-input-row button,
-#telecom .telecom-small-btn,
-#telecom .telecom-enter-btn { font-size:12px !important; padding:6px 10px !important; }
-#telecom .telecom-notice,
-#telecom .telecom-ai-status { font-size:10.5px !important; }
-
-
-/* v184: PC통신 실제 로그처럼 더 작고 촘촘하게, 캐시 강제 갱신용 최종 오버라이드 */
-#telecom .telecom-titlebar { padding:12px 16px !important; }
-#telecom .telecom-titlebar h1 { font-size:18px !important; line-height:1.25 !important; }
-#telecom .telecom-titlebar p { font-size:10.5px !important; }
-#telecom .telecom-room { padding:10px 12px 14px !important; }
-#telecom .telecom-status-row { font-size:13px !important; padding-bottom:8px !important; }
-#telecom #telecomRoomName { font-size:14px !important; }
-#telecom .telecom-room-date { font-size:10.5px !important; min-width:62px !important; padding:2px 5px !important; }
-#telecom .telecom-log {
-  height:500px !important;
-  padding:10px 8px 8px !important;
-  font-size:12.5px !important;
-  line-height:1.42 !important;
-  letter-spacing:0 !important;
-}
-#telecom .telecom-line {
-  grid-template-columns: 102px 76px minmax(220px, 1fr) 42px !important;
-  column-gap:7px !important;
-  min-height:18px !important;
-  line-height:1.42 !important;
-  margin:0 !important;
-}
-#telecom .telecom-line-system {
-  grid-template-columns: 48px minmax(300px,1fr) 42px !important;
-  min-height:18px !important;
-}
-#telecom .telecom-nick,
-#telecom .telecom-real,
-#telecom .telecom-text {
-  font-size:12.5px !important;
-  line-height:1.42 !important;
-  font-weight:700 !important;
-}
-#telecom .telecom-line-time { font-size:9px !important; line-height:1.42 !important; }
-#telecom .telecom-system-prefix,
-#telecom .telecom-system-text { font-size:12.5px !important; line-height:1.42 !important; }
-#telecom .telecom-input-row { padding-top:8px !important; gap:7px !important; }
-#telecom .telecom-input-row span { font-size:12px !important; }
-#telecom .telecom-input-row input { height:28px !important; font-size:12px !important; padding:3px 7px !important; }
-#telecom .telecom-input-row button,
-#telecom .telecom-small-btn,
-#telecom .telecom-enter-btn { font-size:11px !important; padding:5px 9px !important; }
-#telecom .telecom-notice,
-#telecom .telecom-ai-status { font-size:10px !important; }
-
-@media (max-width: 760px) {
-  #telecom .telecom-log { font-size:12px !important; line-height:1.46 !important; }
-  #telecom .telecom-line { grid-template-columns: 78px 58px 1fr 36px !important; column-gap:4px !important; }
-  #telecom .telecom-line-system { grid-template-columns: 44px 1fr 36px !important; }
-  #telecom .telecom-nick,
-  #telecom .telecom-real,
-  #telecom .telecom-text,
-  #telecom .telecom-system-prefix,
-  #telecom .telecom-system-text { font-size:12px !important; }
-  #telecom .telecom-line-time { font-size:8.5px !important; }
-}
-
-
-/* v18 stable dialogue: PC통신 로그를 더 작고 촘촘하게 */
-#telecom .telecom-titlebar h1 { font-size:17px !important; line-height:1.2 !important; }
-#telecom .telecom-titlebar p { font-size:10px !important; }
-#telecom .telecom-room-date { font-size:10px !important; min-width:58px !important; padding:2px 5px !important; }
-#telecom .telecom-log {
-  font-size:11.5px !important;
-  line-height:1.38 !important;
-  letter-spacing:-0.2px !important;
-}
-#telecom .telecom-line {
-  grid-template-columns: 82px 64px 1fr 38px !important;
-  column-gap:4px !important;
-  min-height:17px !important;
-  padding:0 !important;
-  margin:0 !important;
-}
-#telecom .telecom-line-system {
-  grid-template-columns: 46px 1fr 38px !important;
-  column-gap:4px !important;
-}
-#telecom .telecom-nick,
-#telecom .telecom-real,
-#telecom .telecom-text,
-#telecom .telecom-system-prefix,
-#telecom .telecom-system-text {
-  font-size:11.5px !important;
-  line-height:1.38 !important;
-  color:#fff !important;
-  text-shadow:none !important;
-}
-#telecom .telecom-line-time { font-size:8.5px !important; line-height:1.38 !important; }
-#telecom .telecom-input-row span { font-size:11px !important; }
-#telecom .telecom-input-row input { height:26px !important; font-size:11px !important; padding:3px 7px !important; }
-#telecom .telecom-enter-btn,
-#telecom .telecom-small-btn { font-size:10.5px !important; padding:5px 9px !important; }
-#telecom .telecom-ai-status { font-size:9.5px !important; }
-
-/* v180: 모바일 플레이리스트를 PC 하단 바 스타일로 축소 적용 */
-@media (max-width: 768px) {
-  body,
-  body.is-mobile-site {
-    padding-bottom: calc(106px + env(safe-area-inset-bottom, 0px)) !important;
-    scroll-padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  #userPlaylistPlayer.daily-player {
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    top: auto !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 100vw !important;
-    z-index: 12000 !important;
-    margin: 0 !important;
-    pointer-events: none !important;
-    transform: none !important;
-    border-radius: 0 !important;
-  }
-
-  #userPlaylistPlayer.daily-player.closed {
-    display: none !important;
-    transform: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    pointer-events: auto !important;
-    width: 100% !important;
-    min-height: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
-    max-height: none !important;
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
-    box-sizing: border-box !important;
-    border-radius: 0 !important;
-    border-left: 0 !important;
-    border-right: 0 !important;
-    border-bottom: 0 !important;
-    border-top: 1px solid rgba(255,255,255,0.22) !important;
-    display: grid !important;
-    grid-template-columns: 54px minmax(0, 1fr) 74px 44px !important;
-    grid-template-rows: 22px 28px 14px !important;
-    grid-template-areas:
-      "cover title controls actions"
-      "cover sub controls actions"
-      "progress progress progress progress" !important;
-    align-items: center !important;
-    column-gap: 10px !important;
-    row-gap: 3px !important;
-    color: #fff !important;
-    background: linear-gradient(90deg, rgba(80, 63, 55, 0.98), rgba(123, 93, 77, 0.98), rgba(92, 70, 60, 0.98)) !important;
-    box-shadow: 0 -8px 28px rgba(0,0,0,0.22) !important;
-    overflow: visible !important;
-    isolation: isolate !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card::before {
-    display: block !important;
-    content: "" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 0 !important;
-    background-image: var(--player-cover-bg) !important;
-    background-size: cover !important;
-    background-position: center !important;
-    opacity: 0.14 !important;
-    filter: blur(1.2px) saturate(1.04) !important;
-    transform: scale(1.04) !important;
-    pointer-events: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card::after {
-    display: block !important;
-    content: "" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 1 !important;
-    background: linear-gradient(90deg, rgba(36,24,19,0.45), rgba(88,63,52,0.24), rgba(36,24,19,0.48)) !important;
-    pointer-events: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card > * {
-    position: relative !important;
-    z-index: 2 !important;
-  }
-
-  #userPlaylistPlayer .daily-player-label,
-  #userPlaylistPlayer .daily-player-close,
-  #userPlaylistPlayer .playlist-volume-row,
-  #userPlaylistPlayer #playlistPlayerMuteBtn,
-  #userPlaylistPlayer #playlistPlayerVolume,
-  #userPlaylistPlayer #playlistPlayerRemoveBtn,
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn,
-  #userPlaylistPlayer #playlistPlayerCurrent,
-  #userPlaylistPlayer #playlistPlayerDuration {
-    display: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-  #userPlaylistPlayer .daily-player-cover {
-    grid-area: cover !important;
-    display: block !important;
-    width: 52px !important;
-    height: 52px !important;
-    min-width: 52px !important;
-    margin: 0 !important;
-    border-radius: 6px !important;
-    object-fit: cover !important;
-    background: rgba(255,255,255,0.16) !important;
-    border: 1px solid rgba(255,255,255,0.22) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.24) !important;
-  }
-
-  #userPlaylistPlayer .daily-player-cover.empty {
-    display: none !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title {
-    grid-area: title !important;
-    align-self: end !important;
-    justify-self: stretch !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    color: #fff !important;
-    font-size: 14px !important;
-    font-weight: 900 !important;
-    line-height: 1.15 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  #userPlaylistPlayer .daily-player-sub {
-    grid-area: sub !important;
-    display: block !important;
-    align-self: start !important;
-    justify-self: stretch !important;
-    width: 100% !important;
-    margin: 0 !important;
-    color: rgba(255,255,255,0.80) !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    line-height: 1.25 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    opacity: 1 !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    grid-area: controls !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 74px !important;
-    min-width: 74px !important;
-    max-width: 74px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    padding: 0 !important;
-    border-radius: 999px !important;
-    background: rgba(255,255,255,0.96) !important;
-    color: #6b4c3f !important;
-    border: 1px solid rgba(0,0,0,0.08) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.16) !important;
-    font-size: 18px !important;
-    line-height: 1 !important;
-    font-weight: 900 !important;
-  }
-
-  #userPlaylistPlayer .daily-player-progress {
-    grid-area: progress !important;
-    display: block !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: 4px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    accent-color: #ffffff !important;
-    cursor: pointer !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    grid-area: actions !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 44px !important;
-    min-width: 44px !important;
-    max-width: 44px !important;
-    height: 46px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    position: relative !important;
-    display: inline-flex !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    padding: 0 !important;
-    border: 1px solid rgba(255,255,255,0.24) !important;
-    border-radius: 999px !important;
-    background: rgba(255,255,255,0.12) !important;
-    color: transparent !important;
-    font-size: 0 !important;
-    box-shadow: none !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn::before {
-    content: "☰" !important;
-    position: absolute !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-55%, -50%) !important;
-    color: #fff !important;
-    font-size: 24px !important;
-    line-height: 1 !important;
-    font-weight: 800 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn::after {
-    content: "▷" !important;
-    position: absolute !important;
-    right: 6px !important;
-    top: 50% !important;
-    transform: translateY(-40%) !important;
-    color: #fff !important;
-    font-size: 12px !important;
-    line-height: 1 !important;
-    font-weight: 800 !important;
-  }
-
-  #userPlaylistPlayer .playlist-queue-panel {
-    position: fixed !important;
-    left: 10px !important;
-    right: 10px !important;
-    bottom: calc(106px + env(safe-area-inset-bottom, 0px)) !important;
-    width: auto !important;
-    max-width: none !important;
-    max-height: min(420px, calc(100vh - 150px)) !important;
-    overflow: hidden !important;
-    border-radius: 16px !important;
-    background: rgba(46,34,30,0.98) !important;
-    border: 1px solid rgba(255,255,255,0.24) !important;
-    box-shadow: 0 18px 42px rgba(0,0,0,0.40) !important;
-    color: #fff !important;
-    z-index: 13050 !important;
-    pointer-events: auto !important;
-  }
-}
-
-
-/* v181: 모바일 플레이리스트 UI 정리 - 겹침/세모표시/앨범분류 제거 */
-@media (max-width: 920px) {
-  /* 하단 PC형 플리바는 유지하되, 재생목록 패널이 바와 겹치지 않게 더 위로 띄운다. */
-  #userPlaylistPlayer .playlist-queue-panel {
-    bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important;
-    max-height: min(360px, calc(100vh - 190px)) !important;
-  }
-
-  /* 오른쪽 아래 재생목록 버튼의 작은 삼각형 제거 */
-  #userPlaylistPlayer #playlistPlayerListBtn::after {
-    content: none !important;
-    display: none !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn::before {
-    transform: translate(-50%, -50%) !important;
-  }
-
-  /* 모바일 플리바에서 앨범/분류 문구 제거 후 곡 수만 작게 표시 */
-  #userPlaylistPlayer .daily-player-sub {
-    display: block !important;
-    font-size: 10.5px !important;
-    color: rgba(255,255,255,0.72) !important;
-  }
-
-  /* 재생목록 패널에서도 앨범/분류 보조문구 제거 */
-  #userPlaylistPlayer .playlist-queue-sub {
-    display: none !important;
-  }
-
-  #userPlaylistPlayer .playlist-queue-item {
-    grid-template-columns: 34px 1fr !important;
-    min-height: 52px !important;
-  }
-}
-
-/* v182: 모바일 플레이리스트 이전/다음 곡 버튼 활성화 */
-@media (max-width: 920px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 52px minmax(0, 1fr) 126px 44px !important;
-    grid-template-rows: 24px 18px 14px !important;
-    grid-template-areas:
-      "cover title controls actions"
-      "cover sub controls actions"
-      "progress progress progress progress" !important;
-    column-gap: 10px !important;
-    row-gap: 4px !important;
-    min-height: 96px !important;
-    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    grid-area: controls !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 7px !important;
-    width: 126px !important;
-    min-width: 126px !important;
-    max-width: 126px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    padding: 0 !important;
-    border-radius: 999px !important;
-    border: 1px solid rgba(255,255,255,0.28) !important;
-    background: rgba(255,255,255,0.14) !important;
-    color: #fff !important;
-    font-size: 24px !important;
-    line-height: 1 !important;
-    font-weight: 900 !important;
-    box-shadow: none !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    font-size: 18px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-progress {
-    grid-area: progress !important;
-    margin-top: 2px !important;
-  }
-
-  #userPlaylistPlayer .playlist-queue-panel {
-    bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
-
-@media (max-width: 390px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 46px minmax(0, 1fr) 112px 40px !important;
-    column-gap: 8px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-  #userPlaylistPlayer .daily-player-cover {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    width: 112px !important;
-    min-width: 112px !important;
-    max-width: 112px !important;
-    gap: 5px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn {
-    width: 27px !important;
-    height: 27px !important;
-    min-width: 27px !important;
-    font-size: 21px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-  }
-}
-
-/* v183: 모바일 플레이리스트 곡 상세 화면 - 앨범/제목 클릭 시 전체 플레이어 */
-@media (max-width: 920px) {
-  .playlist-detail-trigger {
-    cursor: pointer !important;
-  }
-}
-
-@media (min-width: 921px) {
-  #userPlaylistPlayer #playlistPlayerCover,
-  #userPlaylistPlayer #playlistPlayerTitle {
-    cursor: default !important;
-  }
-}
-
-.playlist-full-detail {
-  display: none;
-}
-
-body.playlist-detail-open {
-  overflow: hidden;
-}
-
-@media (max-width: 920px) {
-  .playlist-full-detail {
-    position: fixed;
-    inset: 0;
-    display: none;
-    z-index: 22000;
-    overflow: hidden;
-    color: #241914;
-    background: #f2ede3;
-    font-family: inherit;
-  }
-
-  .playlist-full-detail.open {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .playlist-full-detail-bg {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 50% 72%, rgba(182,194,222,0.55), rgba(242,237,227,0.35) 28%, rgba(242,237,227,0.94) 58%, rgba(242,237,227,0.98) 100%);
-    background-size: cover;
-    background-position: center;
-    filter: blur(28px) saturate(0.85);
-    transform: scale(1.18);
-    opacity: 0.56;
-  }
-
-  .playlist-full-detail::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(to bottom,
-      rgba(242,237,227,0.92) 0%,
-      rgba(242,237,227,0.72) 46%,
-      rgba(234,238,248,0.38) 78%,
-      rgba(219,231,244,0.52) 100%);
-    pointer-events: none;
-  }
-
-  .playlist-full-detail > *:not(.playlist-full-detail-bg) {
-    position: relative;
-    z-index: 2;
-  }
-
-  .playlist-full-detail-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 8px;
-  }
-
-  .playlist-full-detail-close,
-  .playlist-full-detail-list-top {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    color: rgba(34,24,20,0.82);
-    width: 40px;
-    height: 40px;
-    font-size: 26px;
-    line-height: 1;
-    padding: 0;
-  }
-
-  .playlist-full-detail-list-top {
-    font-size: 22px;
-  }
-
-  .playlist-full-detail-cover-wrap {
-    margin: 18px auto 0;
-    width: min(50vw, 255px);
-    height: min(50vw, 255px);
-    border-radius: 28px;
-    overflow: hidden;
-    background: rgba(255,255,255,0.56);
-    box-shadow: 0 18px 48px rgba(61,48,43,0.12);
-  }
-
-  .playlist-full-detail-cover {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-    user-select: none;
-  }
-
-  .playlist-full-detail-cover.empty {
-    display: none;
-  }
-
-  .playlist-full-detail-meta {
-    text-align: center;
-    padding: 26px 24px 0;
-  }
-
-  .playlist-full-detail-meta strong {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    color: #221713;
-    font-size: clamp(24px, 8vw, 34px);
-    font-weight: 800;
-    line-height: 1.2;
-    word-break: keep-all;
-  }
-
-  .playlist-full-detail-meta span {
-    display: block;
-    margin-top: 10px;
-    color: rgba(34,24,20,0.74);
-    font-size: 18px;
-    font-weight: 500;
-  }
-
-  .playlist-full-detail-progress-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 34px 32px 8px;
-    font-size: 14px;
-    color: rgba(36,25,20,0.72);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .playlist-full-detail-progress {
-    display: block;
-    width: calc(100% - 32px);
-    margin: 0 auto;
-    height: 4px;
-    padding: 0;
-    accent-color: #2d201a;
-  }
-
-  .playlist-full-detail-controls {
-    margin-top: auto;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: center;
-    gap: 8px;
-    padding: 32px 22px calc(36px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .playlist-full-detail-controls button {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    color: #1f1612;
-    font-size: 38px;
-    line-height: 1;
-    min-width: 0;
-    padding: 10px 0;
-    justify-self: center;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-prev,
-  .playlist-full-detail-controls .playlist-full-detail-next {
-    font-size: 34px;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-play {
-    width: 76px;
-    height: 76px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.96);
-    box-shadow: 0 14px 30px rgba(0,0,0,0.12);
-    font-size: 38px;
-    color: #2d201a;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-list {
-    font-size: 30px;
-  }
-}
-
-@media (max-width: 390px) {
-  .playlist-full-detail-cover-wrap {
-    height: min(41vh, 330px);
-  }
-
-  .playlist-full-detail-top-actions {
-    padding-left: 38px;
-    padding-right: 38px;
-    font-size: 29px;
-  }
-
-  .playlist-full-detail-meta {
-    padding-top: min(8vh, 68px);
-  }
-
-  .playlist-full-detail-controls {
-    padding-top: min(9vh, 84px);
-    gap: 8px;
-  }
-
-  .playlist-full-detail-controls button {
-    font-size: 36px;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-play {
-    font-size: 52px;
-  }
-}
-
-/* v184: 모바일 하단 플리바 컨트롤 버튼 오른쪽 이동 */
-@media (max-width: 920px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 54px minmax(0, 1fr) 134px 54px !important;
-    column-gap: 8px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    justify-content: flex-end !important;
-    width: 134px !important;
-    min-width: 134px !important;
-    max-width: 134px !important;
-    transform: translateX(22px) !important;
-    gap: 6px !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    justify-content: flex-end !important;
-    width: 54px !important;
-    min-width: 54px !important;
-    max-width: 54px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title {
-    padding-right: 6px !important;
-  }
-}
-
-@media (max-width: 390px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 48px minmax(0, 1fr) 122px 48px !important;
-    column-gap: 6px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    width: 122px !important;
-    min-width: 122px !important;
-    max-width: 122px !important;
-    transform: translateX(16px) !important;
-    gap: 4px !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    width: 48px !important;
-    min-width: 48px !important;
-    max-width: 48px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn {
-    width: 26px !important;
-    height: 26px !important;
-    min-width: 26px !important;
-    font-size: 20px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    width: 41px !important;
-    height: 41px !important;
-    min-width: 41px !important;
-  }
-}
-
-/* v185: 모바일 상세 플레이어 정리 - 하트/연관곡/EQ 제거, 컨트롤 겹침 완화 */
-@media (max-width: 920px) {
-  .playlist-full-detail-top-actions,
-  .playlist-full-detail-bottom {
-    display: none !important;
-  }
-
-  .playlist-full-detail-cover-wrap {
-    height: min(42vh, 350px) !important;
-  }
-
-  .playlist-full-detail-progress-row {
-    padding: 12px 28px 4px !important;
-    font-size: 13px !important;
-  }
-
-  .playlist-full-detail-meta {
-    padding: min(8vh, 66px) 28px 0 !important;
-  }
-
-  .playlist-full-detail-meta strong {
-    font-size: clamp(22px, 6vw, 30px) !important;
-    line-height: 1.24 !important;
-  }
-
-  .playlist-full-detail-meta span {
-    margin-top: 8px !important;
-    font-size: 16px !important;
-  }
-
-  .playlist-full-detail-controls {
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 10px !important;
-    padding: min(8vh, 76px) 44px 0 !important;
-  }
-
-  .playlist-full-detail-controls button {
-    font-size: 34px !important;
-    padding: 2px 0 !important;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-play {
-    font-size: 48px !important;
-    letter-spacing: -3px !important;
-  }
-
-  .playlist-full-detail-list {
-    font-size: 32px !important;
-    letter-spacing: -1px !important;
-  }
-
-  .playlist-full-detail-close {
-    top: calc(10px + env(safe-area-inset-top, 0px)) !important;
-    right: 12px !important;
-    width: 36px !important;
-    height: 36px !important;
-  }
-}
-
-@media (max-width: 390px) {
-  .playlist-full-detail-meta {
-    padding-top: min(6vh, 52px) !important;
-  }
-  .playlist-full-detail-controls {
-    padding-top: min(7vh, 58px) !important;
-    padding-left: 38px !important;
-    padding-right: 38px !important;
-  }
-}
-
-/* v186: 모바일 상세 플레이어 - 음악앱형 레이아웃 재정렬 */
-@media (max-width: 920px) {
-  .playlist-full-detail.open {
-    display: flex !important;
-    flex-direction: column !important;
-  }
-
-  .playlist-full-detail-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: calc(10px + env(safe-area-inset-top, 0px)) 18px 4px !important;
-  }
-
-  .playlist-full-detail-close,
-  .playlist-full-detail-list-top {
-    position: static !important;
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    color: rgba(34,24,20,0.78) !important;
-  }
-
-  .playlist-full-detail-close {
-    font-size: 34px !important;
-    text-align: left !important;
-  }
-
-  .playlist-full-detail-list-top {
-    font-size: 24px !important;
-    text-align: right !important;
-  }
-
-  .playlist-full-detail-cover-wrap {
-    flex: 0 0 auto !important;
-    margin: 36px auto 0 !important;
-    width: min(50vw, 260px) !important;
-    height: min(50vw, 260px) !important;
-    border-radius: 26px !important;
-    overflow: hidden !important;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.10) !important;
-    background: rgba(255,255,255,0.5) !important;
-  }
-
-  .playlist-full-detail-meta {
-    padding: 34px 24px 0 !important;
-    text-align: center !important;
-  }
-
-  .playlist-full-detail-meta strong {
-    font-size: clamp(24px, 7.8vw, 36px) !important;
-    font-weight: 700 !important;
-    line-height: 1.18 !important;
-    letter-spacing: -0.02em !important;
-  }
-
-  .playlist-full-detail-meta span {
-    margin-top: 10px !important;
-    font-size: 17px !important;
-  }
-
-  .playlist-full-detail-progress-row {
-    margin-top: auto !important;
-    padding: 28px 32px 8px !important;
-    font-size: 14px !important;
-  }
-
-  .playlist-full-detail-progress {
-    width: calc(100% - 28px) !important;
-    margin: 0 auto !important;
-  }
-
-  .playlist-full-detail-controls {
-    margin-top: 0 !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    padding: 26px 18px calc(34px + env(safe-area-inset-bottom, 0px)) !important;
-    align-items: center !important;
-  }
-
-  .playlist-full-detail-controls button {
-    font-size: 32px !important;
-    color: rgba(34,24,20,0.88) !important;
-    padding: 8px 0 !important;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-play {
-    width: 74px !important;
-    height: 74px !important;
-    font-size: 34px !important;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-prev,
-  .playlist-full-detail-controls .playlist-full-detail-next {
-    font-size: 30px !important;
-  }
-
-  .playlist-full-detail-controls .playlist-full-detail-list {
-    font-size: 28px !important;
-  }
-}
-
-@media (max-width: 390px) {
-  .playlist-full-detail-cover-wrap {
-    width: min(54vw, 220px) !important;
-    height: min(54vw, 220px) !important;
-    margin-top: 28px !important;
-  }
-
-  .playlist-full-detail-meta {
-    padding-top: 28px !important;
-  }
-
-  .playlist-full-detail-meta strong {
-    font-size: clamp(22px, 7.4vw, 30px) !important;
-  }
-
-  .playlist-full-detail-controls {
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-  }
-}
-
-
-/* multi category selection */
-.admin-form select[multiple] {
-  min-height: 118px;
-  padding: 8px;
-}
-.helper-inline {
-  display: inline-block;
-  margin-left: 6px;
-  font-size: 0.82rem;
-  color: #8a6a4a;
-  font-weight: 400;
-}
-.category-badge + .category-badge {
-  margin-left: 4px;
-}
-
-
-.bulk-song-cover-panel {
-  margin: 14px 0 18px;
-  padding: 14px;
-  border: 1px solid rgba(90, 66, 42, 0.18);
-  border-radius: 14px;
-  background: rgba(255, 250, 242, 0.82);
-}
-.bulk-song-cover-panel h3 {
-  margin: 0 0 8px;
-  font-size: 1rem;
-}
-.bulk-song-cover-panel select,
-.bulk-song-cover-panel input {
-  width: 100%;
-  margin-bottom: 8px;
-}
-.bulk-song-cover-panel button {
-  width: 100%;
-}
-
-/* v186: 모바일 하단 플레이리스트가 본문 카드와 겹쳐 보이지 않도록 하단 여백 확보 */
-@media (max-width: 768px) {
-  body.has-open-playlist-player main,
-  body.has-open-playlist-player .page.active {
-    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  body.has-open-playlist-player #contentDetailModal,
-  body.has-open-playlist-player .modal {
-    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  #userPlaylistPlayer.daily-player:not(.closed) {
-    pointer-events: none !important;
-  }
-
-  #userPlaylistPlayer.daily-player:not(.closed) .daily-player-card {
-    pointer-events: auto !important;
-  }
-}
-
-/* v187: 모바일 하단 플레이리스트 - 제목과 이전/재생/다음 버튼 겹침 방지 */
-@media (max-width: 768px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 52px minmax(0, 1fr) 136px 44px !important;
-    column-gap: 8px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title,
-  #userPlaylistPlayer .daily-player-sub {
-    max-width: 100% !important;
-    min-width: 0 !important;
-    padding-right: 4px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    justify-content: flex-end !important;
-    width: 136px !important;
-    min-width: 136px !important;
-    max-width: 136px !important;
-    gap: 8px !important;
-    transform: translateX(8px) !important;
-  }
-}
-
-@media (max-width: 390px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 46px minmax(0, 1fr) 124px 38px !important;
-    column-gap: 7px !important;
-    padding-left: 12px !important;
-    padding-right: 10px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    width: 124px !important;
-    min-width: 124px !important;
-    max-width: 124px !important;
-    gap: 6px !important;
-    transform: translateX(10px) !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    font-size: 17px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    width: 38px !important;
-    min-width: 38px !important;
-    max-width: 38px !important;
-    transform: translateX(4px) !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-  }
-}
-
-/* v181: 모바일 플레이리스트 긴 제목 자동 흐름(마키) 처리 */
-@media (max-width: 768px) {
-  #userPlaylistPlayer .daily-player-title {
-    position: relative !important;
-    display: block !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-text {
-    display: inline-block !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-    will-change: transform !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title.is-marquee {
-    text-overflow: clip !important;
-  }
-
-  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-text {
-    padding-right: 28px !important;
-    animation: playlistTitleMobileMarquee var(--playlist-title-marquee-duration, 9s) ease-in-out infinite !important;
-  }
-}
-
-@keyframes playlistTitleMobileMarquee {
-  0%, 14% {
-    transform: translateX(0);
-  }
-  68%, 82% {
-    transform: translateX(var(--playlist-title-marquee-distance, -80px));
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-
-/* v191: 모바일 하단 플레이리스트 긴 제목 마키 강제 보정 */
-@media (max-width: 768px) {
-  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title {
-    position: relative !important;
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-    line-height: 1.25 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text {
-    display: inline-block !important;
-    width: max-content !important;
-    min-width: max-content !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-    padding-right: 44px !important;
-    transform: translate3d(0,0,0);
-    will-change: transform !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.is-marquee {
-    text-overflow: clip !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-text {
-    animation-name: playlistTitleMobileMarqueeV191 !important;
-    animation-duration: var(--playlist-title-marquee-duration, 12s) !important;
-    animation-timing-function: linear !important;
-    animation-iteration-count: infinite !important;
-    animation-delay: 0.6s !important;
-  }
-}
-
-@keyframes playlistTitleMobileMarqueeV191 {
-  0% { transform: translate3d(0,0,0); }
-  10% { transform: translate3d(0,0,0); }
-  48% { transform: translate3d(var(--playlist-title-marquee-distance, -120px),0,0); }
-  62% { transform: translate3d(var(--playlist-title-marquee-distance, -120px),0,0); }
-  100% { transform: translate3d(0,0,0); }
-}
-
-/* v192: 모바일 하단 플레이리스트 제목/컨트롤 겹침 최종 수정
-   - 제목 칸과 이전/재생/다음 버튼 칸을 완전히 분리
-   - 긴 제목은 제목 칸 안에서만 흐르고 버튼 영역으로 넘어가지 않음
-   - 버튼 묶음은 오른쪽으로 고정 */
-@media (max-width: 920px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    display: grid !important;
-    grid-template-columns: 54px minmax(0, 1fr) 148px 48px !important;
-    grid-template-rows: 24px 20px 16px !important;
-    grid-template-areas:
-      "cover title controls actions"
-      "cover sub controls actions"
-      "progress progress progress progress" !important;
-    column-gap: 8px !important;
-    row-gap: 3px !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-height: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
-    padding: 10px 12px calc(11px + env(safe-area-inset-bottom, 0px)) !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-  }
-
-  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-  #userPlaylistPlayer .daily-player-cover {
-    grid-area: cover !important;
-    width: 54px !important;
-    height: 54px !important;
-    min-width: 54px !important;
-    max-width: 54px !important;
-    align-self: center !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
-  #userPlaylistPlayer .daily-player-title {
-    grid-area: title !important;
-    justify-self: stretch !important;
-    align-self: end !important;
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    clip-path: inset(0) !important;
-    white-space: nowrap !important;
-    text-overflow: clip !important;
-    color: #fff !important;
-    font-size: 15px !important;
-    font-weight: 900 !important;
-    line-height: 1.15 !important;
-    z-index: 3 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text,
-  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-text {
-    display: inline-block !important;
-    width: max-content !important;
-    min-width: max-content !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-    padding-right: 56px !important;
-    transform: translate3d(0,0,0);
-    will-change: transform !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-text,
-  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-text {
-    animation: playlistTitleMobileMarqueeV192 var(--playlist-title-marquee-duration, 13s) linear infinite !important;
-    animation-delay: .4s !important;
-  }
-
-  #userPlaylistPlayer .daily-player-sub,
-  #userPlaylistPlayer #playlistPlayerSub {
-    grid-area: sub !important;
-    justify-self: stretch !important;
-    align-self: start !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-    font-size: 11px !important;
-    line-height: 1.2 !important;
-    z-index: 3 !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    grid-area: controls !important;
-    justify-self: end !important;
-    align-self: center !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 7px !important;
-    width: 148px !important;
-    min-width: 148px !important;
-    max-width: 148px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: none !important;
-    z-index: 5 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn {
-    display: inline-flex !important;
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    font-size: 20px !important;
-    flex: 0 0 34px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    width: 50px !important;
-    height: 50px !important;
-    min-width: 50px !important;
-    flex: 0 0 50px !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    grid-area: actions !important;
-    justify-self: end !important;
-    align-self: center !important;
-    width: 48px !important;
-    min-width: 48px !important;
-    max-width: 48px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: none !important;
-    z-index: 5 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-  }
-}
-
-@media (max-width: 390px) {
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    grid-template-columns: 48px minmax(0, 1fr) 132px 42px !important;
-    column-gap: 7px !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-  #userPlaylistPlayer .daily-player-cover {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    max-width: 48px !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    width: 132px !important;
-    min-width: 132px !important;
-    max-width: 132px !important;
-    gap: 5px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    flex-basis: 30px !important;
-    font-size: 18px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    flex-basis: 48px !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    width: 42px !important;
-    min-width: 42px !important;
-    max-width: 42px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-  }
-}
-
-@keyframes playlistTitleMobileMarqueeV192 {
-  0% { transform: translate3d(0,0,0); }
-  12% { transform: translate3d(0,0,0); }
-  52% { transform: translate3d(var(--playlist-title-marquee-distance, -140px),0,0); }
-  66% { transform: translate3d(var(--playlist-title-marquee-distance, -140px),0,0); }
-  100% { transform: translate3d(0,0,0); }
-}
-
-/* v193: 모바일 플레이리스트 하단바 - 버튼 오른쪽 이동 + 6글자 이상 제목 연속 마키 */
-@media (max-width: 920px) {
-  #userPlaylistPlayer.daily-player:not(.closed) {
-    left: 0 !important;
-    right: 0 !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-  }
-
-  #userPlaylistPlayer .daily-player-card.playlist-player-card,
-  #userPlaylistPlayer .daily-player-card {
-    position: relative !important;
-    display: block !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-height: calc(104px + env(safe-area-inset-bottom, 0px)) !important;
-    height: calc(104px + env(safe-area-inset-bottom, 0px)) !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
-  }
-
-  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-  #userPlaylistPlayer .daily-player-cover {
-    position: absolute !important;
-    left: 14px !important;
-    top: 18px !important;
-    width: 54px !important;
-    height: 54px !important;
-    min-width: 54px !important;
-    max-width: 54px !important;
-    margin: 0 !important;
-    z-index: 3 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
-  #userPlaylistPlayer .daily-player-title {
-    position: absolute !important;
-    left: 80px !important;
-    top: 22px !important;
-    width: calc(100vw - 80px - 226px) !important;
-    min-width: 72px !important;
-    max-width: calc(100vw - 306px) !important;
-    height: 23px !important;
-    line-height: 23px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: clip !important;
-    color: #fff !important;
-    font-size: 15px !important;
-    font-weight: 900 !important;
-    z-index: 3 !important;
-    pointer-events: auto !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text,
-  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-text {
-    display: inline-flex !important;
-    align-items: center !important;
-    width: max-content !important;
-    min-width: max-content !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-    transform: translate3d(0,0,0) !important;
-    will-change: transform !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-item,
-  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-item {
-    display: inline-block !important;
-    white-space: nowrap !important;
-    flex: 0 0 auto !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-copy,
-  #userPlaylistPlayer .daily-player-title .playlist-title-marquee-copy {
-    display: none !important;
-    margin-left: var(--playlist-title-marquee-gap, 64px) !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-copy,
-  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-copy {
-    display: inline-block !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.is-marquee .playlist-title-marquee-text,
-  #userPlaylistPlayer .daily-player-title.is-marquee .playlist-title-marquee-text {
-    animation: playlistTitleMobileMarqueeV193 var(--playlist-title-marquee-duration, 10s) linear infinite !important;
-  }
-
-  #userPlaylistPlayer .daily-player-sub,
-  #userPlaylistPlayer #playlistPlayerSub {
-    position: absolute !important;
-    left: 80px !important;
-    top: 49px !important;
-    width: calc(100vw - 80px - 226px) !important;
-    min-width: 72px !important;
-    max-width: calc(100vw - 306px) !important;
-    height: 18px !important;
-    line-height: 18px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-    color: rgba(255,255,255,.9) !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    z-index: 3 !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    position: absolute !important;
-    right: 74px !important;
-    top: 18px !important;
-    width: 142px !important;
-    min-width: 142px !important;
-    max-width: 142px !important;
-    height: 56px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 7px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: none !important;
-    z-index: 8 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPrevBtn,
-  #userPlaylistPlayer #playlistPlayerNextBtn {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    flex: 0 0 34px !important;
-    font-size: 20px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerPlayBtn,
-  #userPlaylistPlayer .daily-play-btn {
-    width: 52px !important;
-    height: 52px !important;
-    min-width: 52px !important;
-    flex: 0 0 52px !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    position: absolute !important;
-    right: 14px !important;
-    top: 23px !important;
-    width: 46px !important;
-    min-width: 46px !important;
-    max-width: 46px !important;
-    height: 46px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: none !important;
-    z-index: 9 !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    border-radius: 999px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerProgress.daily-player-progress,
-  #userPlaylistPlayer .daily-player-progress {
-    position: absolute !important;
-    left: 14px !important;
-    right: 14px !important;
-    bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
-    width: calc(100vw - 28px) !important;
-    margin: 0 !important;
-    z-index: 4 !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-time,
-  #userPlaylistPlayer .daily-volume-row,
-  #userPlaylistPlayer .playlist-volume-row,
-  #userPlaylistPlayer .daily-player-label,
-  #userPlaylistPlayer .daily-player-close {
-    display: none !important;
-  }
-}
-
-@media (max-width: 390px) {
-  #userPlaylistPlayer .daily-player-cover.playlist-player-cover,
-  #userPlaylistPlayer .daily-player-cover {
-    left: 12px !important;
-    width: 50px !important;
-    height: 50px !important;
-    min-width: 50px !important;
-    max-width: 50px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerTitle.daily-player-title,
-  #userPlaylistPlayer .daily-player-title,
-  #userPlaylistPlayer .daily-player-sub,
-  #userPlaylistPlayer #playlistPlayerSub {
-    left: 72px !important;
-    width: calc(100vw - 72px - 214px) !important;
-    max-width: calc(100vw - 286px) !important;
-  }
-
-  #userPlaylistPlayer .daily-player-controls.playlist-player-controls,
-  #userPlaylistPlayer .daily-player-controls {
-    right: 64px !important;
-    width: 138px !important;
-    min-width: 138px !important;
-    max-width: 138px !important;
-    gap: 6px !important;
-  }
-
-  #userPlaylistPlayer .playlist-player-actions {
-    right: 10px !important;
-    width: 44px !important;
-    min-width: 44px !important;
-    max-width: 44px !important;
-  }
-
-  #userPlaylistPlayer #playlistPlayerListBtn {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-  }
-}
-
-@keyframes playlistTitleMobileMarqueeV193 {
-  0% { transform: translate3d(0,0,0); }
-  100% { transform: translate3d(var(--playlist-title-marquee-distance, -140px),0,0); }
-}
-
 
 /* 영상 화질 선택 및 큰 영상 재생 안정화 */
 .video-quality-admin-box {
@@ -7882,507 +4681,580 @@ body.playlist-detail-open {
   }
 }
 
+
 /* =========================================================
-   v210 1990s Warm House Archive Redesign
-   - PC통신 느낌 제거, '광석이네 집'의 집/음악 아카이브 정체성 강화
-   - 기존 기능은 유지하고 시각 디자인만 고급형으로 오버라이드
+   광석이네 집 1990s House Archive Renewal v210
+   - 집/거실/음악 아카이브 콘셉트
+   - 기존 기능 유지, 시각 디자인 전면 리뉴얼
    ========================================================= */
 :root {
-  --body-bg: #efe2cf;
-  --header-bg: #2a1710;
-  --button-bg: #7f4b2e;
-  --card-bg: #fff8ec;
-  --text-color: #261a14;
-  --nav-text-color: #fff4df;
-  --kks-ink: #251711;
-  --kks-brown: #6d3f25;
-  --kks-brown-2: #8e5632;
-  --kks-deep: #1d100b;
-  --kks-gold: #d8a85f;
-  --kks-paper: #fff7e8;
-  --kks-paper-2: #f4e2c8;
-  --kks-line: rgba(99, 57, 31, .22);
-  --kks-shadow: 0 24px 70px rgba(43, 24, 14, .22);
+  --kks-ink: #231815;
+  --kks-brown: #6f4329;
+  --kks-brown-2: #8a5637;
+  --kks-caramel: #b57a4c;
+  --kks-paper: #f7efe3;
+  --kks-wall: #efe2cf;
+  --kks-cream: #fffaf2;
+  --kks-line: rgba(94, 59, 36, .18);
+  --kks-shadow: 0 20px 55px rgba(70, 42, 24, .16);
+  --kks-soft-shadow: 0 10px 25px rgba(77, 48, 29, .11);
 }
 
-html { scroll-behavior: smooth; }
+html { background: #e9dac5; }
 body {
-  min-width: 0 !important;
-  background:
-    radial-gradient(circle at 14% 6%, rgba(255, 237, 190, .55), transparent 32%),
-    radial-gradient(circle at 82% 18%, rgba(116, 61, 31, .12), transparent 28%),
-    linear-gradient(90deg, rgba(105, 62, 32, .10) 0 1px, transparent 1px 96px),
-    linear-gradient(180deg, #f6ebd9 0%, #ead7bc 100%) !important;
   color: var(--kks-ink) !important;
-  letter-spacing: -0.035em;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(255,255,255,.55) 0 10%, transparent 25%),
+    radial-gradient(circle at 88% 6%, rgba(181,122,76,.14) 0 9%, transparent 28%),
+    linear-gradient(90deg, rgba(115,72,42,.10) 1px, transparent 1px),
+    linear-gradient(180deg, #f8f0e5 0%, #ead8c1 52%, #dfc5a8 100%) !important;
+  background-size: auto, auto, 58px 58px, auto !important;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif !important;
 }
 body::before {
-  content: "";
+  content:"";
   position: fixed;
   inset: 0;
   pointer-events: none;
+  opacity: .14;
   z-index: -1;
-  opacity: .26;
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(72, 41, 21, .16) 0 1px, transparent 1.4px),
-    radial-gradient(circle at 70% 65%, rgba(255, 255, 255, .45) 0 1px, transparent 1.5px);
-  background-size: 22px 22px, 37px 37px;
-  mix-blend-mode: multiply;
+    linear-gradient(45deg, rgba(92,53,31,.14) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(92,53,31,.10) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(92,53,31,.10) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(92,53,31,.10) 75%);
+  background-size: 34px 34px;
+  background-position: 0 0, 0 17px, 17px -17px, -17px 0;
 }
 
 .site-header {
-  min-width: 0 !important;
-  min-height: 78px !important;
-  height: auto !important;
-  padding: 14px clamp(18px, 4vw, 52px) !important;
-  background:
-    linear-gradient(180deg, rgba(34, 18, 11, .98), rgba(55, 29, 17, .96)),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 20px) !important;
-  border-bottom: 1px solid rgba(216, 168, 95, .34);
-  box-shadow: 0 14px 34px rgba(31, 18, 12, .28);
-  backdrop-filter: blur(10px);
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  min-height: 76px !important;
+  padding: 12px clamp(14px, 3vw, 34px) !important;
+  background: rgba(58, 34, 22, .88) !important;
+  backdrop-filter: blur(16px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.1) !important;
+  border-bottom: 1px solid rgba(255, 239, 218, .22) !important;
+  box-shadow: 0 10px 35px rgba(35, 24, 21, .18) !important;
+}
+.site-header::before {
+  content:"";
+  position:absolute;
+  left:0; right:0; top:0; height:5px;
+  background: linear-gradient(90deg, #3a2115, #b57a4c, #efe0c8, #7a482d);
+  opacity:.78;
 }
 .logo {
-  min-width: 178px !important;
   position: relative;
-  padding: 8px 14px 8px 46px;
-  border: 1px solid rgba(216, 168, 95, .32);
-  border-radius: 999px;
-  background: rgba(255, 242, 216, .07);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  padding-left: 48px !important;
+  color: #fff8ec !important;
+  cursor: pointer;
 }
 .logo::before {
-  content: "⌂";
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-52%);
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #26160d;
-  background: linear-gradient(135deg, #ffe4a7, #c9883d);
-  font-size: 14px;
-  font-weight: 900;
+  content:"⌂";
+  position:absolute;
+  left:0; top:50%; transform:translateY(-50%);
+  width:36px; height:36px;
+  display:grid; place-items:center;
+  border-radius:12px 12px 14px 14px;
+  background: linear-gradient(145deg, #fff6e8, #d6b48e);
+  color:#5c351f;
+  font-weight:900;
+  box-shadow: inset 0 -3px 0 rgba(91,55,31,.16), 0 7px 18px rgba(0,0,0,.18);
 }
-.logo strong { font-size: 21px; line-height: 1.05; color: #fff7e6; }
-.logo small { color: rgba(255,244,223,.72) !important; font-size: 11px !important; letter-spacing: .02em; }
-nav { gap: 6px !important; }
-nav button {
-  border: 1px solid transparent !important;
+.logo strong, #siteLogoText {
+  display:block;
+  font-size: clamp(21px, 2.4vw, 29px) !important;
+  letter-spacing: -0.06em;
+  line-height:1.05;
+  color:#fff8ec !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,.22);
+}
+.logo small, #siteLogoSubText {
+  display:block;
+  margin-top:3px;
+  color: rgba(255,244,226,.72) !important;
+  font-size: 12px !important;
+  letter-spacing: .06em;
+}
+#siteNav {
+  gap: 6px !important;
+}
+#siteNav button,
+.auth-area button,
+.mobile-menu-toggle {
+  border: 1px solid rgba(255, 239, 218, .22) !important;
+  background: rgba(255, 248, 237, .10) !important;
+  color: #fff4e1 !important;
   border-radius: 999px !important;
-  padding: 10px 13px !important;
-  color: rgba(255, 246, 225, .88) !important;
-  background: transparent !important;
-  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+  padding: 9px 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em;
+  box-shadow: none !important;
 }
-nav button:hover {
-  background: rgba(255, 232, 184, .12) !important;
-  border-color: rgba(216, 168, 95, .28) !important;
-  color: #ffffff !important;
+#siteNav button:hover,
+.auth-area button:hover,
+.mobile-menu-toggle:hover {
+  background: rgba(255, 248, 237, .22) !important;
   transform: translateY(-1px);
 }
-.auth-area button, .mobile-menu-toggle {
-  border-radius: 999px !important;
-  background: linear-gradient(135deg, #8f542f, #6f371e) !important;
-  box-shadow: 0 8px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.16) !important;
-}
-#userStatus { color: rgba(255,246,225,.72); }
+.auth-area #userStatus { color: rgba(255,244,226,.78) !important; }
 
 main {
-  min-width: 0 !important;
-  max-width: 1320px !important;
-  padding: clamp(22px, 4vw, 54px) clamp(16px, 3vw, 36px) 120px !important;
+  width: min(1180px, calc(100% - 28px)) !important;
+  margin: 26px auto 130px !important;
 }
+.page {
+  animation: kksFadeUp .28s ease both;
+}
+@keyframes kksFadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity:1; transform:none; } }
 
-.kks-home-hero,
-.hero.kks-home-hero {
-  min-height: clamp(520px, 58vw, 680px) !important;
-  max-width: 1240px !important;
-  margin: 0 auto 34px !important;
-  padding: clamp(34px, 6vw, 72px) !important;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(280px, .52fr);
-  align-items: end;
-  gap: clamp(24px, 5vw, 58px);
-  overflow: hidden;
-  border-radius: 34px !important;
-  color: #fff8e7 !important;
-  background-image:
-    linear-gradient(90deg, rgba(27, 14, 8, .84) 0%, rgba(53, 27, 15, .64) 42%, rgba(96, 52, 28, .22) 100%),
-    radial-gradient(circle at 80% 15%, rgba(255, 214, 134, .30), transparent 28%),
-    url('images/main-bg.png') !important;
-  background-position: center center !important;
-  background-size: cover !important;
-  box-shadow: var(--kks-shadow), inset 0 0 0 1px rgba(255, 231, 184, .20) !important;
+.house-hero {
+  position: relative !important;
+  isolation: isolate;
+  min-height: clamp(520px, 66vh, 720px) !important;
+  border-radius: 42px !important;
+  overflow: hidden !important;
+  padding: clamp(32px, 6vw, 78px) !important;
+  background: #4a2b1b !important;
+  box-shadow: var(--kks-shadow), inset 0 0 0 1px rgba(255, 242, 222, .25) !important;
 }
-.hero.kks-home-hero::before {
-  background:
-    linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(22, 11, 7, .78) 100%),
-    repeating-linear-gradient(90deg, rgba(255, 247, 226, .05) 0 1px, transparent 1px 5px) !important;
-  opacity: .70;
-}
-.hero.kks-home-hero::after {
-  content: "";
-  position: absolute;
+.house-hero::before {
+  content:"";
+  position:absolute;
   inset: 18px;
-  border: 1px solid rgba(255, 229, 178, .28);
-  border-radius: 24px;
-  pointer-events: none;
-  z-index: 1;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 238, 210, .34);
+  pointer-events:none;
+  z-index: 2;
 }
-.kks-hero-copy, .kks-hero-room-card, .kks-hero-plaque { position: relative; z-index: 2; }
-.kks-hero-plaque {
-  position: absolute;
-  top: 26px;
-  left: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 16px;
+.house-hero::after {
+  content:"";
+  position:absolute;
+  left: 7%; right: 7%; bottom: 0;
+  height: 18px;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(90deg, rgba(45,25,14,.7), rgba(161,105,65,.75), rgba(45,25,14,.7));
+  box-shadow: 0 -10px 30px rgba(0,0,0,.18);
+  z-index: 3;
+}
+.house-hero-bg {
+  position:absolute;
+  inset:0;
+  z-index: -2;
+  background-image:
+    linear-gradient(90deg, rgba(31,19,12,.82) 0%, rgba(47,28,16,.66) 38%, rgba(47,28,16,.25) 72%, rgba(255,246,230,.08) 100%),
+    url("images/main-bg.png");
+  background-size: cover;
+  background-position: center center;
+  filter: saturate(.88) contrast(1.02) sepia(.08);
+  transform: scale(1.01);
+}
+.house-hero-bg::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 70%, rgba(255,221,159,.18), transparent 36%),
+    radial-gradient(circle at 78% 30%, rgba(255,255,255,.17), transparent 31%),
+    linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.28));
+}
+.house-hero-inner {
+  position: relative;
+  z-index: 4;
+  width: min(590px, 100%);
+  color: #fff7e9;
+}
+.house-kicker {
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  margin: 0 0 18px !important;
+  padding: 8px 13px;
   border-radius: 999px;
-  color: rgba(255, 243, 218, .86);
-  background: rgba(28, 13, 7, .48);
-  border: 1px solid rgba(255, 226, 170, .22);
+  background: rgba(255, 247, 232, .14);
+  color: #ffe9c7 !important;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  border: 1px solid rgba(255, 231, 199, .32);
+}
+.house-kicker::before { content:"●"; font-size: 10px; color:#f2bd73; }
+.house-hero h1,
+#homeTitle {
+  margin: 0 !important;
+  color: #fff8ec !important;
+  font-size: clamp(58px, 9vw, 112px) !important;
+  line-height: .94 !important;
+  letter-spacing: -0.09em !important;
+  text-shadow: 0 5px 25px rgba(0,0,0,.38) !important;
+}
+.house-hero p,
+#homeDescription {
+  margin: 22px 0 0 !important;
+  color: rgba(255, 247, 233, .90) !important;
+  font-size: clamp(18px, 2.3vw, 25px) !important;
+  line-height: 1.62 !important;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+.house-hero-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap: 10px;
+  margin-top: 34px;
+}
+.house-hero-actions button,
+.primary-door-btn,
+.secondary-door-btn {
+  min-height: 48px;
+  border-radius: 999px !important;
+  padding: 13px 20px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em;
+  cursor:pointer;
+}
+.primary-door-btn {
+  background: linear-gradient(135deg, #fff2d6, #d39b60) !important;
+  color:#4b2a18 !important;
+  border: 0 !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.22), inset 0 -2px 0 rgba(90,50,24,.18) !important;
+}
+.secondary-door-btn {
+  background: rgba(31, 20, 13, .34) !important;
+  color:#fff8ec !important;
+  border:1px solid rgba(255,235,205,.36) !important;
+}
+.house-name-plate {
+  position:absolute;
+  right: clamp(28px, 5vw, 64px);
+  bottom: clamp(32px, 5vw, 60px);
+  z-index:4;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+  width: 178px;
+  padding: 18px 16px;
+  border-radius: 20px;
+  background: rgba(255, 246, 228, .86);
+  color:#5b3722;
+  border: 1px solid rgba(255,255,255,.58);
+  box-shadow: 0 18px 40px rgba(0,0,0,.20);
+  transform: rotate(-1.5deg);
+}
+.house-name-plate span { font-weight:900; letter-spacing:-.04em; }
+.house-name-plate strong { font-size: 38px; line-height:1; letter-spacing:.02em; color:#7f4b2e; }
+
+.house-room-section,
+.house-latest-section,
+.content-page,
+.auth-page,
+#admin.page {
+  border-radius: 34px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, .92), rgba(247,239,227,.88)),
+    linear-gradient(90deg, rgba(138,86,55,.08) 1px, transparent 1px) !important;
+  background-size: auto, 42px 42px !important;
+  border: 1px solid rgba(119, 73, 42, .16) !important;
+  box-shadow: var(--kks-soft-shadow) !important;
+}
+.house-room-section,
+.house-latest-section {
+  margin-top: 28px;
+  padding: clamp(22px, 4vw, 38px);
+}
+.house-section-head { margin-bottom: 22px; }
+.house-section-head.compact { margin-bottom: 18px; }
+.section-pin {
+  display:inline-block;
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #6f4329;
+  color: #fff4e1;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: .08em;
-  text-transform: uppercase;
 }
-.kks-hero-plaque::before {
-  content: "●";
-  color: #e4b66d;
-  text-shadow: 0 0 14px rgba(228, 182, 109, .75);
+.house-section-head h2,
+.content-section h2,
+.page-title h1 {
+  margin: 0 !important;
+  color: #2d2019 !important;
+  font-size: clamp(28px, 4vw, 44px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.075em !important;
 }
-.kks-hero-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  color: #2b180d;
-  background: linear-gradient(135deg, #ffe5ae, #d39a51);
-  font-size: 14px;
-  font-weight: 1000;
-  box-shadow: 0 10px 24px rgba(0,0,0,.20);
+.house-section-head p,
+.page-title p,
+.helper-text {
+  color: #6d5b4d !important;
+  line-height: 1.7;
+  letter-spacing: -0.035em;
 }
-.kks-hero-kicker::before { content: "⌂"; }
-.hero.kks-home-hero h1,
-.hero.kks-home-hero #homeTitle {
-  max-width: 720px;
-  margin: 0 0 18px !important;
-  color: #fff6df !important;
-  font-size: clamp(43px, 7vw, 82px) !important;
-  line-height: .98 !important;
-  letter-spacing: -0.075em;
-  text-shadow: 0 6px 30px rgba(0,0,0,.42) !important;
-}
-.hero.kks-home-hero p,
-.hero.kks-home-hero #homeDescription {
-  max-width: 640px;
-  margin: 0 0 28px !important;
-  color: rgba(255, 246, 225, .88) !important;
-  font-size: clamp(17px, 2.1vw, 22px) !important;
-  line-height: 1.68;
-  text-shadow: 0 2px 14px rgba(0,0,0,.45) !important;
-}
-.kks-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.kks-hero-actions button,
-.hero.kks-home-hero button {
-  min-height: 48px;
-  padding: 13px 20px !important;
-  border: 1px solid rgba(255, 230, 176, .36) !important;
-  border-radius: 999px !important;
-  color: #fff9ea !important;
-  background: linear-gradient(135deg, rgba(174, 103, 54, .98), rgba(113, 55, 27, .98)) !important;
-  box-shadow: 0 12px 24px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.18) !important;
-}
-.kks-hero-actions button:hover { transform: translateY(-2px); }
-.kks-hero-room-card {
-  align-self: stretch;
-  min-height: 360px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 24px;
-  border-radius: 28px;
-  background:
-    linear-gradient(180deg, rgba(255, 246, 226, .16), rgba(62, 30, 15, .44)),
-    rgba(30, 15, 8, .32);
-  border: 1px solid rgba(255, 232, 184, .28);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 20px 44px rgba(0,0,0,.22);
-  backdrop-filter: blur(4px);
-}
-.kks-room-window {
-  position: absolute;
-  top: 24px;
-  left: 24px;
-  right: 24px;
-  height: 150px;
-  border-radius: 22px 22px 12px 12px;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.14) 0 2px, transparent 2px 50%),
-    linear-gradient(180deg, rgba(255,230,168,.60), rgba(111,63,31,.18));
-  border: 1px solid rgba(255, 232, 184, .35);
-  box-shadow: inset 0 0 34px rgba(255, 237, 198, .22);
-}
-.kks-room-line {
-  position: relative;
-  z-index: 1;
-  margin-bottom: 20px;
-  color: rgba(255,246,226,.92);
-  font-size: 17px;
-  font-weight: 900;
-}
-.kks-room-record {
-  position: relative;
-  z-index: 1;
-  width: 132px;
-  height: 132px;
-  margin-left: auto;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, #e2b363 0 14px, #3a2115 15px 17px, transparent 18px),
-    repeating-radial-gradient(circle, #27150f 0 5px, #422416 6px 7px, #25130d 8px 12px);
-  box-shadow: 0 16px 28px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.08);
-}
-
-.kks-house-menu {
-  max-width: 1240px;
-  margin: 0 auto 34px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.house-room-grid {
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
-.kks-house-card {
-  position: relative;
-  min-height: 156px;
-  overflow: hidden;
-  text-align: left;
-  padding: 24px 22px !important;
-  border-radius: 26px !important;
-  border: 1px solid rgba(112, 65, 35, .24) !important;
-  color: var(--kks-ink) !important;
-  background:
-    linear-gradient(135deg, rgba(255,250,239,.96), rgba(239, 213, 176, .88)) !important;
-  box-shadow: 0 18px 38px rgba(64, 34, 18, .14), inset 0 1px 0 rgba(255,255,255,.65) !important;
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.kks-house-card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 7px;
-  background: linear-gradient(90deg, #703e21, #e0ad62, #7b4627);
-}
-.kks-house-card::after {
-  content: "";
-  position: absolute;
-  right: -36px;
-  bottom: -46px;
-  width: 128px;
-  height: 128px;
-  border-radius: 50%;
-  background: repeating-radial-gradient(circle, rgba(83,45,24,.10) 0 5px, transparent 6px 12px);
-}
-.kks-house-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 28px 54px rgba(64, 34, 18, .20), inset 0 1px 0 rgba(255,255,255,.70) !important;
-}
-.kks-house-icon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin-bottom: 18px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #7f4725, #2a1710);
-  color: #ffe8b7;
-  font-size: 21px;
-  box-shadow: 0 10px 18px rgba(46, 23, 12, .22);
-}
-.kks-house-card strong {
-  display: block;
-  font-size: 25px;
-  margin-bottom: 8px;
-  letter-spacing: -0.055em;
-}
-.kks-house-card em {
-  display: block;
-  font-style: normal;
-  color: rgba(38, 26, 20, .68);
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.content-section,
-.page-title,
-.auth-page,
-.admin-form,
-.list-box,
-.site-guide-card,
-.latest-category-box,
-.latest-category-card {
-  border-color: rgba(111, 63, 31, .20) !important;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 244, .96), rgba(255, 245, 228, .92)) !important;
-  box-shadow: 0 16px 34px rgba(66, 36, 18, .10), inset 0 1px 0 rgba(255,255,255,.72) !important;
-}
-.page-title {
-  position: relative;
-  overflow: hidden;
+.house-room-card {
+  position:relative;
+  min-height: 210px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-end;
+  gap: 6px;
+  padding: 24px !important;
+  overflow:hidden;
+  text-align:left;
   border-radius: 28px !important;
-  padding: 34px 38px !important;
+  border: 1px solid rgba(91,55,31,.18) !important;
+  background:
+    linear-gradient(145deg, rgba(255,250,242,.90), rgba(222,197,166,.92)) !important;
+  color:#2d2019 !important;
+  box-shadow: 0 13px 30px rgba(89, 56, 36, .12) !important;
+  cursor:pointer;
+}
+.house-room-card::before {
+  content:"";
+  position:absolute;
+  inset: 12px 12px auto auto;
+  width: 74px;
+  height: 96px;
+  border-radius: 36px 36px 8px 8px;
+  background:
+    linear-gradient(90deg, transparent 48%, rgba(255,255,255,.24) 49% 51%, transparent 52%),
+    linear-gradient(180deg, rgba(72,42,25,.42), rgba(111,67,41,.18));
+  border: 1px solid rgba(93,58,34,.16);
+  opacity: .55;
+}
+.house-room-card::after {
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height: 8px;
+  background: linear-gradient(90deg, rgba(111,67,41,.15), rgba(181,122,76,.45), rgba(111,67,41,.15));
+}
+.house-room-card:hover { transform: translateY(-5px); box-shadow: 0 24px 48px rgba(82, 51, 31, .18) !important; }
+.house-room-card .room-icon {
+  position:absolute;
+  left: 22px;
+  top: 22px;
+  width: 50px;
+  height: 50px;
+  display:grid;
+  place-items:center;
+  border-radius: 18px;
+  background: rgba(90, 53, 31, .10);
+  color: #78482b;
+  font-size: 25px;
+  font-weight: 900;
+}
+.house-room-card strong {
+  position:relative;
+  z-index:1;
+  font-size: 30px;
+  line-height:1.05;
+  letter-spacing: -0.075em;
+}
+.house-room-card small {
+  position:relative;
+  z-index:1;
+  color: #8a5637;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+.house-room-card em {
+  position:relative;
+  z-index:1;
+  color: #6d5b4d;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+.room-songs { background: linear-gradient(145deg, #fff4df, #e1c095) !important; }
+.room-videos { background: linear-gradient(145deg, #f7eee1, #d9b48b) !important; }
+.room-photos { background: linear-gradient(145deg, #fff7e9, #e6d1b5) !important; }
+.room-radios { background: linear-gradient(145deg, #f4e5d2, #caa07a) !important; }
+.room-stories { background: linear-gradient(145deg, #fffaf2, #eadbc5) !important; }
+.room-about { background: linear-gradient(145deg, #efe0c9, #b8835f) !important; }
+
+.page-title {
+  position:relative;
+  margin-bottom: 22px !important;
+  padding: 28px 30px !important;
+  border-radius: 28px !important;
+  background:
+    linear-gradient(135deg, rgba(255,252,246,.92), rgba(231,212,188,.78)) !important;
+  border: 1px solid rgba(117,73,43,.16) !important;
+  box-shadow: var(--kks-soft-shadow) !important;
 }
 .page-title::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 9px;
-  background: linear-gradient(180deg, #6f3d20, #e2b266, #7d4928);
+  content:"";
+  position:absolute;
+  left: 24px;
+  top: 0;
+  width: 72px;
+  height: 6px;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(90deg, #6f4329, #b57a4c);
 }
-.page-title h1 {
-  color: var(--kks-ink) !important;
-  font-size: clamp(32px, 3.8vw, 48px) !important;
-  line-height: 1.05;
-  letter-spacing: -0.065em;
-}
-.page-title p { color: rgba(38,26,20,.70); line-height: 1.75; }
-.kks-latest-section {
-  max-width: 1240px !important;
-  border-radius: 30px !important;
-  padding: 32px !important;
-}
-.kks-section-head { margin-bottom: 22px; }
-.kks-section-head span {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: #8b572f;
-  font-size: 12px;
-  font-weight: 1000;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-.kks-section-head h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.06em; }
-
 .toolbar {
-  padding: 14px;
-  border: 1px solid rgba(111,63,31,.16);
-  border-radius: 22px;
-  background: rgba(255, 248, 236, .72);
-  box-shadow: 0 12px 26px rgba(66,36,18,.08);
+  border-radius: 22px !important;
+  background: rgba(255,250,242,.76) !important;
+  border: 1px solid rgba(103,64,39,.13) !important;
+  padding: 12px !important;
+  box-shadow: 0 8px 18px rgba(77,48,29,.06) !important;
 }
-.toolbar input,
-.toolbar select,
-input, textarea, select {
+input, select, textarea {
   border-radius: 16px !important;
-  border-color: rgba(111,63,31,.22) !important;
-  background: rgba(255, 253, 248, .92) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.72) !important;
+  border: 1px solid rgba(98,62,39,.22) !important;
+  background: rgba(255,255,255,.78) !important;
+  color: var(--kks-ink) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.62) !important;
 }
-button:not(.kks-house-card):not(nav button) {
-  border-radius: 16px !important;
-  background: linear-gradient(135deg, #8f5531, #6c381f) !important;
-  box-shadow: 0 10px 20px rgba(58,30,15,.16), inset 0 1px 0 rgba(255,255,255,.15) !important;
+input:focus, select:focus, textarea:focus {
+  outline: 3px solid rgba(181,122,76,.22) !important;
+  border-color: rgba(139,83,48,.45) !important;
+}
+button {
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+}
+.content-page button:not(.playlist-nav-btn):not(.daily-play-btn),
+.auth-page button,
+.admin-tabs button,
+.admin-form button,
+.pagination button {
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #8a5637, #6f4329) !important;
+  color: #fff4e1 !important;
+  border: 0 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 18px rgba(111, 67, 41, .20) !important;
+}
+.content-page button:hover,
+.auth-page button:hover,
+.admin-tabs button:hover,
+.admin-form button:hover,
+.pagination button:hover {
+  transform: translateY(-2px);
+}
+.card-grid, .latest-category-grid {
+  gap: 18px !important;
 }
 .card,
-#radioList .list-item,
-#songList .list-item,
-#radioList .content-card,
-#songList .content-card,
-.admin-row {
-  border-radius: 24px !important;
-  border: 1px solid rgba(111, 63, 31, .18) !important;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 244, .98), rgba(255, 242, 220, .92)) !important;
-  box-shadow: 0 16px 34px rgba(66, 36, 18, .12), inset 0 1px 0 rgba(255,255,255,.70) !important;
+.content-card,
+.latest-category-card,
+.list-item,
+.song-card,
+.radio-card,
+.site-guide-card,
+.about-document,
+.admin-form,
+.admin-list > * {
+  border-radius: 28px !important;
+  background: rgba(255, 252, 246, .90) !important;
+  border: 1px solid rgba(106, 67, 41, .14) !important;
+  box-shadow: 0 12px 28px rgba(78, 48, 29, .09) !important;
   overflow: hidden;
 }
 .card:hover,
-#radioList .list-item:hover,
-#songList .list-item:hover,
-.admin-row:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: 0 24px 50px rgba(66,36,18,.18), inset 0 1px 0 rgba(255,255,255,.72) !important;
+.latest-category-card:hover,
+.list-item:hover,
+.song-card:hover,
+.radio-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 42px rgba(77, 48, 29, .14) !important;
 }
-.card img, .card iframe, .card video {
-  height: 215px !important;
-  filter: saturate(1.04) contrast(1.02);
+.card img,
+.content-card img,
+.latest-category-card img,
+.song-card img,
+.radio-card img {
+  filter: sepia(.07) saturate(.94) contrast(1.03);
 }
-.card-body h3,
-#radioList h3,
-#songList h3 { font-weight: 1000; letter-spacing: -0.055em; }
-.category-badge {
-  border: 1px solid rgba(143, 85, 49, .16);
-  background: linear-gradient(135deg, #f4dfbd, #e8c98e) !important;
-  color: #6f3e22 !important;
+.list-box {
+  gap: 18px !important;
 }
-.pagination button { border-radius: 999px !important; }
 
-.admin-tabs {
-  padding: 18px;
-  border-radius: 28px;
-  background: rgba(255, 248, 236, .68);
-  border: 1px solid rgba(111,63,31,.16);
-  box-shadow: 0 16px 34px rgba(66,36,18,.10);
+.daily-player-card,
+.playlist-player-card {
+  border: 1px solid rgba(255, 239, 218, .24) !important;
+  background:
+    linear-gradient(135deg, rgba(71, 42, 27, .92), rgba(38, 25, 19, .88)) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 18px 45px rgba(31, 20, 13, .25) !important;
 }
-.admin-tabs button {
-  min-height: 58px;
-  padding: 13px 18px !important;
-  border-radius: 20px !important;
-  background: linear-gradient(135deg, #865031, #60321e) !important;
+.daily-player-label,
+.playlist-player-label { color: #ffe7c4 !important; }
+.daily-player-title,
+.playlist-player-title { color: #fff7ea !important; }
+.daily-player-sub,
+.playlist-player-sub { color: rgba(255, 245, 232, .72) !important; }
+.daily-play-btn,
+.playlist-nav-btn {
+  background: #fff5e5 !important;
+  color: #70452c !important;
+  border: 1px solid rgba(255,255,255,.55) !important;
 }
+.daily-player-progress,
+#playlistPlayerProgress { accent-color: #f0c58a !important; }
 
 footer {
-  background:
-    linear-gradient(180deg, #2a1710, #150c08) !important;
-  border-top: 1px solid rgba(216, 168, 95, .30);
+  color: rgba(56, 34, 22, .78) !important;
+  background: rgba(244, 232, 213, .72) !important;
+  border-top: 1px solid rgba(90, 55, 31, .13) !important;
 }
 
-/* 모바일: 집 느낌은 유지하되 겹침과 과도한 폭을 방지 */
 @media (max-width: 900px) {
-  body { min-width: 0 !important; }
-  .site-header {
-    min-width: 0 !important;
-    padding: 12px 14px !important;
+  main { width: min(100% - 18px, 720px) !important; margin-top: 16px !important; }
+  .site-header { min-height: 64px !important; padding: 10px 12px !important; }
+  .logo { padding-left: 42px !important; }
+  .logo::before { width:32px; height:32px; border-radius: 11px; }
+  #siteNav {
+    background: rgba(63, 38, 25, .96) !important;
+    border: 1px solid rgba(255,239,218,.18) !important;
+    border-radius: 22px !important;
+    padding: 12px !important;
+    box-shadow: 0 16px 35px rgba(0,0,0,.22) !important;
   }
-  main {
-    min-width: 0 !important;
-    padding: 18px 12px 120px !important;
-  }
-  .logo { min-width: 0 !important; max-width: calc(100vw - 120px); }
-  nav { flex-wrap: wrap !important; }
-  .hero.kks-home-hero,
-  .kks-home-hero {
-    grid-template-columns: 1fr !important;
-    min-height: 620px !important;
-    padding: 86px 22px 26px !important;
-    border-radius: 28px !important;
-    background-position: 58% center !important;
-  }
-  .hero.kks-home-hero h1,
-  .hero.kks-home-hero #homeTitle {
-    font-size: clamp(38px, 12vw, 58px) !important;
-  }
-  .kks-hero-plaque { left: 20px; top: 22px; max-width: calc(100% - 40px); }
-  .kks-hero-room-card { min-height: 190px; padding: 18px; }
-  .kks-room-window { display: none; }
-  .kks-room-record { width: 96px; height: 96px; }
-  .kks-house-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .kks-house-card { min-height: 134px; padding: 20px 16px !important; }
-  .kks-house-card strong { font-size: 22px; }
-  .toolbar { display: grid !important; grid-template-columns: 1fr; gap: 10px; }
-  .page-title { padding: 28px 24px !important; }
+  #siteNav button { width: 100% !important; text-align: left !important; }
+  .house-hero { min-height: 570px !important; border-radius: 30px !important; padding: 28px !important; }
+  .house-hero-bg { background-position: 58% center; }
+  .house-hero::before { inset: 12px; border-radius: 22px; }
+  .house-name-plate { right: 22px; bottom: 28px; width: 136px; padding: 14px 12px; }
+  .house-name-plate strong { font-size: 30px; }
+  .house-room-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .house-room-card { min-height: 168px; padding: 20px !important; border-radius: 22px !important; }
+  .house-room-card strong { font-size: 24px; }
 }
 
-@media (max-width: 460px) {
-  .kks-house-menu { grid-template-columns: 1fr; }
-  .kks-hero-actions { display: grid; grid-template-columns: 1fr; }
-  .hero.kks-home-hero { min-height: 650px !important; }
-  .kks-latest-section { padding: 22px 16px !important; }
+@media (max-width: 520px) {
+  body { background-size: auto, auto, 44px 44px, auto !important; }
+  .house-hero {
+    min-height: 580px !important;
+    padding: 24px 20px 128px !important;
+    border-radius: 26px !important;
+  }
+  .house-hero-bg {
+    background-image:
+      linear-gradient(180deg, rgba(38, 23, 14, .76) 0%, rgba(48, 29, 17, .72) 38%, rgba(48, 29, 17, .35) 100%),
+      url("images/main-bg.png");
+    background-position: 58% center;
+  }
+  .house-hero h1, #homeTitle { font-size: 58px !important; }
+  .house-hero p, #homeDescription { font-size: 17px !important; line-height: 1.58 !important; }
+  .house-hero-actions { gap: 8px; }
+  .house-hero-actions button { width: 100%; justify-content:center; }
+  .house-name-plate { left: 20px; right: auto; bottom: 24px; transform: rotate(-1deg); }
+  .house-room-section, .house-latest-section, .content-page, .auth-page, #admin.page { border-radius: 24px !important; }
+  .house-room-section, .house-latest-section { padding: 20px 14px; }
+  .house-room-grid { grid-template-columns: 1fr; }
+  .house-room-card { min-height: 142px; }
+  .page-title { padding: 24px 20px !important; border-radius: 22px !important; }
+  .page-title h1, .house-section-head h2 { font-size: 31px !important; }
+  .toolbar { display: grid !important; grid-template-columns: 1fr; }
 }

@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=home-archive-redesign-v210" />
+  <link rel="stylesheet" href="style.css?v=home-archive-renewal-v210" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -203,15 +203,15 @@
     <button type="button" id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="모바일 메뉴 열기" aria-expanded="false">☰ 메뉴</button>
 
     <nav id="siteNav">
-      <button data-page-fallback="home" onclick="goPage('home')">광석이네집</button>
-      <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 안내</button>
-      <button data-page-fallback="videos" onclick="goPage('videos')">Videos</button>
-      <button data-page-fallback="songs" onclick="goPage('songs')">Songs</button>
-      <button data-page-fallback="radios" onclick="goPage('radios')">Radios</button>
-      <button data-page-fallback="photos" onclick="goPage('photos')">Photos</button>
-      <button data-page-fallback="stories" onclick="goPage('stories')">Stories</button>
-      <button data-page-fallback="about" onclick="goPage('about')">About Seok</button>
-      <button data-page-fallback="oneum" onclick="goPage('oneum')">Oneum</button>
+      <button data-page-fallback="home" onclick="goPage('home')">집으로</button>
+      <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">집 안내</button>
+      <button data-page-fallback="videos" onclick="goPage('videos')">영상방</button>
+      <button data-page-fallback="songs" onclick="goPage('songs')">노래방</button>
+      <button data-page-fallback="radios" onclick="goPage('radios')">라디오방</button>
+      <button data-page-fallback="photos" onclick="goPage('photos')">사진방</button>
+      <button data-page-fallback="stories" onclick="goPage('stories')">글방</button>
+      <button data-page-fallback="about" onclick="goPage('about')">광석 이야기</button>
+      <button data-page-fallback="oneum" onclick="goPage('oneum')">둥근소리</button>
     </nav>
 
     <div class="auth-area">
@@ -224,55 +224,62 @@
   </header>
 
   <main>
-    <section id="home" class="page active">
+    <section id="home" class="page active home-house-page">
       <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
-      <section class="hero kks-home-hero" id="homeHero">
-        <div class="kks-hero-plaque">Kim Kwang-seok Digital Archive</div>
-        <div class="kks-hero-copy">
-          <span class="kks-hero-kicker">광석이네 집</span>
-          <h1 id="homeTitle">문을 열면,<br />김광석의 노래가 머무는 집</h1>
-          <p id="homeDescription">오래된 방 안의 온기처럼, 노래·영상·사진·라디오·글을 한곳에 모아둔 김광석 디지털 아카이브입니다.</p>
-          <div class="kks-hero-actions">
-            <button data-page-fallback="songs" onclick="goPage('songs')">노래 듣기</button>
-            <button data-page-fallback="videos" onclick="goPage('videos')">영상 보기</button>
-            <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">집 둘러보기</button>
+
+      <section class="hero house-hero" id="homeHero">
+        <div class="house-hero-bg" aria-hidden="true"></div>
+        <div class="house-hero-inner">
+          <p class="house-kicker">김광석을 기억하는 작은 집</p>
+          <h1 id="homeTitle">광석이네 집</h1>
+          <p id="homeDescription">
+            노래가 흐르고, 사진이 걸리고, 목소리가 오래 머무는<br />김광석 디지털 아카이브
+          </p>
+          <div class="house-hero-actions">
+            <button class="primary-door-btn" data-page-fallback="songs" onclick="goPage('songs')">노래 먼저 듣기</button>
+            <button class="secondary-door-btn" data-page-fallback="videos" onclick="goPage('videos')">영상방 들어가기</button>
+            <button class="secondary-door-btn" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">이 집의 이야기</button>
           </div>
         </div>
-        <div class="kks-hero-room-card" aria-hidden="true">
-          <div class="kks-room-window"></div>
-          <div class="kks-room-line">오늘도 노래가 켜져 있습니다</div>
-          <div class="kks-room-record"></div>
+        <div class="house-name-plate" aria-hidden="true">
+          <span>김광석 자료방</span>
+          <strong>OPEN</strong>
         </div>
       </section>
 
-      <section class="kks-house-menu" aria-label="광석이네 집 주요 공간">
-        <button class="kks-house-card" data-page-fallback="songs" onclick="goPage('songs')">
-          <span class="kks-house-icon">♪</span>
-          <strong>노래방</strong>
-          <em>앨범과 공연 음원을 듣는 방</em>
-        </button>
-        <button class="kks-house-card" data-page-fallback="videos" onclick="goPage('videos')">
-          <span class="kks-house-icon">▣</span>
-          <strong>상영방</strong>
-          <em>무대와 방송 영상을 보는 방</em>
-        </button>
-        <button class="kks-house-card" data-page-fallback="photos" onclick="goPage('photos')">
-          <span class="kks-house-icon">▧</span>
-          <strong>사진방</strong>
-          <em>시간과 표정을 모아둔 방</em>
-        </button>
-        <button class="kks-house-card" data-page-fallback="radios" onclick="goPage('radios')">
-          <span class="kks-house-icon">◉</span>
-          <strong>라디오방</strong>
-          <em>목소리와 이야기를 듣는 방</em>
-        </button>
+      <section class="house-room-section" aria-label="자료방 바로가기">
+        <div class="house-section-head">
+          <span class="section-pin">ROOMS</span>
+          <h2>문을 열고 들어가는 자료방</h2>
+          <p>노래, 공연, 라디오, 사진과 글을 집 안의 방처럼 나누어 정리했습니다.</p>
+        </div>
+        <div class="house-room-grid">
+          <button class="house-room-card room-songs" data-page-fallback="songs" onclick="goPage('songs')">
+            <span class="room-icon">♪</span><strong>노래방</strong><small>Songs Archive</small><em>앨범과 공연 음원을 듣는 방</em>
+          </button>
+          <button class="house-room-card room-videos" data-page-fallback="videos" onclick="goPage('videos')">
+            <span class="room-icon">▣</span><strong>영상방</strong><small>Videos</small><em>무대와 방송 기록을 보는 방</em>
+          </button>
+          <button class="house-room-card room-photos" data-page-fallback="photos" onclick="goPage('photos')">
+            <span class="room-icon">▤</span><strong>사진방</strong><small>Photos</small><em>시간과 표정이 걸린 방</em>
+          </button>
+          <button class="house-room-card room-radios" data-page-fallback="radios" onclick="goPage('radios')">
+            <span class="room-icon">◉</span><strong>라디오방</strong><small>Radios</small><em>목소리와 인터뷰가 흐르는 방</em>
+          </button>
+          <button class="house-room-card room-stories" data-page-fallback="stories" onclick="goPage('stories')">
+            <span class="room-icon">✎</span><strong>글방</strong><small>Stories</small><em>일기와 이야기를 읽는 방</em>
+          </button>
+          <button class="house-room-card room-about" data-page-fallback="about" onclick="goPage('about')">
+            <span class="room-icon">⌂</span><strong>광석 이야기</strong><small>About Seok</small><em>그 사람을 차분히 만나는 방</em>
+          </button>
+        </div>
       </section>
 
-<section class="content-section latest-by-category-section kks-latest-section">
-        <div class="kks-section-head">
-          <span>Latest Records</span>
-          <h2>집 안에 새로 놓인 자료</h2>
-          <p class="helper-text">각 자료실에 최근 등록된 기록을 모았습니다.</p>
+      <section class="content-section latest-by-category-section house-latest-section">
+        <div class="house-section-head compact">
+          <span class="section-pin">LATEST</span>
+          <h2>방금 걸어둔 자료</h2>
+          <p class="helper-text">각 자료실에 최근 등록된 자료를 한눈에 모았습니다.</p>
         </div>
         <div id="latestByCategory" class="latest-category-grid"></div>
       </section>
