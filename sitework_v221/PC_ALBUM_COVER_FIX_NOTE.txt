@@ -1,0 +1,16 @@
+PC 앨범 커버 표시 오류 수정 내역
+
+문제:
+- PC 버전에서 Songs 일부 앨범 커버가 깨져 보이는 현상이 있었습니다.
+- 특히 Google Drive 이미지 링크가 <img> 태그에서 직접 표시되지 않는 경우, 모바일에서는 보이지만 PC Chrome에서는 깨질 수 있었습니다.
+- 목록 화면은 thumbnailUrl만 우선 사용해 imageUrl/coverUrl 계열에 저장된 커버를 놓칠 수 있었습니다.
+
+수정:
+1. Google Drive 이미지 링크는 PC에서 더 안정적인 thumbnail 주소로 우선 변환하도록 수정했습니다.
+2. 이미지 로딩 실패 시 thumbnail → uc view → uc download → 원본 주소 순서로 자동 재시도하도록 fallback을 추가했습니다.
+3. Songs 목록/상세/플레이어/커버 확대에서 thumbnailUrl, imageUrl, photoUrl, coverUrl을 모두 확인하도록 보강했습니다.
+4. index.html의 app.js 버전을 갱신해 GitHub Pages/브라우저 캐시가 오래된 JS를 잡지 않도록 했습니다.
+
+적용 파일:
+- app.js
+- index.html

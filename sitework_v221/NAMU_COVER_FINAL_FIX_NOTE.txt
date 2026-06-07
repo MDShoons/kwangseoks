@@ -1,0 +1,11 @@
+PC에서 i.namu.wiki 앨범 커버가 보이지 않는 문제 수정본입니다.
+
+변경 내용:
+1. 나무위키 이미지는 원본 URL + referrerpolicy=no-referrer를 먼저 시도합니다.
+2. 실패할 때만 images.weserv/wsrv/allorigins/corsproxy 순서로 자동 재시도합니다.
+3. 목록, 상세, 오늘의 추천곡, 플레이리스트, 커버 확대 이미지에 동일한 fallback 처리를 적용했습니다.
+4. index.html의 app.js 캐시 버전을 namu-original-first-final-v6으로 갱신했습니다.
+
+중요:
+- GitHub/서버에 올린 뒤 PC에서 Ctrl+F5 강력 새로고침을 해야 합니다.
+- 그래도 특정 이미지만 안 나오면 i.namu.wiki 원본 링크가 만료된 것이므로, 해당 커버는 파일 선택으로 직접 업로드하거나 안정적인 이미지 호스팅 URL로 교체해야 합니다.
