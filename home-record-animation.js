@@ -52,19 +52,22 @@
     const stage = document.getElementById("homeRecordStage");
     if (!hero || !stage) return;
 
-    const heroHeight = hero.getBoundingClientRect().height || 0;
+    const rect = hero.getBoundingClientRect();
+    const heroHeight = rect.height || hero.offsetHeight || 0;
     if (!heroHeight) return;
 
     const mm5 = 19; // 위 2.5mm + 아래 2.5mm 정도
-    const size = Math.max(150, Math.round(heroHeight - mm5));
+    const size = Math.max(180, Math.round(heroHeight - mm5));
+    const left = Math.round(-size / 2);
+
+    stage.style.setProperty("--record-size", size + "px");
+    stage.style.setProperty("--record-left", left + "px");
+    stage.style.setProperty("--record-hide-x", size + "px");
 
     stage.style.width = size + "px";
     stage.style.height = size + "px";
     stage.style.top = "9.5px";
-    stage.style.left = Math.round(-size / 2) + "px";
-
-    // 숨김 상태에서 오른쪽으로 들어가는 거리도 실제 음반 크기에 맞춤
-    stage.style.setProperty("--record-hide-x", size + "px");
+    stage.style.left = left + "px";
   }
 
   function showRecord(stage) {
