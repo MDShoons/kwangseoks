@@ -2139,6 +2139,30 @@ function removeCurrentSongFromPlaylist() {
   updatePlaylistAddButtons();
 }
 
+function removeSongFromPlaylistById(songId) {
+  const targetId = String(songId || "");
+  if (!targetId) return;
+
+  const ids = loadUserPlaylistIds().filter((id) => String(id) !== targetId);
+  const wasCurrent = String(playlistCurrentItemId || "") === targetId;
+
+  saveUserPlaylistIds(ids);
+  localStorage.removeItem(getUserPlaylistStateKey());
+
+  if (wasCurrent) {
+    playlistCurrentItemId = "";
+    playlistRequestedItemId = ids[0] || "";
+    playlistPendingResumeTime = 0;
+    playlistResumeAppliedForId = "";
+  } else if (String(playlistRequestedItemId || "") === targetId) {
+    playlistRequestedItemId = "";
+  }
+
+  setupUserPlaylistPlayer({ forceOpen: ids.length > 0 });
+  updatePlaylistAddButtons();
+  renderPlaylistQueuePanel();
+}
+
 function addSongToUserPlaylist(songId) {
   const id = String(songId || "").trim();
   if (!id) return;
@@ -2371,17 +2395,18 @@ function renderPlaylistQueuePanel() {
 
   list.innerHTML = songs.map((item, index) => {
     const title = escapeHtml(item.title || "제목 없는 곡");
-    const sub = "";
     const id = escapeHtml(String(item.id));
     const active = String(item.id) === String(playlistCurrentItemId);
     return `
-      <button type="button" class="playlist-queue-item${active ? " active" : ""}" data-playlist-item-id="${id}">
-        <span class="playlist-queue-num">${index + 1}</span>
-        <span class="playlist-queue-meta">
-          <span class="playlist-queue-title">${title}</span>
-          
-        </span>
-      </button>`;
+      <div class="playlist-queue-item-wrap${active ? " active" : ""}">
+        <button type="button" class="playlist-queue-item${active ? " active" : ""}" data-playlist-item-id="${id}">
+          <span class="playlist-queue-num">${index + 1}</span>
+          <span class="playlist-queue-meta">
+            <span class="playlist-queue-title">${title}</span>
+          </span>
+        </button>
+        <button type="button" class="playlist-queue-delete" data-playlist-delete-id="${id}" aria-label="${title} 삭제">삭제</button>
+      </div>`;
   }).join("");
 
   list.querySelectorAll(".playlist-queue-item").forEach((btn) => {
@@ -2395,8 +2420,17 @@ function renderPlaylistQueuePanel() {
       setupUserPlaylistPlayer({ forceOpen: true });
     });
   });
-}
 
+  list.querySelectorAll(".playlist-queue-delete").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const id = btn.getAttribute("data-playlist-delete-id");
+      if (!id) return;
+      removeSongFromPlaylistById(id);
+    });
+  });
+}
 
 function isPlaylistFullDetailMobileEnabled() {
   return !!(window.matchMedia && window.matchMedia("(max-width: 920px)").matches);

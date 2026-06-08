@@ -11023,3 +11023,497 @@ footer,
     display: none !important;
   }
 }
+
+
+
+/* ===== v226 final stable playlist player reset ===== */
+/* 기존 여러 버전의 하단 플레이어 CSS를 마지막에서 완전히 덮어쓴다. */
+#userPlaylistPlayer.daily-player.playlist-player.closed {
+  display: none !important;
+}
+
+#userPlaylistPlayer.daily-player.playlist-player:not(.closed) {
+  display: block !important;
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
+  width: 100vw !important;
+  height: 82px !important;
+  min-height: 82px !important;
+  max-height: 82px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  transform: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+  z-index: 5000 !important;
+  pointer-events: none !important;
+}
+
+#userPlaylistPlayer .playlist-player-card,
+#userPlaylistPlayer.daily-player .daily-player-card {
+  pointer-events: auto !important;
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  display: grid !important;
+  grid-template-columns: 56px minmax(220px, 1fr) 310px 210px !important;
+  grid-template-rows: 42px 12px !important;
+  grid-template-areas:
+    "cover info controls actions"
+    "cover progress progress actions" !important;
+  column-gap: 14px !important;
+  row-gap: 6px !important;
+  align-items: center !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 82px !important;
+  min-height: 82px !important;
+  max-height: 82px !important;
+  padding: 9px 22px 14px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(46, 34, 27, 0.76) !important;
+  background-image: none !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 -8px 24px rgba(0,0,0,.18) !important;
+  overflow: hidden !important;
+}
+
+/* 필요 없는 라벨/닫기 버튼은 하단바에서 숨김 */
+#userPlaylistPlayer .playlist-player-label,
+#userPlaylistPlayer .daily-player-label,
+#userPlaylistPlayer #playlistPlayerCloseBtn,
+#userPlaylistPlayer .daily-player-close,
+#userPlaylistPlayer .playlist-volume-row,
+#userPlaylistPlayer .daily-volume-row {
+  display: none !important;
+}
+
+/* 커버 */
+#userPlaylistPlayer #playlistPlayerCover,
+#userPlaylistPlayer .playlist-player-cover,
+#userPlaylistPlayer .daily-player-cover {
+  grid-area: cover !important;
+  position: static !important;
+  display: block !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  max-width: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+}
+
+/* 정보 영역 */
+#userPlaylistPlayer #playlistPlayerTitle,
+#userPlaylistPlayer .daily-player-title {
+  grid-area: info !important;
+  position: static !important;
+  display: block !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  animation: none !important;
+  color: #fff !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  align-self: end !important;
+}
+
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-text,
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-item {
+  display: inline !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+#userPlaylistPlayer #playlistPlayerTitle .playlist-title-marquee-copy {
+  display: none !important;
+}
+
+#userPlaylistPlayer #playlistPlayerSub,
+#userPlaylistPlayer .daily-player-sub {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: static !important;
+  display: block !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 22px 0 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  color: rgba(255,255,255,.82) !important;
+  font-size: 12px !important;
+  line-height: 1.1 !important;
+  align-self: start !important;
+}
+
+/* 재생 컨트롤 */
+#userPlaylistPlayer .playlist-player-controls,
+#userPlaylistPlayer .daily-player-controls {
+  grid-area: controls !important;
+  position: static !important;
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+#userPlaylistPlayer .playlist-nav-btn,
+#userPlaylistPlayer .daily-play-btn {
+  position: static !important;
+  transform: none !important;
+  flex: 0 0 auto !important;
+}
+
+#userPlaylistPlayer .daily-play-btn {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+}
+
+#userPlaylistPlayer .playlist-nav-btn {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+}
+
+/* 시간은 컨트롤 안에서 작게 */
+#userPlaylistPlayer .playlist-player-time,
+#userPlaylistPlayer .daily-player-time {
+  display: flex !important;
+  position: static !important;
+  transform: none !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  gap: 4px !important;
+  justify-content: center !important;
+  color: rgba(255,255,255,.85) !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+/* 진행바 */
+#userPlaylistPlayer #playlistPlayerProgress,
+#userPlaylistPlayer .daily-player-progress {
+  grid-area: progress !important;
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 12px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  accent-color: #fff !important;
+}
+
+/* 액션 버튼 */
+#userPlaylistPlayer .playlist-player-actions {
+  grid-area: actions !important;
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 210px !important;
+  min-width: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+#userPlaylistPlayer .playlist-player-actions button {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 27px !important;
+  min-height: 27px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  transform: none !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+/* 재생목록 패널은 하단바 위로 */
+#userPlaylistPlayer .playlist-queue-panel {
+  position: fixed !important;
+  right: 22px !important;
+  bottom: 92px !important;
+  left: auto !important;
+  top: auto !important;
+  width: min(360px, calc(100vw - 44px)) !important;
+  max-height: 46vh !important;
+  z-index: 5010 !important;
+}
+
+/* 모바일 */
+@media (max-width: 820px) {
+  #userPlaylistPlayer.daily-player.playlist-player:not(.closed) {
+    height: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-card,
+  #userPlaylistPlayer.daily-player .daily-player-card {
+    height: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+    grid-template-columns: 52px minmax(0, 1fr) 140px 44px !important;
+    grid-template-rows: 46px 12px !important;
+    grid-template-areas:
+      "cover info controls actions"
+      "progress progress progress progress" !important;
+    column-gap: 8px !important;
+    row-gap: 7px !important;
+    padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerCover,
+  #userPlaylistPlayer .playlist-player-cover,
+  #userPlaylistPlayer .daily-player-cover {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerTitle,
+  #userPlaylistPlayer .daily-player-title {
+    font-size: 15px !important;
+    line-height: 1.15 !important;
+    align-self: center !important;
+  }
+
+  #userPlaylistPlayer #playlistPlayerSub,
+  #userPlaylistPlayer .daily-player-sub {
+    display: none !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-controls,
+  #userPlaylistPlayer .daily-player-controls {
+    height: 46px !important;
+    gap: 5px !important;
+    justify-content: center !important;
+  }
+
+  #userPlaylistPlayer .daily-play-btn {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+  }
+
+  #userPlaylistPlayer .playlist-nav-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-time,
+  #userPlaylistPlayer .daily-player-time {
+    display: none !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions {
+    width: 44px !important;
+    max-width: 44px !important;
+    height: 44px !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions #playlistPlayerRemoveBtn {
+    display: none !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions #playlistPlayerListBtn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    font-size: 0 !important;
+  }
+
+  #userPlaylistPlayer .playlist-player-actions #playlistPlayerListBtn::before {
+    content: "☰" !important;
+    display: block !important;
+    font-size: 27px !important;
+    line-height: 44px !important;
+    color: #fff !important;
+    text-align: center !important;
+  }
+
+  #userPlaylistPlayer .playlist-queue-panel {
+    right: 10px !important;
+    bottom: calc(94px + env(safe-area-inset-bottom, 0px)) !important;
+    width: calc(100vw - 20px) !important;
+    max-height: 48vh !important;
+  }
+}
+
+
+
+/* ===== v227 playlist queue item delete buttons ===== */
+#userPlaylistPlayer .playlist-queue-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+#userPlaylistPlayer .playlist-queue-item-wrap {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 7px !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+#userPlaylistPlayer .playlist-queue-item-wrap.active .playlist-queue-item {
+  background: rgba(139, 85, 52, .16) !important;
+  border-color: rgba(139, 85, 52, .34) !important;
+}
+
+#userPlaylistPlayer .playlist-queue-item {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+#userPlaylistPlayer .playlist-queue-delete {
+  width: auto !important;
+  min-width: 52px !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+  border: 1px solid rgba(139, 85, 52, .34) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 248, 239, .94) !important;
+  color: #7b4f35 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+#userPlaylistPlayer .playlist-queue-delete:active {
+  transform: scale(.96) !important;
+}
+
+@media (max-width: 820px) {
+  #userPlaylistPlayer .playlist-queue-panel {
+    padding: 12px !important;
+  }
+
+  #userPlaylistPlayer .playlist-queue-item-wrap {
+    grid-template-columns: minmax(0, 1fr) 58px !important;
+    gap: 8px !important;
+  }
+
+  #userPlaylistPlayer .playlist-queue-delete {
+    min-width: 58px !important;
+    height: 36px !important;
+    font-size: 13px !important;
+  }
+}
+
+
+
+/* ===== v228 home record position correction ===== */
+/* 음반이 hero 문구 위를 덮지 않도록, hero 카드 왼쪽 바깥에서 반쯤만 보이게 재배치 */
+@media (min-width: 921px) {
+  #homeHero {
+    overflow: visible !important;
+  }
+
+  #homeHero .home-record-stage {
+    left: 0 !important;
+    top: 52px !important;
+    width: clamp(170px, 13vw, 236px) !important;
+    height: clamp(170px, 13vw, 236px) !important;
+    z-index: 2 !important;
+    transform: translateX(42px) scale(.98) !important;
+  }
+
+  #homeHero .home-record-stage.is-entering,
+  #homeHero .home-record-stage.is-visible {
+    opacity: 1 !important;
+    transform: translateX(-132px) scale(1) !important;
+    pointer-events: auto !important;
+    transition:
+      transform 1.05s cubic-bezier(.22, .9, .22, 1),
+      opacity .52s ease !important;
+  }
+
+  #homeHero .home-record-stage.is-hidden {
+    opacity: 0 !important;
+    transform: translateX(42px) scale(.98) !important;
+    pointer-events: none !important;
+    transition:
+      transform .82s cubic-bezier(.55, 0, .45, 1),
+      opacity .45s ease !important;
+  }
+
+  #homeHero #homeTitle,
+  #homeHero #homeDescription {
+    position: relative !important;
+    z-index: 5 !important;
+  }
+}
+
+/* 화면이 너무 좁은 PC에서는 음반을 조금 더 작고 왼쪽으로 */
+@media (min-width: 921px) and (max-width: 1280px) {
+  #homeHero .home-record-stage {
+    top: 58px !important;
+    width: 180px !important;
+    height: 180px !important;
+  }
+
+  #homeHero .home-record-stage.is-entering,
+  #homeHero .home-record-stage.is-visible {
+    transform: translateX(-118px) scale(1) !important;
+  }
+}

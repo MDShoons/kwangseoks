@@ -12,7 +12,7 @@
 ];
 
   const STORAGE_KEY = "ks_home_record_daily_v1";
-  const DISMISSED_KEY = "ks_home_record_dismissed_day_v1";
+  const DISMISSED_KEY = "ks_home_record_dismissed_session_v1";
 
   function kstDateKey(date = new Date()) {
     const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -40,7 +40,6 @@
     const index = n % RECORD_IMAGES.length;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ day, index }));
-      localStorage.removeItem(DISMISSED_KEY);
     } catch (e) {}
 
     return { day, index, src: RECORD_IMAGES[index] };
@@ -59,12 +58,6 @@
     const daily = pickDailyRecord();
     img.src = daily.src;
 
-    try {
-      if (localStorage.getItem(DISMISSED_KEY) === daily.day) {
-        stage.classList.add("is-hidden");
-        return;
-      }
-    } catch (e) {}
 
     const show = () => {
       if (!isHomeActive()) return;
@@ -84,9 +77,6 @@
     stage.addEventListener("click", function () {
       stage.classList.remove("is-entering", "is-visible", "is-spinning");
       stage.classList.add("is-hidden");
-      try {
-        localStorage.setItem(DISMISSED_KEY, daily.day);
-      } catch (e) {}
     });
 
     // 00:00(KST) 지나면 오른쪽으로 들어갔다가 3초 뒤 새 오늘 음반으로 다시 등장
@@ -105,7 +95,6 @@
 
         try {
           localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(DISMISSED_KEY);
         } catch (e) {}
 
         const nextDaily = pickDailyRecord();
@@ -128,9 +117,6 @@
     window.addEventListener("hashchange", function () {
       if (!isHomeActive()) return;
       const current = pickDailyRecord();
-      try {
-        if (localStorage.getItem(DISMISSED_KEY) === current.day) return;
-      } catch (e) {}
       if (!stage.classList.contains("is-visible") && !stage.classList.contains("is-entering")) {
         setTimeout(show, 700);
       }
