@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=room-v231" />
+  <link rel="stylesheet" href="style.css?v=room-v233" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -90,7 +90,7 @@
         if (!btn) return;
         ev.preventDefault();
         ev.stopPropagation();
-        show(btn.getAttribute("data-page-fallback"));
+        window.goPage(btn.getAttribute("data-page-fallback"));
       }, true);
 
       window.addEventListener("hashchange", function () {
@@ -551,7 +551,16 @@
         <input id="videoTitle" type="text" placeholder="영상 제목" />
         <input id="youtubeUrl" type="url" placeholder="https:// 로 시작하는 미디어 링크를 입력하세요" />
         <input id="videoFile" type="file" accept="video/mp4" />
-        <input id="videoFileUrl" type="url" placeholder="https:// 로 시작하는 미디어 링크를 입력하세요" />
+        <input id="videoFileUrl" type="url" placeholder="기본 영상 URL 또는 원본 URL" />
+        <input id="videoHlsUrl" type="url" placeholder="HLS 스트리밍 URL master.m3u8 (Archive에 올린 HLS용)" />
+        <div class="video-quality-admin-box">
+          <h3>화질별 영상 URL</h3>
+          <p class="helper-text">큰 원본 영상이 끊길 때는 480p/720p 재생용 파일을 따로 만들거나, FFmpeg로 만든 HLS master.m3u8 주소를 위 입력칸에 넣으면 더 안정적으로 재생됩니다. 모바일은 480p가 먼저 선택됩니다.</p>
+          <input id="videoUrl480" type="url" placeholder="480p 모바일용 영상 URL" />
+          <input id="videoUrl720" type="url" placeholder="720p 기본 재생용 영상 URL" />
+          <input id="videoUrl1080" type="url" placeholder="1080p 고화질 영상 URL" />
+          <input id="videoUrlOriginal" type="url" placeholder="원본 영상 URL" />
+        </div>
         <input id="videoYear" type="text" placeholder="연도 예: 1995" />
         <input id="videoSource" type="text" placeholder="출처" />
         <textarea id="videoDescription" placeholder="영상 설명"></textarea>
@@ -741,10 +750,10 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v187-bulk-song-cover-tab-next-category</div>
+<div class="version-marker">v222-user-page-backgrounds</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=room-v231"></script>
-  <script src="room-theme.js?v=room-v231"></script>
-  <script src="home-record-animation.js?v=room-v231"></script>
+  <script src="room-theme.js?v=room-v233"></script>
+  <script type="module" src="app.js?v=room-v233"></script>
+  <script src="home-record-animation.js?v=room-v233"></script>
 </body>
 </html>

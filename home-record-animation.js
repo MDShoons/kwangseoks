@@ -55,12 +55,16 @@
     const heroHeight = hero.getBoundingClientRect().height || 0;
     if (!heroHeight) return;
 
-    const mm5 = 19; // 약 5mm = 18.9px
+    const mm5 = 19; // 위 2.5mm + 아래 2.5mm 정도
     const size = Math.max(150, Math.round(heroHeight - mm5));
+
     stage.style.width = size + "px";
     stage.style.height = size + "px";
     stage.style.top = "9.5px";
     stage.style.left = Math.round(-size / 2) + "px";
+
+    // 숨김 상태에서 오른쪽으로 들어가는 거리도 실제 음반 크기에 맞춤
+    stage.style.setProperty("--record-hide-x", size + "px");
   }
 
   function showRecord(stage) {
