@@ -10930,3 +10930,96 @@ footer,
     text-align: center !important;
   }
 }
+
+
+
+/* ===== v225 PC home random spinning record ===== */
+#homeHero {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+/* keep hero text above the record */
+#homeHero #homeTitle,
+#homeHero #homeDescription,
+#homeHero > div {
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+.home-record-stage {
+  display: none;
+}
+
+@media (min-width: 921px) {
+  .home-record-stage {
+    display: block !important;
+    position: absolute !important;
+    left: 30px !important;
+    top: 42px !important;
+    width: clamp(190px, 16vw, 280px) !important;
+    height: clamp(190px, 16vw, 280px) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    z-index: 1 !important;
+    opacity: 0 !important;
+    transform: translateX(210px) scale(.98) !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+  }
+
+  .home-record-stage.is-entering,
+  .home-record-stage.is-visible {
+    opacity: 1 !important;
+    transform: translateX(-92px) scale(1) !important;
+    pointer-events: auto !important;
+    transition:
+      transform 1.05s cubic-bezier(.22, .9, .22, 1),
+      opacity .52s ease !important;
+  }
+
+  .home-record-stage.is-hidden {
+    opacity: 0 !important;
+    transform: translateX(210px) scale(.98) !important;
+    pointer-events: none !important;
+    transition:
+      transform .82s cubic-bezier(.55, 0, .45, 1),
+      opacity .45s ease !important;
+  }
+
+  .home-record-disc {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    filter: drop-shadow(0 18px 28px rgba(0,0,0,.28)) !important;
+    transform-origin: 50% 50% !important;
+    animation: none;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    pointer-events: none !important;
+  }
+
+  .home-record-stage.is-spinning .home-record-disc {
+    animation: homeRecordSpin 6.5s linear infinite !important;
+  }
+
+  @keyframes homeRecordSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* 모바일에서는 완전히 숨김 */
+@media (max-width: 920px) {
+  .home-record-stage,
+  .home-record-disc {
+    display: none !important;
+  }
+}
