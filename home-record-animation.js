@@ -63,6 +63,7 @@
     stage.style.setProperty("--record-size", size + "px");
     stage.style.setProperty("--record-left", left + "px");
     stage.style.setProperty("--record-behind-x", behindX + "px");
+
     stage.style.width = size + "px";
     stage.style.height = size + "px";
     stage.style.top = "9.5px";

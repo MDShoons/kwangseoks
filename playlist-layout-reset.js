@@ -92,3 +92,45 @@
 
   window.ksPlaylistLayoutReset = run;
 })();
+
+
+
+(function () {
+  "use strict";
+
+  function ensureMobileQueueRemoveButton() {
+    const panel = document.getElementById("playlistQueuePanel");
+    const head = panel ? panel.querySelector(".playlist-queue-head") : null;
+    const existingRemove = document.getElementById("playlistPlayerRemoveBtn");
+    if (!panel || !head || !existingRemove) return;
+
+    let btn = document.getElementById("mobileQueueRemoveBtn");
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.id = "mobileQueueRemoveBtn";
+      btn.textContent = "현재곡 빼기";
+      head.insertBefore(btn, head.firstChild);
+      btn.addEventListener("click", function () {
+        existingRemove.click();
+        setTimeout(function () {
+          if (window.ksPlaylistLayoutReset) window.ksPlaylistLayoutReset();
+        }, 30);
+      });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureMobileQueueRemoveButton);
+  } else {
+    ensureMobileQueueRemoveButton();
+  }
+
+  document.addEventListener("click", function (event) {
+    if (event.target && event.target.id === "playlistPlayerListBtn") {
+      setTimeout(ensureMobileQueueRemoveButton, 30);
+    }
+  });
+
+  window.addEventListener("resize", ensureMobileQueueRemoveButton);
+})();
