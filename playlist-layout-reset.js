@@ -134,3 +134,64 @@
 
   window.addEventListener("resize", ensureMobileQueueRemoveButton);
 })();
+
+
+
+/* ===== v242 mobile queue current-remove insertion ===== */
+(function () {
+  "use strict";
+
+  function ensureMobileQueueRemoveButton() {
+    const panel = document.getElementById("playlistQueuePanel");
+    const head = panel ? panel.querySelector(".playlist-queue-head") : null;
+    const remove = document.getElementById("playlistPlayerRemoveBtn");
+    if (!panel || !head || !remove) return;
+
+    let btn = document.getElementById("mobileQueueRemoveBtn");
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.id = "mobileQueueRemoveBtn";
+      btn.textContent = "현재곡 빼기";
+      btn.addEventListener("click", function () {
+        remove.click();
+        setTimeout(function () {
+          if (window.ksPlaylistLayoutReset) window.ksPlaylistLayoutReset();
+        }, 50);
+      });
+    }
+
+    if (head.firstElementChild !== btn) {
+      head.insertBefore(btn, head.firstElementChild);
+    }
+  }
+
+  function bind() {
+    ensureMobileQueueRemoveButton();
+
+    const listBtn = document.getElementById("playlistPlayerListBtn");
+    if (listBtn && !listBtn.dataset.mobileRemoveBound) {
+      listBtn.dataset.mobileRemoveBound = "1";
+      listBtn.addEventListener("click", function () {
+        setTimeout(ensureMobileQueueRemoveButton, 30);
+        setTimeout(ensureMobileQueueRemoveButton, 180);
+      });
+    }
+
+    const panel = document.getElementById("playlistQueuePanel");
+    if (panel && !panel.dataset.mobileRemoveObserved) {
+      panel.dataset.mobileRemoveObserved = "1";
+      const mo = new MutationObserver(ensureMobileQueueRemoveButton);
+      mo.observe(panel, { childList: true, subtree: true, attributes: true });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bind);
+  } else {
+    bind();
+  }
+
+  window.addEventListener("resize", bind);
+  window.addEventListener("hashchange", bind);
+})();
