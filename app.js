@@ -138,20 +138,11 @@ function isYoutubeUrl(url = "") {
 }
 
 function getVideoMediaUrl(item = {}) {
-  return item.mediaUrl || item.fileUrl || item.videoUrl || item.videoFileUrl || getVideoHlsUrl(item) || "";
+  return item.mediaUrl || item.fileUrl || item.videoUrl || item.videoFileUrl || "";
 }
 
 function isVideoContentItem(item = {}) {
-  return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube" || item.mediaType === "hls";
-}
-
-function getVideoHlsUrl(item = {}) {
-  const nested = item.videoQualityUrls && typeof item.videoQualityUrls === "object" ? item.videoQualityUrls : {};
-  return String(item.hlsUrl || item.videoHlsUrl || item.hlsMasterUrl || nested.hls || nested.m3u8 || "").trim();
-}
-
-function isHlsUrl(url = "") {
-  return /\.m3u8(\?|#|$)/i.test(String(url || ""));
+  return item.category === "videos" || item.mediaType === "video" || item.mediaType === "youtube";
 }
 
 
@@ -329,7 +320,7 @@ const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
   homeTitle: "노래가 머무는 이 곳,\n광석이네 집",
-  homeDescription: "김광석 아카이브",
+  homeDescription: "김광석 디지털 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
@@ -896,13 +887,7 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
   const youtubeUrl = document.getElementById("youtubeUrl").value.trim();
   const videoFile = document.getElementById("videoFile").files[0];
   const directVideoUrl = document.getElementById("videoFileUrl").value.trim();
-  const videoHlsUrl = document.getElementById("videoHlsUrl")?.value.trim() || "";
-  const videoUrl480 = document.getElementById("videoUrl480")?.value.trim() || "";
-  const videoUrl720 = document.getElementById("videoUrl720")?.value.trim() || "";
-  const videoUrl1080 = document.getElementById("videoUrl1080")?.value.trim() || "";
-  const videoUrlOriginal = document.getElementById("videoUrlOriginal")?.value.trim() || "";
-  const hasQualityVideoUrl = !!(videoUrl480 || videoUrl720 || videoUrl1080 || videoUrlOriginal || videoHlsUrl);
-  if (!editId && !youtubeUrl && !videoFile && !directVideoUrl && !hasQualityVideoUrl) return alert("유튜브 URL, mp4 파일, 영상 URL, HLS master.m3u8 URL, 또는 화질별 영상 URL 중 하나를 입력하세요.");
+  if (!editId && !youtubeUrl && !videoFile && !directVideoUrl) return alert("유튜브 URL, mp4 파일, 또는 영상 URL 중 하나를 입력하세요.");
   try {
     const embedUrl = youtubeUrl ? getYoutubeEmbedUrl(youtubeUrl) : "";
     if (youtubeUrl && !embedUrl) return alert("올바른 유튜브 URL을 입력하세요.");
@@ -911,18 +896,14 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
     const existingYoutubeUrl = originalItem ? (originalItem.youtubeUrl || (isYoutubeUrl(originalItem.mediaUrl) ? originalItem.mediaUrl : "")) : "";
     const finalYoutubeUrl = youtubeUrl || existingYoutubeUrl;
     const finalEmbedUrl = youtubeUrl ? embedUrl : (originalItem?.mediaType === "youtube" ? (originalItem.mediaUrl || normalizeYoutubeEmbedUrl(existingYoutubeUrl)) : "");
-    const existingHlsUrl = originalItem ? getVideoHlsUrl(originalItem) : "";
-    const finalHlsUrl = videoHlsUrl || existingHlsUrl;
-    const finalVideoUrl = directVideoUrl || uploadedVideoUrl || videoUrl720 || videoUrl480 || videoUrl1080 || videoUrlOriginal || finalHlsUrl || (originalItem?.mediaType !== "youtube" ? existingVideoUrl : "");
-    const mediaType = (finalEmbedUrl || (finalYoutubeUrl && !finalVideoUrl && !finalHlsUrl)) ? "youtube" : (finalHlsUrl && !finalVideoUrl ? "hls" : "video");
+    const finalVideoUrl = directVideoUrl || uploadedVideoUrl || (originalItem?.mediaType !== "youtube" ? existingVideoUrl : "");
+    const mediaType = (finalEmbedUrl || (finalYoutubeUrl && !finalVideoUrl)) ? "youtube" : "video";
     const mediaUrl = mediaType === "youtube" ? (finalEmbedUrl || normalizeYoutubeEmbedUrl(finalYoutubeUrl)) : finalVideoUrl;
     if (!mediaUrl) return alert("기존 영상 주소를 찾을 수 없습니다. 영상 URL을 다시 입력하세요.");
     const thumbnailUrl = await getImageDataUrlOrDirectUrl(document.getElementById("videoImageFile").files[0], document.getElementById("videoImageUrl").value, 1000);
     const subCategoryPayload = makeSubCategoryPayload("videoSubCategory");
     const payload = { category:"videos", ...subCategoryPayload,
       mediaType, title, youtubeUrl: finalYoutubeUrl || "", mediaUrl,
-      videoUrl480, videoUrl720, videoUrl1080, videoUrlOriginal, videoHlsUrl: finalHlsUrl, hlsUrl: finalHlsUrl,
-      videoQualityUrls: { q480: videoUrl480, q720: videoUrl720, q1080: videoUrl1080, original: videoUrlOriginal, hls: finalHlsUrl },
       year:document.getElementById("videoYear").value.trim(), source:document.getElementById("videoSource").value.trim(),
       description:document.getElementById("videoDescription").value.trim(), body:document.getElementById("videoDescription").value.trim(),
       isPublic:true, updatedAt:serverTimestamp() };
@@ -2139,30 +2120,6 @@ function removeCurrentSongFromPlaylist() {
   updatePlaylistAddButtons();
 }
 
-function removeSongFromPlaylistById(songId) {
-  const targetId = String(songId || "");
-  if (!targetId) return;
-
-  const ids = loadUserPlaylistIds().filter((id) => String(id) !== targetId);
-  const wasCurrent = String(playlistCurrentItemId || "") === targetId;
-
-  saveUserPlaylistIds(ids);
-  localStorage.removeItem(getUserPlaylistStateKey());
-
-  if (wasCurrent) {
-    playlistCurrentItemId = "";
-    playlistRequestedItemId = ids[0] || "";
-    playlistPendingResumeTime = 0;
-    playlistResumeAppliedForId = "";
-  } else if (String(playlistRequestedItemId || "") === targetId) {
-    playlistRequestedItemId = "";
-  }
-
-  setupUserPlaylistPlayer({ forceOpen: ids.length > 0 });
-  updatePlaylistAddButtons();
-  renderPlaylistQueuePanel();
-}
-
 function addSongToUserPlaylist(songId) {
   const id = String(songId || "").trim();
   if (!id) return;
@@ -2395,18 +2352,17 @@ function renderPlaylistQueuePanel() {
 
   list.innerHTML = songs.map((item, index) => {
     const title = escapeHtml(item.title || "제목 없는 곡");
+    const sub = "";
     const id = escapeHtml(String(item.id));
     const active = String(item.id) === String(playlistCurrentItemId);
     return `
-      <div class="playlist-queue-item-wrap${active ? " active" : ""}">
-        <button type="button" class="playlist-queue-item${active ? " active" : ""}" data-playlist-item-id="${id}">
-          <span class="playlist-queue-num">${index + 1}</span>
-          <span class="playlist-queue-meta">
-            <span class="playlist-queue-title">${title}</span>
-          </span>
-        </button>
-        <button type="button" class="playlist-queue-delete" data-playlist-delete-id="${id}" aria-label="${title} 삭제">삭제</button>
-      </div>`;
+      <button type="button" class="playlist-queue-item${active ? " active" : ""}" data-playlist-item-id="${id}">
+        <span class="playlist-queue-num">${index + 1}</span>
+        <span class="playlist-queue-meta">
+          <span class="playlist-queue-title">${title}</span>
+          
+        </span>
+      </button>`;
   }).join("");
 
   list.querySelectorAll(".playlist-queue-item").forEach((btn) => {
@@ -2420,17 +2376,8 @@ function renderPlaylistQueuePanel() {
       setupUserPlaylistPlayer({ forceOpen: true });
     });
   });
-
-  list.querySelectorAll(".playlist-queue-delete").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const id = btn.getAttribute("data-playlist-delete-id");
-      if (!id) return;
-      removeSongFromPlaylistById(id);
-    });
-  });
 }
+
 
 function isPlaylistFullDetailMobileEnabled() {
   return !!(window.matchMedia && window.matchMedia("(max-width: 920px)").matches);
@@ -2484,19 +2431,50 @@ function setPlaylistPlayerTitleText(titleEl, text) {
   const safeText = String(text || "").trim() || "선택한 곡이 없습니다";
   titleEl.dataset.fullTitle = safeText;
   titleEl.classList.remove("is-marquee");
-  titleEl.style.removeProperty("--playlist-title-marquee-gap");
-  titleEl.style.removeProperty("--playlist-title-marquee-distance");
-  titleEl.style.removeProperty("--playlist-title-marquee-duration");
-  titleEl.textContent = safeText;
+  const escaped = escapeHtml(safeText);
+  // v193: 모바일 하단 플레이어 긴 제목은 같은 문구를 2번 배치해
+  // 왼쪽으로 사라진 뒤 오른쪽에서 이어 나오는 연속 마키로 처리한다.
+  titleEl.innerHTML = `<span class="playlist-title-marquee-text"><span class="playlist-title-marquee-item">${escaped}</span><span class="playlist-title-marquee-item playlist-title-marquee-copy" aria-hidden="true">${escaped}</span></span>`;
+  refreshPlaylistPlayerTitleMarquee();
 }
 
 function refreshPlaylistPlayerTitleMarquee() {
   const titleEl = document.getElementById("playlistPlayerTitle");
   if (!titleEl) return;
-  titleEl.classList.remove("is-marquee");
-  titleEl.style.removeProperty("--playlist-title-marquee-gap");
-  titleEl.style.removeProperty("--playlist-title-marquee-distance");
-  titleEl.style.removeProperty("--playlist-title-marquee-duration");
+  const textEl = titleEl.querySelector(".playlist-title-marquee-text");
+  if (!textEl) return;
+  const firstItem = titleEl.querySelector(".playlist-title-marquee-item");
+
+  const apply = () => {
+    const isMobile = !window.matchMedia || window.matchMedia("(max-width: 920px)").matches;
+    const fullText = titleEl.dataset.fullTitle || (firstItem ? firstItem.textContent : textEl.textContent) || "";
+    const compactLen = fullText.replace(/\s+/g, "").length;
+    const itemWidth = Math.ceil((firstItem ? firstItem.scrollWidth : textEl.scrollWidth) || 0);
+    const boxWidth = Math.ceil(titleEl.clientWidth || titleEl.getBoundingClientRect().width || 0);
+    // 사용자 요청: 6글자 이상이면 무조건 움직이게 한다.
+    const shouldMarquee = compactLen >= 6 || itemWidth > boxWidth + 2;
+
+    titleEl.classList.toggle("is-marquee", isMobile && shouldMarquee);
+    if (isMobile && shouldMarquee) {
+      const gap = Math.max(48, Math.min(96, Math.round(boxWidth * 0.55)));
+      const distance = Math.max(80, itemWidth + gap);
+      const duration = Math.min(16, Math.max(7, distance / 26));
+      titleEl.style.setProperty("--playlist-title-marquee-gap", `${gap}px`);
+      titleEl.style.setProperty("--playlist-title-marquee-distance", `-${distance}px`);
+      titleEl.style.setProperty("--playlist-title-marquee-duration", `${duration}s`);
+    } else {
+      titleEl.style.removeProperty("--playlist-title-marquee-gap");
+      titleEl.style.removeProperty("--playlist-title-marquee-distance");
+      titleEl.style.removeProperty("--playlist-title-marquee-duration");
+    }
+  };
+
+  requestAnimationFrame(() => {
+    apply();
+    setTimeout(apply, 150);
+    setTimeout(apply, 500);
+    setTimeout(apply, 1200);
+  });
 }
 
 function setupUserPlaylistPlayer(options = {}) {
@@ -3109,7 +3087,7 @@ function renderLatest(contents) {
   if (!source.length) { box.innerHTML = "<p>등록된 최신 자료가 없습니다.</p>"; return; }
   source.slice(0,4).forEach(i => box.appendChild(createCard(i)));
 }
-function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); setupHlsVideos(box); }
+function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
 function renderPhotos(items) { const box = document.getElementById("photoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 사진이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
 
 function makeTextPreview(text, maxLength = 90) {
@@ -3482,12 +3460,10 @@ function createCard(item) {
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
   if (item.mediaType === "youtube" || (item.category === "videos" && youtubeCandidateUrl)) media = `<iframe loading="lazy" src="${escapeHtml(normalizeYoutubeEmbedUrl(youtubeCandidateUrl || item.mediaUrl))}" allowfullscreen></iframe>`;
   else if (item.mediaType === "video" || (item.category === "videos" && videoMediaUrl)) {
-    const videoPlaybackUrl = normalizeMediaUrlForPlayback(getPreferredVideoUrl(item, "card") || videoMediaUrl, "video");
+    const videoPlaybackUrl = normalizeMediaUrlForPlayback(videoMediaUrl, "video");
     const videoPosterUrl = item.thumbnailUrl || item.imageUrl || item.photoUrl || "";
-    const fileType = /\.mov(\?|#|$)/i.test(videoPlaybackUrl) ? "video/quicktime" : "video/mp4";
-    const hlsAttr = isHlsUrl(videoPlaybackUrl) ? ` data-hls-src="${escapeHtml(videoPlaybackUrl)}"` : "";
-    const sourceHtml = isHlsUrl(videoPlaybackUrl) ? "" : `<source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}">`;
-    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"${hlsAttr}>${sourceHtml}</video>`;
+    const fileType = /\.mov(\?|#|$)/i.test(videoMediaUrl) ? "video/quicktime" : "video/mp4";
+    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"><source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}"></video>`;
   }
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">`;
@@ -3635,167 +3611,6 @@ function closeCoverZoom(event) {
   }
 }
 
-
-function getVideoQualityMap(item = {}) {
-  const nested = item.videoQualityUrls && typeof item.videoQualityUrls === "object" ? item.videoQualityUrls : {};
-  return {
-    q480: String(item.videoUrl480 || nested.q480 || nested["480"] || "").trim(),
-    q720: String(item.videoUrl720 || nested.q720 || nested["720"] || "").trim(),
-    q1080: String(item.videoUrl1080 || nested.q1080 || nested["1080"] || "").trim(),
-    original: String(item.videoUrlOriginal || nested.original || item.originalVideoUrl || "").trim(),
-    hls: getVideoHlsUrl(item)
-  };
-}
-
-function getVideoQualityOptions(item = {}) {
-  const q = getVideoQualityMap(item);
-  const base = getVideoMediaUrl(item);
-  const rawOptions = [
-    { key: "q480", label: "480p", url: q.q480 },
-    { key: "q720", label: "720p", url: q.q720 },
-    { key: "q1080", label: "1080p", url: q.q1080 },
-    { key: "hls", label: "자동/HLS", url: q.hls },
-    { key: "original", label: "원본", url: q.original },
-    { key: "default", label: "기본", url: base }
-  ];
-  const seen = new Set();
-  return rawOptions.filter(opt => {
-    if (!opt.url) return false;
-    const normalized = normalizeMediaUrlForPlayback(opt.url, "video");
-    if (seen.has(normalized)) return false;
-    seen.add(normalized);
-    return true;
-  });
-}
-
-function getPreferredVideoQualityKey(item = {}, mode = "detail") {
-  const options = getVideoQualityOptions(item);
-  const has = (key) => options.some(opt => opt.key === key);
-  const isMobile = window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
-  const preferredOrder = mode === "card"
-    ? ["hls", "q480", "q720", "default", "q1080", "original"]
-    : (isMobile ? ["hls", "q480", "q720", "default", "q1080", "original"] : ["hls", "q720", "q1080", "default", "q480", "original"]);
-  return preferredOrder.find(has) || (options[0] && options[0].key) || "default";
-}
-
-function getVideoUrlByQuality(item = {}, key = "") {
-  const options = getVideoQualityOptions(item);
-  const found = options.find(opt => opt.key === key) || options[0];
-  return found ? found.url : getVideoMediaUrl(item);
-}
-
-function getPreferredVideoUrl(item = {}, mode = "detail") {
-  return getVideoUrlByQuality(item, getPreferredVideoQualityKey(item, mode));
-}
-
-let hlsJsLoadingPromise = null;
-
-function loadHlsJsIfNeeded() {
-  if (window.Hls) return Promise.resolve(window.Hls);
-  if (hlsJsLoadingPromise) return hlsJsLoadingPromise;
-  hlsJsLoadingPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[data-hls-js="true"]');
-    if (existing) {
-      existing.addEventListener("load", () => resolve(window.Hls), { once: true });
-      existing.addEventListener("error", reject, { once: true });
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js";
-    script.async = true;
-    script.dataset.hlsJs = "true";
-    script.onload = () => resolve(window.Hls);
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-  return hlsJsLoadingPromise;
-}
-
-function destroyVideoHlsInstance(video) {
-  if (video && video._hlsInstance) {
-    try { video._hlsInstance.destroy(); } catch(e) {}
-    video._hlsInstance = null;
-  }
-}
-
-function setVideoSource(video, src) {
-  if (!video || !src) return;
-  destroyVideoHlsInstance(video);
-  const source = video.querySelector("source");
-  if (isHlsUrl(src)) {
-    video.dataset.hlsSrc = src;
-    if (source) source.removeAttribute("src");
-    video.removeAttribute("src");
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = src;
-      video.load();
-      return;
-    }
-    loadHlsJsIfNeeded().then((Hls) => {
-      if (!Hls || !Hls.isSupported()) {
-        video.src = src;
-        video.load();
-        return;
-      }
-      const hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 30 });
-      video._hlsInstance = hls;
-      hls.loadSource(src);
-      hls.attachMedia(video);
-    }).catch(() => {
-      video.src = src;
-      video.load();
-    });
-    return;
-  }
-
-  delete video.dataset.hlsSrc;
-  if (source) {
-    source.src = src;
-    source.type = /\.mov(\?|#|$)/i.test(src) ? "video/quicktime" : "video/mp4";
-  } else {
-    video.src = src;
-  }
-  video.load();
-}
-
-function setupHlsVideos(root = document) {
-  root.querySelectorAll("video[data-hls-src]").forEach((video) => {
-    const src = video.dataset.hlsSrc || "";
-    if (!src || video.dataset.hlsReady === src) return;
-    video.dataset.hlsReady = src;
-    setVideoSource(video, src);
-  });
-}
-
-function changeVideoQuality(selectEl) {
-  const videoId = selectEl?.dataset?.videoTarget;
-  const video = videoId ? document.getElementById(videoId) : null;
-  if (!video) return;
-  const selectedOption = selectEl.options[selectEl.selectedIndex];
-  const nextSrc = selectedOption?.dataset?.src || selectEl.value || "";
-  if (!nextSrc) return;
-  const wasPaused = video.paused;
-  const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
-  setVideoSource(video, nextSrc);
-  video.addEventListener("loadedmetadata", function restoreVideoTime() {
-    video.removeEventListener("loadedmetadata", restoreVideoTime);
-    try { if (currentTime && currentTime < video.duration) video.currentTime = currentTime; } catch(e) {}
-    if (!wasPaused) video.play().catch(() => {});
-  });
-}
-
-function renderVideoQualitySelector(item = {}, videoId = "") {
-  const options = getVideoQualityOptions(item);
-  if (options.length <= 1) return "";
-  const selectedKey = getPreferredVideoQualityKey(item, "detail");
-  const opts = options.map(opt => {
-    const src = normalizeMediaUrlForPlayback(opt.url, "video");
-    const selected = opt.key === selectedKey ? " selected" : "";
-    return `<option value="${escapeHtml(src)}" data-src="${escapeHtml(src)}"${selected}>${escapeHtml(opt.label)}</option>`;
-  }).join("");
-  return `<div class="video-quality-selector"><label>화질</label><select data-video-target="${escapeHtml(videoId)}" onchange="changeVideoQuality(this)">${opts}</select></div>`;
-}
-
 function renderDetailMedia(item) {
   const category = item.category || "";
   const mediaUrl = isAudioContentItem(item) ? getPlayableAudioUrl(item) : (item.mediaUrl || item.fileUrl || item.videoUrl || "");
@@ -3811,16 +3626,10 @@ function renderDetailMedia(item) {
     }
 
     if (mediaUrl) {
-      const selectedVideoUrl = getPreferredVideoUrl(item, "detail") || mediaUrl;
-      const selectedPlaybackUrl = normalizeMediaUrlForPlayback(selectedVideoUrl, "video");
       const posterUrl = playbackImageUrl || "";
       const posterAttr = posterUrl ? ` poster="${escapeHtml(posterUrl)}"` : "";
-      const fileType = /\.mov(\?|#|$)/i.test(selectedVideoUrl) ? "video/quicktime" : "video/mp4";
-      const videoId = `detailVideo_${String(item.id || Math.random()).replace(/[^a-zA-Z0-9_-]/g, "")}`;
-      const selector = renderVideoQualitySelector(item, videoId);
-      const hlsAttr = isHlsUrl(selectedPlaybackUrl) ? ` data-hls-src="${escapeHtml(selectedPlaybackUrl)}"` : "";
-      const sourceHtml = isHlsUrl(selectedPlaybackUrl) ? "" : `<source src="${escapeHtml(selectedPlaybackUrl)}" type="${fileType}">`;
-      return `<div class="detail-media-box detail-video-box">${selector}<video id="${escapeHtml(videoId)}" class="detail-inline-video" controls playsinline webkit-playsinline preload="metadata"${posterAttr}${hlsAttr} controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false">${sourceHtml}</video></div>`;
+      const fileType = /\.mov(\?|#|$)/i.test(mediaUrl) ? "video/quicktime" : "video/mp4";
+      return `<div class="detail-media-box detail-video-box"><video class="detail-inline-video" controls playsinline webkit-playsinline preload="auto"${posterAttr} controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false"><source src="${escapeHtml(playbackMediaUrl)}" type="${fileType}"></video></div>`;
     }
 
     if (imageUrl) {
@@ -3926,7 +3735,6 @@ function openContentDetail(id) {
   }
   bindDetailPhotoZoom();
   setupRadioMonochromePlayers(mediaArea);
-  setupHlsVideos(mediaArea);
   document.body.style.overflow = "hidden";
 }
 
@@ -4062,13 +3870,7 @@ function editContent(id) {
     populateSpecificSubCategorySelect("videos", "videoSubCategory", getItemSubCategories(item));
     document.getElementById("videoTitle").value = item.title || "";
     document.getElementById("youtubeUrl").value = item.youtubeUrl || (item.mediaType === "youtube" ? (item.mediaUrl || "") : "");
-    document.getElementById("videoFileUrl").value = (item.mediaType === "video" || item.mediaType === "hls") ? (getVideoMediaUrl(item) || "") : "";
-    if (document.getElementById("videoHlsUrl")) document.getElementById("videoHlsUrl").value = getVideoHlsUrl(item) || "";
-    const videoQualityMap = getVideoQualityMap(item);
-    if (document.getElementById("videoUrl480")) document.getElementById("videoUrl480").value = videoQualityMap.q480 || "";
-    if (document.getElementById("videoUrl720")) document.getElementById("videoUrl720").value = videoQualityMap.q720 || "";
-    if (document.getElementById("videoUrl1080")) document.getElementById("videoUrl1080").value = videoQualityMap.q1080 || "";
-    if (document.getElementById("videoUrlOriginal")) document.getElementById("videoUrlOriginal").value = videoQualityMap.original || "";
+    document.getElementById("videoFileUrl").value = item.mediaType === "video" ? (getVideoMediaUrl(item) || "") : "";
     document.getElementById("videoYear").value = item.year || "";
     document.getElementById("videoSource").value = item.source || "";
     document.getElementById("videoDescription").value = item.body || item.description || "";

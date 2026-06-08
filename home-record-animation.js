@@ -10,9 +10,7 @@
   'images/record-animation/record-5.png',
   'images/record-animation/record-6.png'
 ];
-
-  const STORAGE_KEY = "ks_home_record_daily_v1";
-  const DISMISSED_KEY = "ks_home_record_dismissed_session_v1";
+  const STORAGE_KEY = "ks_home_record_daily_v2";
 
   function kstDateKey(date = new Date()) {
     const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -41,13 +39,42 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ day, index }));
     } catch (e) {}
-
     return { day, index, src: RECORD_IMAGES[index] };
   }
 
   function isHomeActive() {
     const home = document.getElementById("home");
     return !!home && home.classList.contains("active");
+  }
+
+  function positionRecord() {
+    const hero = document.getElementById("homeHero");
+    const stage = document.getElementById("homeRecordStage");
+    if (!hero || !stage) return;
+
+    const heroHeight = hero.getBoundingClientRect().height || 0;
+    if (!heroHeight) return;
+
+    const mm5 = 19; // 약 5mm = 18.9px
+    const size = Math.max(150, Math.round(heroHeight - mm5));
+    stage.style.width = size + "px";
+    stage.style.height = size + "px";
+    stage.style.top = "9.5px";
+    stage.style.left = Math.round(-size / 2) + "px";
+  }
+
+  function showRecord(stage) {
+    if (!isHomeActive()) return;
+    positionRecord();
+    stage.classList.remove("is-hidden");
+    stage.classList.add("is-entering");
+    setTimeout(() => stage.classList.add("is-visible"), 30);
+    setTimeout(() => stage.classList.add("is-spinning"), 1000);
+  }
+
+  function hideRecord(stage) {
+    stage.classList.remove("is-entering", "is-visible", "is-spinning");
+    stage.classList.add("is-hidden");
   }
 
   function initRecord() {
@@ -58,28 +85,16 @@
     const daily = pickDailyRecord();
     img.src = daily.src;
 
+    positionRecord();
+    window.addEventListener("resize", positionRecord);
 
-    const show = () => {
-      if (!isHomeActive()) return;
-      stage.classList.remove("is-hidden");
-      stage.classList.add("is-entering");
-      setTimeout(() => {
-        stage.classList.add("is-visible");
-      }, 30);
-      setTimeout(() => {
-        stage.classList.add("is-spinning");
-      }, 1000);
-    };
-
-    // 사이트 첫 진입 후 2초 뒤, hero 사진 뒤에서 왼쪽으로 나오는 느낌
-    setTimeout(show, 2000);
+    // 새로고침하면 다시 2초 뒤 등장
+    setTimeout(() => showRecord(stage), 2000);
 
     stage.addEventListener("click", function () {
-      stage.classList.remove("is-entering", "is-visible", "is-spinning");
-      stage.classList.add("is-hidden");
+      hideRecord(stage);
     });
 
-    // 00:00(KST) 지나면 오른쪽으로 들어갔다가 3초 뒤 새 오늘 음반으로 다시 등장
     function scheduleMidnightReset() {
       const now = new Date();
       const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
@@ -90,35 +105,24 @@
       const delay = Math.max(1000, nextKstMidnightUtc - now.getTime());
 
       setTimeout(() => {
-        stage.classList.remove("is-entering", "is-visible", "is-spinning");
-        stage.classList.add("is-hidden");
-
+        hideRecord(stage);
         try {
           localStorage.removeItem(STORAGE_KEY);
         } catch (e) {}
-
         const nextDaily = pickDailyRecord();
         img.src = nextDaily.src;
-
-        setTimeout(() => {
-          stage.classList.remove("is-hidden");
-          stage.classList.add("is-entering");
-          setTimeout(() => stage.classList.add("is-visible"), 30);
-          setTimeout(() => stage.classList.add("is-spinning"), 1000);
-        }, 3000);
-
+        setTimeout(() => showRecord(stage), 3000);
         scheduleMidnightReset();
       }, delay);
     }
 
     scheduleMidnightReset();
 
-    // 해시/페이지 이동 후 홈에 돌아왔을 때 숨긴 상태가 아니면 다시 보이도록 보정
     window.addEventListener("hashchange", function () {
       if (!isHomeActive()) return;
-      const current = pickDailyRecord();
+      positionRecord();
       if (!stage.classList.contains("is-visible") && !stage.classList.contains("is-entering")) {
-        setTimeout(show, 700);
+        setTimeout(() => showRecord(stage), 700);
       }
     });
   }
