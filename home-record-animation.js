@@ -56,14 +56,12 @@
     const heroHeight = rect.height || hero.offsetHeight || 0;
     if (!heroHeight) return;
 
-    const mm5 = 19; // 위 2.5mm + 아래 2.5mm 정도
-    const size = Math.max(180, Math.round(heroHeight - mm5));
+    const size = Math.max(180, Math.round(heroHeight - 19)); // hero 세로보다 위아래 2.5mm 정도만 작게
     const left = Math.round(-size / 2);
 
     stage.style.setProperty("--record-size", size + "px");
     stage.style.setProperty("--record-left", left + "px");
     stage.style.setProperty("--record-hide-x", size + "px");
-
     stage.style.width = size + "px";
     stage.style.height = size + "px";
     stage.style.top = "9.5px";
