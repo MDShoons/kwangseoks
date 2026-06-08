@@ -328,7 +328,7 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 이 곳, 광석이네 집",
+  homeTitle: "노래가 머무는 이 곳,\n광석이네 집",
   homeDescription: "김광석 아카이브",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",

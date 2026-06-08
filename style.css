@@ -10279,3 +10279,84 @@ footer,
   position: relative !important;
   z-index: 1 !important;
 }
+
+/* ===== v221 hero title exact wording ===== */
+#homeTitle {
+  white-space: pre-line !important;
+}
+
+
+
+/* ===== v222 user supplied page backgrounds ===== */
+:root {
+  --room-bg-image: none;
+}
+body[data-room="home"] { --room-bg-image: url("images/room-backgrounds/home.webp"); }
+body[data-room="siteinfo"] { --room-bg-image: url("images/room-backgrounds/siteinfo.webp"); }
+body[data-room="videos"] { --room-bg-image: url("images/room-backgrounds/videos.webp"); }
+body[data-room="songs"] { --room-bg-image: url("images/room-backgrounds/songs.webp"); }
+body[data-room="radios"] { --room-bg-image: url("images/room-backgrounds/radios.webp"); }
+body[data-room="photos"] { --room-bg-image: url("images/room-backgrounds/photos.webp"); }
+body[data-room="stories"] { --room-bg-image: url("images/room-backgrounds/stories.webp"); }
+body[data-room="about"] { --room-bg-image: url("images/room-backgrounds/about.webp"); }
+body[data-room="oneum"] { --room-bg-image: url("images/room-backgrounds/oneum.webp"); }
+
+html, body {
+  background: #efe6da !important;
+}
+
+body {
+  background-image: none !important;
+  background-attachment: scroll !important;
+  position: relative !important;
+  overflow-x: hidden !important;
+}
+
+#roomScrollBg {
+  display: none !important;
+}
+
+body::before,
+body::after {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+}
+
+/* blurred extension layer: fills the edges so no blank margins appear */
+body::before {
+  z-index: 0 !important;
+  background-image: var(--room-bg-image) !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  filter: blur(2.2px) saturate(1.02) brightness(.86) contrast(.96) !important;
+  transform: scale(1.08) !important;
+  opacity: .94 !important;
+}
+
+/* main visible layer: preserves the whole uploaded image without cropping */
+body::after {
+  z-index: 0 !important;
+  background-image:
+    linear-gradient(180deg, rgba(42,27,18,.14), rgba(245,237,228,.24) 18%, rgba(243,236,228,.40) 100%),
+    var(--room-bg-image) !important;
+  background-repeat: no-repeat, no-repeat !important;
+  background-position: center center, center center !important;
+  background-size: 100% 100%, contain !important;
+  opacity: .98 !important;
+}
+
+.site-header,
+main,
+footer,
+#roomTransitionOverlay,
+#dailyRecommendPlayer,
+#userPlaylistPlayer,
+.detail-modal,
+.cover-zoom-modal {
+  position: relative !important;
+  z-index: 1 !important;
+}
