@@ -195,3 +195,117 @@
   window.addEventListener("resize", bind);
   window.addEventListener("hashchange", bind);
 })();
+
+
+
+/* ===== v243 force playlist queue open/close for PC + mobile ===== */
+(function () {
+  "use strict";
+
+  function ensureQueueRemoveButton() {
+    const panel = document.getElementById("playlistQueuePanel");
+    const head = panel ? panel.querySelector(".playlist-queue-head") : null;
+    const remove = document.getElementById("playlistPlayerRemoveBtn");
+    if (!panel || !head || !remove) return;
+
+    let btn = document.getElementById("mobileQueueRemoveBtn");
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.id = "mobileQueueRemoveBtn";
+      btn.textContent = "현재곡 빼기";
+      btn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        remove.click();
+        setTimeout(forceQueueOpenIfExpanded, 80);
+      });
+    }
+
+    if (head.firstElementChild !== btn) {
+      head.insertBefore(btn, head.firstElementChild);
+    }
+  }
+
+  function setQueueOpen(open) {
+    const panel = document.getElementById("playlistQueuePanel");
+    const btn = document.getElementById("playlistPlayerListBtn");
+    if (!panel || !btn) return;
+
+    ensureQueueRemoveButton();
+
+    panel.classList.toggle("open", open);
+    panel.classList.toggle("force-open", open);
+    panel.setAttribute("aria-hidden", open ? "false" : "true");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+
+    if (open) {
+      panel.style.setProperty("display", "block", "important");
+      panel.style.setProperty("visibility", "visible", "important");
+      panel.style.setProperty("opacity", "1", "important");
+      panel.style.setProperty("pointer-events", "auto", "important");
+    } else {
+      panel.style.removeProperty("display");
+      panel.style.removeProperty("visibility");
+      panel.style.removeProperty("opacity");
+      panel.style.removeProperty("pointer-events");
+    }
+  }
+
+  function forceQueueOpenIfExpanded() {
+    const btn = document.getElementById("playlistPlayerListBtn");
+    if (btn && btn.getAttribute("aria-expanded") === "true") {
+      setQueueOpen(true);
+    }
+  }
+
+  function bindForceQueueToggle() {
+    const btn = document.getElementById("playlistPlayerListBtn");
+    const panel = document.getElementById("playlistQueuePanel");
+    if (!btn || !panel || btn.dataset.forceQueueToggleV243 === "1") return;
+
+    btn.dataset.forceQueueToggleV243 = "1";
+    btn.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      event.stopPropagation();
+
+      const open = !(panel.classList.contains("open") || panel.classList.contains("force-open") || btn.getAttribute("aria-expanded") === "true");
+      setQueueOpen(open);
+
+      setTimeout(function () {
+        if (open) setQueueOpen(true);
+      }, 80);
+    }, true);
+  }
+
+  function observePanel() {
+    const panel = document.getElementById("playlistQueuePanel");
+    if (!panel || panel.dataset.forceQueueObserverV243 === "1") return;
+    panel.dataset.forceQueueObserverV243 = "1";
+
+    const mo = new MutationObserver(function () {
+      forceQueueOpenIfExpanded();
+      ensureQueueRemoveButton();
+    });
+    mo.observe(panel, { attributes: true, childList: true, subtree: true });
+  }
+
+  function init() {
+    ensureQueueRemoveButton();
+    bindForceQueueToggle();
+    observePanel();
+    forceQueueOpenIfExpanded();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  window.addEventListener("resize", init);
+  window.addEventListener("hashchange", init);
+  window.ksForcePlaylistQueueOpen = function () { setQueueOpen(true); };
+  window.ksForcePlaylistQueueClose = function () { setQueueOpen(false); };
+})();
