@@ -307,7 +307,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v8-no-playlist";
+const APP_VERSION = "v9-no-playlist-player-fix";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1746,7 +1746,7 @@ function scheduleKoreanMidnightRefresh() {
       playlistCurrentItemId = "";
       playlistRequestedItemId = "";
       setupDailyRecommendPlayer({ forceDateRefresh: true });
-      setupUserPlaylistPlayer({ forceOpen: false });
+      disablePlaylistFeature();
       updatePlaylistAddButtons();
     } catch (error) {
       console.warn("자정 플레이어 갱신 오류:", error?.message || error);
@@ -2261,7 +2261,7 @@ function clearUserPlaylist(options = {}) {
   playlistPendingResumeTime = 0;
   playlistResumeAppliedForId = "";
   if (!options.silent) {
-    setupUserPlaylistPlayer({ forceOpen: false });
+    disablePlaylistFeature();
     updatePlaylistAddButtons();
   }
 }
@@ -2273,7 +2273,7 @@ function removeCurrentSongFromPlaylist() {
   localStorage.removeItem(getUserPlaylistStateKey());
   playlistCurrentItemId = "";
   playlistRequestedItemId = ids[0] || "";
-  setupUserPlaylistPlayer({ forceOpen: ids.length > 0 });
+  disablePlaylistFeature();
   updatePlaylistAddButtons();
 }
 
@@ -2294,7 +2294,7 @@ function movePlaylistSelection(direction) {
   playlistRequestedItemId = songs[nextIndex].id;
   playlistPendingResumeTime = 0;
   playlistResumeAppliedForId = "";
-  setupUserPlaylistPlayer({ forceOpen: true });
+  disablePlaylistFeature();
 }
 
 function getCurrentPlaylistSong() {
@@ -2460,7 +2460,7 @@ function bindPlaylistFullDetailOnce() {
     if (nextIndex === currentIndex) nextIndex = (nextIndex + 1) % songs.length;
     playlistRequestedItemId = songs[nextIndex].id;
     playlistAutoPlayAfterMove = true;
-    setupUserPlaylistPlayer({ forceOpen: true });
+    disablePlaylistFeature();
     setTimeout(updatePlaylistFullDetailUi, 180);
   });
   const openList = () => {
@@ -2507,7 +2507,7 @@ function renderPlaylistQueuePanel() {
       playlistPendingResumeTime = 0;
       playlistResumeAppliedForId = "";
       playlistAutoPlayAfterMove = true;
-      setupUserPlaylistPlayer({ forceOpen: true });
+      disablePlaylistFeature();
     });
   });
 }
@@ -2853,7 +2853,7 @@ async function loadContents(force = false) {
       contentsCacheLoaded = true;
       renderAllContentSections();
       setupDailyRecommendPlayer();
-      setupUserPlaylistPlayer({ forceOpen: false });
+      disablePlaylistFeature();
       scheduleKoreanMidnightRefresh();
       await applySavedTemplates();
       applyHomeVoiceSettings(currentSettings);
@@ -4320,6 +4320,57 @@ window.addEventListener("keydown", (event) => {
     closeCoverZoom();
   }
 });
+
+
+// v9: 플레이리스트 기능 완전 비활성화
+function removePlaylistUiCompletely() {
+  try {
+    ["playlistFullDetail", "userPlaylistPlayer", "playlistQueuePanel"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    document.querySelectorAll(".playlist-full-detail,.playlist-player,.playlist-queue-panel,.playlist-add-row").forEach((el) => {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    document.body?.classList.remove("has-open-playlist-player");
+    localStorage.removeItem("kwangseoks_user_playlist_song_ids_v1");
+    localStorage.removeItem("kwangseoks_user_playlist_day_key_v1");
+    localStorage.removeItem("kwangseoks_user_playlist_state_v1");
+  } catch (_) {}
+}
+
+function disablePlaylistFeature() {
+  playlistCurrentItemId = "";
+  playlistRequestedItemId = "";
+  playlistAutoPlayAfterMove = false;
+  playlistPendingResumeTime = 0;
+  playlistResumeAppliedForId = "";
+  removePlaylistUiCompletely();
+}
+
+// 기존 코드 일부가 호출되더라도 플레이리스트 화면이 다시 생성되지 않도록 덮어쓰기
+try {
+  window.__KWANGSEOKS_DISABLE_PLAYLIST__ = true;
+  setupUserPlaylistPlayer = function () { disablePlaylistFeature(); };
+  openPlaylistFullDetail = function () { disablePlaylistFeature(); };
+  closePlaylistFullDetail = function () { disablePlaylistFeature(); };
+  ensurePlaylistFullDetailElement = function () { disablePlaylistFeature(); return null; };
+  updatePlaylistFullDetailUi = function () { disablePlaylistFeature(); };
+  renderPlaylistQueuePanel = function () { disablePlaylistFeature(); };
+  bindPlaylistFullDetailOnce = function () { disablePlaylistFeature(); };
+  bindPlaylistDetailTriggerDelegation = function () { disablePlaylistFeature(); };
+  updatePlaylistDetailTriggerAccessibility = function () { disablePlaylistFeature(); };
+  refreshPlaylistPlayerTitleMarquee = function () { return; };
+  syncPlaylistPlayerBodySpace = function () { document.body?.classList.remove("has-open-playlist-player"); };
+  addSongToUserPlaylist = function () { disablePlaylistFeature(); return false; };
+  updatePlaylistAddButtons = function () { disablePlaylistFeature(); };
+  window.addSongToUserPlaylist = addSongToUserPlaylist;
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", disablePlaylistFeature);
+  else disablePlaylistFeature();
+  window.addEventListener("load", disablePlaylistFeature);
+} catch (error) {
+  console.warn("플레이리스트 제거 처리 오류:", error?.message || error);
+}
 
 window.openCoverZoom = openCoverZoom;
 window.openCoverZoomFromElement = openCoverZoomFromElement;

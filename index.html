@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=restart-v7" />
+  <link rel="stylesheet" href="style.css?v=no-playlist-v9" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -123,6 +123,34 @@
 
 </head>
 <body>
+
+<script>
+  // v9: 플레이리스트 완전 제거 안전장치
+  (function () {
+    window.__KWANGSEOKS_DISABLE_PLAYLIST__ = true;
+    function removePlaylistUi() {
+      try {
+        ["playlistFullDetail", "userPlaylistPlayer", "playlistQueuePanel"].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        });
+        document.querySelectorAll(".playlist-full-detail,.playlist-player,.playlist-queue-panel,.playlist-add-row").forEach(function (el) {
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        });
+        document.body && document.body.classList.remove("has-open-playlist-player");
+        [
+          "kwangseoks_user_playlist_song_ids_v1",
+          "kwangseoks_user_playlist_day_key_v1",
+          "kwangseoks_user_playlist_state_v1"
+        ].forEach(function (key) { localStorage.removeItem(key); });
+      } catch (e) {}
+    }
+    document.addEventListener("DOMContentLoaded", removePlaylistUi);
+    window.addEventListener("load", removePlaylistUi);
+    setTimeout(removePlaylistUi, 100);
+    setTimeout(removePlaylistUi, 800);
+  })();
+</script>
 
   <aside id="dailyRecommendPlayer" class="daily-player" aria-label="오늘의 추천곡 플레이어">
     <div class="daily-player-card">
@@ -757,8 +785,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v8-no-playlist</div>
+<div class="version-marker">v9-no-playlist-player-fix</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=no-playlist-v8"></script>
+  <script type="module" src="app.js?v=no-playlist-v9"></script>
 </body>
 </html>

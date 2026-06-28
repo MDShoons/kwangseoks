@@ -292,3 +292,24 @@ footer{width:min(1360px,calc(100% - 44px));margin:0 auto 34px;padding:26px;text-
 /* v8 no playlist */
 .playlist-player,.playlist-add-row,.playlist-full-detail,.playlist-queue-panel{display:none!important;}
 body.has-open-playlist-player{padding-bottom:0!important;}
+
+
+/* v9: 플레이리스트 완전 제거 - 이전 캐시/자동 생성 상세 플레이어까지 차단 */
+#userPlaylistPlayer,
+#playlistFullDetail,
+#playlistQueuePanel,
+.playlist-player,
+.playlist-full-detail,
+.playlist-queue-panel,
+.playlist-add-row,
+.playlist-player-actions,
+.playlist-detail-trigger {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.has-open-playlist-player {
+  padding-bottom: 0 !important;
+  overflow: auto !important;
+}
