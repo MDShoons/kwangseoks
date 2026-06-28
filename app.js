@@ -307,7 +307,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v9-no-playlist-player-fix";
+const APP_VERSION = "v11-home-restart";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -328,13 +328,13 @@ let pageCategories = {};
 const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
-  homeTitle: "노래가 머무는 이 곳,\n광석이네 집",
-  homeDescription: "김광석 아카이브",
+  homeTitle: "김광석의 노래와 기록을\n조용히 모아두는 집",
+  homeDescription: "영상, 노래, 라디오, 사진, 이야기 자료를 한곳에 정리한 김광석 아카이브입니다.",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
   photosDesc: "김광석의 시간과 표정을 담은 사진 아카이브입니다.",
-  storiesDesc: "김광석의 일기입니다.",
+  storiesDesc: "김광석과 관련된 글과 이야기를 모아둔 공간입니다.",
   aboutDesc: "김광석에 대한 정보를 볼 수 있는 곳입니다.",
   oneumDesc: "김광석의 둥근소리글을 모아둔 곳입니다.",
   homeBgUrl: "./images/main-bg.png",
@@ -1412,7 +1412,7 @@ function applySiteSettings(settings) {
   document.getElementById("footerTitle").textContent = `${settings.siteName} | ${settings.siteSubName}`;
   const hero = document.getElementById("homeHero");
   const bg = settings.homeBgDataUrl || settings.homeBgUrl;
-  hero.style.backgroundImage = bg ? `url("${bg}${bg.startsWith("data:") ? "" : (bg.includes("?") ? "&" : "?") + "v=" + Date.now()}")` : "";
+  hero.style.backgroundImage = "";
 }
 
 function applyDesignSettings(s = currentSettings) {
@@ -3153,7 +3153,7 @@ function renderLatestByCategory(contents) {
     songs: "Songs 최신",
     radios: "Radios 최신",
     photos: "Photos 최신",
-    stories: "Stories 최신",
+    stories: "이야기 최신",
     oneum: "Oneum 최신"
   };
 
@@ -3483,11 +3483,11 @@ function renderAudioArchiveCard(item, id, img, previewText) {
 function renderTextArchiveCard(item, id, img, previewText) {
   const isStoryList = id === "storyList";
   const isOneumList = id === "oneumList";
-  const fallbackLabel = isOneumList ? "원음 글" : "일기 자료";
+  const fallbackLabel = isOneumList ? "원음 글" : "이야기 자료";
   const metaMarkup = isOneumList
     ? oneumMetaMarkup(item)
     : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`;
-  const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 일기는 상세보기에서 볼 수 있습니다.";
+  const hintText = isOneumList ? "전체 원음글은 상세보기에서 볼 수 있습니다." : "전체 이야기는 상세보기에서 볼 수 있습니다.";
 
   return `
     ${img ? `<img src="${img}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder text-card-placeholder">${fallbackLabel}</div>`}
