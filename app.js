@@ -356,13 +356,142 @@ let currentSettings = { ...DEFAULT_SETTINGS };
 const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
 const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
 
+const BOARD_TABLE_BY_PAGE = {
+  videos: "movie",
+  songs: "song",
+  radios: "radio",
+  photos: "photo",
+  stories: "story",
+  about: "about",
+  oneum: "oneum"
+};
+
+const PAGE_BY_BOARD_TABLE = {
+  movie: "videos",
+  video: "videos",
+  videos: "videos",
+  song: "songs",
+  songs: "songs",
+  audio: "songs",
+  radio: "radios",
+  radios: "radios",
+  photo: "photos",
+  photos: "photos",
+  gallery: "photos",
+  story: "stories",
+  stories: "stories",
+  about: "about",
+  oneum: "oneum"
+};
+
+let activeDetailPage = "";
+
+function getContentRouteFromLocation() {
+  const params = new URLSearchParams(window.location.search || "");
+  const wrId = params.get("wr_id") || params.get("id") || params.get("doc_id") || "";
+  const boTable = String(params.get("bo_table") || params.get("board") || params.get("category") || "").trim().toLowerCase();
+
+  if (!wrId && !boTable) return null;
+
+  return {
+    itemId: String(wrId || "").trim(),
+    page: PAGE_BY_BOARD_TABLE[boTable] || "",
+    boTable
+  };
+}
+
 function getPageFromHash() {
-  const page = window.location.hash.replace("#", "").trim();
+  const route = getContentRouteFromLocation();
+  if (route?.page) return route.page;
+
+  const rawHash = window.location.hash.replace("#", "").trim();
+  const page = rawHash.split(/[\/?:&]/)[0];
   return VALID_PAGES.includes(page) ? page : "home";
+}
+
+function getBoardTableForItem(item) {
+  return BOARD_TABLE_BY_PAGE[item?.category] || item?.category || "archive";
+}
+
+function getSiteBasePath() {
+  let path = window.location.pathname || "/";
+  path = path.replace(/\/bbs\/board\.(php|html)$/i, "/");
+  path = path.replace(/\/index\.html$/i, "/");
+  if (!path.endsWith("/")) path = path.replace(/\/[^/]*$/i, "/");
+  return path || "/";
+}
+
+function makeContentBoardUrl(item) {
+  const url = new URL(`${window.location.origin}${getSiteBasePath()}bbs/board.php`);
+  url.searchParams.set("bo_table", getBoardTableForItem(item));
+  url.searchParams.set("wr_id", item?.id || "");
+  return url.toString();
+}
+
+function updateContentBoardUrl(item, replace = false) {
+  const url = makeContentBoardUrl(item);
+  const state = { page: item?.category || "home", itemId: item?.id || "" };
+  if (replace) window.history.replaceState(state, "", url);
+  else if (window.location.href !== url) window.history.pushState(state, "", url);
+}
+
+function clearContentBoardUrl() {
+  if (!window.location.search.includes("wr_id=")) return;
+  const page = VALID_PAGES.includes(activeDetailPage) ? activeDetailPage : getPageFromHash();
+  const url = new URL(`${window.location.origin}${getSiteBasePath()}`);
+  url.hash = page && page !== "home" ? `#${page}` : "#home";
+  window.history.pushState({ page }, "", url.toString());
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("공유 주소를 복사했습니다.");
+  } catch (error) {
+    window.prompt("공유 주소를 복사해 주세요.", text);
+  }
+}
+
+window.copyContentShareUrl = function copyContentShareUrl(url) {
+  copyTextToClipboard(url);
+};
+
+async function openContentRouteFromLocation() {
+  const route = getContentRouteFromLocation();
+  if (!route?.itemId) return false;
+
+  if (!contentsCacheLoaded) await loadContents();
+
+  const item = allContents.find((content) => String(content.id) === String(route.itemId));
+  const page = item?.category || route.page || "home";
+
+  if (RESTRICTED_PAGES.includes(page) && !currentUser) {
+    showPage("loginRequired", true);
+    return true;
+  }
+
+  showPage(page, true);
+
+  if (!item) {
+    alert("해당 자료를 찾지 못했습니다. 삭제되었거나 주소가 잘못되었을 수 있습니다.");
+    return true;
+  }
+
+  setTimeout(() => openContentDetail(item.id, { replaceUrl: true }), 0);
+  return true;
 }
 
 function goPage(pageId) {
   if (!VALID_PAGES.includes(pageId)) pageId = "home";
+
+  if (getContentRouteFromLocation()?.itemId || /\/bbs\/board\.(php|html)$/i.test(window.location.pathname || "")) {
+    const url = new URL(`${window.location.origin}${getSiteBasePath()}`);
+    url.hash = pageId;
+    window.history.pushState({ page: pageId }, "", url.toString());
+    closeContentDetail();
+    showPage(pageId, true);
+    return;
+  }
 
   if (window.location.hash !== `#${pageId}`) {
     window.location.hash = pageId;
@@ -372,8 +501,14 @@ function goPage(pageId) {
 }
 
 function handleHashRoute() {
+  if (getContentRouteFromLocation()?.itemId && contentsCacheLoaded) {
+    openContentRouteFromLocation();
+    return;
+  }
   showPage(getPageFromHash(), true);
 }
+
+window.addEventListener("popstate", handleHashRoute);
 
 window.showPage = showPage;
 window.goPage = goPage;
@@ -705,7 +840,7 @@ onAuthStateChanged(auth, async (user) => {
   await window.addEventListener("hashchange", handleHashRoute);
 window.addEventListener("DOMContentLoaded", handleHashRoute);
 loadSiteSettings(); await loadPageCategories(); await loadContents();
-  handleHashRoute();
+  if (!(await openContentRouteFromLocation())) handleHashRoute();
 });
 
 async function loadPageCategories() {
@@ -3846,9 +3981,12 @@ function renderDetailMedia(item) {
   return "";
 }
 
-function openContentDetail(id) {
-  const item = allContents.find((content) => content.id === id);
+function openContentDetail(id, options = {}) {
+  const item = allContents.find((content) => String(content.id) === String(id));
   if (!item) return;
+
+  activeDetailPage = item.category || activeDetailPage || "home";
+  if (options.updateUrl !== false) updateContentBoardUrl(item, Boolean(options.replaceUrl));
 
   const modal = document.getElementById("contentDetailModal");
   const mediaArea = document.getElementById("detailMediaArea");
@@ -3884,6 +4022,22 @@ function openContentDetail(id) {
   const oneumReplyHtml = isOneumItem(item) ? renderOneumKksReplyMarkup(item) : "";
   descEl.innerHTML = `${detailBodyHtml}${oneumReplyHtml}`;
 
+  const shareUrl = makeContentBoardUrl(item);
+  let shareArea = document.getElementById("detailShareArea");
+  if (!shareArea) {
+    shareArea = document.createElement("div");
+    shareArea.id = "detailShareArea";
+    shareArea.className = "detail-share-area";
+    descEl.parentElement?.insertBefore(shareArea, descEl);
+  }
+  shareArea.innerHTML = `
+    <div class="detail-share-title">게시글 공유 주소</div>
+    <div class="detail-share-row">
+      <input class="detail-share-url" type="text" value="${escapeHtml(shareUrl)}" readonly onclick="this.select()" />
+      <button type="button" class="detail-share-copy-btn" onclick="copyContentShareUrl(this.parentElement.querySelector('.detail-share-url').value)">주소 복사</button>
+    </div>
+  `;
+
   forceMobileViewportZoomReset();
   modal.classList.remove("hidden");
   installBasicContentProtection();
@@ -3912,8 +4066,12 @@ function closeContentDetail(event) {
   if (categoryEl) categoryEl.innerHTML = "";
   if (metaEl) metaEl.innerHTML = "";
   if (descEl) descEl.innerHTML = "";
+  const shareArea = document.getElementById("detailShareArea");
+  if (shareArea) shareArea.innerHTML = "";
   if (modal) modal.classList.add("hidden");
 
+  clearContentBoardUrl();
+  activeDetailPage = "";
   document.body.style.overflow = "";
   forceMobileViewportZoomReset();
 }

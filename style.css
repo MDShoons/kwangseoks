@@ -16338,3 +16338,57 @@ body.playlist-detail-open {
     text-align: center !important;
   }
 }
+
+/* 게시판형 공유 주소 영역 */
+.detail-share-area {
+  margin: 14px 0 18px;
+  padding: 12px;
+  border: 1px solid rgba(122, 77, 53, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 250, 244, 0.92);
+}
+
+.detail-share-title {
+  margin-bottom: 8px;
+  font-weight: 800;
+  color: #5d3a28;
+}
+
+.detail-share-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.detail-share-url {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(122, 77, 53, 0.35);
+  border-radius: 9px;
+  font-size: 13px;
+  background: #fff;
+  color: #2f2924;
+}
+
+.detail-share-copy-btn {
+  white-space: nowrap;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: #7a4d35;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .detail-share-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detail-share-copy-btn {
+    width: 100%;
+  }
+}

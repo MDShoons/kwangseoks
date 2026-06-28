@@ -1,0 +1,21 @@
+# 게시판형 공유 주소 업데이트
+
+이번 버전은 자료 상세창을 열 때 주소가 게시판형으로 바뀌도록 수정했습니다.
+
+예시:
+https://도메인/bbs/board.php?bo_table=movie&wr_id=자료ID
+
+적용 내용:
+1. Videos/Songs/Radios/Photos/Stories/Oneum 자료 클릭 시 주소창이 게시판형 URL로 변경됩니다.
+2. 상세창 안에 '게시글 공유 주소'와 '주소 복사' 버튼이 표시됩니다.
+3. 공유 주소로 접속하면 해당 자료가 있는 페이지로 이동한 뒤 상세창이 자동으로 열립니다.
+4. GitHub Pages는 PHP를 실행하지 못하므로, /bbs/board.php 직접 접속은 404.html을 통해 메인 페이지로 돌려보낸 뒤 JavaScript가 자료를 여는 방식으로 처리합니다.
+5. 실제 게시글 번호는 Firestore 문서 ID를 wr_id로 사용합니다. 숫자형 34, 35 같은 번호가 필요하면 별도의 boardNo 필드를 추가해야 합니다.
+
+bo_table 대응:
+- movie  → videos
+- song   → songs
+- radio  → radios
+- photo  → photos
+- story  → stories
+- oneum  → oneum
