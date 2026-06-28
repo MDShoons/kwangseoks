@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=concert-dropdown-v20" />
+  <link rel="stylesheet" href="style.css?v=admin-concert-mobile-v21" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -550,6 +550,7 @@
         <button onclick="showAdminForm('photo')">사진 등록</button>
         <button onclick="showAdminForm('audio')">음원 등록</button>
         <button onclick="showAdminForm('radio')">라디오 등록</button>
+        <button onclick="showAdminForm('concertPoster')">공연 자료 등록</button>
         <button onclick="showAdminForm('concertAudio')">공연 음성 등록</button>
         <button onclick="showAdminForm('oneum')">원음 글 등록</button>
         <button onclick="showAdminForm('manage')">자료 수정/삭제</button>
@@ -562,7 +563,7 @@
         <h2>각 페이지 글/사진 등록</h2>
         <input type="hidden" id="editContentId" value="" />
         <label>등록할 페이지</label>
-        <select id="contentCategory"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option></select>
+        <select id="contentCategory"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option></select>
         <label>자료 카테고리 <span class="helper-inline">Ctrl/⌘ 또는 Shift로 여러 개 선택</span></label>
         <select id="contentSubCategory" multiple size="5"></select>
         <input id="contentTitle" type="text" placeholder="제목" />
@@ -653,6 +654,23 @@
         <button type="button" id="saveRadioBtn">라디오 저장</button>
       </form>
 
+      <form id="adminConcertPosterForm" class="admin-form hidden">
+        <h2>공연 자료 등록</h2>
+        <p class="helper-text">공연자료 페이지에 들어갈 포스터, 프로그램북, 안내문, 공연 관련 기록을 등록합니다.</p>
+        <label>자료 카테고리 <span class="helper-inline">여러 개 선택 가능</span></label><select id="concertPosterSubCategory" multiple size="5"></select>
+        <input id="concertPosterTitle" type="text" placeholder="공연 자료 제목" />
+        <textarea id="concertPosterBody" placeholder="공연 자료 설명 또는 본문"></textarea>
+        <input id="concertPosterYear" type="text" placeholder="공연 연도 예: 1995" />
+        <input id="concertPosterSource" type="text" placeholder="출처 / 공연명 / 장소" />
+        <label>공연 포스터 또는 관련 이미지</label>
+        <input id="concertPosterImageFile" type="file" accept="image/*" />
+        <input id="concertPosterImageUrl" type="url" placeholder="https:// 로 시작하는 이미지 링크를 입력하세요" />
+        <p class="helper-text">이미지는 자동 압축 후 Firestore에 저장됩니다. 포스터가 없는 공연 기록은 제목과 설명만으로도 등록할 수 있습니다.</p>
+        <label class="checkbox-label"><input id="concertPosterFeatured" type="checkbox" /> 메인 최신/추천 자료로 활용</label>
+        <button type="button" id="saveConcertPosterBtn">공연 자료 저장</button>
+        <button type="button" id="resetConcertPosterBtn" class="secondary-btn">입력 초기화</button>
+      </form>
+
       <form id="adminConcertAudioForm" class="admin-form hidden">
         <h2>공연 음성 등록</h2>
         <p class="helper-text">공연음성 페이지에 들어갈 mp3/wav 자료를 등록합니다. URL 직접 입력도 가능합니다.</p>
@@ -666,7 +684,7 @@
         <label>대표 이미지 또는 포스터 업로드</label>
         <input id="concertImageFile" type="file" accept="image/*" />
         <input id="concertImageUrl" type="url" placeholder="선택사항: 이미지 URL. 가능하면 위 사진 업로드를 사용하세요." />
-        <p class="helper-text">공연 포스터나 관련 이미지는 ‘각 페이지 글/사진 등록’에서 등록 페이지를 공연자료로 선택해 올릴 수 있습니다.</p>
+        <p class="helper-text">공연 포스터나 관련 이미지는 관리자 메뉴의 ‘공연 자료 등록’에서 따로 등록합니다.</p>
         <button type="button" id="saveConcertBtn">공연 음성 저장</button>
       </form>
 
@@ -702,7 +720,7 @@
 
       <section id="adminManageForm" class="admin-form hidden">
         <h2>자료 수정/삭제</h2>
-        <div class="toolbar"><select id="manageCategoryFilter" onchange="renderAdminManageList()"><option value="">전체</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select><button type="button" onclick="loadContents()">새로고침</button></div>
+        <div class="toolbar"><select id="manageCategoryFilter" onchange="renderAdminManageList()"><option value="">전체</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select><button type="button" onclick="loadContents()">새로고침</button></div>
         <div id="adminContentList" class="admin-list"></div>
       </section>
 
@@ -754,7 +772,7 @@
 
         <h3>페이지 템플릿</h3>
         <label>변경할 페이지</label>
-        <select id="templatePage"><option value="home">처음</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
+        <select id="templatePage"><option value="home">처음</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
         <label>템플릿</label>
         <select id="templateType"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option><option value="wide">넓은 본문형</option></select>
         <button type="button" id="saveTemplateBtn">템플릿만 저장</button>
@@ -765,7 +783,7 @@
         <h2>페이지별 카테고리 만들기</h2>
         <p class="helper-text">예: Songs 페이지에 1집, 2집 / Videos 페이지에 공연, 방송, 인터뷰 등을 만들 수 있습니다.</p>
         <label>카테고리를 만들 페이지</label>
-        <select id="categoryPage"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
+        <select id="categoryPage"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
         <input id="newCategoryName" type="text" placeholder="새 카테고리 이름 예: 1집, 2집, 공연, 인터뷰" />
         <button type="button" id="saveCategoryBtn">카테고리 생성</button>
         <h3>현재 카테고리</h3>
@@ -804,8 +822,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v20-concert-dropdown-menu</div>
+<div class="version-marker">v21-admin-concert-mobile-split</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=concert-dropdown-v20"></script>
+  <script type="module" src="app.js?v=admin-concert-mobile-v21"></script>
 </body>
 </html>

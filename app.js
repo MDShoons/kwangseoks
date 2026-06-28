@@ -308,7 +308,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v19-concert-split-fullscreen";
+const APP_VERSION = "v21-admin-concert-mobile-split";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -659,14 +659,15 @@ installScreenProtection();
 }
 
 function showAdminForm(type) {
-  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminConcertAudioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm","adminBulkSongCoverForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
-  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", concertAudio:"adminConcertAudioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm", bulkSongCover:"adminBulkSongCoverForm"};
+  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminConcertPosterForm","adminConcertAudioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm","adminBulkSongCoverForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
+  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", concertPoster:"adminConcertPosterForm", concertAudio:"adminConcertAudioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm", bulkSongCover:"adminBulkSongCoverForm"};
   document.getElementById(map[type])?.classList.remove("hidden");
   if (type === "content") populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos", []);
   if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory", []);
   if (type === "photo") populateSpecificSubCategorySelect("photos", "photoSubCategory", []);
   if (type === "audio") populateSpecificSubCategorySelect("songs", "audioSubCategory", []);
   if (type === "radio") populateSpecificSubCategorySelect("radios", "radioSubCategory", []);
+  if (type === "concertPoster") populateSpecificSubCategorySelect("concerts", "concertPosterSubCategory", []);
   if (type === "concertAudio") populateSpecificSubCategorySelect("concerts", "concertSubCategory", []);
   if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory", []);
   if (type === "template") { fillSettingsFormFromCurrent(); bindDesignPreviewEvents(); }
@@ -1106,6 +1107,60 @@ function resetVideoForm() {
   if (btn) btn.textContent = "영상 저장";
 }
 document.getElementById("resetVideoBtn")?.addEventListener("click", resetVideoForm);
+
+async function saveConcertPoster() {
+  if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
+
+  const title = document.getElementById("concertPosterTitle")?.value.trim() || "";
+  const body = document.getElementById("concertPosterBody")?.value.trim() || "";
+  if (!title || !body) return alert("공연 자료 제목과 설명을 입력하세요.");
+
+  try {
+    const mediaUrl = await getImageDataUrlOrDirectUrl(
+      document.getElementById("concertPosterImageFile")?.files?.[0],
+      document.getElementById("concertPosterImageUrl")?.value || "",
+      1400
+    );
+
+    const payload = {
+      category: "concerts",
+      ...makeSubCategoryPayload("concertPosterSubCategory"),
+      mediaType: mediaUrl ? "imageText" : "text",
+      title,
+      body,
+      description: body,
+      year: document.getElementById("concertPosterYear")?.value.trim() || "",
+      source: document.getElementById("concertPosterSource")?.value.trim() || "",
+      isFeatured: !!document.getElementById("concertPosterFeatured")?.checked,
+      isPublic: true,
+      createdBy: currentUser.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    if (mediaUrl) {
+      payload.mediaUrl = mediaUrl;
+      payload.imageUrl = mediaUrl;
+      payload.thumbnailUrl = mediaUrl;
+    }
+
+    await addDoc(collection(db, "contents"), payload);
+    alert("공연 자료가 저장되었습니다.");
+    resetConcertPosterForm();
+    await loadContents(true);
+  } catch(e) {
+    alert("공연 자료 저장 오류: " + e.message);
+  }
+}
+
+function resetConcertPosterForm() {
+  const form = document.getElementById("adminConcertPosterForm");
+  if (form) form.reset();
+  populateSpecificSubCategorySelect("concerts", "concertPosterSubCategory", []);
+}
+
+document.getElementById("saveConcertPosterBtn")?.addEventListener("click", saveConcertPoster);
+document.getElementById("resetConcertPosterBtn")?.addEventListener("click", resetConcertPosterForm);
 
 document.getElementById("saveAudioBtn").addEventListener("click", () => saveAudioLike("songs", "audio"));
 document.getElementById("saveRadioBtn").addEventListener("click", () => saveAudioLike("radios", "radio"));

@@ -1113,33 +1113,35 @@ body:has(#home.active) .daily-player:not(.hidden):not(.closed){
 }
 
 
-/* v20: 모바일에서는 공연 하위 메뉴를 펼친 형태로 표시 */
+/* v21: 모바일에서는 공연 상위 메뉴를 숨기고 공연자료/공연음성을 일반 메뉴처럼 분리 표시 */
 @media (max-width:1100px){
   #siteNav .nav-dropdown{
-    display:grid;
-    width:auto;
+    display:contents;
   }
   #siteNav .nav-dropdown-trigger{
-    justify-content:flex-start;
+    display:none !important;
   }
   #siteNav .nav-dropdown-menu{
+    display:contents;
     position:static;
-    left:auto;
-    top:auto;
     min-width:0;
-    margin-top:6px;
-    padding:6px;
+    margin:0;
+    padding:0;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+    backdrop-filter:none;
     transform:none;
     opacity:1;
     visibility:visible;
     pointer-events:auto;
-    background:rgba(255,255,255,.05);
-    box-shadow:none;
-    border-radius:16px;
   }
   #siteNav .nav-dropdown-menu::before{display:none;}
   #siteNav .nav-dropdown-menu button{
-    font-size:13px;
-    padding:9px 11px;
+    width:auto;
+    border-radius:999px;
+    padding:10px 12px;
+    font-size:14px;
+    text-align:center;
   }
 }
