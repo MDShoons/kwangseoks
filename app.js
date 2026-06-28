@@ -1965,8 +1965,6 @@ function setupDailyRecommendPlayer(options = {}) {
   const songs = allContents.filter((item) => item.category === "songs");
   const selected = pickDailyRecommendedSong(songs);
 
-  player.classList.remove("hidden");
-
   if (!selected) {
     dailyRecommendedItemId = "";
     audio.pause();
@@ -1981,6 +1979,8 @@ function setupDailyRecommendPlayer(options = {}) {
     progress.disabled = true;
     current.textContent = "0:00";
     duration.textContent = "0:00";
+    player.classList.add("hidden", "closed");
+    positionFloatingAudioPlayers();
     return;
   }
 
@@ -1999,9 +1999,12 @@ function setupDailyRecommendPlayer(options = {}) {
     progress.disabled = true;
     current.textContent = "0:00";
     duration.textContent = "0:00";
+    player.classList.add("hidden", "closed");
+    positionFloatingAudioPlayers();
     return;
   }
 
+  player.classList.remove("hidden", "closed");
   playBtn.disabled = false;
   playBtn.classList.remove("disabled");
   progress.disabled = false;
