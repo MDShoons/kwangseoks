@@ -101,7 +101,7 @@ function normalizeGitHubPagesAudioUrl(url) {
     if (!isKwangseoksPages) return value;
 
     const repoPath = parsed.pathname.replace(/^\/kwangseoks\//, "");
-    if (!/^(audios|radios)\//i.test(repoPath)) return value;
+    if (!/^(audios|radios|concerts)\//i.test(repoPath)) return value;
 
     return `https://raw.githubusercontent.com/mdshoons/kwangseoks/main/${repoPath}`;
   } catch (_) {
@@ -187,7 +187,7 @@ function getAdminDownloadInfo(item = {}) {
 
   if (category === "songs") return null;
 
-  if (category === "radios") {
+  if (category === "radios" || (category === "concerts" && isAudioContentItem(item))) {
     url = getPlayableAudioUrl(item);
     type = "audio";
     fallbackExt = "mp3";
@@ -220,6 +220,7 @@ function renderAdminDownloadButton(item = {}, place = "card") {
 
   const labelMap = {
     radios: "라디오 다운로드",
+    concerts: "공연 음성 다운로드",
     videos: "영상 다운로드",
     photos: "사진 다운로드"
   };
@@ -307,7 +308,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v11-home-restart";
+const APP_VERSION = "v18-concerts-recommend";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -329,10 +330,11 @@ const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
   homeTitle: "김광석의 노래와 기록을\n조용히 모아두는 집",
-  homeDescription: "영상, 노래, 라디오, 사진, 이야기 자료를 한곳에 정리한 김광석 아카이브입니다.",
+  homeDescription: "영상, 노래, 라디오, 공연, 사진, 이야기 자료를 한곳에 정리한 김광석 아카이브입니다.",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
+  concertsDesc: "김광석의 공연 포스터, 공연 관련 기록, 공연 음성 파일을 나누어 정리한 공간입니다.",
   photosDesc: "김광석의 시간과 표정을 담은 사진 아카이브입니다.",
   storiesDesc: "김광석과 관련된 글과 이야기를 모아둔 공간입니다.",
   aboutDesc: "김광석에 대한 정보를 볼 수 있는 곳입니다.",
@@ -353,13 +355,14 @@ const DEFAULT_SETTINGS = {
 let currentSettings = { ...DEFAULT_SETTINGS };
 
 
-const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
-const RESTRICTED_PAGES = ["videos", "radios", "photos", "oneum"];
+const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "concerts", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const RESTRICTED_PAGES = ["videos", "radios", "concerts", "photos", "oneum"];
 
 const BOARD_TABLE_BY_PAGE = {
   videos: "movie",
   songs: "song",
   radios: "radio",
+  concerts: "concert",
   photos: "photo",
   stories: "story",
   about: "about",
@@ -375,6 +378,10 @@ const PAGE_BY_BOARD_TABLE = {
   audio: "songs",
   radio: "radios",
   radios: "radios",
+  concert: "concerts",
+  concerts: "concerts",
+  performance: "concerts",
+  live: "concerts",
   photo: "photos",
   photos: "photos",
   gallery: "photos",
@@ -522,6 +529,20 @@ function escapeHtml(text) {
   return String(text || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
 
+function getCategoryDisplayName(category) {
+  const map = {
+    videos: "영상",
+    songs: "노래",
+    radios: "라디오",
+    concerts: "공연",
+    photos: "사진",
+    stories: "이야기",
+    about: "김광석",
+    oneum: "둥근소리글"
+  };
+  return map[category] || category || "미분류";
+}
+
 
 function getItemSubCategories(item) {
   const values = [];
@@ -612,7 +633,7 @@ function showPage(pageId, fromHash = false) {
   if (pageId === "home") tryPlayHomeVoiceOnce();
 
 
-  if (["videos", "songs", "radios", "photos", "stories", "oneum"].includes(pageId)) {
+  if (["videos", "songs", "radios", "concerts", "photos", "stories", "oneum"].includes(pageId)) {
     // 이미 자료를 한 번 불러온 뒤에는 페이지 이동 때마다 Firestore를 다시 읽지 않고
     // 현재 페이지 목록만 다시 그립니다. 페이지 전환 체감 속도를 빠르게 하기 위한 캐시 처리입니다.
     if (contentsCacheLoaded) renderContentPage(pageId);
@@ -626,14 +647,15 @@ installScreenProtection();
 }
 
 function showAdminForm(type) {
-  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm","adminBulkSongCoverForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
-  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm", bulkSongCover:"adminBulkSongCoverForm"};
+  ["adminContentForm","adminVideoForm","adminPhotoForm","adminAudioForm","adminRadioForm","adminConcertAudioForm","adminOneumForm","adminManageForm","adminTemplateForm","adminCategoryForm","adminBulkSongCoverForm"].forEach(id => document.getElementById(id)?.classList.add("hidden"));
+  const map = {content:"adminContentForm", video:"adminVideoForm", photo:"adminPhotoForm", audio:"adminAudioForm", radio:"adminRadioForm", concertAudio:"adminConcertAudioForm", oneum:"adminOneumForm", manage:"adminManageForm", template:"adminTemplateForm", category:"adminCategoryForm", bulkSongCover:"adminBulkSongCoverForm"};
   document.getElementById(map[type])?.classList.remove("hidden");
   if (type === "content") populateContentSubCategorySelect(document.getElementById("contentCategory")?.value || "videos", []);
   if (type === "video") populateSpecificSubCategorySelect("videos", "videoSubCategory", []);
   if (type === "photo") populateSpecificSubCategorySelect("photos", "photoSubCategory", []);
   if (type === "audio") populateSpecificSubCategorySelect("songs", "audioSubCategory", []);
   if (type === "radio") populateSpecificSubCategorySelect("radios", "radioSubCategory", []);
+  if (type === "concertAudio") populateSpecificSubCategorySelect("concerts", "concertSubCategory", []);
   if (type === "oneum") populateSpecificSubCategorySelect("oneum", "oneumSubCategory", []);
   if (type === "template") { fillSettingsFormFromCurrent(); bindDesignPreviewEvents(); }
   if (type === "category") renderCategoryList();
@@ -846,13 +868,14 @@ async function loadPageCategories() {
     populateSpecificSubCategorySelect("songs","audioSubCategory");
     populateBulkSongCoverCategorySelect();
     populateSpecificSubCategorySelect("radios","radioSubCategory");
+    populateSpecificSubCategorySelect("concerts","concertSubCategory");
     populateSpecificSubCategorySelect("oneum","oneumSubCategory");
     renderCategoryList();
   } catch (e) { console.warn(e); }
 }
 
 function populateAllCategoryFilters() {
-  ["videos","songs","radios","photos","stories","about","oneum"].forEach(page => {
+  ["videos","songs","radios","concerts","photos","stories","about","oneum"].forEach(page => {
     const select = document.getElementById(`${page}CategoryFilter`);
     if (!select) return;
     const cur = select.value;
@@ -1073,6 +1096,7 @@ document.getElementById("resetVideoBtn")?.addEventListener("click", resetVideoFo
 
 document.getElementById("saveAudioBtn").addEventListener("click", () => saveAudioLike("songs", "audio"));
 document.getElementById("saveRadioBtn").addEventListener("click", () => saveAudioLike("radios", "radio"));
+document.getElementById("saveConcertBtn")?.addEventListener("click", () => saveAudioLike("concerts", "concert"));
 document.getElementById("saveOneumBtn")?.addEventListener("click", saveOneumPost);
 document.getElementById("resetOneumBtn")?.addEventListener("click", resetOneumForm);
 document.getElementById("oneumHasKksReply")?.addEventListener("change", toggleOneumReplyFields);
@@ -1192,9 +1216,9 @@ function resetOneumForm() {
 async function saveAudioLike(category, prefix) {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
 
-  const title = getInputValueByIds([`${prefix}Title`, category === "songs" ? "songTitle" : "", category === "radios" ? "radioTitle" : ""].filter(Boolean));
+  const title = getInputValueByIds([`${prefix}Title`, category === "songs" ? "songTitle" : "", category === "radios" ? "radioTitle" : "", category === "concerts" ? "concertTitle" : ""].filter(Boolean));
   const urlInput = getMediaUrlForPrefix(prefix);
-  const file = getFileByIds([`${prefix}File`, `${prefix}UploadFile`, category === "songs" ? "songFile" : "", category === "radios" ? "radioFile" : ""].filter(Boolean));
+  const file = getFileByIds([`${prefix}File`, `${prefix}UploadFile`, category === "songs" ? "songFile" : "", category === "radios" ? "radioFile" : "", category === "concerts" ? "concertFile" : ""].filter(Boolean));
   const coverFile = getFileByIds([`${prefix}ImageFile`, `${prefix}CoverFile`, `${prefix}ThumbnailFile`]);
   const coverUrlInput = getThumbnailUrlForPrefix(prefix);
 
@@ -1204,7 +1228,8 @@ async function saveAudioLike(category, prefix) {
   }
 
   try {
-    const mediaUrl = normalizeMediaUrlForPlayback(urlInput || await uploadFileToGitHubWorker(file, category === "songs" ? "audios" : "radios"), "audio");
+    const uploadFolder = category === "songs" ? "audios" : (category === "concerts" ? "concerts" : "radios");
+    const mediaUrl = normalizeMediaUrlForPlayback(urlInput || await uploadFileToGitHubWorker(file, uploadFolder), "audio");
     const thumbnailUrl = await getImageDataUrlOrDirectUrl(coverFile, coverUrlInput, 1000);
 
     await addDoc(collection(db, "contents"), {
@@ -1224,7 +1249,7 @@ async function saveAudioLike(category, prefix) {
     });
 
     alert("미디어와 앨범 커버가 저장되었습니다.");
-    const formId = category === "songs" ? "adminAudioForm" : "adminRadioForm";
+    const formId = category === "songs" ? "adminAudioForm" : (category === "concerts" ? "adminConcertAudioForm" : "adminRadioForm");
     document.getElementById(formId)?.reset();
     populateSpecificSubCategorySelect(category, `${prefix}SubCategory`, []);
     await loadContents(true);
@@ -1392,7 +1417,7 @@ function applySiteSettings(settings) {
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
   document.getElementById("homeTitle").textContent = settings.homeTitle;
   document.getElementById("homeDescription").textContent = settings.homeDescription;
-  ["videos","songs","radios","photos","stories","about","oneum"].forEach(p => {
+  ["videos","songs","radios","concerts","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
     if (el) el.textContent = settings[`${p}Desc`] || DEFAULT_SETTINGS[`${p}Desc`];
   });
@@ -1415,7 +1440,7 @@ function applyDesignSettings(s = currentSettings) {
 function fillSettingsFormFromCurrent() {
   const ids = {
     settingSiteName:"siteName", settingSiteSubName:"siteSubName", settingHomeTitle:"homeTitle", settingHomeDescription:"homeDescription",
-    settingVideosDesc:"videosDesc", settingSongsDesc:"songsDesc", settingRadiosDesc:"radiosDesc", settingPhotosDesc:"photosDesc",
+    settingVideosDesc:"videosDesc", settingSongsDesc:"songsDesc", settingRadiosDesc:"radiosDesc", settingConcertsDesc:"concertsDesc", settingPhotosDesc:"photosDesc",
     settingStoriesDesc:"storiesDesc", settingAboutDesc:"aboutDesc", settingOneumDesc:"oneumDesc",
     settingBodyBgColor:"bodyBgColor", settingHeaderBgColor:"headerBgColor", settingButtonColor:"buttonColor", settingCardBgColor:"cardBgColor",
     settingTextColor:"textColor", settingHeroTextColor:"heroTextColor", settingNavTextColor:"navTextColor",
@@ -1474,6 +1499,7 @@ document.getElementById("saveSiteSettingsBtn").addEventListener("click", async (
       videosDesc: document.getElementById("settingVideosDesc").value.trim() || DEFAULT_SETTINGS.videosDesc,
       songsDesc: document.getElementById("settingSongsDesc").value.trim() || DEFAULT_SETTINGS.songsDesc,
       radiosDesc: document.getElementById("settingRadiosDesc").value.trim() || DEFAULT_SETTINGS.radiosDesc,
+      concertsDesc: document.getElementById("settingConcertsDesc")?.value.trim() || DEFAULT_SETTINGS.concertsDesc,
       photosDesc: document.getElementById("settingPhotosDesc").value.trim() || DEFAULT_SETTINGS.photosDesc,
       storiesDesc: document.getElementById("settingStoriesDesc").value.trim() || DEFAULT_SETTINGS.storiesDesc,
       aboutDesc: document.getElementById("settingAboutDesc").value.trim() || DEFAULT_SETTINGS.aboutDesc,
@@ -1644,6 +1670,7 @@ function renderAllContentSections() {
   const videos = prepareItemsForPage("videos", filterBySelectedSubCategory("videos", allContents.filter(i => i.category === "videos")));
   const songs = prepareItemsForPage("songs", filterBySelectedSubCategory("songs", allContents.filter(i => i.category === "songs")));
   const radios = prepareItemsForPage("radios", filterBySelectedSubCategory("radios", allContents.filter(i => i.category === "radios")));
+  const concerts = prepareItemsForPage("concerts", filterBySelectedSubCategory("concerts", allContents.filter(i => i.category === "concerts")));
   const photos = prepareItemsForPage("photos", filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
   const stories = prepareItemsForPage("stories", filterBySelectedSubCategory("stories", allContents.filter(i => i.category === "stories")));
   const oneum = prepareItemsForPage("oneum", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
@@ -1652,6 +1679,7 @@ function renderAllContentSections() {
   renderPhotos(photos);
   renderList("songList", songs);
   renderList("radioList", radios);
+  renderConcerts(concerts);
   renderList("storyList", stories);
   renderAboutDocument(allContents.filter(i => i.category === "about"));
   renderList("oneumList", oneum);
@@ -1674,6 +1702,7 @@ function renderContentPage(page) {
   else if (page === "photos") renderPhotos(items);
   else if (page === "songs") renderList("songList", items);
   else if (page === "radios") renderList("radioList", items);
+  else if (page === "concerts") renderConcerts(items);
   else if (page === "stories") renderList("storyList", items);
   else if (page === "oneum") renderList("oneumList", items);
 
@@ -2912,6 +2941,7 @@ const pageState = {
   videos: 1,
   songs: 1,
   radios: 1,
+  concerts: 1,
   photos: 1,
   stories: 1,
   oneum: 1
@@ -3180,15 +3210,16 @@ function renderLatestByCategory(contents) {
   if (!box) return;
 
   const labels = {
-    videos: "Videos 최신",
-    songs: "Songs 최신",
-    radios: "Radios 최신",
-    photos: "Photos 최신",
+    videos: "영상 최신",
+    songs: "노래 최신",
+    radios: "라디오 최신",
+    concerts: "공연 최신",
+    photos: "사진 최신",
     stories: "이야기 최신",
-    oneum: "Oneum 최신"
+    oneum: "둥근소리글 최신"
   };
 
-  const pages = ["videos", "songs", "radios", "photos", "stories", "oneum"];
+  const pages = ["videos", "songs", "radios", "concerts", "photos", "stories", "oneum"];
   box.innerHTML = "";
 
   pages.forEach((page) => {
@@ -3221,6 +3252,30 @@ function renderLatest(contents) {
   if (!source.length) { box.innerHTML = "<p>등록된 최신 자료가 없습니다.</p>"; return; }
   source.slice(0,4).forEach(i => box.appendChild(createCard(i)));
 }
+
+function isConcertAudioItem(item) {
+  return item?.category === "concerts" && isAudioContentItem(item) && Boolean(getPlayableAudioUrl(item));
+}
+
+function renderConcerts(items) {
+  const posterBox = document.getElementById("concertPosterList");
+  const audioBox = document.getElementById("concertAudioList");
+  if (!posterBox || !audioBox) return;
+
+  const posterItems = items.filter(item => !isConcertAudioItem(item));
+  const audioItems = items.filter(item => isConcertAudioItem(item));
+
+  posterBox.innerHTML = "";
+  if (!posterItems.length) {
+    posterBox.innerHTML = '<p class="helper-text">등록된 포스터 및 공연 관련 자료가 없습니다.</p>';
+  } else {
+    posterItems.forEach(item => posterBox.appendChild(createCard(item)));
+  }
+
+  renderList("concertAudioList", audioItems);
+  setupRadioMonochromePlayers(audioBox);
+}
+
 function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); setupHlsVideos(box); }
 function renderPhotos(items) { const box = document.getElementById("photoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 사진이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); }
 
@@ -3479,7 +3534,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
   const safeSource = escapeHtml(item.source || "미기재");
   const created = createdDateMarkup(item);
   const player = renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`);
-  const showCover = id === "songList";
+  const showCover = id === "songList" || id === "concertAudioList";
   const thumb = showCover
     ? (img
         ? `<div class="audio-archive-cover"><img src="${img}" alt="${safeTitle}" loading="lazy" decoding="async"></div>`
@@ -3501,7 +3556,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
         ${player}
       </div>
 
-      ${id === "radioList" ? `<div class="admin-download-row">${renderAdminDownloadButton(item, "card")}</div>` : ""}
+      ${(id === "radioList" || id === "concertAudioList") ? `<div class="admin-download-row">${renderAdminDownloadButton(item, "card")}</div>` : ""}
       <div class="audio-archive-info-row">
         <p><strong>연도:</strong> ${safeYear}</p>
         <p><strong>출처:</strong> ${safeSource}</p>
@@ -3547,7 +3602,7 @@ function renderList(id, items) {
   const isStoryList = id === "storyList";
   const isOneumList = id === "oneumList";
   const isTextArchiveGrid = isStoryList || isOneumList;
-  const isAudioArchiveList = id === "songList" || id === "radioList";
+  const isAudioArchiveList = id === "songList" || id === "radioList" || id === "concertAudioList";
 
   if (isTextArchiveGrid) box.classList.add("card-grid", "text-archive-grid");
 
@@ -3577,7 +3632,7 @@ function renderList(id, items) {
           <h3>${escapeHtml(item.title)}</h3>
           ${renderCategoryBadges(item)}
           ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
-          ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
+          ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" || id === "concertAudioList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
           ${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}
           ${createdDateMarkup(item)}
         </div>
@@ -3604,7 +3659,7 @@ function createCard(item) {
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(getCategoryDisplayName(item.category))}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
 }
 
@@ -3977,6 +4032,20 @@ function renderDetailMedia(item) {
     return "";
   }
 
+  if (category === "concerts") {
+    if (mediaUrl && isAudioContentItem(item)) {
+      const imagePart = imageUrl ? `<div class="detail-concert-poster-box"><img src="${escapeHtml(playbackImageUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>` : "";
+      return `<div class="detail-concert-layout">${imagePart}<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div></div>`;
+    }
+
+    const concertImage = playbackImageUrl || playbackMediaUrl;
+    if (concertImage) {
+      return `<div class="detail-media-box detail-concert-poster-box"><img src="${escapeHtml(concertImage)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+    }
+
+    return "";
+  }
+
   if (category === "photos") {
     if (imageUrl || mediaUrl) {
       return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl || playbackMediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
@@ -4019,7 +4088,7 @@ function openContentDetail(id, options = {}) {
 
   titleEl.textContent = item.title || "제목 없음";
   const detailCats = renderCategoryText(item);
-  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(item.category || "미분류")}${detailCats ? ` / <strong>카테고리:</strong> ${escapeHtml(detailCats)}` : ""}`;
+  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(getCategoryDisplayName(item.category))}${detailCats ? ` / <strong>카테고리:</strong> ${escapeHtml(detailCats)}` : ""}`;
   if (isOneumItem(item)) {
     const author = getOneumAuthor(item) || "미기재";
     const authorName = getOneumAuthorName(item);

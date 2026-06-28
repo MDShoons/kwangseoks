@@ -963,3 +963,68 @@ body:has(#home.active) .daily-player{
     padding: 12px !important;
   }
 }
+
+/* v18: 공연 페이지 + 홈 오늘의 추천곡 복구 */
+body:has(#home.active) .daily-player:not(.hidden):not(.closed){
+  display:block!important;
+}
+.concerts-split-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:22px;
+  margin-top:24px;
+}
+.concerts-subsection{
+  border:1px solid rgba(255,255,255,.13);
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));
+  border-radius:30px;
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+.concerts-subsection-head{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:6px 14px;
+  align-items:baseline;
+  margin-bottom:18px;
+  padding-bottom:14px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+.concerts-subsection-head span{
+  color:var(--accent);
+  font-size:12px;
+  font-weight:950;
+  letter-spacing:.14em;
+}
+.concerts-subsection-head h2{
+  margin:0;
+  font-size:24px;
+  letter-spacing:-.05em;
+}
+.concerts-subsection-head p{
+  grid-column:2;
+  margin:0;
+  color:var(--muted);
+  line-height:1.55;
+}
+.concerts-poster-list.card-grid{
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+}
+.concerts-audio-list .audio-archive-card{
+  margin-bottom:14px;
+}
+.detail-concert-layout{
+  width:100%;
+  display:grid;
+  gap:18px;
+}
+.detail-concert-poster-box img{
+  max-height:58vh;
+  width:100%;
+  object-fit:contain;
+}
+@media (max-width:720px){
+  .concerts-subsection{padding:18px;border-radius:22px;}
+  .concerts-subsection-head{grid-template-columns:1fr;}
+  .concerts-subsection-head p{grid-column:1;}
+}
