@@ -1,0 +1,1 @@
+v16: 사이트 소개(#siteinfo) 페이지의 자료실 구성 항목에서 Videos/Songs/Radios/Photos/About Seok/Oneum 영어 표기를 영상/노래/라디오/사진/김광석/둥근소리글로 변경했습니다. 기존 기능과 /bbs/board.php 주소 변경 방식은 유지합니다.
