@@ -1585,13 +1585,56 @@ function installBasicContentProtection() {
 
 function hardenMediaDownloadControls() {
   document.querySelectorAll("audio, video").forEach((media) => {
-    media.setAttribute("controlsList", "nodownload noplaybackrate");
+    media.setAttribute("controlsList", "nodownload noplaybackrate nofullscreen");
     media.setAttribute("oncontextmenu", "return false");
     media.addEventListener("contextmenu", (event) => event.preventDefault());
     if (media.tagName.toLowerCase() === "video") {
+      media.setAttribute("playsinline", "");
+      media.setAttribute("webkit-playsinline", "");
       media.setAttribute("disablePictureInPicture", "");
+      media.disablePictureInPicture = true;
+      media.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }, { passive: false });
     }
   });
+}
+
+// v17: 영상 클릭/확대 시 브라우저 전체화면 검은 플레이어로 넘어가지 않도록 사이트 영상은 인라인 재생만 허용합니다.
+function installInlineVideoFullscreenBlocker() {
+  if (window.__kwangseoksInlineVideoFullscreenBlockerInstalled) return;
+  window.__kwangseoksInlineVideoFullscreenBlockerInstalled = true;
+
+  const isSiteVideo = (el) => {
+    if (!el || !el.tagName || el.tagName.toLowerCase() !== "video") return false;
+    return el.classList.contains("card-inline-video") || el.classList.contains("detail-inline-video") || el.closest("#contentDetailModal") || el.closest(".card");
+  };
+
+  const exitIfVideoFullscreen = () => {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    if (!isSiteVideo(fsEl)) return;
+    try {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    } catch (_) {}
+    forceMobileViewportZoomReset();
+  };
+
+  document.addEventListener("fullscreenchange", exitIfVideoFullscreen, true);
+  document.addEventListener("webkitfullscreenchange", exitIfVideoFullscreen, true);
+  document.addEventListener("mozfullscreenchange", exitIfVideoFullscreen, true);
+  document.addEventListener("MSFullscreenChange", exitIfVideoFullscreen, true);
+
+  document.addEventListener("click", (event) => {
+    const video = event.target && event.target.closest ? event.target.closest("video") : null;
+    if (!isSiteVideo(video)) return;
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("controlsList", "nodownload noplaybackrate nofullscreen");
+  }, true);
 }
 
 function renderAllContentSections() {
@@ -1615,6 +1658,7 @@ function renderAllContentSections() {
 
   renderAdminManageList();
   installBasicContentProtection();
+  installInlineVideoFullscreenBlocker();
   setupRadioMonochromePlayers();
 }
 
@@ -3241,7 +3285,7 @@ function renderRadioMonochromePlayer(mediaUrl, playerId = "") {
 
   return `
     <div class="radio-mono-player" data-radio-player data-player-id="${safeId}" data-audio-url="${safeUrl}" onclick="event.stopPropagation()">
-      <audio preload="none" controlsList="nodownload noplaybackrate" oncontextmenu="return false"></audio>
+      <audio preload="none" controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false"></audio>
       <div class="radio-mono-controls">
         <button type="button" class="radio-mono-play" aria-label="재생 또는 일시정지">▶</button>
         <div class="radio-mono-time"><span class="radio-mono-current">0:00</span> <span class="radio-mono-divider">/</span> <span class="radio-mono-duration">--:--</span></div>
@@ -3533,7 +3577,7 @@ function renderList(id, items) {
           <h3>${escapeHtml(item.title)}</h3>
           ${renderCategoryBadges(item)}
           ${previewText ? `<p class="text-preview">${escapeHtml(previewText)}</p>` : ""}
-          ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
+          ${isAudioContentItem(item) ? (id === "radioList" || id === "songList" ? renderRadioMonochromePlayer(normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio"), `${id}-${item.id}`) : `<audio controls controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`) : ""}
           ${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}
           ${createdDateMarkup(item)}
         </div>
@@ -3555,9 +3599,9 @@ function createCard(item) {
     const fileType = /\.mov(\?|#|$)/i.test(videoPlaybackUrl) ? "video/quicktime" : "video/mp4";
     const hlsAttr = isHlsUrl(videoPlaybackUrl) ? ` data-hls-src="${escapeHtml(videoPlaybackUrl)}"` : "";
     const sourceHtml = isHlsUrl(videoPlaybackUrl) ? "" : `<source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}">`;
-    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"${hlsAttr}>${sourceHtml}</video>`;
+    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate nofullscreen" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"${hlsAttr}>${sourceHtml}</video>`;
   }
-  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
+  else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(item.category)}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
@@ -3888,7 +3932,7 @@ function renderDetailMedia(item) {
       const selector = renderVideoQualitySelector(item, videoId);
       const hlsAttr = isHlsUrl(selectedPlaybackUrl) ? ` data-hls-src="${escapeHtml(selectedPlaybackUrl)}"` : "";
       const sourceHtml = isHlsUrl(selectedPlaybackUrl) ? "" : `<source src="${escapeHtml(selectedPlaybackUrl)}" type="${fileType}">`;
-      return `<div class="detail-media-box detail-video-box">${selector}<video id="${escapeHtml(videoId)}" class="detail-inline-video" controls playsinline webkit-playsinline preload="metadata"${posterAttr}${hlsAttr} controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false">${sourceHtml}</video></div>`;
+      return `<div class="detail-media-box detail-video-box">${selector}<video id="${escapeHtml(videoId)}" class="detail-inline-video" controls playsinline webkit-playsinline preload="metadata"${posterAttr}${hlsAttr} controlsList="nodownload noplaybackrate nofullscreen" disablePictureInPicture oncontextmenu="return false">${sourceHtml}</video></div>`;
     }
 
     if (imageUrl) {
@@ -3995,6 +4039,7 @@ function openContentDetail(id, options = {}) {
   forceMobileViewportZoomReset();
   modal.classList.remove("hidden");
   installBasicContentProtection();
+  installInlineVideoFullscreenBlocker();
   if (typeof hardenMediaDownloadControls === "function") {
     hardenMediaDownloadControls();
   }
@@ -4283,6 +4328,7 @@ if (document.readyState === "loading") {
 } else {
   installMobileVideoZoomResetGuards();
 }
+installInlineVideoFullscreenBlocker();
 
 window.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;

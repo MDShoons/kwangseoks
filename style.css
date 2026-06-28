@@ -891,3 +891,75 @@ body:has(#home.active) .daily-player{
     min-height:auto!important;
   }
 }
+
+
+/* v17: 영상은 사이트 상세창 안에서만 재생되도록 브라우저 기본 전체화면 버튼을 숨깁니다. */
+.card-inline-video::-webkit-media-controls-fullscreen-button,
+.detail-inline-video::-webkit-media-controls-fullscreen-button,
+#contentDetailModal video::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+.detail-video-box,
+.detail-video-box .detail-inline-video {
+  max-width: 100%;
+}
+
+.detail-inline-video {
+  width: 100%;
+  max-height: min(68vh, 720px);
+  object-fit: contain;
+  background: #000;
+}
+
+/* v17-4x3: 영상 상세보기는 브라우저 전체화면이 아니라 사이트 안 4:3 박스에서 재생 */
+.detail-media-area:has(.detail-video-box) {
+  min-height: auto !important;
+  padding: 22px !important;
+  align-content: center !important;
+}
+
+.detail-video-box {
+  width: min(100%, 860px) !important;
+  aspect-ratio: 4 / 3 !important;
+  background: #000 !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.detail-video-box iframe,
+.detail-video-box .detail-inline-video,
+#contentDetailModal .detail-inline-video {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 4 / 3 !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  background: #000 !important;
+  border-radius: 0 !important;
+}
+
+.video-quality-selector {
+  position: absolute !important;
+  left: 18px !important;
+  top: 18px !important;
+  z-index: 3 !important;
+}
+
+.card-inline-video {
+  aspect-ratio: 4 / 3 !important;
+  object-fit: contain !important;
+  background: #000 !important;
+}
+
+@media (max-width: 760px) {
+  .detail-video-box {
+    width: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+  .detail-media-area:has(.detail-video-box) {
+    padding: 12px !important;
+  }
+}
