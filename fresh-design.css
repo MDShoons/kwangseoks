@@ -504,21 +504,14 @@ button.secondary-btn,
 .admin-tabs button,
 .admin-form button,
 .auth-page button,
-.detail-share-copy-btn{
-  border:1px solid var(--fresh-brown) !important;
-  border-radius:999px !important;
-  background:var(--fresh-brown) !important;
-  color:#fffaf2 !important;
-  padding:10px 14px !important;
-  font-weight:900 !important;
-}
+
 .playlist-add-btn:hover,
 .admin-download-btn:hover,
 .pagination button:hover,
 .admin-tabs button:hover,
 .admin-form button:hover,
 .auth-page button:hover,
-.detail-share-copy-btn:hover{background:var(--fresh-brown-dark) !important;}
+
 .audio-archive-info-row{border-top:1px solid rgba(123,75,43,.14) !important;margin-top:16px !important;padding-top:14px !important;}
 
 /* latest */
@@ -558,8 +551,8 @@ button.secondary-btn,
   font-weight:900 !important;
 }
 .detail-text-area h2{font-size:2rem !important;line-height:1.22 !important;letter-spacing:-.07em !important;color:var(--fresh-ink) !important;}
-.detail-share-row{background:#f3e4d2 !important;border-radius:16px !important;border:1px solid rgba(123,75,43,.14) !important;padding:10px !important;}
-.detail-share-url{background:#fffaf2 !important;border-radius:12px !important;color:#4b3325 !important;}
+
+
 
 /* floating players */
 .daily-player{

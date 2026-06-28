@@ -443,19 +443,6 @@ function clearContentBoardUrl() {
   window.history.pushState({ page }, "", url.toString());
 }
 
-async function copyTextToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    alert("공유 주소를 복사했습니다.");
-  } catch (error) {
-    window.prompt("공유 주소를 복사해 주세요.", text);
-  }
-}
-
-window.copyContentShareUrl = function copyContentShareUrl(url) {
-  copyTextToClipboard(url);
-};
-
 async function openContentRouteFromLocation() {
   const route = getContentRouteFromLocation();
   if (!route?.itemId) return false;
@@ -477,7 +464,7 @@ async function openContentRouteFromLocation() {
     return true;
   }
 
-  setTimeout(() => openContentDetail(item.id, { replaceUrl: true }), 0);
+  setTimeout(() => openContentDetail(item.id, { updateUrl: true, replaceUrl: true }), 0);
   return true;
 }
 
@@ -3529,7 +3516,7 @@ function renderList(id, items) {
     if (shouldRenderAudioArchive) div.classList.add("audio-archive-card");
     if (isTextArchiveGrid) div.className = "card text-archive-card" + (isStoryList ? " story-preview-card" : " oneum-preview-card");
 
-    div.onclick = () => openContentDetail(item.id);
+    div.onclick = () => openContentDetail(item.id, { updateUrl: true });
 
     const img = normalizeMediaUrlForPlayback(item.thumbnailUrl || (!isAudioContentItem(item) && !isVideoContentItem(item) ? item.mediaUrl : ""), "image");
     const previewLength = isStoryList ? 120 : isOneumList ? 130 : 90;
@@ -3557,7 +3544,7 @@ function renderList(id, items) {
   });
 }
 function createCard(item) {
-  const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id);
+  const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id, { updateUrl: true });
   let media = "";
   const videoMediaUrl = getVideoMediaUrl(item);
   const youtubeCandidateUrl = item.youtubeUrl || (isYoutubeUrl(item.mediaUrl) ? item.mediaUrl : "");
@@ -3966,7 +3953,7 @@ function openContentDetail(id, options = {}) {
   if (!item) return;
 
   activeDetailPage = item.category || activeDetailPage || "home";
-  if (options.updateUrl !== false) updateContentBoardUrl(item, Boolean(options.replaceUrl));
+  if (options.updateUrl === true) updateContentBoardUrl(item, Boolean(options.replaceUrl));
 
   const modal = document.getElementById("contentDetailModal");
   const mediaArea = document.getElementById("detailMediaArea");
@@ -4002,21 +3989,8 @@ function openContentDetail(id, options = {}) {
   const oneumReplyHtml = isOneumItem(item) ? renderOneumKksReplyMarkup(item) : "";
   descEl.innerHTML = `${detailBodyHtml}${oneumReplyHtml}`;
 
-  const shareUrl = makeContentBoardUrl(item);
-  let shareArea = document.getElementById("detailShareArea");
-  if (!shareArea) {
-    shareArea = document.createElement("div");
-    shareArea.id = "detailShareArea";
-    shareArea.className = "detail-share-area";
-    descEl.parentElement?.insertBefore(shareArea, descEl);
-  }
-  shareArea.innerHTML = `
-    <div class="detail-share-title">게시글 공유 주소</div>
-    <div class="detail-share-row">
-      <input class="detail-share-url" type="text" value="${escapeHtml(shareUrl)}" readonly onclick="this.select()" />
-      <button type="button" class="detail-share-copy-btn" onclick="copyContentShareUrl(this.parentElement.querySelector('.detail-share-url').value)">주소 복사</button>
-    </div>
-  `;
+  // V14: 주소창은 /bbs/board.php?... 형태로 바꾸되, 상세창 안의 공유 주소 UI는 만들지 않습니다.
+  document.querySelectorAll("#detailShareArea, .detail-share-area").forEach((el) => el.remove());
 
   forceMobileViewportZoomReset();
   modal.classList.remove("hidden");
@@ -4046,8 +4020,6 @@ function closeContentDetail(event) {
   if (categoryEl) categoryEl.innerHTML = "";
   if (metaEl) metaEl.innerHTML = "";
   if (descEl) descEl.innerHTML = "";
-  const shareArea = document.getElementById("detailShareArea");
-  if (shareArea) shareArea.innerHTML = "";
   if (modal) modal.classList.add("hidden");
 
   clearContentBoardUrl();
