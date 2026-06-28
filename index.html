@@ -38,8 +38,8 @@
       }, true);
     })();
   </script>
-  <title>광석이네 집 | 노래가 머문 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=clean-archive-v6" />
+  <title>광석이네 집 | 김광석 디지털 아카이브</title>
+  <link rel="stylesheet" href="style.css?v=restart-v7" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -225,73 +225,66 @@
   </header>
 
   <main>
-    <section id="home" class="page active fresh-home-page">
+    <section id="home" class="page active restart-home-page">
       <audio id="homeVoiceAudio" class="home-voice-hidden-audio" preload="auto" playsinline></audio>
 
-      <section class="fresh-hero hero" id="homeHero" aria-label="광석이네 집 메인">
-        <div class="fresh-hero-copy">
-          <p class="fresh-eyebrow">KIM KWANG SEOK DIGITAL ARCHIVE</p>
-          <h1 id="homeTitle">노래가 남긴 시간,<br />광석이네 집에 모았습니다.</h1>
-          <p id="homeDescription">영상 · 노래 · 라디오 · 사진 · 글을 조용히 정리하는 김광석 개인 아카이브입니다.</p>
-          <div class="fresh-hero-actions">
-            <button type="button" data-page-fallback="songs" onclick="goPage('songs')">노래 듣기</button>
-            <button type="button" data-page-fallback="videos" onclick="goPage('videos')">영상 보기</button>
-            <button type="button" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 안내</button>
+      <section class="restart-hero" id="homeHero" aria-label="광석이네 집 메인">
+        <div class="restart-hero-left">
+          <p class="restart-kicker">KIM KWANG SEOK PRIVATE ARCHIVE</p>
+          <h1 id="homeTitle">흩어진 목소리를<br />하나의 기록으로.</h1>
+          <p id="homeDescription">영상 · 노래 · 라디오 · 사진 · 글을 정리하는 김광석 디지털 아카이브입니다.</p>
+          <div class="restart-search-panel" aria-label="자료실 빠른 이동">
+            <button type="button" data-page-fallback="videos" onclick="goPage('videos')"><span>01</span>영상 자료</button>
+            <button type="button" data-page-fallback="songs" onclick="goPage('songs')"><span>02</span>노래 자료</button>
+            <button type="button" data-page-fallback="radios" onclick="goPage('radios')"><span>03</span>라디오 자료</button>
+            <button type="button" data-page-fallback="photos" onclick="goPage('photos')"><span>04</span>사진 자료</button>
+          </div>
+          <div class="restart-hero-actions">
+            <button type="button" class="primary-action" data-page-fallback="songs" onclick="goPage('songs')">자료 둘러보기</button>
+            <button type="button" class="ghost-action" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 안내</button>
           </div>
         </div>
 
-        <div class="fresh-hero-object" aria-label="오늘의 음반">
-          <button id="homeRecordStage" class="home-record-stage fresh-record-stage" type="button" aria-label="오늘의 음반 숨기기">
-            <img id="homeRecordDisc" class="home-record-disc fresh-record-disc" alt="오늘의 음반" />
-          </button>
-          <div class="fresh-note-card">
-            <strong>오늘의 기록</strong>
-            <span>등록된 자료를 한 장씩 천천히 꺼내 봅니다.</span>
+        <div class="restart-hero-right" aria-label="대표 기록 카드">
+          <div class="archive-index-card">
+            <div class="index-card-top">
+              <span>ARCHIVE CARD</span>
+              <strong>광석이네 집</strong>
+            </div>
+            <button id="homeRecordStage" class="home-record-stage restart-record-stage" type="button" aria-label="오늘의 음반 숨기기">
+              <img id="homeRecordDisc" class="home-record-disc restart-record-disc" alt="오늘의 음반" />
+            </button>
+            <dl>
+              <div><dt>TYPE</dt><dd>VIDEO · SONG · RADIO · PHOTO</dd></div>
+              <div><dt>MODE</dt><dd>COLLECT · LISTEN · REMEMBER</dd></div>
+              <div><dt>NOTE</dt><dd>오래된 자료를 찾기 쉬운 형식으로 정리합니다.</dd></div>
+            </dl>
           </div>
         </div>
       </section>
 
-      <section class="fresh-archive-map" aria-label="자료실 바로가기">
-        <div class="fresh-section-head">
-          <span>ARCHIVE ROOMS</span>
-          <h2>자료실</h2>
-          <p>게시판처럼 찾고, 아카이브처럼 오래 보관합니다.</p>
-        </div>
-        <div class="fresh-room-grid">
-          <button type="button" class="fresh-room-card" data-page-fallback="videos" onclick="goPage('videos')">
-            <span class="fresh-room-no">01</span><strong>영상</strong><em>공연 · 방송 · 인터뷰</em>
-          </button>
-          <button type="button" class="fresh-room-card" data-page-fallback="songs" onclick="goPage('songs')">
-            <span class="fresh-room-no">02</span><strong>노래</strong><em>음반 · 라이브 · 커버</em>
-          </button>
-          <button type="button" class="fresh-room-card" data-page-fallback="radios" onclick="goPage('radios')">
-            <span class="fresh-room-no">03</span><strong>라디오</strong><em>방송 음성 · 인터뷰</em>
-          </button>
-          <button type="button" class="fresh-room-card" data-page-fallback="photos" onclick="goPage('photos')">
-            <span class="fresh-room-no">04</span><strong>갤러리</strong><em>사진 · 이미지 기록</em>
-          </button>
-          <button type="button" class="fresh-room-card" data-page-fallback="stories" onclick="goPage('stories')">
-            <span class="fresh-room-no">05</span><strong>그대에게</strong><em>글 · 일기 · 이야기</em>
-          </button>
-          <button type="button" class="fresh-room-card" data-page-fallback="oneum" onclick="goPage('oneum')">
-            <span class="fresh-room-no">06</span><strong>둥근소리글</strong><em>관련 글 모음</em>
-          </button>
-        </div>
+      <section class="restart-room-strip" aria-label="자료실 전체 메뉴">
+        <button type="button" data-page-fallback="videos" onclick="goPage('videos')"><b>Videos</b><span>공연 · 방송 · 인터뷰</span></button>
+        <button type="button" data-page-fallback="songs" onclick="goPage('songs')"><b>Songs</b><span>음반 · 라이브 · 음원</span></button>
+        <button type="button" data-page-fallback="radios" onclick="goPage('radios')"><b>Radios</b><span>방송 음성 · 인터뷰</span></button>
+        <button type="button" data-page-fallback="photos" onclick="goPage('photos')"><b>Photos</b><span>사진 · 이미지 기록</span></button>
+        <button type="button" data-page-fallback="stories" onclick="goPage('stories')"><b>Stories</b><span>글 · 일기 · 이야기</span></button>
+        <button type="button" data-page-fallback="oneum" onclick="goPage('oneum')"><b>Oneum</b><span>둥근소리글</span></button>
       </section>
 
-      <section class="fresh-intro-band" aria-label="사이트 소개 요약">
+      <section class="restart-statement" aria-label="아카이브 운영 방향">
         <div>
-          <span>ABOUT THIS HOUSE</span>
-          <h2>화려한 기념관보다, 자주 들를 수 있는 작은 자료방.</h2>
+          <span>ARCHIVE PRINCIPLE</span>
+          <h2>장식보다 기록, 분위기보다 검색.</h2>
         </div>
-        <p>광석이네 집은 흩어진 자료를 과하게 꾸미기보다, 제목·연도·출처·설명을 차분히 남기는 데 집중합니다. 오래된 기록을 다시 찾기 쉽도록 검색과 분류를 중심에 두었습니다.</p>
+        <p>이번 디자인은 ‘방’ 콘셉트와 게시판 흉내를 버리고, 자료를 빠르게 찾고 오래 보관하는 데 집중했습니다. 화면은 조용하게, 목록은 분명하게, 자료 상세는 크게 보이도록 다시 설계했습니다.</p>
       </section>
 
-      <section class="content-section latest-by-category-section fresh-latest-section">
-        <div class="fresh-section-head compact">
+      <section class="content-section latest-by-category-section restart-latest-section">
+        <div class="restart-section-head">
           <span>RECENTLY ADDED</span>
-          <h2>최신 자료</h2>
-          <p class="helper-text">최근 등록된 자료를 빠르게 확인할 수 있습니다.</p>
+          <h2>최근 등록 자료</h2>
+          <p class="helper-text">각 자료실에 최근 올라온 기록을 한눈에 확인합니다.</p>
         </div>
         <div id="latestByCategory" class="latest-category-grid"></div>
       </section>
@@ -802,9 +795,9 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v6-clean-archive-redesign</div>
+<div class="version-marker">v7-restart-archive-redesign</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=clean-archive-v6"></script>
-  <script src="playlist-layout-reset.js?v=clean-archive-v6"></script>
+  <script type="module" src="app.js?v=restart-v7"></script>
+  <script src="playlist-layout-reset.js?v=restart-v7"></script>
 </body>
 </html>
