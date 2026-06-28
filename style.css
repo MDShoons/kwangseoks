@@ -75,7 +75,7 @@ main{width:min(1360px,calc(100% - 44px));margin:0 auto;padding:110px 0 90px}
 .logo{display:flex;flex-direction:column;gap:3px;user-select:none;min-width:0}
 .logo strong{font-size:22px;font-weight:950;letter-spacing:-.06em;color:#fff}
 .logo small{font-size:9px;letter-spacing:.22em;color:rgba(243,238,228,.54);font-weight:800}
-#siteNav{display:flex;align-items:center;gap:4px;justify-content:center;min-width:0;overflow:auto;scrollbar-width:none}
+#siteNav{display:flex;align-items:center;gap:4px;justify-content:center;min-width:0;overflow:visible;scrollbar-width:none}
 #siteNav::-webkit-scrollbar{display:none}
 #siteNav button,.auth-area button,.mobile-menu-toggle{
   border:0;border-radius:999px;padding:10px 12px;
@@ -88,6 +88,73 @@ main{width:min(1360px,calc(100% - 44px));margin:0 auto;padding:110px 0 90px}
 #signupBtn{border:1px solid rgba(255,255,255,.18)}
 #logoutBtn{background:rgba(181,72,72,.15);color:#ffd4d4}
 .mobile-menu-toggle{display:none;border:1px solid rgba(255,255,255,.16)}
+
+/* v20: 공연 메뉴 드롭다운 */
+.nav-dropdown{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  flex:0 0 auto;
+}
+.nav-dropdown-trigger{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.nav-dropdown-trigger::after{
+  content:"▾";
+  font-size:10px;
+  line-height:1;
+  color:rgba(243,238,228,.62);
+  transform:translateY(1px);
+}
+.nav-dropdown-menu{
+  position:absolute;
+  left:50%;
+  top:calc(100% + 10px);
+  min-width:148px;
+  display:grid;
+  gap:5px;
+  padding:8px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:18px;
+  background:rgba(18,17,15,.94);
+  box-shadow:0 18px 50px rgba(0,0,0,.36);
+  backdrop-filter:blur(16px);
+  transform:translateX(-50%) translateY(6px);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .16s ease, transform .16s ease, visibility .16s ease;
+  z-index:1010;
+}
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateX(-50%) translateY(0);
+}
+.nav-dropdown-menu::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:-12px;
+  height:12px;
+}
+#siteNav .nav-dropdown-menu button{
+  width:100%;
+  justify-content:flex-start;
+  text-align:left;
+  border-radius:12px;
+  padding:10px 12px;
+  color:rgba(243,238,228,.86);
+}
+#siteNav .nav-dropdown-menu button:hover{
+  background:rgba(208,160,92,.16);
+  color:#fff;
+}
 
 /* Home */
 .restart-home-page{padding-top:6px}
@@ -281,7 +348,7 @@ button:active{transform:translateY(1px)}
 footer{width:min(1360px,calc(100% - 44px));margin:0 auto 34px;padding:26px;text-align:center;color:rgba(243,238,228,.5);border-top:1px solid rgba(255,255,255,.1)}footer p{margin:4px 0}#footerTitle{font-weight:950;color:rgba(243,238,228,.8)}
 
 @media (max-width:1100px){
-  .site-header{grid-template-columns:1fr auto;align-items:center}.mobile-menu-toggle{display:inline-flex}.auth-area{grid-column:1/-1;justify-content:flex-start;overflow:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}#siteNav{display:none;grid-column:1/-1;justify-content:flex-start;flex-wrap:wrap;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}body.mobile-nav-open #siteNav{display:flex}.restart-hero{grid-template-columns:1fr}.restart-hero-right{min-height:520px}.restart-room-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.card-grid,.latest-category-grid,.text-archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.restart-statement{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.detail-modal-inner{grid-template-columns:1fr}.playlist-player{right:18px;bottom:330px}.site-guide-grid{grid-template-columns:1fr}.design-grid{grid-template-columns:1fr}
+  .site-header{grid-template-columns:1fr auto;align-items:center}.mobile-menu-toggle{display:inline-flex}.auth-area{grid-column:1/-1;justify-content:flex-start;overflow:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}#siteNav{display:none;grid-column:1/-1;justify-content:flex-start;flex-wrap:wrap;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);overflow:visible}body.mobile-nav-open #siteNav{display:flex}.restart-hero{grid-template-columns:1fr}.restart-hero-right{min-height:520px}.restart-room-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.card-grid,.latest-category-grid,.text-archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.restart-statement{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.detail-modal-inner{grid-template-columns:1fr}.playlist-player{right:18px;bottom:330px}.site-guide-grid{grid-template-columns:1fr}.design-grid{grid-template-columns:1fr}
 }
 @media (max-width:700px){
   :root{--header-h:64px}main{width:min(100% - 24px,680px);padding-top:132px}.site-header{top:10px;width:calc(100% - 20px);border-radius:22px;padding:12px}.logo strong{font-size:20px}.restart-hero-left{padding:34px 24px}.restart-hero h1{font-size:56px}.restart-hero p{font-size:17px}.restart-search-panel,.restart-room-strip,.card-grid,.latest-category-grid,.text-archive-grid{grid-template-columns:1fr}.archive-index-card{min-height:480px}.restart-record-stage{width:210px;height:210px}.restart-statement,.restart-latest-section,.content-page,#admin,.auth-page{padding:24px;border-radius:26px}.toolbar{grid-template-columns:1fr}.list-item,.audio-archive-shell{grid-template-columns:1fr}.list-item img,.audio-archive-cover{width:100%;height:auto;aspect-ratio:1/1}.page-title h1{font-size:44px}.daily-player{width:calc(50% - 22px);right:12px;bottom:12px}.playlist-player{right:calc(50% + 10px);bottom:12px}.daily-hide-options{display:none}.daily-player-card{border-radius:18px;padding:10px}.daily-player-title{font-size:13px}.daily-player-sub{display:none}.detail-modal{padding:12px}.detail-text-area{padding:30px 22px}.detail-media-area{padding:18px;min-height:240px}.detail-text-area h2{font-size:30px}.inline-field,.form-two-col{grid-template-columns:1fr}.admin-row{display:grid}.admin-row-actions{justify-content:flex-start}
@@ -1043,4 +1110,36 @@ body:has(#home.active) .daily-player:not(.hidden):not(.closed){
 .concerts-poster-page .concerts-poster-list,
 .concerts-audio-page .concerts-audio-list {
   margin-top: 18px;
+}
+
+
+/* v20: 모바일에서는 공연 하위 메뉴를 펼친 형태로 표시 */
+@media (max-width:1100px){
+  #siteNav .nav-dropdown{
+    display:grid;
+    width:auto;
+  }
+  #siteNav .nav-dropdown-trigger{
+    justify-content:flex-start;
+  }
+  #siteNav .nav-dropdown-menu{
+    position:static;
+    left:auto;
+    top:auto;
+    min-width:0;
+    margin-top:6px;
+    padding:6px;
+    transform:none;
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    background:rgba(255,255,255,.05);
+    box-shadow:none;
+    border-radius:16px;
+  }
+  #siteNav .nav-dropdown-menu::before{display:none;}
+  #siteNav .nav-dropdown-menu button{
+    font-size:13px;
+    padding:9px 11px;
+  }
 }
