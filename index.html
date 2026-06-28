@@ -38,8 +38,8 @@
       }, true);
     })();
   </script>
-  <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=board-url-v1" />
+  <title>광석이네 집 | 김광석 아카이브 게시판</title>
+  <link rel="stylesheet" href="style.css?v=kimkwangseok-ref-v3" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -194,6 +194,19 @@
 <div id="screenProtectOverlay" class="screen-protect-overlay hidden">
     <div>화면 보호 모드입니다.</div>
   </div>
+
+  <div class="kks-util-bar" aria-label="상단 유틸리티 영역">
+    <div class="kks-util-inner">
+      <div class="kks-visitor-text">접속자 <strong>ARCHIVE</strong> · 오늘의 자료를 조용히 모읍니다</div>
+      <div class="kks-popular-tags" aria-label="인기검색어">
+        <span>인기검색어</span>
+        <button type="button" data-page-fallback="songs" onclick="goPage('songs')">김광석</button>
+        <button type="button" data-page-fallback="videos" onclick="goPage('videos')">공연</button>
+        <button type="button" data-page-fallback="photos" onclick="goPage('photos')">사진</button>
+        <button type="button" data-page-fallback="radios" onclick="goPage('radios')">라디오</button>
+      </div>
+    </div>
+  </div>
   <header class="site-header">
     <div class="logo" onclick="goPage('home')">
       <strong id="siteLogoText">광석이네 집</strong>
@@ -203,15 +216,15 @@
     <button type="button" id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="모바일 메뉴 열기" aria-expanded="false">☰ 메뉴</button>
 
     <nav id="siteNav">
-      <button data-page-fallback="home" onclick="goPage('home')">광석이네집</button>
-      <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 안내</button>
-      <button data-page-fallback="videos" onclick="goPage('videos')">Videos</button>
-      <button data-page-fallback="songs" onclick="goPage('songs')">Songs</button>
-      <button data-page-fallback="radios" onclick="goPage('radios')">Radios</button>
-      <button data-page-fallback="photos" onclick="goPage('photos')">Photos</button>
-      <button data-page-fallback="stories" onclick="goPage('stories')">Stories</button>
-      <button data-page-fallback="about" onclick="goPage('about')">About Seok</button>
-      <button data-page-fallback="oneum" onclick="goPage('oneum')">Oneum</button>
+      <button data-page-fallback="home" onclick="goPage('home')">HOME</button>
+      <button data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 소개</button>
+      <button data-page-fallback="videos" onclick="goPage('videos')">영상</button>
+      <button data-page-fallback="songs" onclick="goPage('songs')">음반/노래</button>
+      <button data-page-fallback="radios" onclick="goPage('radios')">라디오</button>
+      <button data-page-fallback="photos" onclick="goPage('photos')">갤러리</button>
+      <button data-page-fallback="stories" onclick="goPage('stories')">그대에게</button>
+      <button data-page-fallback="about" onclick="goPage('about')">소개</button>
+      <button data-page-fallback="oneum" onclick="goPage('oneum')">둥근소리글</button>
     </nav>
 
     <div class="auth-area">
@@ -230,17 +243,83 @@
         <button id="homeRecordStage" class="home-record-stage" type="button" aria-label="오늘의 음반 숨기기">
           <img id="homeRecordDisc" class="home-record-disc" alt="오늘의 음반">
         </button>
-        <h1 id="homeTitle">노래가 머무는 이 곳,
-광석이네 집</h1>
-        <p id="homeDescription">김광석 디지털 아카이브</p>
+        <h1 id="homeTitle">김광석을 기억하는 사람들의
+온라인 아카이브</h1>
+        <p id="homeDescription">영상 · 음반 · 라디오 · 사진 · 글을 게시판처럼 모아두는 작은 자료방</p>
         <div>
-          <button data-page-fallback="videos" onclick="goPage('videos')">영상 보러가기</button>
-          <button data-page-fallback="photos" onclick="goPage('photos')">사진 보러가기</button>
+          <button data-page-fallback="videos" onclick="goPage('videos')">영상 자료</button>
+          <button data-page-fallback="photos" onclick="goPage('photos')">갤러리</button>
         </div>
       </section>
+
+      <section class="kks-portal-layout" aria-label="김광석닷컴 참고형 메인 게시판 영역">
+        <div class="kks-portal-main">
+          <article class="kks-board-panel kks-board-panel-large">
+            <div class="kks-panel-head">
+              <h2>음반/영상</h2>
+              <button type="button" data-page-fallback="videos" onclick="goPage('videos')">더보기</button>
+            </div>
+            <div class="kks-feature-grid">
+              <button type="button" class="kks-feature-card" data-page-fallback="songs" onclick="goPage('songs')">
+                <strong>음반·노래 아카이브</strong>
+                <span>정규 음반, 다시부르기, 라이브 음원 정보를 정리합니다.</span>
+              </button>
+              <button type="button" class="kks-feature-card" data-page-fallback="videos" onclick="goPage('videos')">
+                <strong>공연·방송 영상</strong>
+                <span>무대, 방송, 인터뷰 영상을 게시글처럼 찾아봅니다.</span>
+              </button>
+              <button type="button" class="kks-feature-card" data-page-fallback="radios" onclick="goPage('radios')">
+                <strong>라디오 음성 자료</strong>
+                <span>라디오 방송과 인터뷰 음성을 따로 모아둡니다.</span>
+              </button>
+            </div>
+          </article>
+
+          <article class="kks-board-panel">
+            <div class="kks-panel-head">
+              <h2>새소식 / 기록</h2>
+              <button type="button" data-page-fallback="stories" onclick="goPage('stories')">이동</button>
+            </div>
+            <ul class="kks-board-list">
+              <li><button type="button" data-page-fallback="siteinfo" onclick="goPage('siteinfo')"><span>공지</span>광석이네 집 이용 안내와 자료 등록 기준</button></li>
+              <li><button type="button" data-page-fallback="stories" onclick="goPage('stories')"><span>그대에게</span>김광석을 기억하는 글과 이야기</button></li>
+              <li><button type="button" data-page-fallback="oneum" onclick="goPage('oneum')"><span>둥근소리글</span>둥근소리 관련 기록 모음</button></li>
+            </ul>
+          </article>
+        </div>
+
+        <aside class="kks-portal-side" aria-label="메인 사이드바">
+          <article class="kks-side-card kks-login-card">
+            <h2>LOGIN</h2>
+            <p>회원 자료실은 로그인 후 이용할 수 있습니다.</p>
+            <div class="kks-side-actions">
+              <button type="button" data-page-fallback="login" onclick="goPage('login')">로그인</button>
+              <button type="button" data-page-fallback="signup" onclick="goPage('signup')">회원가입</button>
+            </div>
+          </article>
+          <article class="kks-side-card">
+            <h2>자료실 바로가기</h2>
+            <div class="kks-quick-links">
+              <button type="button" data-page-fallback="about" onclick="goPage('about')">소개</button>
+              <button type="button" data-page-fallback="photos" onclick="goPage('photos')">갤러리</button>
+              <button type="button" data-page-fallback="songs" onclick="goPage('songs')">음반</button>
+              <button type="button" data-page-fallback="videos" onclick="goPage('videos')">영상</button>
+              <button type="button" data-page-fallback="radios" onclick="goPage('radios')">라디오</button>
+              <button type="button" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">공지</button>
+            </div>
+          </article>
+          <article class="kks-side-card">
+            <h2>태그</h2>
+            <div class="kks-tag-cloud">
+              <span>서른 즈음에</span><span>이등병의 편지</span><span>다시부르기</span><span>소극장</span><span>하모니카</span><span>라디오</span>
+            </div>
+          </article>
+        </aside>
+      </section>
+
 <section class="content-section latest-by-category-section">
-        <h2>자료별 최신 자료</h2>
-        <p class="helper-text">각 자료실에 최근 등록된 자료를 모았습니다.</p>
+        <h2>최신 자료</h2>
+        <p class="helper-text">최근 등록된 자료를 게시판 목록처럼 빠르게 확인할 수 있습니다.</p>
         <div id="latestByCategory" class="latest-category-grid"></div>
       </section>
     </section>
@@ -390,7 +469,7 @@
     </section>
 
     <section id="videos" class="page content-page">
-      <div class="page-title"><h1>Videos</h1><p id="videosDesc">김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.</p></div>
+      <div class="page-title"><h1>영상</h1><p id="videosDesc">김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.</p></div>
       <div class="toolbar"><input id="videosSearchInput" class="page-search-input" type="search" placeholder="영상 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
           <select id="videosSortSelect" class="page-sort-select" onchange="resetPageAndReload('videos')">
             <option value="desc">최신 순</option>
@@ -401,7 +480,7 @@
     </section>
 
     <section id="songs" class="page content-page">
-      <div class="page-title"><h1>Songs</h1><p id="songsDesc">김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.</p></div>
+      <div class="page-title"><h1>음반/노래</h1><p id="songsDesc">김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.</p></div>
       <div class="toolbar"><input id="songsSearchInput" class="page-search-input" type="search" placeholder="음원 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
           <select id="songsSortSelect" class="page-sort-select" onchange="resetPageAndReload('songs')">
             <option value="desc">최신 순</option>
@@ -412,7 +491,7 @@
     </section>
 
     <section id="radios" class="page content-page">
-      <div class="page-title"><h1>Radios</h1><p id="radiosDesc">김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.</p></div>
+      <div class="page-title"><h1>라디오</h1><p id="radiosDesc">김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.</p></div>
       <div class="toolbar"><input id="radiosSearchInput" class="page-search-input" type="search" placeholder="라디오 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
           <select id="radiosSortSelect" class="page-sort-select" onchange="resetPageAndReload('radios')">
             <option value="desc">최신 순</option>
@@ -423,7 +502,7 @@
     </section>
 
     <section id="photos" class="page content-page">
-      <div class="page-title"><h1>Photos</h1><p id="photosDesc">김광석의 시간과 표정을 담은 사진 아카이브입니다.</p></div>
+      <div class="page-title"><h1>갤러리</h1><p id="photosDesc">김광석의 시간과 표정을 담은 사진 아카이브입니다.</p></div>
       <div class="toolbar"><input id="photosSearchInput" class="page-search-input" type="search" placeholder="사진 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
           <select id="photosSortSelect" class="page-sort-select" onchange="resetPageAndReload('photos')">
             <option value="desc">최신 순</option>
@@ -434,7 +513,7 @@
     </section>
 
     <section id="stories" class="page content-page">
-      <div class="page-title"><h1>Stories</h1><p id="storiesDesc">김광석의 일기입니다.</p></div>
+      <div class="page-title"><h1>그대에게</h1><p id="storiesDesc">김광석의 일기입니다.</p></div>
       <div class="toolbar"><input id="storiesSearchInput" class="page-search-input" type="search" placeholder="일기 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
           <select id="storiesSortSelect" class="page-sort-select" onchange="resetPageAndReload('stories')">
             <option value="desc">최신 순</option>
@@ -445,14 +524,14 @@
     </section>
 
     <section id="about" class="page content-page">
-<div class="page-title"><h1>About Seok</h1><p id="aboutDesc">김광석에 대한 정보를 볼 수 있는 곳입니다.</p></div>
+<div class="page-title"><h1>김광석 소개</h1><p id="aboutDesc">김광석에 대한 정보를 볼 수 있는 곳입니다.</p></div>
       <article id="aboutDocument" class="about-document">
         <p class="helper-text">아직 등록된 김광석 관련 글이 없습니다.</p>
       </article>
     </section>
 
     <section id="oneum" class="page content-page">
-      <div class="page-title"><h1>Oneum</h1><p id="oneumDesc">김광석의 둥근소리글을 모아둔 곳입니다.</p></div>
+      <div class="page-title"><h1>둥근소리글</h1><p id="oneumDesc">김광석의 둥근소리글을 모아둔 곳입니다.</p></div>
       <div class="toolbar"><input id="oneumSearchInput" class="page-search-input" type="search" placeholder="둥근소리글 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
           <select id="oneumSortSelect" class="page-sort-select" onchange="resetPageAndReload('oneum')">
             <option value="desc">최신 순</option>
@@ -750,10 +829,10 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v222-user-page-backgrounds</div>
-  <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
+<div class="version-marker">v3-kimkwangseok-reference-board-theme</div>
+  <footer><p id="footerTitle">광석이네 집 | 김광석 아카이브 게시판</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
   <script src="room-theme.js?v=room-v244"></script>
-  <script type="module" src="app.js?v=board-url-v1"></script>
+  <script type="module" src="app.js?v=kimkwangseok-ref-v3"></script>
   <script src="home-record-animation.js?v=room-v244"></script>
   <script src="playlist-layout-reset.js?v=room-v244"></script>
 </body>
