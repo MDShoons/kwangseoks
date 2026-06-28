@@ -308,7 +308,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v18-concerts-recommend";
+const APP_VERSION = "v19-concert-split-fullscreen";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -330,11 +330,12 @@ const DEFAULT_SETTINGS = {
   siteName: "광석이네 집",
   siteSubName: "김광석 디지털 아카이브",
   homeTitle: "김광석의 노래와 기록을\n조용히 모아두는 집",
-  homeDescription: "영상, 노래, 라디오, 공연, 사진, 이야기 자료를 한곳에 정리한 김광석 아카이브입니다.",
+  homeDescription: "영상, 노래, 라디오, 공연자료, 공연음성, 사진, 이야기 자료를 한곳에 정리한 김광석 아카이브입니다.",
   videosDesc: "김광석의 공연, 방송, 인터뷰 영상을 모아둔 공간입니다.",
   songsDesc: "김광석의 노래와 앨범 정보를 정리한 음악 아카이브입니다.",
   radiosDesc: "김광석의 라디오 방송과 인터뷰 음성을 모아둔 공간입니다.",
-  concertsDesc: "김광석의 공연 포스터, 공연 관련 기록, 공연 음성 파일을 나누어 정리한 공간입니다.",
+  concertsDesc: "김광석의 공연 포스터, 프로그램북, 안내문, 공연 관련 기록을 모아둔 공간입니다.",
+  concertAudiosDesc: "김광석의 공연 실황, 라이브 음성, 현장 녹음 자료를 모아둔 공간입니다.",
   photosDesc: "김광석의 시간과 표정을 담은 사진 아카이브입니다.",
   storiesDesc: "김광석과 관련된 글과 이야기를 모아둔 공간입니다.",
   aboutDesc: "김광석에 대한 정보를 볼 수 있는 곳입니다.",
@@ -355,14 +356,15 @@ const DEFAULT_SETTINGS = {
 let currentSettings = { ...DEFAULT_SETTINGS };
 
 
-const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "concerts", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
-const RESTRICTED_PAGES = ["videos", "radios", "concerts", "photos", "oneum"];
+const VALID_PAGES = ["home", "siteinfo", "videos", "songs", "radios", "concerts", "concertAudios", "photos", "stories", "about", "oneum", "login", "signup", "mypage", "loginRequired", "admin"];
+const RESTRICTED_PAGES = ["videos", "radios", "concerts", "concertAudios", "photos", "oneum"];
 
 const BOARD_TABLE_BY_PAGE = {
   videos: "movie",
   songs: "song",
   radios: "radio",
   concerts: "concert",
+  concertAudios: "concert_audio",
   photos: "photo",
   stories: "story",
   about: "about",
@@ -381,7 +383,10 @@ const PAGE_BY_BOARD_TABLE = {
   concert: "concerts",
   concerts: "concerts",
   performance: "concerts",
-  live: "concerts",
+  concert_audio: "concertAudios",
+  concertaudio: "concertAudios",
+  concertaudios: "concertAudios",
+  live: "concertAudios",
   photo: "photos",
   photos: "photos",
   gallery: "photos",
@@ -416,8 +421,14 @@ function getPageFromHash() {
   return VALID_PAGES.includes(page) ? page : "home";
 }
 
+function getDisplayPageForItem(item) {
+  if (item?.category === "concerts" && isConcertAudioItem(item)) return "concertAudios";
+  return item?.category || "home";
+}
+
 function getBoardTableForItem(item) {
-  return BOARD_TABLE_BY_PAGE[item?.category] || item?.category || "archive";
+  const page = getDisplayPageForItem(item);
+  return BOARD_TABLE_BY_PAGE[page] || BOARD_TABLE_BY_PAGE[item?.category] || item?.category || "archive";
 }
 
 function getSiteBasePath() {
@@ -437,7 +448,7 @@ function makeContentBoardUrl(item) {
 
 function updateContentBoardUrl(item, replace = false) {
   const url = makeContentBoardUrl(item);
-  const state = { page: item?.category || "home", itemId: item?.id || "" };
+  const state = { page: getDisplayPageForItem(item), itemId: item?.id || "" };
   if (replace) window.history.replaceState(state, "", url);
   else if (window.location.href !== url) window.history.pushState(state, "", url);
 }
@@ -457,7 +468,7 @@ async function openContentRouteFromLocation() {
   if (!contentsCacheLoaded) await loadContents();
 
   const item = allContents.find((content) => String(content.id) === String(route.itemId));
-  const page = item?.category || route.page || "home";
+  const page = item ? getDisplayPageForItem(item) : (route.page || "home");
 
   if (RESTRICTED_PAGES.includes(page) && !currentUser) {
     showPage("loginRequired", true);
@@ -534,7 +545,8 @@ function getCategoryDisplayName(category) {
     videos: "영상",
     songs: "노래",
     radios: "라디오",
-    concerts: "공연",
+    concerts: "공연자료",
+    concertAudios: "공연음성",
     photos: "사진",
     stories: "이야기",
     about: "김광석",
@@ -633,7 +645,7 @@ function showPage(pageId, fromHash = false) {
   if (pageId === "home") tryPlayHomeVoiceOnce();
 
 
-  if (["videos", "songs", "radios", "concerts", "photos", "stories", "oneum"].includes(pageId)) {
+  if (["videos", "songs", "radios", "concerts", "concertAudios", "photos", "stories", "oneum"].includes(pageId)) {
     // 이미 자료를 한 번 불러온 뒤에는 페이지 이동 때마다 Firestore를 다시 읽지 않고
     // 현재 페이지 목록만 다시 그립니다. 페이지 전환 체감 속도를 빠르게 하기 위한 캐시 처리입니다.
     if (contentsCacheLoaded) renderContentPage(pageId);
@@ -875,12 +887,13 @@ async function loadPageCategories() {
 }
 
 function populateAllCategoryFilters() {
-  ["videos","songs","radios","concerts","photos","stories","about","oneum"].forEach(page => {
+  ["videos","songs","radios","concerts","concertAudios","photos","stories","about","oneum"].forEach(page => {
     const select = document.getElementById(`${page}CategoryFilter`);
     if (!select) return;
     const cur = select.value;
+    const categorySourcePage = page === "concertAudios" ? "concerts" : page;
     select.innerHTML = '<option value="">전체 카테고리</option>';
-    (pageCategories[page] || []).forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
+    (pageCategories[categorySourcePage] || []).forEach(cat => select.appendChild(new Option(cat.name, cat.name)));
     select.value = cur;
   });
 }
@@ -1417,7 +1430,7 @@ function applySiteSettings(settings) {
   document.getElementById("siteLogoSubText").textContent = settings.siteSubName;
   document.getElementById("homeTitle").textContent = settings.homeTitle;
   document.getElementById("homeDescription").textContent = settings.homeDescription;
-  ["videos","songs","radios","concerts","photos","stories","about","oneum"].forEach(p => {
+  ["videos","songs","radios","concerts","concertAudios","photos","stories","about","oneum"].forEach(p => {
     const el = document.getElementById(`${p}Desc`);
     if (el) el.textContent = settings[`${p}Desc`] || DEFAULT_SETTINGS[`${p}Desc`];
   });
@@ -1440,7 +1453,7 @@ function applyDesignSettings(s = currentSettings) {
 function fillSettingsFormFromCurrent() {
   const ids = {
     settingSiteName:"siteName", settingSiteSubName:"siteSubName", settingHomeTitle:"homeTitle", settingHomeDescription:"homeDescription",
-    settingVideosDesc:"videosDesc", settingSongsDesc:"songsDesc", settingRadiosDesc:"radiosDesc", settingConcertsDesc:"concertsDesc", settingPhotosDesc:"photosDesc",
+    settingVideosDesc:"videosDesc", settingSongsDesc:"songsDesc", settingRadiosDesc:"radiosDesc", settingConcertsDesc:"concertsDesc", settingConcertAudiosDesc:"concertAudiosDesc", settingPhotosDesc:"photosDesc",
     settingStoriesDesc:"storiesDesc", settingAboutDesc:"aboutDesc", settingOneumDesc:"oneumDesc",
     settingBodyBgColor:"bodyBgColor", settingHeaderBgColor:"headerBgColor", settingButtonColor:"buttonColor", settingCardBgColor:"cardBgColor",
     settingTextColor:"textColor", settingHeroTextColor:"heroTextColor", settingNavTextColor:"navTextColor",
@@ -1500,6 +1513,7 @@ document.getElementById("saveSiteSettingsBtn").addEventListener("click", async (
       songsDesc: document.getElementById("settingSongsDesc").value.trim() || DEFAULT_SETTINGS.songsDesc,
       radiosDesc: document.getElementById("settingRadiosDesc").value.trim() || DEFAULT_SETTINGS.radiosDesc,
       concertsDesc: document.getElementById("settingConcertsDesc")?.value.trim() || DEFAULT_SETTINGS.concertsDesc,
+      concertAudiosDesc: document.getElementById("settingConcertAudiosDesc")?.value.trim() || DEFAULT_SETTINGS.concertAudiosDesc,
       photosDesc: document.getElementById("settingPhotosDesc").value.trim() || DEFAULT_SETTINGS.photosDesc,
       storiesDesc: document.getElementById("settingStoriesDesc").value.trim() || DEFAULT_SETTINGS.storiesDesc,
       aboutDesc: document.getElementById("settingAboutDesc").value.trim() || DEFAULT_SETTINGS.aboutDesc,
@@ -1611,56 +1625,19 @@ function installBasicContentProtection() {
 
 function hardenMediaDownloadControls() {
   document.querySelectorAll("audio, video").forEach((media) => {
-    media.setAttribute("controlsList", "nodownload noplaybackrate nofullscreen");
+    media.setAttribute("controlsList", media.tagName.toLowerCase() === "video" ? "nodownload noplaybackrate" : "nodownload noplaybackrate nofullscreen");
     media.setAttribute("oncontextmenu", "return false");
     media.addEventListener("contextmenu", (event) => event.preventDefault());
     if (media.tagName.toLowerCase() === "video") {
       media.setAttribute("playsinline", "");
       media.setAttribute("webkit-playsinline", "");
-      media.setAttribute("disablePictureInPicture", "");
-      media.disablePictureInPicture = true;
-      media.addEventListener("dblclick", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      }, { passive: false });
     }
   });
 }
 
 // v17: 영상 클릭/확대 시 브라우저 전체화면 검은 플레이어로 넘어가지 않도록 사이트 영상은 인라인 재생만 허용합니다.
 function installInlineVideoFullscreenBlocker() {
-  if (window.__kwangseoksInlineVideoFullscreenBlockerInstalled) return;
-  window.__kwangseoksInlineVideoFullscreenBlockerInstalled = true;
-
-  const isSiteVideo = (el) => {
-    if (!el || !el.tagName || el.tagName.toLowerCase() !== "video") return false;
-    return el.classList.contains("card-inline-video") || el.classList.contains("detail-inline-video") || el.closest("#contentDetailModal") || el.closest(".card");
-  };
-
-  const exitIfVideoFullscreen = () => {
-    const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-    if (!isSiteVideo(fsEl)) return;
-    try {
-      if (document.exitFullscreen) document.exitFullscreen();
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-      else if (document.msExitFullscreen) document.msExitFullscreen();
-    } catch (_) {}
-    forceMobileViewportZoomReset();
-  };
-
-  document.addEventListener("fullscreenchange", exitIfVideoFullscreen, true);
-  document.addEventListener("webkitfullscreenchange", exitIfVideoFullscreen, true);
-  document.addEventListener("mozfullscreenchange", exitIfVideoFullscreen, true);
-  document.addEventListener("MSFullscreenChange", exitIfVideoFullscreen, true);
-
-  document.addEventListener("click", (event) => {
-    const video = event.target && event.target.closest ? event.target.closest("video") : null;
-    if (!isSiteVideo(video)) return;
-    video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
-    video.setAttribute("controlsList", "nodownload noplaybackrate nofullscreen");
-  }, true);
+  // v19: 상세 영상의 기본 전체화면 버튼을 다시 허용합니다.
 }
 
 function renderAllContentSections() {
@@ -1670,7 +1647,9 @@ function renderAllContentSections() {
   const videos = prepareItemsForPage("videos", filterBySelectedSubCategory("videos", allContents.filter(i => i.category === "videos")));
   const songs = prepareItemsForPage("songs", filterBySelectedSubCategory("songs", allContents.filter(i => i.category === "songs")));
   const radios = prepareItemsForPage("radios", filterBySelectedSubCategory("radios", allContents.filter(i => i.category === "radios")));
-  const concerts = prepareItemsForPage("concerts", filterBySelectedSubCategory("concerts", allContents.filter(i => i.category === "concerts")));
+  const allConcertItems = allContents.filter(i => i.category === "concerts");
+  const concerts = prepareItemsForPage("concerts", filterBySelectedSubCategory("concerts", allConcertItems.filter(i => !isConcertAudioItem(i))));
+  const concertAudios = prepareItemsForPage("concertAudios", filterBySelectedSubCategory("concertAudios", allConcertItems.filter(i => isConcertAudioItem(i))));
   const photos = prepareItemsForPage("photos", filterBySelectedSubCategory("photos", allContents.filter(i => i.category === "photos")));
   const stories = prepareItemsForPage("stories", filterBySelectedSubCategory("stories", allContents.filter(i => i.category === "stories")));
   const oneum = prepareItemsForPage("oneum", filterBySelectedSubCategory("oneum", allContents.filter(i => i.category === "oneum")));
@@ -1680,6 +1659,7 @@ function renderAllContentSections() {
   renderList("songList", songs);
   renderList("radioList", radios);
   renderConcerts(concerts);
+  renderConcertAudios(concertAudios);
   renderList("storyList", stories);
   renderAboutDocument(allContents.filter(i => i.category === "about"));
   renderList("oneumList", oneum);
@@ -1696,13 +1676,18 @@ function renderContentPage(page) {
     return;
   }
 
-  const items = prepareItemsForPage(page, filterBySelectedSubCategory(page, allContents.filter(i => i.category === page)));
+  const sourceCategory = page === "concertAudios" ? "concerts" : page;
+  let sourceItems = allContents.filter(i => i.category === sourceCategory);
+  if (page === "concerts") sourceItems = sourceItems.filter(i => !isConcertAudioItem(i));
+  if (page === "concertAudios") sourceItems = sourceItems.filter(i => isConcertAudioItem(i));
+  const items = prepareItemsForPage(page, filterBySelectedSubCategory(page, sourceItems));
 
   if (page === "videos") renderVideos(items);
   else if (page === "photos") renderPhotos(items);
   else if (page === "songs") renderList("songList", items);
   else if (page === "radios") renderList("radioList", items);
   else if (page === "concerts") renderConcerts(items);
+  else if (page === "concertAudios") renderConcertAudios(items);
   else if (page === "stories") renderList("storyList", items);
   else if (page === "oneum") renderList("oneumList", items);
 
@@ -2942,6 +2927,7 @@ const pageState = {
   songs: 1,
   radios: 1,
   concerts: 1,
+  concertAudios: 1,
   photos: 1,
   stories: 1,
   oneum: 1
@@ -3213,17 +3199,18 @@ function renderLatestByCategory(contents) {
     videos: "영상 최신",
     songs: "노래 최신",
     radios: "라디오 최신",
-    concerts: "공연 최신",
+    concerts: "공연자료 최신",
+    concertAudios: "공연음성 최신",
     photos: "사진 최신",
     stories: "이야기 최신",
     oneum: "둥근소리글 최신"
   };
 
-  const pages = ["videos", "songs", "radios", "concerts", "photos", "stories", "oneum"];
+  const pages = ["videos", "songs", "radios", "concerts", "concertAudios", "photos", "stories", "oneum"];
   box.innerHTML = "";
 
   pages.forEach((page) => {
-    const item = contents.find((content) => content.category === page);
+    const item = page === "concertAudios" ? contents.find((content) => isConcertAudioItem(content)) : contents.find((content) => content.category === page && (page !== "concerts" || !isConcertAudioItem(content)));
     const div = document.createElement("div");
     div.className = "latest-category-box";
 
@@ -3259,21 +3246,19 @@ function isConcertAudioItem(item) {
 
 function renderConcerts(items) {
   const posterBox = document.getElementById("concertPosterList");
-  const audioBox = document.getElementById("concertAudioList");
-  if (!posterBox || !audioBox) return;
-
-  const posterItems = items.filter(item => !isConcertAudioItem(item));
-  const audioItems = items.filter(item => isConcertAudioItem(item));
+  if (!posterBox) return;
 
   posterBox.innerHTML = "";
-  if (!posterItems.length) {
-    posterBox.innerHTML = '<p class="helper-text">등록된 포스터 및 공연 관련 자료가 없습니다.</p>';
+  if (!items.length) {
+    posterBox.innerHTML = '<p class="helper-text">등록된 공연자료가 없습니다.</p>';
   } else {
-    posterItems.forEach(item => posterBox.appendChild(createCard(item)));
+    items.forEach(item => posterBox.appendChild(createCard(item)));
   }
+}
 
-  renderList("concertAudioList", audioItems);
-  setupRadioMonochromePlayers(audioBox);
+function renderConcertAudios(items) {
+  renderList("concertAudioList", items);
+  setupRadioMonochromePlayers(document.getElementById("concertAudios") || document);
 }
 
 function renderVideos(items) { const box = document.getElementById("videoList"); box.innerHTML = ""; if (!items.length) box.innerHTML = "<p>등록된 영상이 없습니다.</p>"; items.forEach(i => box.appendChild(createCard(i))); setupHlsVideos(box); }
@@ -3654,12 +3639,12 @@ function createCard(item) {
     const fileType = /\.mov(\?|#|$)/i.test(videoPlaybackUrl) ? "video/quicktime" : "video/mp4";
     const hlsAttr = isHlsUrl(videoPlaybackUrl) ? ` data-hls-src="${escapeHtml(videoPlaybackUrl)}"` : "";
     const sourceHtml = isHlsUrl(videoPlaybackUrl) ? "" : `<source src="${escapeHtml(videoPlaybackUrl)}" type="${fileType}">`;
-    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate nofullscreen" disablePictureInPicture oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"${hlsAttr}>${sourceHtml}</video>`;
+    media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"${hlsAttr}>${sourceHtml}</video>`;
   }
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
   else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">`;
   else media = `<div class="card-placeholder">글 자료</div>`;
-  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(getCategoryDisplayName(item.category))}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
+  card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(getCategoryDisplayName(getDisplayPageForItem(item)))}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
 }
 
@@ -3987,7 +3972,7 @@ function renderDetailMedia(item) {
       const selector = renderVideoQualitySelector(item, videoId);
       const hlsAttr = isHlsUrl(selectedPlaybackUrl) ? ` data-hls-src="${escapeHtml(selectedPlaybackUrl)}"` : "";
       const sourceHtml = isHlsUrl(selectedPlaybackUrl) ? "" : `<source src="${escapeHtml(selectedPlaybackUrl)}" type="${fileType}">`;
-      return `<div class="detail-media-box detail-video-box">${selector}<video id="${escapeHtml(videoId)}" class="detail-inline-video" controls playsinline webkit-playsinline preload="metadata"${posterAttr}${hlsAttr} controlsList="nodownload noplaybackrate nofullscreen" disablePictureInPicture oncontextmenu="return false">${sourceHtml}</video></div>`;
+      return `<div class="detail-media-box detail-video-box">${selector}<video id="${escapeHtml(videoId)}" class="detail-inline-video" controls playsinline webkit-playsinline preload="metadata"${posterAttr}${hlsAttr} controlsList="nodownload noplaybackrate" oncontextmenu="return false">${sourceHtml}</video></div>`;
     }
 
     if (imageUrl) {
@@ -4065,7 +4050,7 @@ function openContentDetail(id, options = {}) {
   const item = allContents.find((content) => String(content.id) === String(id));
   if (!item) return;
 
-  activeDetailPage = item.category || activeDetailPage || "home";
+  activeDetailPage = getDisplayPageForItem(item) || activeDetailPage || "home";
   if (options.updateUrl === true) updateContentBoardUrl(item, Boolean(options.replaceUrl));
 
   const modal = document.getElementById("contentDetailModal");
@@ -4088,7 +4073,7 @@ function openContentDetail(id, options = {}) {
 
   titleEl.textContent = item.title || "제목 없음";
   const detailCats = renderCategoryText(item);
-  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(getCategoryDisplayName(item.category))}${detailCats ? ` / <strong>카테고리:</strong> ${escapeHtml(detailCats)}` : ""}`;
+  categoryEl.innerHTML = `<strong>분류:</strong> ${escapeHtml(getCategoryDisplayName(getDisplayPageForItem(item)))}${detailCats ? ` / <strong>카테고리:</strong> ${escapeHtml(detailCats)}` : ""}`;
   if (isOneumItem(item)) {
     const author = getOneumAuthor(item) || "미기재";
     const authorName = getOneumAuthorName(item);

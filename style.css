@@ -893,13 +893,7 @@ body:has(#home.active) .daily-player{
 }
 
 
-/* v17: 영상은 사이트 상세창 안에서만 재생되도록 브라우저 기본 전체화면 버튼을 숨깁니다. */
-.card-inline-video::-webkit-media-controls-fullscreen-button,
-.detail-inline-video::-webkit-media-controls-fullscreen-button,
-#contentDetailModal video::-webkit-media-controls-fullscreen-button {
-  display: none !important;
-}
-
+/* v19: 영상은 상세창에서는 4:3으로 보이고, 사용자가 누르면 브라우저 전체화면도 가능합니다. */
 .detail-video-box,
 .detail-video-box .detail-inline-video {
   max-width: 100%;
@@ -912,7 +906,7 @@ body:has(#home.active) .daily-player{
   background: #000;
 }
 
-/* v17-4x3: 영상 상세보기는 브라우저 전체화면이 아니라 사이트 안 4:3 박스에서 재생 */
+/* v19: 영상 상세보기는 사이트 안에서 4:3으로 재생하고, 기본 전체화면 버튼은 유지 */
 .detail-media-area:has(.detail-video-box) {
   min-height: auto !important;
   padding: 22px !important;
@@ -1027,4 +1021,26 @@ body:has(#home.active) .daily-player:not(.hidden):not(.closed){
   .concerts-subsection{padding:18px;border-radius:22px;}
   .concerts-subsection-head{grid-template-columns:1fr;}
   .concerts-subsection-head p{grid-column:1;}
+}
+
+
+/* v19: 영상 전체화면 진입 시에도 원본 비율을 유지하고 검은 여백으로 보정 */
+#contentDetailModal video:fullscreen,
+#contentDetailModal video:-webkit-full-screen,
+.card-inline-video:fullscreen,
+.card-inline-video:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  background: #000 !important;
+  border-radius: 0 !important;
+}
+
+/* v19: 공연자료와 공연음성은 서로 다른 페이지로 분리 */
+.concerts-poster-page .concerts-poster-list,
+.concerts-audio-page .concerts-audio-list {
+  margin-top: 18px;
 }

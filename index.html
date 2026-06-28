@@ -39,12 +39,12 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=concerts-recommend-v18" />
+  <link rel="stylesheet" href="style.css?v=concert-split-fullscreen-v19" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
     (function () {
-      var VALID = ["home","siteinfo","videos","songs","radios","concerts","photos","stories","about","oneum","loginRequired","login","signup","mypage","admin"];
+      var VALID = ["home","siteinfo","videos","songs","radios","concerts","concertAudios","photos","stories","about","oneum","loginRequired","login","signup","mypage","admin"];
       function qsa(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
 
       function show(page) {
@@ -199,7 +199,8 @@
       <button data-page-fallback="videos" onclick="goPage('videos')">영상</button>
       <button data-page-fallback="songs" onclick="goPage('songs')">노래</button>
       <button data-page-fallback="radios" onclick="goPage('radios')">라디오</button>
-      <button data-page-fallback="concerts" onclick="goPage('concerts')">공연</button>
+      <button data-page-fallback="concerts" onclick="goPage('concerts')">공연자료</button>
+      <button data-page-fallback="concertAudios" onclick="goPage('concertAudios')">공연음성</button>
       <button data-page-fallback="photos" onclick="goPage('photos')">사진</button>
       <button data-page-fallback="stories" onclick="goPage('stories')">이야기</button>
       <button data-page-fallback="about" onclick="goPage('about')">김광석</button>
@@ -226,7 +227,7 @@
         <div class="home-v12-title-block">
           <p class="home-v12-kicker">KIM KWANG SEOK DIGITAL ARCHIVE</p>
           <h1 id="homeTitle">광석이네 집</h1>
-          <p id="homeDescription">김광석의 노래, 영상, 라디오, 공연, 사진, 이야기 자료를 조용히 정리해 두는 개인 아카이브입니다.</p>
+          <p id="homeDescription">김광석의 노래, 영상, 라디오, 공연자료, 공연음성, 사진, 이야기 자료를 조용히 정리해 두는 개인 아카이브입니다.</p>
           <div class="home-v12-actions">
             <button type="button" class="home-v12-primary" data-page-fallback="videos" onclick="goPage('videos')">자료 둘러보기</button>
             <button type="button" class="home-v12-secondary" data-page-fallback="siteinfo" onclick="goPage('siteinfo')">사이트 소개</button>
@@ -256,7 +257,7 @@
         <h1>사이트 안내</h1>
         <p>
           광석이네 집은 김광석을 기억하고 추억하기 위해 만든 개인형 디지털 아카이브입니다.
-          김광석 자료방에서 모아 온 자료와 기록을 바탕으로, 노래·영상·라디오·공연·사진·글을 한곳에서 살펴볼 수 있도록 정리하고 있습니다.
+          김광석 자료방에서 모아 온 자료와 기록을 바탕으로, 노래·영상·라디오·공연자료·공연음성·사진·글을 한곳에서 살펴볼 수 있도록 정리하고 있습니다.
         </p>
       </div>
 
@@ -268,7 +269,7 @@
             단순히 파일을 올려두는 곳이 아니라, 언제 어떤 자료인지, 어떤 맥락에서 남겨진 자료인지, 나중에 다시 찾을 때 어떤 단서가 필요한지를 함께 남기는 것을 목표로 합니다.
           </p>
           <p>
-            이곳의 중심은 ‘소장’보다 ‘기억’입니다. 노래 한 곡, 공연 영상 하나, 짧은 라디오 음성, 공연 포스터와 음성 파일, 오래된 사진 한 장이라도 그 시대의 분위기와 사람들의 추억을 함께 남기는 방식으로 정리해 가고 있습니다.
+            이곳의 중심은 ‘소장’보다 ‘기억’입니다. 노래 한 곡, 공연 영상 하나, 짧은 라디오 음성, 공연 포스터와 공연 음성 파일, 오래된 사진 한 장이라도 그 시대의 분위기와 사람들의 추억을 함께 남기는 방식으로 정리해 가고 있습니다.
           </p>
         </article>
 
@@ -287,7 +288,7 @@
             김광석의 노래는 많은 사람들에게 단순한 음악으로만 남아 있지 않습니다. 어떤 이에게는 청춘의 한 장면이고, 어떤 이에게는 외로웠던 밤을 견디게 해준 위로이며, 또 어떤 이에게는 말로 다 표현하지 못했던 마음을 대신 불러준 목소리입니다. 그의 노래는 화려하지 않았지만 진심이 있었고, 큰 소리로 외치지 않았지만 오래 남는 울림이 있었습니다. 그래서 사람들은 지금도 그의 노래를 다시 듣고, 그의 표정을 다시 바라보며, 그가 남긴 시간들을 조용히 되새깁니다.
           </p>
           <p>
-            광석이네 집은 그런 마음에서 출발했습니다. 흩어져 있는 김광석의 노래, 영상, 라디오 음성, 공연 자료, 사진, 이야기와 기록들을 한곳에 모아두고, 누구나 편안하게 찾아와 보고 들을 수 있는 공간을 만들고자 했습니다. 오래된 무대 위의 모습, 라디오에서 흘러나오던 목소리, 앨범 속에 담긴 노래들, 그리고 그를 기억하는 여러 흔적들이 이곳에서 다시 하나의 이야기로 이어집니다.
+            광석이네 집은 그런 마음에서 출발했습니다. 흩어져 있는 김광석의 노래, 영상, 라디오 음성, 공연 자료, 공연 음성, 사진, 이야기와 기록들을 한곳에 모아두고, 누구나 편안하게 찾아와 보고 들을 수 있는 공간을 만들고자 했습니다. 오래된 무대 위의 모습, 라디오에서 흘러나오던 목소리, 앨범 속에 담긴 노래들, 그리고 그를 기억하는 여러 흔적들이 이곳에서 다시 하나의 이야기로 이어집니다.
           </p>
           <p>
             이곳에서 김광석은 과거의 인물로만 머물지 않습니다. 그의 노래는 여전히 누군가의 하루에 닿고, 그의 목소리는 지금도 낯선 시간 속에서 위로가 됩니다. 어제의 기억이 오늘의 마음과 만나고, 오래된 노래가 새로운 사람에게 다시 전해지는 곳. 광석이네 집은 바로 그런 만남을 위해 마련된 공간입니다.
@@ -320,7 +321,8 @@
             <li><span class="site-storage-name">영상</span><span class="site-storage-desc">— 공연, 방송, 인터뷰 영상 자료</span></li>
             <li><span class="site-storage-name">노래</span><span class="site-storage-desc">— 앨범별 노래, 라이브 음원, 관련 설명</span></li>
             <li><span class="site-storage-name">라디오</span><span class="site-storage-desc">— 라디오 방송, 인터뷰, 음성 기록</span></li>
-            <li><span class="site-storage-name">공연</span><span class="site-storage-desc">— 공연 포스터, 공연 관련 기록, 공연 음성 파일</span></li>
+            <li><span class="site-storage-name">공연자료</span><span class="site-storage-desc">— 공연 포스터, 프로그램북, 공연 관련 기록</span></li>
+            <li><span class="site-storage-name">공연음성</span><span class="site-storage-desc">— 공연 실황, 라이브 음성, 현장 녹음 자료</span></li>
             <li><span class="site-storage-name">사진</span><span class="site-storage-desc">— 사진, 이미지, 시기별 기록</span></li>
             <li><span class="site-storage-name">이야기</span><span class="site-storage-desc">— 글, 일기, 이야기 자료</span></li>
             <li><span class="site-storage-name">김광석</span><span class="site-storage-desc">— 김광석에 대한 설명과 정리 글</span></li>
@@ -427,24 +429,26 @@
         <div id="radiosPagination" class="pagination"></div>
     </section>
 
-    <section id="concerts" class="page content-page concerts-page">
-      <div class="page-title"><h1>공연</h1><p id="concertsDesc">김광석의 공연 포스터, 공연 관련 기록, 공연 음성 파일을 나누어 정리한 공간입니다.</p></div>
-      <div class="toolbar"><input id="concertsSearchInput" class="page-search-input" type="search" placeholder="공연 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+    <section id="concerts" class="page content-page concerts-page concerts-poster-page">
+      <div class="page-title"><h1>공연자료</h1><p id="concertsDesc">김광석의 공연 포스터, 프로그램북, 안내문, 공연 관련 기록을 모아둔 공간입니다.</p></div>
+      <div class="toolbar"><input id="concertsSearchInput" class="page-search-input" type="search" placeholder="공연자료 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
           <select id="concertsSortSelect" class="page-sort-select" onchange="resetPageAndReload('concerts')">
             <option value="desc">최신 순</option>
             <option value="asc">오래된 순</option>
           </select><select id="concertsCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
-      <div class="concerts-split-grid">
-        <section class="concerts-subsection concerts-poster-section">
-          <div class="concerts-subsection-head"><span>01</span><h2>포스터 및 공연 관련</h2><p>공연 포스터, 프로그램북, 안내문, 공연 기록을 모아둡니다.</p></div>
-          <div id="concertPosterList" class="card-grid concerts-poster-list"></div>
-        </section>
-        <section class="concerts-subsection concerts-audio-section">
-          <div class="concerts-subsection-head"><span>02</span><h2>공연 음성 파일</h2><p>공연 실황, 라이브 음성, 현장 녹음 자료를 모아둡니다.</p></div>
-          <div id="concertAudioList" class="list-box concerts-audio-list"></div>
-        </section>
-      </div>
+      <div id="concertPosterList" class="card-grid concerts-poster-list"></div>
       <div id="concertsPagination" class="pagination"></div>
+    </section>
+
+    <section id="concertAudios" class="page content-page concerts-audio-page">
+      <div class="page-title"><h1>공연음성</h1><p id="concertAudiosDesc">김광석의 공연 실황, 라이브 음성, 현장 녹음 자료를 모아둔 공간입니다.</p></div>
+      <div class="toolbar"><input id="concertAudiosSearchInput" class="page-search-input" type="search" placeholder="공연음성 검색: 제목, 설명, 연도, 출처" oninput="loadContents()" />
+          <select id="concertAudiosSortSelect" class="page-sort-select" onchange="resetPageAndReload('concertAudios')">
+            <option value="desc">최신 순</option>
+            <option value="asc">오래된 순</option>
+          </select><select id="concertAudiosCategoryFilter" onchange="loadContents()"><option value="">전체 카테고리</option></select></div>
+      <div id="concertAudioList" class="list-box concerts-audio-list"></div>
+      <div id="concertAudiosPagination" class="pagination"></div>
     </section>
 
     <section id="photos" class="page content-page">
@@ -553,7 +557,7 @@
         <h2>각 페이지 글/사진 등록</h2>
         <input type="hidden" id="editContentId" value="" />
         <label>등록할 페이지</label>
-        <select id="contentCategory"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option></select>
+        <select id="contentCategory"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option></select>
         <label>자료 카테고리 <span class="helper-inline">Ctrl/⌘ 또는 Shift로 여러 개 선택</span></label>
         <select id="contentSubCategory" multiple size="5"></select>
         <input id="contentTitle" type="text" placeholder="제목" />
@@ -646,7 +650,7 @@
 
       <form id="adminConcertAudioForm" class="admin-form hidden">
         <h2>공연 음성 등록</h2>
-        <p class="helper-text">공연 페이지의 ‘공연 음성 파일’ 영역에 들어갈 mp3/wav 자료를 등록합니다. URL 직접 입력도 가능합니다.</p>
+        <p class="helper-text">공연음성 페이지에 들어갈 mp3/wav 자료를 등록합니다. URL 직접 입력도 가능합니다.</p>
         <label>자료 카테고리 <span class="helper-inline">여러 개 선택 가능</span></label><select id="concertSubCategory" multiple size="5"></select>
         <input id="concertTitle" type="text" placeholder="공연 음성 제목" />
         <input id="concertFile" type="file" accept="audio/mpeg,audio/mp3,audio/wav,.mp3,.wav" />
@@ -657,7 +661,7 @@
         <label>대표 이미지 또는 포스터 업로드</label>
         <input id="concertImageFile" type="file" accept="image/*" />
         <input id="concertImageUrl" type="url" placeholder="선택사항: 이미지 URL. 가능하면 위 사진 업로드를 사용하세요." />
-        <p class="helper-text">공연 포스터나 관련 이미지는 ‘각 페이지 글/사진 등록’에서 등록 페이지를 공연으로 선택해 올릴 수도 있습니다.</p>
+        <p class="helper-text">공연 포스터나 관련 이미지는 ‘각 페이지 글/사진 등록’에서 등록 페이지를 공연자료로 선택해 올릴 수 있습니다.</p>
         <button type="button" id="saveConcertBtn">공연 음성 저장</button>
       </form>
 
@@ -693,7 +697,7 @@
 
       <section id="adminManageForm" class="admin-form hidden">
         <h2>자료 수정/삭제</h2>
-        <div class="toolbar"><select id="manageCategoryFilter" onchange="renderAdminManageList()"><option value="">전체</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select><button type="button" onclick="loadContents()">새로고침</button></div>
+        <div class="toolbar"><select id="manageCategoryFilter" onchange="renderAdminManageList()"><option value="">전체</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select><button type="button" onclick="loadContents()">새로고침</button></div>
         <div id="adminContentList" class="admin-list"></div>
       </section>
 
@@ -736,7 +740,8 @@
         <textarea id="settingVideosDesc" placeholder="Videos 설명"></textarea>
         <textarea id="settingSongsDesc" placeholder="Songs 설명"></textarea>
         <textarea id="settingRadiosDesc" placeholder="라디오 설명"></textarea>
-        <textarea id="settingConcertsDesc" placeholder="공연 설명"></textarea>
+        <textarea id="settingConcertsDesc" placeholder="공연자료 설명"></textarea>
+        <textarea id="settingConcertAudiosDesc" placeholder="공연음성 설명"></textarea>
         <textarea id="settingPhotosDesc" placeholder="Photos 설명"></textarea>
         <textarea id="settingStoriesDesc" placeholder="이야기 설명"></textarea>
         <textarea id="settingAboutDesc" placeholder="About Seok 설명"></textarea>
@@ -744,7 +749,7 @@
 
         <h3>페이지 템플릿</h3>
         <label>변경할 페이지</label>
-        <select id="templatePage"><option value="home">처음</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
+        <select id="templatePage"><option value="home">처음</option><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
         <label>템플릿</label>
         <select id="templateType"><option value="card">카드형</option><option value="gallery">갤러리형</option><option value="list">리스트형</option><option value="timeline">연도별형</option><option value="wide">넓은 본문형</option></select>
         <button type="button" id="saveTemplateBtn">템플릿만 저장</button>
@@ -755,7 +760,7 @@
         <h2>페이지별 카테고리 만들기</h2>
         <p class="helper-text">예: Songs 페이지에 1집, 2집 / Videos 페이지에 공연, 방송, 인터뷰 등을 만들 수 있습니다.</p>
         <label>카테고리를 만들 페이지</label>
-        <select id="categoryPage"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
+        <select id="categoryPage"><option value="videos">영상</option><option value="songs">노래</option><option value="radios">라디오</option><option value="concerts">공연자료</option><option value="photos">사진</option><option value="stories">이야기</option><option value="about">김광석</option><option value="oneum">둥근소리글</option></select>
         <input id="newCategoryName" type="text" placeholder="새 카테고리 이름 예: 1집, 2집, 공연, 인터뷰" />
         <button type="button" id="saveCategoryBtn">카테고리 생성</button>
         <h3>현재 카테고리</h3>
@@ -794,8 +799,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v18-concerts-recommend</div>
+<div class="version-marker">v19-concert-split-fullscreen</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=concerts-recommend-v18"></script>
+  <script type="module" src="app.js?v=concert-split-fullscreen-v19"></script>
 </body>
 </html>
