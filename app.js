@@ -307,7 +307,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v186-song-cover-rawurl-mobile-playlist-space";
+const APP_VERSION = "v8-no-playlist";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -2278,35 +2278,12 @@ function removeCurrentSongFromPlaylist() {
 }
 
 function addSongToUserPlaylist(songId) {
-  const id = String(songId || "").trim();
-  if (!id) return;
-  const item = allContents.find((content) => String(content.id) === id);
-  if (!item || item.category !== "songs" || !getPlayableAudioUrl(item)) {
-    alert("재생 가능한 Songs 음원만 플레이리스트에 담을 수 있습니다.");
-    return;
-  }
-  const ids = loadUserPlaylistIds();
-  if (!ids.includes(id)) ids.push(id);
-  saveUserPlaylistIds(ids);
-  localStorage.removeItem(getUserPlaylistStateKey());
-  playlistPendingResumeTime = 0;
-  playlistResumeAppliedForId = "";
-  playlistRequestedItemId = id;
-  setupUserPlaylistPlayer({ forceOpen: true });
-  updatePlaylistAddButtons();
+  return false;
 }
 window.addSongToUserPlaylist = addSongToUserPlaylist;
 
 function updatePlaylistAddButtons() {
-  const ids = loadUserPlaylistIds();
-  document.querySelectorAll(".playlist-add-btn").forEach((btn) => {
-    const onclick = btn.getAttribute("onclick") || "";
-    const match = onclick.match(/addSongToUserPlaylist\(\"([^\"]+)\"\)/);
-    const id = match ? match[1] : "";
-    const added = id && ids.includes(id);
-    btn.textContent = added ? "✓ 플레이리스트에 담김" : "＋ 플레이리스트 담기";
-    btn.classList.toggle("added", Boolean(added));
-  });
+  return;
 }
 
 function movePlaylistSelection(direction) {
@@ -3492,7 +3469,7 @@ function renderAudioArchiveCard(item, id, img, previewText) {
       <div class="audio-archive-player-row">
         ${player}
       </div>
-      ${id === "songList" ? `<div class="playlist-add-row"><button type="button" class="playlist-add-btn" onclick='event.stopPropagation(); addSongToUserPlaylist(${JSON.stringify(item.id || "")})'>＋ 플레이리스트 담기</button></div>` : ""}
+
       ${id === "radioList" ? `<div class="admin-download-row">${renderAdminDownloadButton(item, "card")}</div>` : ""}
       <div class="audio-archive-info-row">
         <p><strong>연도:</strong> ${safeYear}</p>

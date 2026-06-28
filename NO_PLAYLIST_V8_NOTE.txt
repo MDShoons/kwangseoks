@@ -1,0 +1,8 @@
+v8-no-playlist 수정 내용
+
+- 내 플레이리스트 고정 플레이어 HTML 제거
+- Songs 카드의 “＋ 플레이리스트 담기” 버튼 제거
+- 사이트 안내 문구에서 플레이리스트 설명 제거
+- playlist-layout-reset.js 로딩 제거
+- 기존 캐시 버튼 클릭 대비 addSongToUserPlaylist 무동작 처리
+- Firebase, 로그인, 관리자, 자료등록, 자료 수정/삭제, 상세보기, 오늘의 추천곡 기능은 유지
