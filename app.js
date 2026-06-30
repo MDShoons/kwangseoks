@@ -1108,24 +1108,43 @@ function resetVideoForm() {
 }
 document.getElementById("resetVideoBtn")?.addEventListener("click", resetVideoForm);
 
+async function getMultipleConcertPosterImageUrls(originalItem = null) {
+  const fileInput = document.getElementById("concertPosterImageFile");
+  const urlInput = document.getElementById("concertPosterImageUrl");
+  const files = Array.from(fileInput?.files || []).filter(file => file && /^image\//i.test(file.type || "image/"));
+  const directUrl = String(urlInput?.value || "").trim();
+
+  if (files.length) {
+    if (files.length > 12) throw new Error("이미지는 한 번에 최대 12장까지 등록해 주세요.");
+    const urls = [];
+    for (const file of files) {
+      urls.push(await fileToCompressedDataUrl(file, 1200, 0.68));
+    }
+    return urls;
+  }
+
+  if (directUrl) return [directUrl];
+  if (originalItem) return getItemImageUrls(originalItem);
+  return [];
+}
+
 async function saveConcertPoster() {
   if (!isAdmin) return alert("관리자만 저장할 수 있습니다.");
 
+  const editId = document.getElementById("editConcertPosterId")?.value || "";
+  const originalItem = editId ? allContents.find(i => i.id === editId) : null;
   const title = document.getElementById("concertPosterTitle")?.value.trim() || "";
   const body = document.getElementById("concertPosterBody")?.value.trim() || "";
-  if (!title || !body) return alert("공연 자료 제목과 설명을 입력하세요.");
+  if (!title) return alert("공연 자료 제목을 입력하세요.");
 
   try {
-    const mediaUrl = await getImageDataUrlOrDirectUrl(
-      document.getElementById("concertPosterImageFile")?.files?.[0],
-      document.getElementById("concertPosterImageUrl")?.value || "",
-      1400
-    );
+    const imageUrls = await getMultipleConcertPosterImageUrls(originalItem);
+    const mediaUrl = imageUrls[0] || "";
 
     const payload = {
       category: "concerts",
       ...makeSubCategoryPayload("concertPosterSubCategory"),
-      mediaType: mediaUrl ? "imageText" : "text",
+      mediaType: mediaUrl ? (imageUrls.length > 1 ? "galleryText" : "imageText") : "text",
       title,
       body,
       description: body,
@@ -1133,8 +1152,6 @@ async function saveConcertPoster() {
       source: document.getElementById("concertPosterSource")?.value.trim() || "",
       isFeatured: !!document.getElementById("concertPosterFeatured")?.checked,
       isPublic: true,
-      createdBy: currentUser.uid,
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
@@ -1142,10 +1159,22 @@ async function saveConcertPoster() {
       payload.mediaUrl = mediaUrl;
       payload.imageUrl = mediaUrl;
       payload.thumbnailUrl = mediaUrl;
+      payload.imageUrls = imageUrls;
+      payload.galleryUrls = imageUrls;
+      payload.photoCount = imageUrls.length;
+    } else {
+      payload.imageUrls = [];
+      payload.galleryUrls = [];
     }
 
-    await addDoc(collection(db, "contents"), payload);
-    alert("공연 자료가 저장되었습니다.");
+    if (editId) {
+      await updateDoc(doc(db, "contents", editId), payload);
+      alert("공연 자료가 수정되었습니다.");
+    } else {
+      await addDoc(collection(db, "contents"), { ...payload, createdBy: currentUser.uid, createdAt: serverTimestamp() });
+      alert("공연 자료가 저장되었습니다.");
+    }
+
     resetConcertPosterForm();
     await loadContents(true);
   } catch(e) {
@@ -1157,6 +1186,12 @@ function resetConcertPosterForm() {
   const form = document.getElementById("adminConcertPosterForm");
   if (form) form.reset();
   populateSpecificSubCategorySelect("concerts", "concertPosterSubCategory", []);
+  const id = document.getElementById("editConcertPosterId");
+  if (id) id.value = "";
+  const title = document.getElementById("concertPosterFormTitle");
+  if (title) title.textContent = "공연 자료 등록";
+  const btn = document.getElementById("saveConcertPosterBtn");
+  if (btn) btn.textContent = "공연 자료 저장";
 }
 
 document.getElementById("saveConcertPosterBtn")?.addEventListener("click", saveConcertPoster);
@@ -1608,7 +1643,7 @@ function applyTemplate(page, template) {
 }
 async function applySavedTemplates(force = false) {
   if (savedTemplatesCacheLoaded && !force) return;
-  for (const p of ["home","videos","songs","radios","photos","stories","about","oneum"]) {
+  for (const p of ["home","videos","songs","radios","concerts","concertAudios","photos","stories","about","oneum"]) {
     const snap = await getDoc(doc(db, "templateSettings", p));
     if (snap.exists()) applyTemplate(p, snap.data().template);
   }
@@ -3682,6 +3717,65 @@ function renderList(id, items) {
     box.appendChild(div);
   });
 }
+function getItemImageUrls(item = {}) {
+  const values = [];
+  const pushValue = (value) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(pushValue);
+      return;
+    }
+    if (typeof value === "object") {
+      pushValue(value.url || value.src || value.mediaUrl || value.imageUrl || value.thumbnailUrl || "");
+      return;
+    }
+    const url = String(value || "").trim();
+    if (!url) return;
+    values.push(url);
+  };
+
+  pushValue(item.imageUrls);
+  pushValue(item.galleryUrls);
+  pushValue(item.photoUrls);
+  pushValue(item.images);
+  pushValue(item.imageUrl);
+  pushValue(item.photoUrl);
+  pushValue(item.thumbnailUrl);
+
+  if (!isAudioContentItem(item) && !isVideoContentItem(item) && item.mediaUrl) {
+    pushValue(item.mediaUrl);
+  }
+
+  const seen = new Set();
+  return values.filter((url) => {
+    const normalized = normalizeMediaUrlForPlayback(url, "image");
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+function getPrimaryImageUrl(item = {}) {
+  return getItemImageUrls(item)[0] || "";
+}
+
+function renderDetailImageGallery(item = {}, title = "") {
+  const urls = getItemImageUrls(item);
+  if (!urls.length) return "";
+
+  if (urls.length === 1) {
+    const src = normalizeMediaUrlForPlayback(urls[0], "image");
+    return `<div class="detail-media-box"><img src="${escapeHtml(src)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
+  }
+
+  const images = urls.map((url, index) => {
+    const src = normalizeMediaUrlForPlayback(url, "image");
+    return `<button type="button" class="detail-gallery-image detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(src)}" data-cover-title="${title} ${index + 1}" aria-label="공연 자료 이미지 ${index + 1} 크게 보기"><img src="${escapeHtml(src)}" alt="${title} ${index + 1}" draggable="false" oncontextmenu="return false" /></button>`;
+  }).join("");
+
+  return `<div class="detail-media-box detail-multi-image-gallery">${images}</div>`;
+}
+
 function createCard(item) {
   const card = document.createElement("div"); card.className = "card"; card.onclick = () => openContentDetail(item.id, { updateUrl: true });
   let media = "";
@@ -3697,8 +3791,16 @@ function createCard(item) {
     media = `<video class="card-inline-video" controls playsinline webkit-playsinline preload="metadata" controlsList="nodownload noplaybackrate" oncontextmenu="return false" poster="${escapeHtml(videoPosterUrl)}"${hlsAttr}>${sourceHtml}</video>`;
   }
   else if (isAudioContentItem(item)) media = `${item.thumbnailUrl ? `<img src="${item.thumbnailUrl}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">` : `<div class="card-placeholder">음원 자료</div>`}<audio controls controlsList="nodownload noplaybackrate nofullscreen" oncontextmenu="return false" src="${normalizeMediaUrlForPlayback(getPlayableAudioUrl(item), "audio")}"></audio>`;
-  else if (item.mediaUrl) media = `<img src="${normalizeMediaUrlForPlayback(item.mediaUrl, "image")}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">`;
-  else media = `<div class="card-placeholder">글 자료</div>`;
+  else {
+    const imageUrls = getItemImageUrls(item);
+    const firstImage = imageUrls[0] || "";
+    if (firstImage) {
+      const moreCount = Math.max(0, imageUrls.length - 1);
+      media = `<div class="card-image-wrap"><img src="${escapeHtml(normalizeMediaUrlForPlayback(firstImage, "image"))}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async">${moreCount ? `<span class="multi-image-count">+${moreCount}</span>` : ""}</div>`;
+    } else {
+      media = `<div class="card-placeholder">글 자료</div>`;
+    }
+  }
   card.innerHTML = `${media}<div class="card-body"><h3>${escapeHtml(item.title)}</h3>${renderCategoryBadges(item)}<p class="text-preview">${escapeHtml(makeTextPreview(item.description || item.body || "", 90))}</p><p><strong>분류:</strong> ${escapeHtml(getCategoryDisplayName(getDisplayPageForItem(item)))}</p>${isOneumItem(item) ? oneumMetaMarkup(item) : `<p><strong>연도:</strong> ${escapeHtml(item.year || "미상")}</p><p><strong>출처:</strong> ${escapeHtml(item.source || "미기재")}</p>`}${createdDateMarkup(item)}${renderAdminDownloadButton(item, "card")}</div>`;
   return card;
 }
@@ -4078,20 +4180,11 @@ function renderDetailMedia(item) {
       return `<div class="detail-concert-layout">${imagePart}<div class="detail-audio-box detail-radio-audio-box">${renderRadioMonochromePlayer(playbackMediaUrl, `${category}-detail-${item.id || "detail"}`)}</div></div>`;
     }
 
-    const concertImage = playbackImageUrl || playbackMediaUrl;
-    if (concertImage) {
-      return `<div class="detail-media-box detail-concert-poster-box"><img src="${escapeHtml(concertImage)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
-    }
-
-    return "";
+    return renderDetailImageGallery(item, title);
   }
 
   if (category === "photos") {
-    if (imageUrl || mediaUrl) {
-      return `<div class="detail-media-box"><img src="${escapeHtml(playbackImageUrl || playbackMediaUrl)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
-    }
-
-    return "";
+    return renderDetailImageGallery(item, title);
   }
 
   if (imageUrl) {
@@ -4285,6 +4378,23 @@ function renderAdminManageList() {
 }
 function editContent(id) {
   const item = allContents.find(i => i.id === id); if (!item) return;
+  if (item.category === "concerts" && !isConcertAudioItem(item)) {
+    showAdminForm("concertPoster");
+    const editId = document.getElementById("editConcertPosterId");
+    if (editId) editId.value = item.id;
+    const formTitle = document.getElementById("concertPosterFormTitle");
+    if (formTitle) formTitle.textContent = "공연 자료 수정";
+    populateSpecificSubCategorySelect("concerts", "concertPosterSubCategory", getItemSubCategories(item));
+    document.getElementById("concertPosterTitle").value = item.title || "";
+    document.getElementById("concertPosterYear").value = item.year || "";
+    document.getElementById("concertPosterSource").value = item.source || "";
+    document.getElementById("concertPosterBody").value = item.body || item.description || "";
+    document.getElementById("concertPosterImageUrl").value = getPrimaryImageUrl(item) || "";
+    document.getElementById("concertPosterFeatured").checked = Boolean(item.isFeatured);
+    const btn = document.getElementById("saveConcertPosterBtn");
+    if (btn) btn.textContent = "공연 자료 수정 저장";
+    return;
+  }
   if (item.category === "videos") {
     showAdminForm("video");
     document.getElementById("editVideoId").value = item.id;

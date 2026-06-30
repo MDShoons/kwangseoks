@@ -1145,3 +1145,74 @@ body:has(#home.active) .daily-player:not(.hidden):not(.closed){
     text-align:center;
   }
 }
+
+/* v22: 공연자료 페이지를 사진란처럼 갤러리형 카드 목록으로 통일 */
+#concerts .concerts-poster-list.card-grid{
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.card-image-wrap{
+  position: relative;
+  width: 100%;
+  background: #0c0b0a;
+}
+.card-image-wrap img{
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  display: block;
+}
+.multi-image-count{
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.72);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 950;
+  border: 1px solid rgba(255,255,255,.22);
+}
+.detail-multi-image-gallery{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.detail-multi-image-gallery .detail-gallery-image{
+  width: 100%;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255,255,255,.04);
+  cursor: zoom-in;
+}
+.detail-multi-image-gallery .detail-gallery-image img{
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  display: block;
+  background: #0c0b0a;
+}
+#adminConcertPosterForm input[type="file"]{
+  cursor: pointer;
+}
+@media (max-width: 900px){
+  #concerts .concerts-poster-list.card-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px){
+  #concerts .concerts-poster-list.card-grid{
+    grid-template-columns: 1fr;
+  }
+  .detail-multi-image-gallery{
+    grid-template-columns: 1fr;
+  }
+}
