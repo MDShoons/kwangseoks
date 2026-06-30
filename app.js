@@ -308,7 +308,7 @@ import {
   doc, setDoc, getDoc, runTransaction, updateDoc, deleteDoc, onSnapshot, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const APP_VERSION = "v21-admin-concert-mobile-split";
+const APP_VERSION = "v24-concert-detail-slider";
 const ACTIVE_UPLOAD_WORKER_URL = "https://kwangseoks-uploader.kos20050627.workers.dev";
 console.log("광석이네집", APP_VERSION);
 const app = initializeApp(firebaseConfig);
@@ -1108,6 +1108,47 @@ function resetVideoForm() {
 }
 document.getElementById("resetVideoBtn")?.addEventListener("click", resetVideoForm);
 
+async function imageFileToCompressedUploadFile(file, maxWidth = 1800, quality = 0.82) {
+  if (!file || !/^image\//i.test(file.type || "")) {
+    throw new Error("이미지 파일만 업로드할 수 있습니다.");
+  }
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("이미지 파일을 읽지 못했습니다."));
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("이미지를 불러오지 못했습니다."));
+    image.src = dataUrl;
+  });
+
+  const ratio = img.width > maxWidth ? maxWidth / img.width : 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.width * ratio));
+  canvas.height = Math.max(1, Math.round(img.height * ratio));
+  canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((outputBlob) => {
+      if (outputBlob) resolve(outputBlob);
+      else reject(new Error("이미지 압축에 실패했습니다."));
+    }, "image/jpeg", quality);
+  });
+
+  const safeBase = String(file.name || "concert-image")
+    .replace(/\.[^.]+$/, "")
+    .replace(/[^0-9A-Za-z가-힣._-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "concert-image";
+
+  return new File([blob], `${safeBase}.jpg`, { type: "image/jpeg" });
+}
+
 async function getMultipleConcertPosterImageUrls(originalItem = null) {
   const fileInput = document.getElementById("concertPosterImageFile");
   const urlInput = document.getElementById("concertPosterImageUrl");
@@ -1115,10 +1156,14 @@ async function getMultipleConcertPosterImageUrls(originalItem = null) {
   const directUrl = String(urlInput?.value || "").trim();
 
   if (files.length) {
-    if (files.length > 12) throw new Error("이미지는 한 번에 최대 12장까지 등록해 주세요.");
+    if (files.length > 20) throw new Error("이미지는 한 번에 최대 20장까지 등록해 주세요.");
     const urls = [];
-    for (const file of files) {
-      urls.push(await fileToCompressedDataUrl(file, 1200, 0.68));
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index];
+      const compressedFile = await imageFileToCompressedUploadFile(file, 1800, 0.82);
+      const uploadedUrl = await uploadFileToGitHubWorker(compressedFile, "photos");
+      if (!uploadedUrl) throw new Error(`${index + 1}번째 이미지 업로드 URL을 받지 못했습니다.`);
+      urls.push(uploadedUrl);
     }
     return urls;
   }
@@ -3768,12 +3813,68 @@ function renderDetailImageGallery(item = {}, title = "") {
     return `<div class="detail-media-box"><img src="${escapeHtml(src)}" alt="${title}" draggable="false" oncontextmenu="return false" /></div>`;
   }
 
-  const images = urls.map((url, index) => {
-    const src = normalizeMediaUrlForPlayback(url, "image");
-    return `<button type="button" class="detail-gallery-image detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(src)}" data-cover-title="${title} ${index + 1}" aria-label="공연 자료 이미지 ${index + 1} 크게 보기"><img src="${escapeHtml(src)}" alt="${title} ${index + 1}" draggable="false" oncontextmenu="return false" /></button>`;
+  const normalized = urls.map((url) => normalizeMediaUrlForPlayback(url, "image"));
+  const firstSrc = normalized[0];
+  const thumbs = normalized.map((src, index) => {
+    const itemTitle = `${title} ${index + 1}`.trim();
+    return `<button type="button" class="detail-slider-thumb${index === 0 ? ' active' : ''}" onclick="selectDetailSlider(this, ${index})" data-src="${escapeHtml(src)}" data-title="${escapeHtml(itemTitle)}" aria-label="이미지 ${index + 1} 보기"><img src="${escapeHtml(src)}" alt="${escapeHtml(itemTitle)}" draggable="false" oncontextmenu="return false" /></button>`;
   }).join("");
 
-  return `<div class="detail-media-box detail-multi-image-gallery">${images}</div>`;
+  return `
+    <div class="detail-media-box detail-image-slider" data-slider-count="${normalized.length}">
+      <div class="detail-slider-stage">
+        <button type="button" class="detail-slider-nav prev" onclick="changeDetailSlider(this, -1)" aria-label="이전 이미지">‹</button>
+        <button type="button" class="detail-slider-main detail-cover-zoom-trigger" onclick="openCoverZoomFromElement(this)" data-cover-src="${escapeHtml(firstSrc)}" data-cover-title="${escapeHtml(`${title} 1`.trim())}" data-current-index="0" aria-label="현재 이미지 크게 보기">
+          <img class="detail-slider-main-image" src="${escapeHtml(firstSrc)}" alt="${escapeHtml(`${title} 1`.trim())}" draggable="false" oncontextmenu="return false" />
+        </button>
+        <button type="button" class="detail-slider-nav next" onclick="changeDetailSlider(this, 1)" aria-label="다음 이미지">›</button>
+        <div class="detail-slider-counter"><span class="detail-slider-current">1</span> / ${normalized.length}</div>
+      </div>
+      <div class="detail-slider-thumbs">${thumbs}</div>
+    </div>`;
+}
+
+function setDetailSliderIndex(root, index) {
+  if (!root) return;
+  const thumbs = Array.from(root.querySelectorAll('.detail-slider-thumb'));
+  if (!thumbs.length) return;
+  const total = thumbs.length;
+  const safeIndex = ((Number(index) || 0) % total + total) % total;
+  const selected = thumbs[safeIndex];
+  const src = selected?.dataset?.src || '';
+  const title = selected?.dataset?.title || '';
+  const mainButton = root.querySelector('.detail-slider-main');
+  const mainImage = root.querySelector('.detail-slider-main-image');
+  const counter = root.querySelector('.detail-slider-current');
+  if (mainButton) {
+    mainButton.dataset.coverSrc = src;
+    mainButton.dataset.coverTitle = title;
+    mainButton.dataset.currentIndex = String(safeIndex);
+  }
+  if (mainImage) {
+    mainImage.src = src;
+    mainImage.alt = title;
+  }
+  if (counter) counter.textContent = String(safeIndex + 1);
+  thumbs.forEach((thumb, idx) => {
+    thumb.classList.toggle('active', idx === safeIndex);
+    thumb.setAttribute('aria-pressed', idx === safeIndex ? 'true' : 'false');
+  });
+  try { selected?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch(e) {}
+}
+
+function changeDetailSlider(trigger, step) {
+  const root = trigger?.closest('.detail-image-slider');
+  if (!root) return;
+  const mainButton = root.querySelector('.detail-slider-main');
+  const currentIndex = Number(mainButton?.dataset?.currentIndex || 0);
+  setDetailSliderIndex(root, currentIndex + Number(step || 0));
+}
+
+function selectDetailSlider(trigger, index) {
+  const root = trigger?.closest('.detail-image-slider');
+  if (!root) return;
+  setDetailSliderIndex(root, index);
 }
 
 function createCard(item) {

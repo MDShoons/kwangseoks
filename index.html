@@ -39,7 +39,7 @@
     })();
   </script>
   <title>광석이네 집 | 김광석 디지털 아카이브</title>
-  <link rel="stylesheet" href="style.css?v=concert-photo-style-v22" />
+  <link rel="stylesheet" href="style.css?v=concert-photo-storage-v23" />
 
   <script>
     // v110: 영상글 수정 시 기존 영상 재생 정보 보존
@@ -665,6 +665,7 @@
         <textarea id="concertPosterBody" placeholder="공연 자료 설명"></textarea>
         <label>공연 자료 이미지 <span class="helper-inline">여러 장 선택 가능</span></label>
         <input id="concertPosterImageFile" type="file" accept="image/*" multiple />
+        <p class="helper-text">여러 장을 선택해도 이미지는 별도 파일로 업로드되고, Firestore에는 가벼운 이미지 주소만 저장됩니다.</p>
         <input id="concertPosterImageUrl" type="url" placeholder="선택사항: 이미지 URL. 가능하면 위 사진 업로드를 사용하세요." />
         <p class="helper-text">파일 선택 창에서 여러 이미지를 한 번에 선택할 수 있습니다. 선택한 이미지는 자동 압축 후 하나의 공연자료 안에 함께 저장됩니다.</p>
         <label class="checkbox-label"><input id="concertPosterFeatured" type="checkbox" /> 메인 최신/추천 자료로 활용</label>
@@ -823,8 +824,8 @@
       <div id="coverZoomCaption" class="cover-zoom-caption"></div>
     </div>
   </div>
-<div class="version-marker">v21-admin-concert-mobile-split</div>
+<div class="version-marker">v23-concert-image-url-upload</div>
   <footer><p id="footerTitle">광석이네 집 | 김광석 디지털 아카이브</p><p>자료의 저작권은 원저작자와 권리자에게 있습니다.</p></footer>
-  <script type="module" src="app.js?v=concert-photo-style-v22"></script>
+  <script type="module" src="app.js?v=concert-photo-storage-v23"></script>
 </body>
 </html>

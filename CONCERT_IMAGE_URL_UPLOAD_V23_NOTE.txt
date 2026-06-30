@@ -1,0 +1,7 @@
+v23 공연 자료 다중 이미지 저장 방식 수정
+
+- 기존 v22는 여러 이미지를 base64 Data URL로 Firestore 문서 안에 직접 저장해서 1MiB 문서 크기 제한에 걸릴 수 있었습니다.
+- v23은 공연 자료 등록 시 선택한 이미지를 압축한 뒤 Cloudflare GitHub 업로더로 별도 업로드합니다.
+- Firestore에는 imageUrls/galleryUrls 배열에 이미지 URL만 저장합니다.
+- 공연 자료 페이지는 사진란처럼 갤러리형 표시를 유지합니다.
+- 기존 Firebase, 로그인, 관리자, 자료등록, 게시글 주소 기능은 유지합니다.

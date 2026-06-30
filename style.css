@@ -1200,6 +1200,87 @@ body:has(#home.active) .daily-player:not(.hidden):not(.closed){
   display: block;
   background: #0c0b0a;
 }
+.detail-image-slider{
+  display: grid;
+  gap: 14px;
+}
+.detail-slider-stage{
+  position: relative;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(0,0,0,.28);
+}
+.detail-slider-main{
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: #0c0b0a;
+  cursor: zoom-in;
+}
+.detail-slider-main-image{
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 68vh;
+  object-fit: contain;
+  display: block;
+  background: #0c0b0a;
+}
+.detail-slider-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.58);
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.detail-slider-nav.prev{ left: 12px; }
+.detail-slider-nav.next{ right: 12px; }
+.detail-slider-counter{
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.65);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  z-index: 2;
+}
+.detail-slider-thumbs{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 10px;
+}
+.detail-slider-thumb{
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,255,255,.04);
+}
+.detail-slider-thumb.active{
+  border-color: var(--gold, #d4a857);
+  box-shadow: 0 0 0 1px rgba(212,168,87,.25);
+}
+.detail-slider-thumb img{
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  background: #0c0b0a;
+}
 #adminConcertPosterForm input[type="file"]{
   cursor: pointer;
 }
@@ -1214,5 +1295,18 @@ body:has(#home.active) .daily-player:not(.hidden):not(.closed){
   }
   .detail-multi-image-gallery{
     grid-template-columns: 1fr;
+  }
+  .detail-slider-thumbs{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .detail-slider-nav{
+    width: 38px;
+    height: 38px;
+    font-size: 24px;
+  }
+  .detail-slider-counter{
+    right: 10px;
+    bottom: 10px;
+    font-size: 12px;
   }
 }
